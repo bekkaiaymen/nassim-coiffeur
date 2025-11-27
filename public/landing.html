@@ -13,14 +13,14 @@
     <meta name="apple-mobile-web-app-title" content="Nassim Coiffeur">
     
     <!-- Manifest -->
-    <link rel="manifest" href="/public/manifest.json">
+    <link rel="manifest" href="/manifest.json">
     
     <!-- Icons -->
-    <link rel="icon" href="/public/nassim/logo.jpg">
-    <link rel="apple-touch-icon" href="/public/nassim/logo.jpg">
+    <link rel="icon" href="/nassim/logo.jpg">
+    <link rel="apple-touch-icon" href="/nassim/logo.jpg">
     
     <title>Nassim Coiffeur - صالون ناسيم الاحترافي</title>
-    <link rel="stylesheet" href="/public/landing.css">
+    <link rel="stylesheet" href="/landing.css">
 </head>
 <body>
     <!-- Hero Section -->
@@ -483,7 +483,7 @@
 
         // PWA Service Worker Registration
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/public/service-worker.js')
+            navigator.serviceWorker.register('/service-worker.js')
                 .then(() => console.log('✅ PWA: Service Worker registered'))
                 .catch((err) => console.error('❌ PWA: Registration failed', err));
         }
