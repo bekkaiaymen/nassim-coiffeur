@@ -1,10 +1,9 @@
 {
-  "version": 2,
-  "outputDirectory": "public",
   "rewrites": [
-    { "source": "/home", "destination": "/landing.html" },
-    { "source": "/nassim", "destination": "/nassim/index.html" },
-    { "source": "/nassim-owner", "destination": "/nassim-owner/index.html" }
+    { "source": "/home", "destination": "/public/landing.html" },
+    { "source": "/nassim", "destination": "/public/nassim/index.html" },
+    { "source": "/nassim-owner", "destination": "/public/nassim-owner/index.html" },
+    { "source": "/(.*)", "destination": "/public/$1" }
   ],
   "headers": [
     {
