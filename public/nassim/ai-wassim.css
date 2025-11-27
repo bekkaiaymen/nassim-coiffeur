@@ -205,11 +205,15 @@
     padding: 15px;
     background: white;
     border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: center;
 }
 .wassim-chat-input-wrapper {
     display: flex;
     gap: 10px;
-    align-items: flex-end;
+    align-items: center;
+    max-width: 350px;
+    width: 100%;
 }
 .wassim-chat-input {
     flex: 1;
