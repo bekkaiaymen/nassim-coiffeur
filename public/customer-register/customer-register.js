@@ -26,8 +26,8 @@ async function loadBusinesses() {
         const response = await fetch(`${API_URL}/businesses/public`);
         const data = await response.json();
 
-        if (result.success) {
-            allBusinesses = result.data;
+        if (data.success) {
+            allBusinesses = data.data;
             displayBusinesses(allBusinesses);
         } else {
             showNotification('فشل تحميل المحلات', 'error');
