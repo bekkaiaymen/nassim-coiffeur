@@ -15,6 +15,7 @@ app.use(cors({
     origin: [
         'https://nassim-coiffeur.vercel.app',
         'https://nassim-coiffeur-bekkaiaymen.vercel.app',
+        'https://nassim-coiffeur-git-main-nassim-coiffeurs-projects.vercel.app',
         'http://localhost:3000',
         'http://192.168.1.2:3000'
     ],
