@@ -55,6 +55,7 @@ const userRoutes = require('./routes/users');
 const serviceRoutes = require('./routes/services');
 const statsRoutes = require('./routes/stats');
 const aiRoutes = require('./routes/ai');
+const aiAssistantRoutes = require('./routes/ai-assistant');
 const tenantRoutes = require('./routes/tenants');
 const planRoutes = require('./routes/plans');
 const businessRoutes = require('./routes/businesses');
@@ -78,6 +79,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', userRoutes); // Auth routes (login, register)
 app.use('/api/services', serviceRoutes);
+app.use('/api/ai', aiAssistantRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/tenants', tenantRoutes);
