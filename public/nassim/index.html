@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#FDB714">
+    <meta name="description" content="صالون nassim - احجز موعدك في أفضل صالون حلاقة">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Nassim Coiffeur">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/public/manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" href="/public/nassim/logo.jpg">
+    <link rel="apple-touch-icon" href="/public/nassim/logo.jpg">
+    
+    <title>✂️ Nassim Barber - صالون ناسيم للحلاقة</title>
+    <link rel="stylesheet" href="/public/nassim/nassim.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+</head>
+<body>
+    <!-- Splash Screen / Welcome Logo Animation -->
+    <div id="splashScreen" class="splash-screen">
+        <div class="splash-content">
+            <img src="/public/nassim/logo.jpg" alt="Nassim Coiffeur" class="splash-logo">
+            <div class="splash-text">Nassim Coiffeur</div>
+            <div class="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Home Page -->
+    <div id="homePage" style="display: none;">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-top">
+                <div>
+                    <div class="welcome-text">مرحباً بعودتك في</div>
+                    <h1 class="header-title">✂️ Nassim Barber<br>صالونك المفضل!</h1>
+                </div>
+                <button class="notification-btn" onclick="showNotifications()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <span class="notification-badge"></span>
+                </button>
+            </div>
+            
+            <!-- Search -->
+            <div class="search-box">
+                <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <input type="text" class="search-input" placeholder="ابحث عن خدمة أو موظف..." id="searchInput">
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <div class="quick-action" onclick="openBookingModal()">
+                    <div class="quick-action-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <span class="quick-action-label">احجز موعد</span>
+                </div>
+                <div class="quick-action" onclick="showBookingHistory()">
+                    <div class="quick-action-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <span class="quick-action-label">حجوزاتي</span>
+                </div>
+                <div class="quick-action" onclick="showRewards()">
+                    <div class="quick-action-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <span class="quick-action-label">المكافآت</span>
+                </div>
+                <div class="quick-action" onclick="showPosts()">
+                    <div class="quick-action-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                        </svg>
+                    </div>
+                    <span class="quick-action-label">الأخبار</span>
+                </div>
+            </div>
+
+            <!-- Loyalty Points Card -->
+            <div class="loyalty-card">
+                <div class="loyalty-content">
+                    <div class="loyalty-icon">⭐</div>
+                    <div class="loyalty-info">
+                        <div class="loyalty-points" id="loyaltyPoints">0</div>
+                        <div class="loyalty-label">نقاط الولاء</div>
+                    </div>
+                </div>
+                <div class="loyalty-tier">
+                    <span id="loyaltyTier">برونزي</span>
+                    <span class="tier-badge">🥉</span>
+                </div>
+            </div>
+
+            <!-- Specialists -->
+            <div class="section-header">
+                <h2 class="section-title">المختصين</h2>
+                <button class="see-all-btn" onclick="showAllSpecialists()">عرض الكل</button>
+            </div>
+            
+            <div class="specialists-grid" id="specialistsList">
+                <!-- Skeleton Loaders -->
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-image"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                    </div>
+                </div>
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-image"></div>
+                    <div class="skeleton-content">
+                        <div class="skeleton skeleton-title"></div>
+                        <div class="skeleton skeleton-text"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Services -->
+            <div class="section-header">
+                <h2 class="section-title">الخدمات</h2>
+                <button class="see-all-btn" onclick="showAllServices()">عرض الكل</button>
+            </div>
+
+            <div class="services-list" id="servicesList">
+                <!-- Services will be loaded here -->
+            </div>
+
+            <!-- Latest Posts -->
+            <div class="section-header">
+                <h2 class="section-title">آخر الأخبار</h2>
+                <button class="see-all-btn" onclick="showPosts()">عرض الكل</button>
+            </div>
+
+            <div class="posts-list" id="postsList">
+                <!-- Posts will be loaded here -->
+            </div>
+
+            <!-- Rewards -->
+            <div class="section-header">
+                <h2 class="section-title">المكافآت</h2>
+                <button class="see-all-btn" onclick="showRewards()">عرض الكل</button>
+            </div>
+
+            <div class="rewards-list" id="rewardsList">
+                <!-- Rewards will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Posts Page -->
+    <div id="postsPage" class="page-container hidden">
+        <div class="page-header">
+            <button class="back-btn-page" onclick="goBackToHome()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <h1 class="page-title">📢 آخر الأخبار</h1>
+        </div>
+
+        <div id="allPostsList" class="posts-container">
+            <!-- All posts will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Rewards Page -->
+    <div id="rewardsPage" class="page-container hidden">
+        <div class="page-header">
+            <button class="back-btn-page" onclick="goBackToHome()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <h1 class="page-title">🎁 المكافآت</h1>
+        </div>
+
+        <!-- User Points -->
+        <div class="user-points-card">
+            <div class="points-info">
+                <div class="points-value" id="userPoints">0</div>
+                <div class="points-label">نقاطك الحالية</div>
+            </div>
+            <div class="points-icon">⭐</div>
+        </div>
+
+        <div id="allRewardsList" class="rewards-container">
+            <!-- All rewards will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <button class="nav-item active" onclick="showHome()">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span class="nav-label">الرئيسية</span>
+        </button>
+        <button class="nav-item" onclick="showPosts()">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+            </svg>
+            <span class="nav-label">الأخبار</span>
+        </button>
+        <button class="nav-item center" onclick="openBookingModal()">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+        </button>
+        <button class="nav-item" onclick="showRewards()">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="nav-label">المكافآت</span>
+        </button>
+        <button class="nav-item" onclick="showAccount()">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span class="nav-label">حسابي</span>
+        </button>
+    </nav>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">📅 حجز موعد جديد</h2>
+                <button class="close-btn" onclick="closeBookingModal()">&times;</button>
+            </div>
+            <form id="bookingForm">
+                <div class="form-group">
+                    <label class="form-label">اختر الخدمة *</label>
+                    <select id="serviceSelect" class="form-select" required onchange="updateServiceInfo()">
+                        <option value="">-- اختر الخدمة --</option>
+                    </select>
+                </div>
+
+                <div id="serviceInfo" class="form-group hidden">
+                    <div style="background: var(--bg-dark); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="color: var(--text-secondary);">المدة:</span>
+                            <strong id="serviceDuration">-</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary);">السعر:</span>
+                            <strong style="color: var(--primary);" id="servicePrice">-</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">اختر الموظف *</label>
+                    <select id="employeeSelect" class="form-select" required>
+                        <option value="">-- اختر الموظف --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">التاريخ *</label>
+                    <input type="date" id="appointmentDate" class="form-input" required onchange="loadAvailableSlots()">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">الوقت *</label>
+                    <input type="time" id="appointmentTime" class="form-input" required style="font-size: 16px; padding: 14px;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">الأوقات المتاحة (اختياري)</label>
+                    <div id="timeSlots" class="time-slots">
+                        <div class="empty-state">اختر التاريخ لرؤية الأوقات المقترحة</div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ملاحظات إضافية</label>
+                    <textarea id="appointmentNotes" rows="3" placeholder="أي ملاحظات خاصة؟" style="resize: vertical;"></textarea>
+                </div>
+
+                <button type="submit" class="book-now-btn" id="confirmBookingBtn">
+                    تأكيد الحجز
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notifications Page -->
+    <div id="notificationsPage" class="page-container hidden">
+        <div class="page-header">
+            <button class="back-btn-page" onclick="goBackToHome()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <h1 class="page-title">🔔 الإشعارات</h1>
+        </div>
+
+        <div class="notifications-container" id="notificationsList">
+            <!-- Notifications will be loaded here -->
+        </div>
+
+        <div class="empty-notifications hidden">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="80" height="80">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            <h3>لا توجد إشعارات</h3>
+            <p>سنعلمك بأي تحديثات مهمة</p>
+        </div>
+    </div>
+
+    <!-- Booking History Page -->
+    <div id="bookingHistoryPage" class="page-container hidden">
+        <div class="page-header">
+            <button class="back-btn-page" onclick="goBackToHome()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <h1 class="page-title">📅 سجل الحجوزات</h1>
+        </div>
+
+        <div class="booking-tabs">
+            <button class="booking-tab active" onclick="filterBookings('all')">الكل</button>
+            <button class="booking-tab" onclick="filterBookings('upcoming')">القادمة</button>
+            <button class="booking-tab" onclick="filterBookings('completed')">المكتملة</button>
+            <button class="booking-tab" onclick="filterBookings('cancelled')">الملغية</button>
+        </div>
+
+        <div id="bookingsList" class="bookings-container">
+            <!-- Bookings will be loaded here -->
+        </div>
+
+        <div class="empty-bookings hidden">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="80" height="80">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <h3>لا توجد حجوزات</h3>
+            <p>ابدأ بحجز موعدك الأول الآن</p>
+            <button class="book-now-btn" onclick="openBookingModal()">احجز الآن</button>
+        </div>
+    </div>
+
+    <!-- Edit Profile Page -->
+    <div id="editProfilePage" class="page-container hidden">
+        <div class="page-header">
+            <button class="back-btn-page" onclick="showAccount()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <h1 class="page-title">✏️ تعديل الملف الشخصي</h1>
+        </div>
+
+        <form id="editProfileForm" class="edit-profile-form">
+            <div class="form-group">
+                <label class="form-label">الاسم الكامل *</label>
+                <input type="text" id="editName" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">رقم الهاتف *</label>
+                <input type="tel" id="editPhone" class="form-input" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">البريد الإلكتروني</label>
+                <input type="email" id="editEmail" class="form-input">
+            </div>
+
+            <button type="submit" class="book-now-btn">
+                حفظ التغييرات
+            </button>
+        </form>
+    </div>
+
+    <!-- Account Page -->
+    <div id="accountPage" class="page-container hidden">
+        <div class="account-header">
+            <div class="profile-section">
+                <div class="profile-avatar">
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces" alt="Profile" id="profileImage">
+                </div>
+                <h2 class="profile-name" id="profileName"></h2>
+                <p class="profile-email" id="profileEmail"></p>
+                <p class="profile-phone" id="profilePhone" style="color: #999; font-size: 14px; margin-top: 4px;"></p>
+            </div>
+        </div>
+
+        <!-- Account Menu -->
+        <div class="account-menu">
+            <div class="menu-section">
+                <h3 class="menu-section-title">الحساب</h3>
+                
+                <button class="menu-item" onclick="editProfile()">
+                    <div class="menu-item-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <div class="menu-item-content">
+                        <span class="menu-item-title">تعديل الملف الشخصي</span>
+                        <span class="menu-item-subtitle">الاسم، البريد، رقم الهاتف</span>
+                    </div>
+                    <svg class="menu-item-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+
+                <button class="menu-item" onclick="showBookingHistory()">
+                    <div class="menu-item-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div class="menu-item-content">
+                        <span class="menu-item-title">سجل الحجوزات</span>
+                        <span class="menu-item-subtitle">عرض جميع حجوزاتك السابقة</span>
+                    </div>
+                    <svg class="menu-item-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="menu-section">
+                <h3 class="menu-section-title">الإعدادات</h3>
+                
+                <button class="menu-item" onclick="showNotificationSettings()">
+                    <div class="menu-item-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                    </div>
+                    <div class="menu-item-content">
+                        <span class="menu-item-title">الإشعارات</span>
+                        <span class="menu-item-subtitle">إدارة إشعارات التطبيق</span>
+                    </div>
+                    <svg class="menu-item-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+            </div>
+
+            <button class="logout-btn" onclick="logout()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                تسجيل الخروج
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <script src="/public/nassim/nassim.js"></script>
+</body>
+</html>

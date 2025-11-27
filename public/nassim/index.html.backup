@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>✂️ Nassim Barber - بوابة العملاء</title>
+    <link rel="stylesheet" href="style.css?v=2">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">✂️ Nassim Barber</div>
+        <div class="user-info" id="userInfo">
+            <div class="loyalty-badge" id="loyaltyBadge">
+                <span class="points" id="pointsDisplay">0</span>
+                <span class="label">نقطة</span>
+            </div>
+            <button class="profile-btn" onclick="showProfile()">
+                <img src="https://ui-avatars.com/api/?name=User&background=667eea&color=fff" alt="Profile" id="profileAvatar">
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <h1 class="welcome-title">مرحباً بك في Nassim Barber</h1>
+            <p class="welcome-subtitle">أفضل خدمات الحلاقة في المدينة</p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="/book-now/index.html" class="action-card primary">
+                <div class="icon">📅</div>
+                <div class="content">
+                    <h3>احجز موعد</h3>
+                    <p>احجز موعدك الآن</p>
+                </div>
+            </a>
+            <div class="action-card" onclick="showSection('notifications')">
+                <div class="icon">🔔</div>
+                <div class="content">
+                    <h3>الإشعارات</h3>
+                    <p id="notifBadge">لا توجد إشعارات جديدة</p>
+                </div>
+            </div>
+            <div class="action-card" onclick="showSection('rewards')">
+                <div class="icon">🎁</div>
+                <div class="content">
+                    <h3>المكافآت</h3>
+                    <p>استبدل نقاطك</p>
+                </div>
+            </div>
+            <div class="action-card" onclick="showSection('appointments')">
+                <div class="icon">📋</div>
+                <div class="content">
+                    <h3>مواعيدي</h3>
+                    <p>سجل الحجوزات</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Posts Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📢 الإعلانات والعروض</h2>
+            </div>
+            <div class="posts-grid" id="postsList">
+                <div class="skeleton-post"></div>
+                <div class="skeleton-post"></div>
+            </div>
+        </div>
+
+        <!-- Rewards Section -->
+        <div class="section hidden" id="rewardsSection">
+            <div class="section-header">
+                <h2>🎁 المكافآت المتاحة</h2>
+                <button class="back-btn" onclick="hideSection('rewards')">رجوع</button>
+            </div>
+            <div class="loyalty-info">
+                <div class="loyalty-card">
+                    <div class="tier-badge" id="tierBadge">برونزي</div>
+                    <div class="points-display">
+                        <div class="points-number" id="totalPoints">0</div>
+                        <div class="points-label">نقطة متوفرة</div>
+                    </div>
+                    <div class="tier-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                        </div>
+                        <div class="progress-text" id="progressText">200 نقطة للمستوى الفضي</div>
+                    </div>
+                </div>
+            </div>
+            <div class="rewards-grid" id="rewardsList">
+                <div class="skeleton-reward"></div>
+                <div class="skeleton-reward"></div>
+                <div class="skeleton-reward"></div>
+            </div>
+        </div>
+
+        <!-- Notifications Section -->
+        <div class="section hidden" id="notificationsSection">
+            <div class="section-header">
+                <h2>🔔 الإشعارات</h2>
+                <button class="back-btn" onclick="hideSection('notifications')">رجوع</button>
+            </div>
+            <div class="notifications-list" id="notificationsList">
+                <div class="skeleton-notification"></div>
+                <div class="skeleton-notification"></div>
+            </div>
+        </div>
+
+        <!-- Appointments Section -->
+        <div class="section hidden" id="appointmentsSection">
+            <div class="section-header">
+                <h2>📋 مواعيدي</h2>
+                <button class="back-btn" onclick="hideSection('appointments')">رجوع</button>
+            </div>
+            <div class="appointments-list" id="appointmentsList">
+                <div class="skeleton-appointment"></div>
+                <div class="skeleton-appointment"></div>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="section hidden" id="profileSection">
+            <div class="section-header">
+                <h2>👤 الملف الشخصي</h2>
+                <button class="back-btn" onclick="hideSection('profile')">رجوع</button>
+            </div>
+            <div class="profile-card">
+                <div class="profile-avatar-large">
+                    <img src="https://ui-avatars.com/api/?name=User&background=667eea&color=fff" alt="Profile" id="profileAvatarLarge">
+                </div>
+                <div class="profile-info">
+                    <h3 id="profileName">-</h3>
+                    <p id="profilePhone">-</p>
+                    <p id="profileEmail">-</p>
+                </div>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <div class="stat-value" id="totalVisits">0</div>
+                        <div class="stat-label">زيارة</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="loyaltyPoints">0</div>
+                        <div class="stat-label">نقطة</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="loyaltyTier">برونزي</div>
+                        <div class="stat-label">المستوى</div>
+                    </div>
+                </div>
+                <button class="logout-btn" onclick="logout()">تسجيل الخروج</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reward Redeem Modal -->
+    <div id="redeemModal" class="modal hidden">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeRedeemModal()">&times;</button>
+            <div class="reward-details">
+                <div class="reward-icon-large" id="modalRewardIcon">🎁</div>
+                <h2 id="modalRewardName">-</h2>
+                <p id="modalRewardDescription">-</p>
+                <div class="reward-cost">
+                    <span id="modalRewardCost">0</span> نقطة
+                </div>
+                <button class="btn-primary" id="redeemBtn" onclick="confirmRedeem()">استبدال المكافأة</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="nassim.js?v=2"></script>
+</body>
+</html>

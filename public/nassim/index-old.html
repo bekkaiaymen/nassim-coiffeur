@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#FDB714">
+    <title>✂️ Nassim Barber</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #FDB714;
+            --primary-dark: #E6A613;
+            --dark: #0A0A0A;
+            --surface: #1E1E1E;
+            --text-primary: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --success: #34C759;
+            --error: #FF3B30;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Cairo', sans-serif;
+            background: var(--dark);
+            color: var(--text-primary);
+            padding-bottom: 80px;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 50px 20px 30px;
+            border-radius: 0 0 30px 30px;
+            box-shadow: 0 10px 30px rgba(253, 183, 20, 0.3);
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0A0A0A;
+        }
+
+        .profile-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #0A0A0A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .welcome-card {
+            background: rgba(10, 10, 10, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .welcome-text {
+            font-size: 16px;
+            color: #0A0A0A;
+            margin-bottom: 5px;
+        }
+
+        .user-name {
+            font-size: 24px;
+            font-weight: 800;
+            color: #0A0A0A;
+            margin-bottom: 15px;
+        }
+
+        .loyalty-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .loyalty-points {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .points-number {
+            font-size: 32px;
+            font-weight: 800;
+            color: #0A0A0A;
+        }
+
+        .points-label {
+            font-size: 12px;
+            color: #0A0A0A;
+            margin-top: 5px;
+        }
+
+        .loyalty-tier {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .tier-badge {
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .tier-label {
+            font-size: 14px;
+            font-weight: 700;
+            color: #0A0A0A;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 20px;
+            padding-bottom: 100px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .action-btn {
+            background: var(--surface);
+            border: none;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #0A0A0A;
+        }
+
+        .action-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .action-label {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        /* Section */
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .see-all {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        /* Posts */
+        .posts-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .post-card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .post-card:active {
+            transform: scale(0.98);
+        }
+
+        .post-type-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #0A0A0A;
+            margin-bottom: 10px;
+        }
+
+        .post-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .post-content {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        /* Rewards */
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .reward-card {
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .reward-card:active {
+            transform: scale(0.95);
+        }
+
+        .reward-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .reward-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .reward-cost {
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 10px 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: var(--text-secondary);
+        }
+
+        .nav-item:active {
+            transform: scale(0.9);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(253, 183, 20, 0.2);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--surface);
+            color: var(--text-primary);
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                bottom: 80px;
+                opacity: 0;
+            }
+            to {
+                bottom: 100px;
+                opacity: 1;
+            }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--error);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-top">
+            <div class="logo">✂️ Nassim Barber</div>
+            <div class="profile-avatar" id="profileAvatar">N</div>
+        </div>
+        <div class="welcome-card">
+            <div class="welcome-text">مرحباً بك</div>
+            <div class="user-name" id="userName">جاري التحميل...</div>
+            <div class="loyalty-info">
+                <div class="loyalty-points">
+                    <div class="points-number" id="pointsNumber">0</div>
+                    <div class="points-label">نقاطي</div>
+                </div>
+                <div class="loyalty-tier">
+                    <div class="tier-badge">🏆</div>
+                    <div class="tier-label" id="tierLabel">برونزي</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="/book-now" class="action-btn primary">
+                <div class="action-icon">📅</div>
+                <div class="action-label">احجز موعد</div>
+            </a>
+            <button class="action-btn" onclick="showPage('appointments')">
+                <div class="action-icon">📋</div>
+                <div class="action-label">مواعيدي</div>
+            </button>
+            <button class="action-btn" onclick="showPage('rewards')">
+                <div class="action-icon">🎁</div>
+                <div class="action-label">المكافآت</div>
+            </button>
+            <button class="action-btn" onclick="showPage('notifications')">
+                <div class="action-icon">🔔</div>
+                <div class="action-label">الإشعارات</div>
+            </button>
+        </div>
+
+        <!-- Posts Section -->
+        <div class="section" id="homeSection">
+            <div class="section-header">
+                <h2 class="section-title">📢 أحدث الإعلانات</h2>
+            </div>
+            <div class="posts-list" id="postsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>جاري التحميل...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointments Section -->
+        <div class="section hidden" id="appointmentsSection">
+            <div class="section-header">
+                <h2 class="section-title">📋 مواعيدي</h2>
+            </div>
+            <div class="posts-list" id="appointmentsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>جاري التحميل...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rewards Section -->
+        <div class="section hidden" id="rewardsSection">
+            <div class="section-header">
+                <h2 class="section-title">🎁 المكافآت المتاحة</h2>
+            </div>
+            <div class="rewards-grid" id="rewardsList">
+                <div class="loading" style="grid-column: 1/-1;">
+                    <div class="spinner"></div>
+                    <p>جاري التحميل...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications Section -->
+        <div class="section hidden" id="notificationsSection">
+            <div class="section-header">
+                <h2 class="section-title">🔔 الإشعارات</h2>
+            </div>
+            <div class="posts-list" id="notificationsList">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>جاري التحميل...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="showPage('home')">
+            <div class="nav-icon">🏠</div>
+            <div class="nav-label">الرئيسية</div>
+        </div>
+        <div class="nav-item" onclick="showPage('appointments')">
+            <div class="nav-icon">📋</div>
+            <div class="nav-label">المواعيد</div>
+        </div>
+        <a href="/book-now" class="nav-item">
+            <div class="nav-icon">➕</div>
+            <div class="nav-label">حجز</div>
+        </a>
+        <div class="nav-item" onclick="showPage('rewards')">
+            <div class="nav-icon">🎁</div>
+            <div class="nav-label">المكافآت</div>
+        </div>
+        <div class="nav-item" onclick="showPage('notifications')">
+            <div class="nav-icon">🔔</div>
+            <div class="nav-label">الإشعارات</div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="mobile.js"></script>
+</body>
+</html>

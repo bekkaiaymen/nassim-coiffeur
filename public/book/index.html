@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>احجز موعدك الآن</title>
+    <link rel="stylesheet" href="/public/book/booking.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <h1>SmartBiz</h1>
+                <p>احجز موعدك بسهولة</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Business Info -->
+            <section class="business-info" id="business-info">
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>جاري التحميل...</p>
+                </div>
+            </section>
+
+            <!-- Booking Form -->
+            <section class="booking-section">
+                <div class="booking-card">
+                    <div class="booking-header">
+                        <i class="fas fa-calendar-check"></i>
+                        <h2>احجز موعدك</h2>
+                        <p>املأ البيانات التالية لحجز موعد</p>
+                    </div>
+
+                    <form id="booking-form" onsubmit="submitBooking(event)">
+                        <!-- Step 1: Customer Info -->
+                        <div class="form-step active" id="step-1">
+                            <h3 class="step-title">
+                                <span class="step-number">1</span>
+                                معلوماتك الشخصية
+                            </h3>
+
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-user"></i>
+                                    الاسم الكامل
+                                </label>
+                                <input type="text" id="customer-name" class="form-control" placeholder="أدخل اسمك" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-phone"></i>
+                                    رقم الجوال
+                                </label>
+                                <input type="tel" id="customer-phone" class="form-control" placeholder="05xxxxxxxx" pattern="^05[0-9]{8}$" required>
+                                <small>مثال: 0512345678</small>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-envelope"></i>
+                                    البريد الإلكتروني (اختياري)
+                                </label>
+                                <input type="email" id="customer-email" class="form-control" placeholder="example@email.com">
+                            </div>
+
+                            <button type="button" class="btn btn-primary btn-block" onclick="nextStep(2)">
+                                التالي
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                        </div>
+
+                        <!-- Step 2: Select Service -->
+                        <div class="form-step" id="step-2">
+                            <h3 class="step-title">
+                                <span class="step-number">2</span>
+                                اختر الخدمة
+                            </h3>
+
+                            <div id="services-list" class="services-grid">
+                                <div class="loading">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>جاري تحميل الخدمات...</p>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="prevStep(1)">
+                                    <i class="fas fa-arrow-right"></i>
+                                    السابق
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="nextStep(3)" disabled id="next-to-step-3">
+                                    التالي
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Select Employee -->
+                        <div class="form-step" id="step-3">
+                            <h3 class="step-title">
+                                <span class="step-number">3</span>
+                                اختر الموظف
+                            </h3>
+
+                            <div id="employees-list" class="employees-grid">
+                                <div class="loading">
+                                    <i class="fas fa-spinner fa-spin"></i>
+                                    <p>جاري تحميل الموظفين...</p>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="prevStep(2)">
+                                    <i class="fas fa-arrow-right"></i>
+                                    السابق
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="nextStep(4)" disabled id="next-to-step-4">
+                                    التالي
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Select Date & Time -->
+                        <div class="form-step" id="step-4">
+                            <h3 class="step-title">
+                                <span class="step-number">4</span>
+                                اختر التاريخ والوقت
+                            </h3>
+
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-calendar"></i>
+                                    التاريخ
+                                </label>
+                                <input type="date" id="appointment-date" class="form-control" required onchange="loadAvailableTimes()">
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-clock"></i>
+                                    الوقت المتاح
+                                </label>
+                                <div id="available-times" class="time-slots">
+                                    <p style="text-align: center; color: #6B7280;">اختر التاريخ أولاً</p>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="prevStep(3)">
+                                    <i class="fas fa-arrow-right"></i>
+                                    السابق
+                                </button>
+                                <button type="button" class="btn btn-primary" onclick="nextStep(5)" disabled id="next-to-step-5">
+                                    التالي
+                                    <i class="fas fa-arrow-left"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Step 5: Confirmation -->
+                        <div class="form-step" id="step-5">
+                            <h3 class="step-title">
+                                <span class="step-number">5</span>
+                                تأكيد الحجز
+                            </h3>
+
+                            <div class="booking-summary">
+                                <div class="summary-item">
+                                    <i class="fas fa-user"></i>
+                                    <div>
+                                        <strong>الاسم</strong>
+                                        <p id="summary-name"></p>
+                                    </div>
+                                </div>
+
+                                <div class="summary-item">
+                                    <i class="fas fa-phone"></i>
+                                    <div>
+                                        <strong>رقم الجوال</strong>
+                                        <p id="summary-phone"></p>
+                                    </div>
+                                </div>
+
+                                <div class="summary-item">
+                                    <i class="fas fa-scissors"></i>
+                                    <div>
+                                        <strong>الخدمة</strong>
+                                        <p id="summary-service"></p>
+                                    </div>
+                                </div>
+
+                                <div class="summary-item">
+                                    <i class="fas fa-user-tie"></i>
+                                    <div>
+                                        <strong>الموظف</strong>
+                                        <p id="summary-employee"></p>
+                                    </div>
+                                </div>
+
+                                <div class="summary-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <div>
+                                        <strong>التاريخ</strong>
+                                        <p id="summary-date"></p>
+                                    </div>
+                                </div>
+
+                                <div class="summary-item">
+                                    <i class="fas fa-clock"></i>
+                                    <div>
+                                        <strong>الوقت</strong>
+                                        <p id="summary-time"></p>
+                                    </div>
+                                </div>
+
+                                <div class="summary-item highlight">
+                                    <i class="fas fa-money-bill-wave"></i>
+                                    <div>
+                                        <strong>السعر</strong>
+                                        <p id="summary-price"></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn btn-secondary" onclick="prevStep(4)">
+                                    <i class="fas fa-arrow-right"></i>
+                                    السابق
+                                </button>
+                                <button type="submit" class="btn btn-success" id="submit-booking">
+                                    <i class="fas fa-check"></i>
+                                    تأكيد الحجز
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div id="success-modal" class="modal">
+        <div class="modal-overlay" onclick="closeSuccessModal()"></div>
+        <div class="modal-content success">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h2>تم تأكيد حجزك!</h2>
+            <p>تم إرسال تفاصيل الحجز إلى رقم جوالك</p>
+            <div class="booking-details" id="success-details"></div>
+            <button class="btn btn-primary" onclick="resetBooking()">
+                حجز موعد آخر
+            </button>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>جميع الحقوق محفوظة © 2024 SmartBiz</p>
+        </div>
+    </footer>
+
+    <script src="/public/book/booking.js"></script>
+</body>
+</html>

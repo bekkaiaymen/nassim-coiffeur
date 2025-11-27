@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>حسابي - SmartBiz</title>
+    <link rel="stylesheet" href="/public/customer/customer.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#1A1A2E">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                        <circle cx="20" cy="20" r="18" fill="#6366f1"/>
+                        <path d="M20 10 L28 25 L12 25 Z" fill="white"/>
+                    </svg>
+                    <span>SmartBiz AI</span>
+                </div>
+                <div class="nav-links">
+                    <span id="customer-name" class="customer-name">مرحباً</span>
+                    <button class="btn-secondary" onclick="logout()">تسجيل الخروج</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    <div class="avatar-circle">
+                        <svg width="50" height="50" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="profile-info">
+                    <h1 id="profile-customer-name">جاري التحميل...</h1>
+                    <p id="profile-phone">05xxxxxxxx</p>
+                    <p class="member-since">عضو منذ: <span id="member-since">2025</span></p>
+                </div>
+                <div class="loyalty-card">
+                    <div class="loyalty-icon">⭐</div>
+                    <div class="loyalty-info">
+                        <div class="loyalty-points" id="loyalty-points">0</div>
+                        <div class="loyalty-label">نقاط الولاء</div>
+                    </div>
+                    <div class="loyalty-value">
+                        = <span id="loyalty-riyal">0</span> ريال
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="total-appointments">0</div>
+                        <div class="stat-label">إجمالي الزيارات</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="total-spent">0 ر.س</div>
+                        <div class="stat-label">إجمالي المصروفات</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏰</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="upcoming-count">0</div>
+                        <div class="stat-label">مواعيد قادمة</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⭐</div>
+                    <div class="stat-content">
+                        <div class="stat-value" id="rating-value">-</div>
+                        <div class="stat-label">تقييمي</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('upcoming')">المواعيد القادمة</button>
+                <button class="tab" onclick="showTab('history')">السجل</button>
+                <button class="tab" onclick="showTab('invoices')">الفواتير</button>
+                <button class="tab" onclick="showTab('rewards')">المكافآت</button>
+                <button class="tab" onclick="showTab('settings')">الإعدادات</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Upcoming Appointments -->
+                <div id="upcoming-tab" class="tab-panel active">
+                    <div class="section-header">
+                        <h2>المواعيد القادمة</h2>
+                        <button class="btn-primary" onclick="bookNewAppointment()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                            </svg>
+                            حجز موعد جديد
+                        </button>
+                    </div>
+                    <div id="upcoming-appointments" class="appointments-list">
+                        <div class="loading">جاري تحميل المواعيد...</div>
+                    </div>
+                </div>
+
+                <!-- History -->
+                <div id="history-tab" class="tab-panel">
+                    <div class="section-header">
+                        <h2>سجل المواعيد السابقة</h2>
+                    </div>
+                    <div id="history-appointments" class="appointments-list">
+                        <div class="loading">جاري تحميل السجل...</div>
+                    </div>
+                </div>
+
+                <!-- Invoices -->
+                <div id="invoices-tab" class="tab-panel">
+                    <div class="section-header">
+                        <h2>فواتيري</h2>
+                    </div>
+                    <div id="invoices-list" class="invoices-grid">
+                        <div class="loading">جاري تحميل الفواتير...</div>
+                    </div>
+                </div>
+
+                <!-- Rewards -->
+                <div id="rewards-tab" class="tab-panel">
+                    <div class="section-header">
+                        <h2>برنامج المكافآت</h2>
+                    </div>
+                    <div class="rewards-container">
+                        <div class="rewards-info">
+                            <div class="rewards-card large">
+                                <div class="rewards-icon">🎁</div>
+                                <h3>نقاطك الحالية</h3>
+                                <div class="rewards-points" id="rewards-points-display">0 نقطة</div>
+                                <p>= <span id="rewards-riyal-display">0</span> ريال</p>
+                                <button class="btn-primary" onclick="redeemPoints()">استبدال النقاط</button>
+                            </div>
+                        </div>
+                        <div class="rewards-history">
+                            <h3>سجل النقاط</h3>
+                            <div id="points-history" class="points-list">
+                                <p class="empty-state">لا يوجد سجل نقاط</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings -->
+                <div id="settings-tab" class="tab-panel">
+                    <div class="section-header">
+                        <h2>إعدادات الحساب</h2>
+                    </div>
+                    <div class="settings-form">
+                        <form id="profile-form">
+                            <div class="form-group">
+                                <label>الاسم الكامل</label>
+                                <input type="text" id="settings-name" placeholder="الاسم الكامل">
+                            </div>
+                            <div class="form-group">
+                                <label>رقم الجوال</label>
+                                <input type="tel" id="settings-phone" placeholder="05xxxxxxxx">
+                            </div>
+                            <div class="form-group">
+                                <label>البريد الإلكتروني</label>
+                                <input type="email" id="settings-email" placeholder="example@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="notifications-enabled">
+                                    استقبال إشعارات المواعيد
+                                </label>
+                            </div>
+                            <button type="submit" class="btn-primary">حفظ التغييرات</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification"></div>
+
+    <!-- Booking Modal -->
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📅 حجز موعد جديد</h2>
+                <button class="close-btn" onclick="closeBookingModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="bookingForm">
+                    <div class="form-group">
+                        <label>اختر المحل *</label>
+                        <select id="businessSelect" required onchange="loadServices()">
+                            <option value="">-- اختر المحل --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>اختر الخدمة *</label>
+                        <select id="serviceSelect" required onchange="updateServiceInfo()">
+                            <option value="">-- اختر الخدمة --</option>
+                        </select>
+                    </div>
+
+                    <div id="serviceInfo" class="service-info" style="display: none;">
+                        <div class="info-row">
+                            <span>المدة:</span>
+                            <strong id="serviceDuration">-</strong>
+                        </div>
+                        <div class="info-row">
+                            <span>السعر:</span>
+                            <strong id="servicePrice">-</strong>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>التاريخ *</label>
+                        <input type="date" id="appointmentDate" required onchange="loadAvailableSlots()">
+                    </div>
+
+                    <div class="form-group">
+                        <label>الوقت المتاح *</label>
+                        <div id="timeSlots" class="time-slots">
+                            <p class="empty-state">اختر التاريخ أولاً</p>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>ملاحظات إضافية</label>
+                        <textarea id="appointmentNotes" rows="3" placeholder="أي ملاحظات خاصة؟"></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn-secondary" onclick="closeBookingModal()">إلغاء</button>
+                        <button type="submit" class="btn-primary" id="confirmBookingBtn">
+                            تأكيد الحجز
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/api-client.js"></script>
+    <script src="/public/customer/customer.js"></script>
+</body>
+</html>

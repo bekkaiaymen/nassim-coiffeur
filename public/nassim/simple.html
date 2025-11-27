@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✂️ Nassim Barber - Simple</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">✂️ Nassim Barber</div>
+        <div class="user-info" id="userInfo">
+            <a href="/customer-login" class="login-btn" style="padding: 10px 20px; background: linear-gradient(135deg, #FDB714 0%, #E6A613 100%); border-radius: 12px; text-decoration: none; color: #1A1A1A; font-weight: 700;">
+                تسجيل الدخول
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <h1 class="welcome-title">مرحباً بك في Nassim Barber</h1>
+            <p class="welcome-subtitle">أفضل خدمات الحلاقة في المدينة</p>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <a href="/book-now" class="action-card primary">
+                <div class="icon">📅</div>
+                <div class="content">
+                    <h3>احجز موعد</h3>
+                    <p>احجز موعدك الآن</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- Posts Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>📢 الإعلانات والعروض</h2>
+            </div>
+            <div class="posts-grid" id="postsList">
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+                    <p>جاري التحميل...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rewards Section -->
+        <div class="section">
+            <div class="section-header">
+                <h2>🎁 المكافآت</h2>
+            </div>
+            <div class="rewards-grid" id="rewardsList">
+                <div style="text-align: center; padding: 40px; color: #64748b;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+                    <p>جاري التحميل...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <script>
+        console.log('🚀 Simple page loaded');
+        
+        const BUSINESS_ID = '69259331651b1babc1eb83dc';
+        const API_URL = '/api';
+
+        // Load posts
+        async function loadPosts() {
+            console.log('📥 Loading posts...');
+            try {
+                const response = await fetch(`${API_URL}/posts/public/${BUSINESS_ID}`);
+                console.log('Posts response:', response.status);
+                
+                const data = await response.json();
+                console.log('Posts data:', data);
+                
+                const container = document.getElementById('postsList');
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    container.innerHTML = data.data.map(post => `
+                        <div class="post-card">
+                            <div class="post-content">
+                                <span class="post-type ${post.type}">${post.type}</span>
+                                <h3 class="post-title">${post.title}</h3>
+                                <p class="post-text">${post.content}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                    console.log('✅ Posts displayed');
+                } else {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #64748b;"><p>لا توجد إعلانات</p></div>';
+                }
+            } catch (error) {
+                console.error('❌ Error loading posts:', error);
+                document.getElementById('postsList').innerHTML = `<div style="text-align: center; padding: 40px; color: #ef4444;">خطأ: ${error.message}</div>`;
+            }
+        }
+
+        // Load rewards
+        async function loadRewards() {
+            console.log('📥 Loading rewards...');
+            try {
+                const response = await fetch(`${API_URL}/rewards/public/${BUSINESS_ID}`);
+                console.log('Rewards response:', response.status);
+                
+                const data = await response.json();
+                console.log('Rewards data:', data);
+                
+                const container = document.getElementById('rewardsList');
+                
+                if (data.success && data.data && data.data.length > 0) {
+                    container.innerHTML = data.data.map(reward => `
+                        <div class="reward-card">
+                            <div class="reward-icon">${reward.icon}</div>
+                            <h3 class="reward-name">${reward.name}</h3>
+                            <p class="reward-description">${reward.description}</p>
+                            <div class="reward-cost">${reward.pointsCost} نقطة</div>
+                        </div>
+                    `).join('');
+                    console.log('✅ Rewards displayed');
+                } else {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #64748b;"><p>لا توجد مكافآت</p></div>';
+                }
+            } catch (error) {
+                console.error('❌ Error loading rewards:', error);
+                document.getElementById('rewardsList').innerHTML = `<div style="text-align: center; padding: 40px; color: #ef4444;">خطأ: ${error.message}</div>`;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('✅ DOM loaded');
+            await loadPosts();
+            await loadRewards();
+            console.log('✅ All loaded');
+        });
+    </script>
+</body>
+</html>

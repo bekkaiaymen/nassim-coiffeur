@@ -1,0 +1,87 @@
+{
+  "name": "Nassim Coiffeur - صالون ناسيم",
+  "short_name": "Nassim",
+  "description": "صالون الحلاقة الاحترافي - احجز موعدك الآن",
+  "start_url": "/nassim?source=pwa",
+  "display": "standalone",
+  "background_color": "#0A0A0A",
+  "theme_color": "#FDB714",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/public/nassim/logo.jpg",
+      "sizes": "72x72",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/nassim/logo.jpg",
+      "sizes": "96x96",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/nassim/logo.jpg",
+      "sizes": "128x128",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/nassim/logo.jpg",
+      "sizes": "144x144",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/nassim/logo.jpg",
+      "sizes": "152x152",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/nassim/logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/nassim/logo.jpg",
+      "sizes": "384x384",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "/public/nassim/logo.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["lifestyle", "business"],
+  "screenshots": [
+    {
+      "src": "/public/nassim/background.jpg",
+      "sizes": "540x720",
+      "type": "image/jpeg"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "حجز موعد",
+      "short_name": "حجز",
+      "description": "احجز موعد جديد",
+      "url": "/nassim",
+      "icons": [
+        {
+          "src": "/public/nassim/logo.jpg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

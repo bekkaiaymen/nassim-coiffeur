@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBiz - إدارة الأعمال بالذكاء الاصطناعي</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes slideInRight {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(-100%); opacity: 0; }
+        }
+        .spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-content">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                        <circle cx="20" cy="20" r="18" fill="#6366f1"/>
+                        <path d="M20 10 L28 25 L12 25 Z" fill="white"/>
+                    </svg>
+                    <span>SmartBiz AI</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#features">المميزات</a>
+                    <a href="#pricing">الأسعار</a>
+                    
+                    <!-- Login Dropdown -->
+                    <div class="dropdown" style="position: relative; display: inline-block;">
+                        <button class="dropdown-btn" onclick="toggleDropdown('loginDropdown')" style="background: white; border: 2px solid #e5e7eb; color: #374151; padding: 10px 20px; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 8px;">
+                            🔐 تسجيل الدخول
+                            <span style="font-size: 12px;">▼</span>
+                        </button>
+                        <div id="loginDropdown" class="dropdown-content" style="display: none; position: absolute; left: 0; background: white; min-width: 200px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); border-radius: 10px; z-index: 1000; margin-top: 10px;">
+                            <a href="/login" style="display: block; padding: 12px 20px; text-decoration: none; color: #374151; border-bottom: 1px solid #f3f4f6;">
+                                🏪 صاحب محل
+                            </a>
+                            <a href="/customer-login" style="display: block; padding: 12px 20px; text-decoration: none; color: #374151;">
+                                👤 زبون
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Register Dropdown -->
+                    <div class="dropdown" style="position: relative; display: inline-block; margin-right: 10px;">
+                        <button class="dropdown-btn" onclick="toggleDropdown('registerDropdown')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; color: white; padding: 12px 24px; border-radius: 50px; cursor: pointer; font-weight: 600; font-size: 16px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); display: flex; align-items: center; gap: 8px;">
+                            ✨ ابدأ مجاناً
+                            <span style="font-size: 12px;">▼</span>
+                        </button>
+                        <div id="registerDropdown" class="dropdown-content" style="display: none; position: absolute; left: 0; background: white; min-width: 220px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); border-radius: 10px; z-index: 1000; margin-top: 10px;">
+                            <a href="/register" style="display: block; padding: 12px 20px; text-decoration: none; color: #374151; border-bottom: 1px solid #f3f4f6;">
+                                🏪 سجل محلك التجاري
+                            </a>
+                            <a href="/customer-register" style="display: block; padding: 12px 20px; text-decoration: none; color: #374151;">
+                                👤 سجل كزبون
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="hero-title">
+                        <span class="gradient-text">الذكاء الاصطناعي</span>
+                        <br>لإدارة أعمالك الصغيرة
+                    </h1>
+                    <p class="hero-subtitle">
+                        منصة متكاملة لإدارة الحلاقين والمطاعم والورشات مع حجز المواعيد، 
+                        الفواتير الذكية، وذكاء اصطناعي للرد على الزبائن 24/7
+                    </p>
+                    <div class="hero-buttons" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                        <button class="btn-primary btn-lg" onclick="window.location.href='/register'" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5); font-size: 20px; padding: 18px 40px; display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 24px;">🏪</span>
+                            <span>سجل محلك مجاناً</span>
+                        </button>
+                        <button class="btn-secondary btn-lg" onclick="window.location.href='/customer-register'" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.5); font-size: 20px; padding: 18px 40px; display: flex; align-items: center; gap: 12px; color: white; border: none; border-radius: 50px; cursor: pointer;">
+                            <span style="font-size: 24px;">👤</span>
+                            <span>سجل كزبون</span>
+                        </button>
+                        <p style="margin-top: 20px; font-size: 16px; opacity: 0.9; width: 100%; text-align: center;">
+                            ✓ بدون بطاقة ائتمان  •  ✓ إلغاء في أي وقت  •  ✓ دعم فني 24/7
+                        </p>
+                    </div>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <div class="stat-number">500+</div>
+                            <div class="stat-label">محل تجاري</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">10K+</div>
+                            <div class="stat-label">موعد شهرياً</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">99%</div>
+                            <div class="stat-label">رضا العملاء</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <div class="floating-card card-1">
+                        <div class="card-icon">📅</div>
+                        <div class="card-content">
+                            <div class="card-title">موعد جديد</div>
+                            <div class="card-subtitle">أحمد - حلاقة - 3:00 مساءً</div>
+                        </div>
+                    </div>
+                    <div class="floating-card card-2">
+                        <div class="card-icon">💰</div>
+                        <div class="card-content">
+                            <div class="card-title">فاتورة جديدة</div>
+                            <div class="card-subtitle">250 ريال - مدفوعة</div>
+                        </div>
+                    </div>
+                    <div class="floating-card card-3">
+                        <div class="card-icon">🤖</div>
+                        <div class="card-content">
+                            <div class="card-title">AI قيد العمل</div>
+                            <div class="card-subtitle">الرد على 5 عملاء</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">مميزات شاملة لأعمالك</h2>
+                <p class="section-subtitle">كل ما تحتاجه لإدارة عملك بكفاءة واحترافية</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📅</div>
+                    <h3>حجز المواعيد الذكي</h3>
+                    <p>نظام حجز متطور مع تذكيرات تلقائية، إدارة الانتظار، والتقويم الذكي</p>
+                    <ul class="feature-list">
+                        <li>حجز أونلاين 24/7</li>
+                        <li>تذكيرات SMS/WhatsApp</li>
+                        <li>منع الحجوزات المتضاربة</li>
+                        <li>قائمة الانتظار التلقائية</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💳</div>
+                    <h3>إدارة الفواتير</h3>
+                    <p>إصدار فواتير احترافية، متابعة المدفوعات، وتقارير مالية تفصيلية</p>
+                    <ul class="feature-list">
+                        <li>فواتير إلكترونية فورية</li>
+                        <li>قبول الدفع الإلكتروني</li>
+                        <li>تقارير الإيرادات</li>
+                        <li>متابعة المدفوعات</li>
+                    </ul>
+                </div>
+                <div class="feature-card featured">
+                    <div class="badge">الأكثر طلباً</div>
+                    <div class="feature-icon">🤖</div>
+                    <h3>مساعد AI للعملاء</h3>
+                    <p>ذكاء اصطناعي متقدم للرد على استفسارات العملاء وحجز المواعيد تلقائياً</p>
+                    <ul class="feature-list">
+                        <li>رد فوري على الاستفسارات</li>
+                        <li>حجز تلقائي عبر WhatsApp</li>
+                        <li>يتعلم من أسلوبك</li>
+                        <li>دعم متعدد اللغات</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>لوحة التحكم</h3>
+                    <p>رؤية شاملة لأداء عملك مع تقارير وإحصائيات تفصيلية</p>
+                    <ul class="feature-list">
+                        <li>إحصائيات في الوقت الفعلي</li>
+                        <li>تحليل أداء الموظفين</li>
+                        <li>تقارير الإيرادات</li>
+                        <li>تحليل رضا العملاء</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>إدارة العملاء</h3>
+                    <p>قاعدة بيانات شاملة للعملاء مع سجل الزيارات والتفضيلات</p>
+                    <ul class="feature-list">
+                        <li>ملفات العملاء الكاملة</li>
+                        <li>سجل الخدمات السابقة</li>
+                        <li>برامج الولاء</li>
+                        <li>تقييمات العملاء</li>
+                    </ul>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚙️</div>
+                    <h3>إدارة الموظفين</h3>
+                    <p>متابعة أداء الموظفين، جداول العمل، والحوافز</p>
+                    <ul class="feature-list">
+                        <li>جداول العمل المرنة</li>
+                        <li>تتبع الأداء</li>
+                        <li>نظام العمولات</li>
+                        <li>إدارة الإجازات</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Business Types Section -->
+    <section id="businesses" class="business-types">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">مناسب لجميع الأعمال</h2>
+                <p class="section-subtitle">حلول مخصصة لكل نوع عمل</p>
+            </div>
+            <div class="business-grid">
+                <div class="business-card">
+                    <div class="business-icon">💈</div>
+                    <h3>صالونات الحلاقة</h3>
+                    <p>إدارة المواعيد، خدمات الحلاقة المتنوعة، ومتابعة أداء الحلاقين</p>
+                    <div class="business-features">
+                        <span class="tag">حجز الخدمات</span>
+                        <span class="tag">إدارة الحلاقين</span>
+                        <span class="tag">باقات الخدمات</span>
+                    </div>
+                </div>
+                <div class="business-card">
+                    <div class="business-icon">🍽️</div>
+                    <h3>المطاعم والمقاهي</h3>
+                    <p>حجز الطاولات، إدارة الطلبات، وقائمة الطعام الرقمية</p>
+                    <div class="business-features">
+                        <span class="tag">حجز الطاولات</span>
+                        <span class="tag">قائمة رقمية</span>
+                        <span class="tag">نظام POS</span>
+                    </div>
+                </div>
+                <div class="business-card">
+                    <div class="business-icon">🔧</div>
+                    <h3>الورشات والصيانة</h3>
+                    <p>تتبع الأعمال، إدارة قطع الغيار، وفواتير الخدمات</p>
+                    <div class="business-features">
+                        <span class="tag">تتبع الأعمال</span>
+                        <span class="tag">المخزون</span>
+                        <span class="tag">تقديرات الأسعار</span>
+                    </div>
+                </div>
+                <div class="business-card">
+                    <div class="business-icon">💅</div>
+                    <h3>صالونات التجميل</h3>
+                    <p>إدارة المواعيد، خدمات العناية، وبرامج الولاء</p>
+                    <div class="business-features">
+                        <span class="tag">خدمات متنوعة</span>
+                        <span class="tag">برامج الولاء</span>
+                        <span class="tag">باقات العروض</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Demo Section -->
+    <section id="demo" class="demo-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">جرب النظام الآن</h2>
+                <p class="section-subtitle">اختبر المميزات مباشرة</p>
+            </div>
+            <div class="demo-container">
+                <div class="demo-sidebar">
+                    <button class="demo-tab active" onclick="showDemoTab('booking')">
+                        📅 حجز المواعيد
+                    </button>
+                    <button class="demo-tab" onclick="showDemoTab('invoice')">
+                        💳 إصدار فاتورة
+                    </button>
+                    <button class="demo-tab" onclick="showDemoTab('ai')">
+                        🤖 مساعد AI
+                    </button>
+                    <button class="demo-tab" onclick="showDemoTab('dashboard')">
+                        📊 لوحة التحكم
+                    </button>
+                </div>
+                <div class="demo-content">
+                    <!-- Booking Demo -->
+                    <div id="demo-booking" class="demo-panel active">
+                        <h3>حجز موعد جديد</h3>
+                        <form class="booking-form">
+                            <div class="form-group">
+                                <label>اسم العميل</label>
+                                <input type="text" placeholder="مثال: أحمد محمد" value="أحمد محمد">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>رقم الجوال</label>
+                                    <input type="tel" placeholder="05xxxxxxxx" value="0501234567">
+                                </div>
+                                <div class="form-group">
+                                    <label>نوع الخدمة</label>
+                                    <select>
+                                        <option>حلاقة كاملة</option>
+                                        <option>حلاقة + تشذيب لحية</option>
+                                        <option>صبغة</option>
+                                        <option>حلاقة أطفال</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>التاريخ</label>
+                                    <input type="date" value="2025-11-22">
+                                </div>
+                                <div class="form-group">
+                                    <label>الوقت</label>
+                                    <select>
+                                        <option>10:00 صباحاً</option>
+                                        <option>11:00 صباحاً</option>
+                                        <option selected>3:00 مساءً</option>
+                                        <option>4:00 مساءً</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>الحلاق</label>
+                                <select>
+                                    <option>محمد (متاح)</option>
+                                    <option>خالد (متاح)</option>
+                                    <option>علي (محجوز)</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn-primary btn-block" onclick="confirmBooking()">
+                                تأكيد الحجز
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Invoice Demo -->
+                    <div id="demo-invoice" class="demo-panel">
+                        <h3>إصدار فاتورة</h3>
+                        <form class="invoice-form">
+                            <div class="form-group">
+                                <label>اسم العميل</label>
+                                <input type="text" placeholder="اسم العميل" value="سعيد أحمد">
+                            </div>
+                            <div class="invoice-items">
+                                <div class="invoice-item">
+                                    <select>
+                                        <option selected>حلاقة كاملة</option>
+                                        <option>حلاقة + لحية</option>
+                                        <option>صبغة</option>
+                                    </select>
+                                    <input type="number" value="50" placeholder="السعر">
+                                    <button type="button" class="btn-icon">❌</button>
+                                </div>
+                                <div class="invoice-item">
+                                    <select>
+                                        <option selected>تشذيب لحية</option>
+                                        <option>حلاقة كاملة</option>
+                                    </select>
+                                    <input type="number" value="30" placeholder="السعر">
+                                    <button type="button" class="btn-icon">❌</button>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-secondary btn-sm" onclick="addInvoiceItem()">
+                                ➕ إضافة خدمة
+                            </button>
+                            <div class="invoice-summary">
+                                <div class="summary-row">
+                                    <span>المجموع الفرعي:</span>
+                                    <span>80 ريال</span>
+                                </div>
+                                <div class="summary-row">
+                                    <span>الضريبة (15%):</span>
+                                    <span>12 ريال</span>
+                                </div>
+                                <div class="summary-row total">
+                                    <span>المجموع النهائي:</span>
+                                    <span>92 ريال</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>طريقة الدفع</label>
+                                <select name="payment">
+                                    <option>نقدي</option>
+                                    <option>بطاقة</option>
+                                    <option>تحويل بنكي</option>
+                                </select>
+                            </div>
+                            <button type="button" class="btn-primary btn-block" onclick="generateInvoice()">
+                                إصدار الفاتورة
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- AI Demo -->
+                    <div id="demo-ai" class="demo-panel">
+                        <h3>مساعد AI للعملاء</h3>
+                        <div class="chat-container">
+                            <div class="chat-messages">
+                                <div class="message customer">
+                                    <div class="message-content">
+                                        <p>السلام عليكم، أريد حجز موعد للحلاقة</p>
+                                        <span class="message-time">3:45 مساءً</span>
+                                    </div>
+                                </div>
+                                <div class="message ai">
+                                    <div class="message-avatar">🤖</div>
+                                    <div class="message-content">
+                                        <p>وعليكم السلام! يسعدني مساعدتك. متى تفضل الحجز؟ لدينا مواعيد متاحة غداً من الساعة 10 صباحاً</p>
+                                        <span class="message-time">3:45 مساءً</span>
+                                    </div>
+                                </div>
+                                <div class="message customer">
+                                    <div class="message-content">
+                                        <p>غداً الساعة 3 مساءً مناسب؟</p>
+                                        <span class="message-time">3:46 مساءً</span>
+                                    </div>
+                                </div>
+                                <div class="message ai">
+                                    <div class="message-avatar">🤖</div>
+                                    <div class="message-content">
+                                        <p>نعم متاح! هل تفضل حلاقاً معيناً؟ لدينا محمد وخالد متاحان في هذا الوقت</p>
+                                        <span class="message-time">3:46 مساءً</span>
+                                    </div>
+                                </div>
+                                <div class="message customer">
+                                    <div class="message-content">
+                                        <p>محمد ممتاز</p>
+                                        <span class="message-time">3:47 مساءً</span>
+                                    </div>
+                                </div>
+                                <div class="message ai">
+                                    <div class="message-avatar">🤖</div>
+                                    <div class="message-content">
+                                        <p>تمام! تم حجز موعدك مع محمد غداً الساعة 3 مساءً. سنرسل لك تذكيراً قبل الموعد بساعة. هل تحتاج أي شيء آخر؟</p>
+                                        <span class="message-time">3:47 مساءً</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input">
+                                <input type="text" placeholder="اكتب رسالتك هنا...">
+                                <button class="btn-primary">إرسال</button>
+                            </div>
+                        </div>
+                        <div class="ai-stats">
+                            <div class="stat-box">
+                                <div class="stat-value">95%</div>
+                                <div class="stat-label">دقة الردود</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value">&lt;30s</div>
+                                <div class="stat-label">وقت الرد</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-value">24/7</div>
+                                <div class="stat-label">متاح دائماً</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Demo -->
+                    <div id="demo-dashboard" class="demo-panel">
+                        <h3>لوحة التحكم</h3>
+                        <div class="dashboard-stats">
+                            <div class="stat-card">
+                                <div class="stat-icon">📅</div>
+                                <div class="stat-info">
+                                    <div class="stat-number">28</div>
+                                    <div class="stat-label">مواعيد اليوم</div>
+                                    <div class="stat-change positive">+12% عن الأمس</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">💰</div>
+                                <div class="stat-info">
+                                    <div class="stat-number">4,250 ر.س</div>
+                                    <div class="stat-label">إيرادات اليوم</div>
+                                    <div class="stat-change positive">+8% عن الأمس</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">👥</div>
+                                <div class="stat-info">
+                                    <div class="stat-number">156</div>
+                                    <div class="stat-label">عملاء هذا الشهر</div>
+                                    <div class="stat-change positive">+23% عن الشهر الماضي</div>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">⭐</div>
+                                <div class="stat-info">
+                                    <div class="stat-number">4.8</div>
+                                    <div class="stat-label">تقييم العملاء</div>
+                                    <div class="stat-change positive">+0.3 نقطة</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-charts">
+                            <div class="chart-card">
+                                <h4>الإيرادات الأسبوعية</h4>
+                                <div class="simple-chart">
+                                    <div class="chart-bar" style="height: 60%"><span>السبت</span></div>
+                                    <div class="chart-bar" style="height: 45%"><span>الأحد</span></div>
+                                    <div class="chart-bar" style="height: 75%"><span>الإثنين</span></div>
+                                    <div class="chart-bar" style="height: 90%"><span>الثلاثاء</span></div>
+                                    <div class="chart-bar" style="height: 65%"><span>الأربعاء</span></div>
+                                    <div class="chart-bar" style="height: 80%"><span>الخميس</span></div>
+                                    <div class="chart-bar" style="height: 95%"><span>الجمعة</span></div>
+                                </div>
+                            </div>
+                            <div class="chart-card">
+                                <h4>الخدمات الأكثر طلباً</h4>
+                                <div class="service-list">
+                                    <div class="service-item">
+                                        <span class="service-name">حلاقة كاملة</span>
+                                        <div class="service-bar" style="width: 85%"></div>
+                                        <span class="service-count">124</span>
+                                    </div>
+                                    <div class="service-item">
+                                        <span class="service-name">حلاقة + لحية</span>
+                                        <div class="service-bar" style="width: 65%"></div>
+                                        <span class="service-count">89</span>
+                                    </div>
+                                    <div class="service-item">
+                                        <span class="service-name">تشذيب لحية</span>
+                                        <div class="service-bar" style="width: 45%"></div>
+                                        <span class="service-count">56</span>
+                                    </div>
+                                    <div class="service-item">
+                                        <span class="service-name">صبغة</span>
+                                        <div class="service-bar" style="width: 30%"></div>
+                                        <span class="service-count">32</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">خطط مرنة لكل الأحجام</h2>
+                <p class="section-subtitle">ابدأ مجاناً وارتقِ حسب احتياجك</p>
+            </div>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>المبتدئ</h3>
+                        <div class="price">
+                            <span class="currency">ر.س</span>
+                            <span class="amount">0</span>
+                            <span class="period">/شهر</span>
+                        </div>
+                        <p>مثالي للتجربة والمحلات الصغيرة</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✅ حتى 50 موعد شهرياً</li>
+                        <li>✅ فواتير أساسية</li>
+                        <li>✅ 1 مستخدم</li>
+                        <li>✅ دعم عبر البريد</li>
+                        <li>❌ مساعد AI</li>
+                        <li>❌ تقارير متقدمة</li>
+                    </ul>
+                    <button class="btn-outline btn-block">ابدأ مجاناً</button>
+                </div>
+                <div class="pricing-card featured">
+                    <div class="badge">الأكثر شعبية</div>
+                    <div class="pricing-header">
+                        <h3>المحترف</h3>
+                        <div class="price">
+                            <span class="currency">ر.س</span>
+                            <span class="amount">299</span>
+                            <span class="period">/شهر</span>
+                        </div>
+                        <p>للأعمال المتنامية والمحترفة</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✅ مواعيد غير محدودة</li>
+                        <li>✅ فواتير متقدمة</li>
+                        <li>✅ حتى 5 مستخدمين</li>
+                        <li>✅ مساعد AI متقدم</li>
+                        <li>✅ تقارير تفصيلية</li>
+                        <li>✅ دعم WhatsApp</li>
+                        <li>✅ برامج الولاء</li>
+                    </ul>
+                    <button class="btn-primary btn-block">ابدأ الآن</button>
+                </div>
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>المؤسسات</h3>
+                        <div class="price">
+                            <span class="currency">ر.س</span>
+                            <span class="amount">799</span>
+                            <span class="period">/شهر</span>
+                        </div>
+                        <p>للشركات والفروع المتعددة</p>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✅ كل مميزات المحترف</li>
+                        <li>✅ مستخدمين غير محدود</li>
+                        <li>✅ فروع متعددة</li>
+                        <li>✅ API مخصص</li>
+                        <li>✅ مدير حساب مخصص</li>
+                        <li>✅ تدريب شخصي</li>
+                        <li>✅ تخصيص كامل</li>
+                    </ul>
+                    <button class="btn-outline btn-block">تواصل معنا</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2>جاهز للبدء؟</h2>
+                <p>انضم لمئات الأعمال والزبائن الذين يستخدمون SmartBiz AI</p>
+                <div class="cta-buttons" style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn-primary btn-lg" onclick="window.location.href='/register'" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);">
+                        🏪 سجل محلك الآن
+                    </button>
+                    <button class="btn-primary btn-lg" onclick="window.location.href='/customer-register'" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);">
+                        👤 سجل كزبون
+                    </button>
+                </div>
+                <p style="margin-top: 20px; font-size: 14px; opacity: 0.8;">
+                    لديك حساب؟ 
+                    <a href="#" onclick="toggleDropdown('footerLoginDropdown'); return false;" style="color: white; text-decoration: underline; cursor: pointer;">تسجيل الدخول</a>
+                </p>
+                <div id="footerLoginDropdown" class="dropdown-content" style="display: none; position: relative; background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); margin: 15px auto 0; max-width: 300px; border-radius: 10px;">
+                    <a href="/login" style="display: block; padding: 12px 20px; text-decoration: none; color: white; border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        🏪 دخول صاحب محل
+                    </a>
+                    <a href="/customer-login" style="display: block; padding: 12px 20px; text-decoration: none; color: white;">
+                        👤 دخول زبون
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                            <circle cx="20" cy="20" r="18" fill="#6366f1"/>
+                            <path d="M20 10 L28 25 L12 25 Z" fill="white"/>
+                        </svg>
+                        <span>SmartBiz AI</span>
+                    </div>
+                    <p>منصة متكاملة لإدارة الأعمال الصغيرة بالذكاء الاصطناعي</p>
+                </div>
+                <div class="footer-section">
+                    <h4>المنصة</h4>
+                    <ul>
+                        <li><a href="#features">المميزات</a></li>
+                        <li><a href="#pricing">الأسعار</a></li>
+                        <li><a href="#demo">تجربة</a></li>
+                        <li><a href="#">المدونة</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>الدعم</h4>
+                    <ul>
+                        <li><a href="#">مركز المساعدة</a></li>
+                        <li><a href="#">تواصل معنا</a></li>
+                        <li><a href="#">الأسئلة الشائعة</a></li>
+                        <li><a href="#">حالة الخدمة</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>الشركة</h4>
+                    <ul>
+                        <li><a href="#">عن SmartBiz</a></li>
+                        <li><a href="#">الوظائف</a></li>
+                        <li><a href="#">الخصوصية</a></li>
+                        <li><a href="#">الشروط</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 SmartBiz AI. جميع الحقوق محفوظة.</p>
+                <div class="social-links">
+                    <a href="#">Twitter</a>
+                    <a href="#">LinkedIn</a>
+                    <a href="#">Instagram</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="api-client.js?v=4"></script>
+    <script src="script.js?v=4"></script>
+    
+    <script>
+        // Toggle dropdown menu
+        function toggleDropdown(dropdownId) {
+            const dropdown = document.getElementById(dropdownId);
+            const allDropdowns = document.querySelectorAll('.dropdown-content');
+            
+            // Close all other dropdowns
+            allDropdowns.forEach(d => {
+                if (d.id !== dropdownId) {
+                    d.style.display = 'none';
+                }
+            });
+            
+            // Toggle current dropdown
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        // Close dropdowns when clicking outside
+        window.addEventListener('click', function(event) {
+            if (!event.target.matches('.dropdown-btn') && !event.target.closest('.dropdown-btn')) {
+                const dropdowns = document.querySelectorAll('.dropdown-content');
+                dropdowns.forEach(dropdown => {
+                    dropdown.style.display = 'none';
+                });
+            }
+        });
+    </script>
+    
+    <style>
+        .dropdown-content a:hover {
+            background: #f3f4f6;
+        }
+        
+        .dropdown-btn:hover {
+            transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .dropdown {
+                width: 100%;
+                margin: 10px 0;
+            }
+            
+            .dropdown-btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .dropdown-content {
+                left: 0;
+                right: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</body>
+</html>

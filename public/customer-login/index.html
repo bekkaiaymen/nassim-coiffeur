@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل دخول العميل - SmartBiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            direction: rtl;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 450px;
+            padding: 40px;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .logo p {
+            color: #6b7280;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Cairo', sans-serif;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .login-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .divider {
+            text-align: center;
+            margin: 25px 0;
+            color: #9ca3af;
+            position: relative;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 40%;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider::before {
+            right: 0;
+        }
+
+        .divider::after {
+            left: 0;
+        }
+
+        .demo-section {
+            margin-top: 20px;
+        }
+
+        .demo-title {
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .demo-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .demo-btn {
+            flex: 1;
+            padding: 12px;
+            background: #f3f4f6;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .demo-btn:hover {
+            background: #e5e7eb;
+            border-color: #6366f1;
+            transform: translateY(-2px);
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #1e40af;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #6366f1;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: white;
+            padding: 40px 60px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 500px;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .notification.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+
+        .notification.success {
+            border-top: 6px solid #10b981;
+            color: #059669;
+        }
+
+        .notification.error {
+            border-top: 6px solid #ef4444;
+            color: #dc2626;
+        }
+        
+        .notification::before {
+            content: '';
+            display: block;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            animation: scaleUp 0.5s ease;
+        }
+        
+        .notification.success::before {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            content: '✓';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            line-height: 80px;
+        }
+        
+        .notification.error::before {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            content: '✕';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            line-height: 80px;
+        }
+        
+        @keyframes scaleUp {
+            from {
+                transform: scale(0) rotate(-180deg);
+            }
+            to {
+                transform: scale(1) rotate(0deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <svg viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="18" fill="#6366f1"/>
+                <path d="M20 10 L28 25 L12 25 Z" fill="white"/>
+            </svg>
+            <h1>حسابي</h1>
+            <p>تسجيل دخول العميل</p>
+        </div>
+
+        <form id="customerLoginForm">
+            <div class="form-group">
+                <label>رقم الجوال أو البريد الإلكتروني</label>
+                <input type="text" id="identifier" placeholder="05xxxxxxxx أو email@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label>كلمة المرور</label>
+                <div style="position: relative;">
+                    <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
+                    <button type="button" onclick="togglePassword()" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 20px;">
+                        👁️
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" id="loginBtn" class="login-btn">
+                <span class="btn-text">تسجيل الدخول</span>
+                <div class="spinner"></div>
+            </button>
+        </form>
+
+        <div class="divider">أو</div>
+
+        <div class="info-box">
+            💡 <strong>تلميح:</strong> استخدم رقم جوالك أو بريدك الإلكتروني المسجل مع كلمة المرور
+        </div>
+        
+        <div class="back-link" style="margin-top: 15px;">
+            <span style="color: #6b7280;">ليس لديك حساب؟</span>
+            <a href="/customer-register">سجل الآن مجاناً</a>
+        </div>
+
+        <div class="back-link">
+            <a href="/">← العودة للصفحة الرئيسية</a>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+        }
+
+        // Show Notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            // Keep notification visible for the full duration
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // Detect if input is email or phone
+        function detectInputType(identifier) {
+            // Check if email
+            if (identifier.includes('@')) {
+                return { type: 'email', value: identifier };
+            }
+            // Assume phone number
+            let phone = identifier.replace(/\s/g, '');
+            // Normalize phone (add 0 if starts with 5)
+            if (/^5[0-9]{8}$/.test(phone)) {
+                phone = '0' + phone;
+            }
+            return { type: 'phone', value: phone };
+        }
+
+        // Login Form
+        document.getElementById('customerLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const identifier = document.getElementById('identifier').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const btnText = loginBtn.querySelector('.btn-text');
+            const spinner = loginBtn.querySelector('.spinner');
+            
+            // Validate inputs
+            if (!identifier || !password) {
+                showNotification('الرجاء إدخال جميع الحقول', 'error');
+                return;
+            }
+
+            // Detect input type
+            const input = detectInputType(identifier);
+            
+            // Disable button and show spinner
+            loginBtn.disabled = true;
+            btnText.style.display = 'none';
+            spinner.style.display = 'block';
+            
+            try {
+                // Prepare login data
+                const loginData = {
+                    password: password
+                };
+                
+                if (input.type === 'email') {
+                    loginData.email = input.value;
+                } else {
+                    loginData.phone = input.value;
+                }
+                
+                console.log('Login attempt:', { type: input.type, identifier: input.value });
+                
+                // Send login request
+                const response = await fetch('/api/customers/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                const data = await response.json();
+                console.log('Login response:', data);
+                
+                if (response.ok && data.success) {
+                    // Save token and user data
+                    localStorage.setItem('customerToken', data.data.token);
+                    localStorage.setItem('customerData', JSON.stringify(data.data.user));
+                    
+                    // Show success message
+                    showNotification('✓ تم تسجيل الدخول بنجاح!', 'success');
+                    
+                    // Redirect based on followed businesses
+                    setTimeout(() => {
+                        if (data.data.followsNassim) {
+                            window.location.href = '/nassim';
+                        } else {
+                            window.location.href = '/customer';
+                        }
+                    }, 1500);
+                } else {
+                    showNotification(data.message || 'البيانات غير صحيحة', 'error');
+                    
+                    // Re-enable button
+                    loginBtn.disabled = false;
+                    btnText.style.display = 'inline';
+                    spinner.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showNotification('حدث خطأ في الاتصال. حاول مرة أخرى.', 'error');
+                
+                // Re-enable button
+                loginBtn.disabled = false;
+                btnText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }
+        });
+
+        // Check if already logged in
+        if (localStorage.getItem('customerToken')) {
+            // Optionally verify token before redirecting
+            // For now, just redirect
+            // window.location.href = '/customer';
+        }
+    </script>
+</body>
+</html>

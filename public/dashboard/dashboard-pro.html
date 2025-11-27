@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة التحكم - SmartBiz Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/public/dashboard/dashboard-pro.css">
+</head>
+<body>
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+        <a href="#dashboard" class="mobile-nav-item active" data-section="dashboard">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="#appointments" class="mobile-nav-item" data-section="appointments">
+            <i class="fas fa-calendar"></i>
+            <span>المواعيد</span>
+        </a>
+        <a href="#employees" class="mobile-nav-item" data-section="employees">
+            <i class="fas fa-users"></i>
+            <span>الفريق</span>
+        </a>
+        <a href="#menu" class="mobile-nav-item" data-section="menu">
+            <i class="fas fa-bars"></i>
+            <span>المزيد</span>
+        </a>
+    </nav>
+
+    <!-- App Container -->
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-top">
+                <div class="business-info">
+                    <h1 class="business-name" id="businessName">SmartBiz</h1>
+                    <p class="user-greeting">مرحباً، <span id="userName">صاحب المحل</span></p>
+                </div>
+                <button class="notification-btn" onclick="openNotifications()">
+                    <i class="fas fa-bell"></i>
+                    <span class="badge" id="notifCount">3</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="app-main">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <div class="section-header">
+                    <h2>نظرة عامة</h2>
+                    <button class="refresh-btn" onclick="refreshDashboard()">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="stats-row">
+                    <div class="stat-card primary">
+                        <div class="stat-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="pendingAppointments">0</h3>
+                            <p>حجوزات معلقة</p>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="todayAppointments">0</h3>
+                            <p>مواعيد اليوم</p>
+                        </div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-icon">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3 id="activeEmployees">0</h3>
+                            <p>موظفين نشطين</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <h3 class="section-title">إجراءات سريعة</h3>
+                    <div class="action-grid">
+                        <button class="action-btn" onclick="openSection('appointments')">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>حجز جديد</span>
+                        </button>
+                        <button class="action-btn" onclick="openSection('employees')">
+                            <i class="fas fa-user-plus"></i>
+                            <span>إضافة موظف</span>
+                        </button>
+                        <button class="action-btn" onclick="openSection('services')">
+                            <i class="fas fa-scissors"></i>
+                            <span>الخدمات</span>
+                        </button>
+                        <button class="action-btn" onclick="openSection('customers')">
+                            <i class="fas fa-users"></i>
+                            <span>العملاء</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Today's Schedule -->
+                <div class="schedule-section">
+                    <div class="section-header">
+                        <h3 class="section-title">جدول اليوم</h3>
+                        <button class="btn-link" onclick="openSection('appointments')">عرض الكل</button>
+                    </div>
+                    <div id="todaySchedule" class="schedule-list">
+                        <div class="loading-state">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            <p>جاري التحميل...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Appointments Section -->
+            <section id="appointments" class="section">
+                <div class="section-header">
+                    <h2>إدارة المواعيد</h2>
+                    <button class="btn-primary" onclick="openNewAppointmentModal()">
+                        <i class="fas fa-plus"></i> حجز جديد
+                    </button>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-status="all" onclick="filterAppointments('all')">
+                        الكل
+                    </button>
+                    <button class="filter-tab" data-status="pending" onclick="filterAppointments('pending')">
+                        معلق <span class="badge" id="pendingBadge">0</span>
+                    </button>
+                    <button class="filter-tab" data-status="appointment_confirmed" onclick="filterAppointments('appointment_confirmed')">
+                        تأكيد أولي
+                    </button>
+                    <button class="filter-tab" data-status="fully_confirmed" onclick="filterAppointments('fully_confirmed')">
+                        مؤكد كلياً
+                    </button>
+                    <button class="filter-tab" data-status="completed" onclick="filterAppointments('completed')">
+                        مكتمل
+                    </button>
+                </div>
+
+                <!-- Appointments List -->
+                <div id="appointmentsList" class="appointments-list">
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>جاري تحميل المواعيد...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Employees Section -->
+            <section id="employees" class="section">
+                <div class="section-header">
+                    <h2>إدارة الفريق</h2>
+                    <button class="btn-primary" onclick="openAddEmployeeModal()">
+                        <i class="fas fa-user-plus"></i> إضافة موظف
+                    </button>
+                </div>
+
+                <div id="employeesList" class="employees-grid">
+                    <div class="loading-state">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <p>جاري تحميل الموظفين...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Menu Section (More Options) -->
+            <section id="menu" class="section">
+                <div class="section-header">
+                    <h2>المزيد</h2>
+                </div>
+
+                <div class="menu-list">
+                    <a href="#" class="menu-item" onclick="openSection('customers'); return false;">
+                        <i class="fas fa-users"></i>
+                        <span>العملاء</span>
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a href="#" class="menu-item" onclick="openSection('services'); return false;">
+                        <i class="fas fa-scissors"></i>
+                        <span>الخدمات</span>
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a href="#" class="menu-item" onclick="openSection('invoices'); return false;">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>الفواتير</span>
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a href="#" class="menu-item" onclick="openSection('reports'); return false;">
+                        <i class="fas fa-chart-line"></i>
+                        <span>التقارير</span>
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a href="#" class="menu-item" onclick="openSection('settings'); return false;">
+                        <i class="fas fa-cog"></i>
+                        <span>الإعدادات</span>
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                    <a href="#" class="menu-item danger" onclick="logout(); return false;">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span>تسجيل الخروج</span>
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Appointment Details Modal -->
+    <div id="appointmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تفاصيل الحجز</h3>
+                <button class="modal-close" onclick="closeAppointmentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="appointmentDetails">
+                <!-- Appointment details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Employee Modal -->
+    <div id="addEmployeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>إضافة موظف جديد</h3>
+                <button class="modal-close" onclick="closeAddEmployeeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addEmployeeForm" onsubmit="addEmployee(event)">
+                    <div class="form-group">
+                        <label for="empName">الاسم الكامل *</label>
+                        <input type="text" id="empName" required placeholder="أحمد محمد">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="empPhone">رقم الجوال *</label>
+                        <input type="tel" id="empPhone" required placeholder="05xxxxxxxx" pattern="[0-9]{10}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="empEmail">البريد الإلكتروني</label>
+                        <input type="email" id="empEmail" placeholder="example@email.com">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="empJobTitle">المسمى الوظيفي</label>
+                        <input type="text" id="empJobTitle" value="حلاق" placeholder="حلاق">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="empExperience">سنوات الخبرة</label>
+                        <input type="number" id="empExperience" min="0" max="50" value="0">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="empSpecialties">التخصصات</label>
+                        <input type="text" id="empSpecialties" placeholder="قص شعر، حلاقة ذقن، صبغة">
+                        <small>افصل بين التخصصات بفاصلة (،)</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="empBio">نبذة مختصرة</label>
+                        <textarea id="empBio" rows="3" placeholder="حلاق محترف مع خبرة عالية..."></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeAddEmployeeModal()">إلغاء</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> حفظ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Employee Details Modal -->
+    <div id="employeeDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تفاصيل الموظف</h3>
+                <button class="modal-close" onclick="closeEmployeeDetailsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="employeeDetailsContent">
+                <!-- Employee details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Assign Employee Modal -->
+    <div id="assignEmployeeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>اختيار الموظف</h3>
+                <button class="modal-close" onclick="closeAssignEmployeeModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="assignEmployeeContent">
+                <!-- Employee selection will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- New Appointment Modal -->
+    <div id="newAppointmentModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>إضافة حجز جديد</h3>
+                <button class="modal-close" onclick="closeNewAppointmentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="newAppointmentForm" onsubmit="createNewAppointment(event)">
+                    <div class="form-group">
+                        <label for="aptCustomerName">اسم العميل *</label>
+                        <input type="text" id="aptCustomerName" required placeholder="محمد أحمد">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aptCustomerPhone">رقم الهاتف *</label>
+                        <input type="tel" id="aptCustomerPhone" required placeholder="0501234567" pattern="[0-9]{10}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aptService">الخدمة *</label>
+                        <select id="aptService" required>
+                            <option value="">اختر الخدمة</option>
+                            <option value="قص شعر عادي">قص شعر عادي</option>
+                            <option value="قص شعر + حلاقة">قص شعر + حلاقة</option>
+                            <option value="حلاقة فقط">حلاقة فقط</option>
+                            <option value="صبغة">صبغة</option>
+                            <option value="تصفيف شعر">تصفيف شعر</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aptEmployee">الموظف (اختياري)</label>
+                        <select id="aptEmployee">
+                            <option value="">أي موظف متاح</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aptDate">التاريخ *</label>
+                        <input type="date" id="aptDate" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aptTime">الوقت *</label>
+                        <input type="time" id="aptTime" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="aptNotes">ملاحظات</label>
+                        <textarea id="aptNotes" rows="3" placeholder="أي ملاحظات إضافية..."></textarea>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary" onclick="closeNewAppointmentModal()">إلغاء</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-save"></i> حفظ الحجز
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications Modal -->
+    <div id="notificationsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>الإشعارات</h3>
+                <button class="modal-close" onclick="closeNotificationsModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="notificationsContent">
+                <!-- Notifications will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/public/dashboard/dashboard-pro.js"></script>
+</body>
+</html>

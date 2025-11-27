@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحديث المحلات - Super Admin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            direction: rtl;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .btn {
+            padding: 15px 30px;
+            background: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #5558d9;
+        }
+        .btn-success {
+            background: #10b981;
+        }
+        .btn-success:hover {
+            background: #059669;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f0f9ff;
+            border-left: 4px solid #6366f1;
+            border-radius: 5px;
+        }
+        .business-list {
+            margin-top: 20px;
+        }
+        .business-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+        .business-item.active {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.active {
+            background: #10b981;
+            color: white;
+        }
+        .status.trial {
+            background: #f59e0b;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 أدوات Super Admin - تحديث المحلات</h1>
+        
+        <div>
+            <button class="btn btn-success" onclick="updateAllBusinesses()">
+                ✅ تفعيل جميع المحلات
+            </button>
+            <button class="btn" onclick="loadBusinesses()">
+                📋 عرض جميع المحلات
+            </button>
+        </div>
+
+        <div id="result" class="result" style="display: none;"></div>
+        <div id="businessList" class="business-list"></div>
+    </div>
+
+    <script>
+        async function updateAllBusinesses() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '⏳ جاري تحديث المحلات...';
+
+            try {
+                const response = await fetch('/api/businesses', {
+                    method: 'GET'
+                });
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    // Update each business
+                    let updated = 0;
+                    for (const business of result.data) {
+                        try {
+                            const updateRes = await fetch(`/api/businesses/${business._id}`, {
+                                method: 'PUT',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    'subscription.status': 'active',
+                                    'subscription.plan': 'basic'
+                                })
+                            });
+                            if (updateRes.ok) updated++;
+                        } catch (e) {
+                            console.error('Error updating business:', e);
+                        }
+                    }
+
+                    resultDiv.innerHTML = `✅ تم تحديث ${updated} من ${result.data.length} محل بنجاح!`;
+                    setTimeout(() => loadBusinesses(), 1000);
+                } else {
+                    resultDiv.innerHTML = '❌ فشل تحميل المحلات';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `❌ حدث خطأ: ${error.message}`;
+            }
+        }
+
+        async function loadBusinesses() {
+            const listDiv = document.getElementById('businessList');
+            listDiv.innerHTML = '⏳ جاري تحميل المحلات...';
+
+            try {
+                const response = await fetch('/api/businesses');
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    const typeIcons = {
+                        barbershop: '✂️',
+                        salon: '💇',
+                        restaurant: '🍽️',
+                        cafe: '☕',
+                        workshop: '🔧',
+                        spa: '💆',
+                        gym: '💪',
+                        other: '🏪'
+                    };
+
+                    const typeNames = {
+                        barbershop: 'صالون حلاقة',
+                        salon: 'صالون تجميل',
+                        restaurant: 'مطعم',
+                        cafe: 'مقهى',
+                        workshop: 'ورشة',
+                        spa: 'سبا',
+                        gym: 'نادي رياضي',
+                        other: 'أخرى'
+                    };
+
+                    listDiv.innerHTML = `
+                        <h3>📊 إجمالي المحلات: ${result.data.length}</h3>
+                        ${result.data.map(b => `
+                            <div class="business-item ${b.subscription?.status === 'active' ? 'active' : ''}">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong>${typeIcons[b.businessType] || '🏪'} ${b.businessName}</strong>
+                                        <div style="font-size: 14px; color: #666; margin-top: 5px;">
+                                            ${typeNames[b.businessType] || b.businessType} • 
+                                            ${b.city || 'غير محدد'} • 
+                                            ${b.subdomain}.smartbiz.com
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="status ${b.subscription?.status || 'trial'}">
+                                            ${b.subscription?.status === 'active' ? 'نشط' : 
+                                              b.subscription?.status === 'trial' ? 'تجريبي' : 
+                                              b.subscription?.status || 'غير محدد'}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    `;
+                } else {
+                    listDiv.innerHTML = '<p>لا توجد محلات</p>';
+                }
+            } catch (error) {
+                listDiv.innerHTML = `❌ حدث خطأ: ${error.message}`;
+            }
+        }
+
+        // Load businesses on page load
+        loadBusinesses();
+    </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+services:
+  # Backend Service
+  - type: web
+    name: nassim-backend
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://nassim-coiffeur.vercel.app
+    healthCheckPath: /
+    autoDeploy: true

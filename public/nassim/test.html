@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Nassim</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0A0A0A;
+            color: white;
+            padding: 20px;
+        }
+        .test-result {
+            background: #1E1E1E;
+            padding: 20px;
+            margin: 10px 0;
+            border-radius: 10px;
+        }
+        .success { border-left: 4px solid #34C759; }
+        .error { border-left: 4px solid #FF3B30; }
+        .loading { border-left: 4px solid #FDB714; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Nassim Portal Test</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+        const BUSINESS_ID = '69259331651b1babc1eb83dc';
+        
+        function addResult(message, type = 'loading') {
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong><br>${message}`;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        async function runTests() {
+            addResult('🚀 Starting tests...');
+            
+            // Test 1: Posts API
+            try {
+                addResult('📡 Testing Posts API...');
+                const response = await fetch(`/api/posts/public/${BUSINESS_ID}`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    addResult(`✅ Posts API: ${data.data.length} posts found`, 'success');
+                    data.data.forEach((post, i) => {
+                        addResult(`  ${i+1}. ${post.title} (${post.type})`, 'success');
+                    });
+                } else {
+                    addResult('❌ Posts API: No posts found', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Posts API Error: ${error.message}`, 'error');
+            }
+            
+            // Test 2: Rewards API
+            try {
+                addResult('📡 Testing Rewards API...');
+                const response = await fetch(`/api/rewards/public/${BUSINESS_ID}`);
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    addResult(`✅ Rewards API: ${data.data.length} rewards found`, 'success');
+                } else {
+                    addResult('❌ Rewards API: No rewards found', 'error');
+                }
+            } catch (error) {
+                addResult(`❌ Rewards API Error: ${error.message}`, 'error');
+            }
+            
+            // Test 3: Check token
+            const token = localStorage.getItem('customerToken');
+            if (token) {
+                addResult(`✅ Token found in localStorage`, 'success');
+            } else {
+                addResult(`ℹ️ No token (guest mode)`, 'loading');
+            }
+            
+            addResult('✅ Tests completed!', 'success');
+        }
+
+        runTests();
+    </script>
+</body>
+</html>

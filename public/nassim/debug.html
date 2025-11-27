@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Nassim</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0A0A0A;
+            color: white;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .status {
+            background: #1E1E1E;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #FDB714;
+        }
+        .success { border-left-color: #34C759; }
+        .error { border-left-color: #FF3B30; }
+        pre {
+            background: #000;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Nassim Portal Debug</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+        const BUSINESS_ID = '69259331651b1babc1eb83dc';
+        
+        function log(message, type = 'status') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+            console.log(message.replace(/<[^>]*>/g, ''));
+        }
+
+        async function runDiagnostics() {
+            log('🚀 بدء التشخيص...');
+            
+            // Test 1: Check localStorage
+            log('<h3>1️⃣ فحص localStorage</h3>');
+            const token = localStorage.getItem('customerToken');
+            if (token) {
+                log(`✅ Token موجود: ${token.substring(0, 20)}...`, 'success');
+            } else {
+                log('⚠️ لا يوجد token (وضع الزائر)', 'status');
+            }
+            
+            // Test 2: Test Posts API
+            log('<h3>2️⃣ اختبار Posts API</h3>');
+            try {
+                const postsResponse = await fetch(`/api/posts/public/${BUSINESS_ID}`);
+                log(`Status: ${postsResponse.status} ${postsResponse.statusText}`);
+                
+                const postsData = await postsResponse.json();
+                log(`Success: ${postsData.success}`, postsData.success ? 'success' : 'error');
+                
+                if (postsData.data) {
+                    log(`📊 عدد المنشورات: ${postsData.data.length}`, 'success');
+                    postsData.data.forEach((post, i) => {
+                        log(`   ${i+1}. ${post.title}`);
+                    });
+                }
+            } catch (error) {
+                log(`❌ خطأ في Posts API: ${error.message}`, 'error');
+            }
+            
+            // Test 3: Test Rewards API
+            log('<h3>3️⃣ اختبار Rewards API</h3>');
+            try {
+                const rewardsResponse = await fetch(`/api/rewards/public/${BUSINESS_ID}`);
+                log(`Status: ${rewardsResponse.status}`);
+                
+                const rewardsData = await rewardsResponse.json();
+                log(`Success: ${rewardsData.success}`, rewardsData.success ? 'success' : 'error');
+                
+                if (rewardsData.data) {
+                    log(`🎁 عدد المكافآت: ${rewardsData.data.length}`, 'success');
+                }
+            } catch (error) {
+                log(`❌ خطأ في Rewards API: ${error.message}`, 'error');
+            }
+            
+            // Test 4: Check if nassim.js loads
+            log('<h3>4️⃣ فحص تحميل الملفات</h3>');
+            try {
+                const cssResponse = await fetch('/nassim/style.css');
+                log(`CSS: ${cssResponse.status}`, cssResponse.ok ? 'success' : 'error');
+                
+                const jsResponse = await fetch('/nassim/nassim.js');
+                log(`JS: ${jsResponse.status}`, jsResponse.ok ? 'success' : 'error');
+            } catch (error) {
+                log(`❌ خطأ في تحميل الملفات: ${error.message}`, 'error');
+            }
+            
+            // Test 5: Check DOM elements
+            log('<h3>5️⃣ فحص عناصر الصفحة</h3>');
+            const elements = [
+                'postsList',
+                'rewardsList',
+                'userInfo',
+                'pointsDisplay'
+            ];
+            
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    log(`✅ ${id} موجود`, 'success');
+                } else {
+                    log(`❌ ${id} غير موجود`, 'error');
+                }
+            });
+            
+            log('<h3>✅ انتهى التشخيص</h3>', 'success');
+            log('<p><a href="/nassim" style="color: #FDB714;">← العودة لصفحة Nassim</a></p>');
+        }
+
+        runDiagnostics();
+    </script>
+</body>
+</html>

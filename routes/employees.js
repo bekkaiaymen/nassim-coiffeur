@@ -1,0 +1,425 @@
+const express = require('express');
+const router = express.Router();
+const Employee = require('../models/Employee');
+const Appointment = require('../models/Appointment');
+const { protect, ensureTenant } = require('../middleware/auth');
+
+// @desc    Get employees by business ID (Public)
+// @route   GET /api/employees/public/by-business/:businessId
+// @access  Public
+router.get('/public/by-business/:businessId', async (req, res) => {
+    try {
+        const { businessId } = req.params;
+        
+        const employees = await Employee.find({
+            business: businessId,
+            status: 'active',
+            isAvailable: true
+        })
+        .populate('services', 'name price duration')
+        .sort({ order: 1, createdAt: -1 });
+
+        res.json({
+            success: true,
+            count: employees.length,
+            data: employees
+        });
+    } catch (error) {
+        console.error('Get public employees error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في جلب الموظفين'
+        });
+    }
+});
+
+// @desc    Get all employees for a business
+// @route   GET /api/employees
+// @access  Private
+router.get('/', protect, ensureTenant, async (req, res) => {
+    try {
+        const { business } = req.query;
+        const tenantId = business || req.tenantId || req.user.tenant || req.user.business;
+        
+        const employees = await Employee.find({
+            $or: [
+                { tenant: tenantId },
+                { business: tenantId }
+            ]
+        })
+        .populate('services', 'name price duration')
+        .sort({ order: 1, createdAt: -1 });
+
+        res.json(employees);
+    } catch (error) {
+        console.error('Get employees error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في جلب الموظفين'
+        });
+    }
+});
+
+// @desc    Get available employees for customer booking
+// @route   GET /api/employees/available
+// @access  Public
+router.get('/available/:businessId', async (req, res) => {
+    try {
+        const { businessId } = req.params;
+        const { date, time, serviceId } = req.query;
+
+        const query = {
+            business: businessId,
+            status: 'active',
+            isAvailable: true
+        };
+
+        // إذا كانت هناك خدمة محددة، فقط الموظفين الذين يقدمونها
+        if (serviceId) {
+            query.services = serviceId;
+        }
+
+        const employees = await Employee.find(query)
+            .select('name avatar jobTitle specialties stats experience')
+            .sort({ order: 1, 'stats.rating': -1 });
+
+        // إذا كان هناك تاريخ ووقت، فلتر حسب التوفر
+        if (date && time) {
+            const availableEmployees = [];
+            for (const emp of employees) {
+                const available = await emp.isAvailableAt(new Date(date), time);
+                if (available) {
+                    availableEmployees.push(emp);
+                }
+            }
+            return res.json({
+                success: true,
+                count: availableEmployees.length,
+                data: availableEmployees
+            });
+        }
+
+        res.json({
+            success: true,
+            count: employees.length,
+            data: employees
+        });
+    } catch (error) {
+        console.error('Get available employees error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في جلب الموظفين المتاحين'
+        });
+    }
+});
+
+// @desc    Get single employee
+// @route   GET /api/employees/:id
+// @access  Private
+router.get('/:id', protect, ensureTenant, async (req, res) => {
+    try {
+        const employee = await Employee.findOne({
+            _id: req.params.id,
+            $or: [
+                { tenant: req.tenantId },
+                { business: req.tenantId }
+            ]
+        }).populate('services', 'name price duration');
+
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: 'الموظف غير موجود'
+            });
+        }
+
+        res.json({
+            success: true,
+            data: employee
+        });
+    } catch (error) {
+        console.error('Get employee error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في جلب بيانات الموظف'
+        });
+    }
+});
+
+// @desc    Create new employee
+// @route   POST /api/employees
+// @access  Private
+router.post('/', protect, ensureTenant, async (req, res) => {
+    try {
+        // استخدام tenantId من middleware
+        const tenantId = req.tenantId || req.user.tenant || req.user.business;
+        
+        if (!tenantId) {
+            return res.status(400).json({
+                success: false,
+                message: 'المستخدم غير مرتبط بمتجر'
+            });
+        }
+        
+        const employeeData = {
+            ...req.body,
+            tenant: tenantId,
+            business: tenantId
+        };
+
+        const employee = await Employee.create(employeeData);
+
+        res.status(201).json({
+            success: true,
+            message: 'تم إضافة الموظف بنجاح',
+            data: employee
+        });
+    } catch (error) {
+        console.error('Create employee error:', error);
+        res.status(400).json({
+            success: false,
+            message: error.message || 'حدث خطأ في إضافة الموظف'
+        });
+    }
+});
+
+// @desc    Update employee
+// @route   PUT /api/employees/:id
+// @access  Private
+router.put('/:id', protect, ensureTenant, async (req, res) => {
+    try {
+        const employee = await Employee.findOne({
+            _id: req.params.id,
+            $or: [
+                { tenant: req.tenantId },
+                { business: req.tenantId }
+            ]
+        });
+
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: 'الموظف غير موجود'
+            });
+        }
+
+        // Update fields
+        Object.keys(req.body).forEach(key => {
+            if (key !== 'tenant' && key !== 'business') {
+                employee[key] = req.body[key];
+            }
+        });
+
+        await employee.save();
+
+        res.json({
+            success: true,
+            message: 'تم تحديث بيانات الموظف بنجاح',
+            data: employee
+        });
+    } catch (error) {
+        console.error('Update employee error:', error);
+        res.status(400).json({
+            success: false,
+            message: error.message || 'حدث خطأ في تحديث الموظف'
+        });
+    }
+});
+
+// @desc    Update employee status
+// @route   PATCH /api/employees/:id/status
+// @access  Private
+router.patch('/:id/status', protect, ensureTenant, async (req, res) => {
+    try {
+        const { status, isAvailable } = req.body;
+
+        const employee = await Employee.findOne({
+            _id: req.params.id,
+            tenant: req.tenantId
+        });
+
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: 'الموظف غير موجود'
+            });
+        }
+
+        if (status) employee.status = status;
+        if (typeof isAvailable === 'boolean') employee.isAvailable = isAvailable;
+
+        await employee.save();
+
+        res.json({
+            success: true,
+            message: 'تم تحديث حالة الموظف بنجاح',
+            data: employee
+        });
+    } catch (error) {
+        console.error('Update employee status error:', error);
+        res.status(400).json({
+            success: false,
+            message: 'حدث خطأ في تحديث حالة الموظف'
+        });
+    }
+});
+
+// @desc    Delete employee
+// @route   DELETE /api/employees/:id
+// @access  Private
+router.delete('/:id', protect, ensureTenant, async (req, res) => {
+    try {
+        const employee = await Employee.findOne({
+            _id: req.params.id,
+            $or: [
+                { tenant: req.tenantId },
+                { business: req.tenantId }
+            ]
+        });
+
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: 'الموظف غير موجود'
+            });
+        }
+
+        // التحقق من وجود حجوزات قادمة
+        const upcomingAppointments = await Appointment.countDocuments({
+            employee: employee._id,
+            date: { $gte: new Date() },
+            status: { $in: ['pending', 'confirmed'] }
+        });
+
+        if (upcomingAppointments > 0) {
+            return res.status(400).json({
+                success: false,
+                message: `لا يمكن حذف الموظف لوجود ${upcomingAppointments} حجز قادم. يرجى إلغاء الحجوزات أولاً`
+            });
+        }
+
+        await employee.deleteOne();
+
+        res.json({
+            success: true,
+            message: 'تم حذف الموظف بنجاح'
+        });
+    } catch (error) {
+        console.error('Delete employee error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في حذف الموظف'
+        });
+    }
+});
+
+// @desc    Get employee stats
+// @route   GET /api/employees/:id/stats
+// @access  Private
+router.get('/:id/stats', protect, ensureTenant, async (req, res) => {
+    try {
+        const employee = await Employee.findOne({
+            _id: req.params.id,
+            tenant: req.tenantId
+        });
+
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: 'الموظف غير موجود'
+            });
+        }
+
+        // الحجوزات القادمة
+        const upcomingAppointments = await Appointment.countDocuments({
+            employee: employee._id,
+            date: { $gte: new Date() },
+            status: { $in: ['pending', 'confirmed'] }
+        });
+
+        // الحجوزات اليوم
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+
+        const todayAppointments = await Appointment.countDocuments({
+            employee: employee._id,
+            date: { $gte: today, $lt: tomorrow },
+            status: { $in: ['pending', 'confirmed'] }
+        });
+
+        // الحجوزات هذا الشهر
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+        const monthlyStats = await Appointment.aggregate([
+            {
+                $match: {
+                    employee: employee._id,
+                    date: { $gte: startOfMonth, $lte: endOfMonth }
+                }
+            },
+            {
+                $group: {
+                    _id: '$status',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        res.json({
+            success: true,
+            data: {
+                employee: {
+                    name: employee.name,
+                    avatar: employee.avatar,
+                    jobTitle: employee.jobTitle,
+                    stats: employee.stats
+                },
+                upcomingAppointments,
+                todayAppointments,
+                monthlyStats
+            }
+        });
+    } catch (error) {
+        console.error('Get employee stats error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في جلب إحصائيات الموظف'
+        });
+    }
+});
+
+// @desc    Update employee order
+// @route   PATCH /api/employees/reorder
+// @access  Private
+router.patch('/reorder', protect, ensureTenant, async (req, res) => {
+    try {
+        const { employeeIds } = req.body; // array of employee IDs in new order
+
+        // Update order for each employee
+        const updatePromises = employeeIds.map((id, index) =>
+            Employee.findOneAndUpdate(
+                { _id: id, tenant: req.tenantId },
+                { order: index },
+                { new: true }
+            )
+        );
+
+        await Promise.all(updatePromises);
+
+        res.json({
+            success: true,
+            message: 'تم تحديث ترتيب الموظفين بنجاح'
+        });
+    } catch (error) {
+        console.error('Reorder employees error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في تحديث الترتيب'
+        });
+    }
+});
+
+module.exports = router;

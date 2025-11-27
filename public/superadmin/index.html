@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المالك - SmartBiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="superadmin.css">
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-brand">
+            <svg width="35" height="35" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="18" fill="#6366f1"/>
+                <path d="M20 10 L28 25 L12 25 Z" fill="white"/>
+            </svg>
+            <span>SmartBiz - مالك المنصة</span>
+        </div>
+        <div class="nav-actions">
+            <div class="notification-btn">
+                🔔
+                <span class="badge">5</span>
+            </div>
+            <div class="user-menu">
+                <img src="https://ui-avatars.com/api/?name=Super+Admin&background=6366f1&color=fff" alt="Admin">
+                <div class="user-dropdown">
+                    <p class="user-name">Super Admin</p>
+                    <p class="user-role">مالك المنصة</p>
+                    <button onclick="logout()">تسجيل الخروج</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li class="active" onclick="showTab('overview')">
+                    <span class="icon">📊</span>
+                    <span>نظرة عامة</span>
+                </li>
+                <li onclick="showTab('tenants')">
+                    <span class="icon">🏪</span>
+                    <span>المتاجر</span>
+                </li>
+                <li onclick="showTab('subscriptions')">
+                    <span class="icon">💳</span>
+                    <span>الاشتراكات</span>
+                </li>
+                <li onclick="showTab('revenue')">
+                    <span class="icon">💰</span>
+                    <span>الإيرادات</span>
+                </li>
+                <li onclick="showTab('plans')">
+                    <span class="icon">📦</span>
+                    <span>خطط الاشتراك</span>
+                </li>
+                <li onclick="showTab('users')">
+                    <span class="icon">👥</span>
+                    <span>المستخدمين</span>
+                </li>
+                <li onclick="showTab('analytics')">
+                    <span class="icon">📈</span>
+                    <span>التحليلات</span>
+                </li>
+                <li onclick="showTab('settings')">
+                    <span class="icon">⚙️</span>
+                    <span>الإعدادات</span>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- Content Area -->
+        <main class="content">
+            <!-- Overview Tab -->
+            <div id="overview-tab" class="tab-content active">
+                <div class="page-header">
+                    <h1>نظرة عامة</h1>
+                    <p>مرحباً بك في لوحة تحكم SmartBiz</p>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <div class="stat-icon">🏪</div>
+                        <div class="stat-info">
+                            <p class="stat-label">إجمالي المتاجر</p>
+                            <h2 class="stat-value" id="total-tenants">0</h2>
+                            <span class="stat-change positive">+12% هذا الشهر</span>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <p class="stat-label">الإيرادات الشهرية</p>
+                            <h2 class="stat-value" id="monthly-revenue">0 ر.س</h2>
+                            <span class="stat-change positive">+8% من الشهر الماضي</span>
+                        </div>
+                    </div>
+                    <div class="stat-card info">
+                        <div class="stat-icon">📋</div>
+                        <div class="stat-info">
+                            <p class="stat-label">الاشتراكات النشطة</p>
+                            <h2 class="stat-value" id="active-subscriptions">0</h2>
+                            <span class="stat-change neutral">مستقر</span>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <p class="stat-label">إجمالي المستخدمين</p>
+                            <h2 class="stat-value" id="total-users">0</h2>
+                            <span class="stat-change positive">+23 مستخدم جديد</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row -->
+                <div class="charts-row">
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <h3>الإيرادات الشهرية</h3>
+                            <select class="year-select">
+                                <option>2025</option>
+                                <option>2024</option>
+                            </select>
+                        </div>
+                        <div class="chart" id="revenue-chart">
+                            <div class="bar-chart">
+                                <div class="bar" style="height: 60%"><span>يناير<br>4.5K</span></div>
+                                <div class="bar" style="height: 75%"><span>فبراير<br>6K</span></div>
+                                <div class="bar" style="height: 50%"><span>مارس<br>4K</span></div>
+                                <div class="bar" style="height: 85%"><span>أبريل<br>7K</span></div>
+                                <div class="bar" style="height: 90%"><span>مايو<br>7.5K</span></div>
+                                <div class="bar" style="height: 95%"><span>يونيو<br>8K</span></div>
+                                <div class="bar" style="height: 80%"><span>يوليو<br>6.5K</span></div>
+                                <div class="bar" style="height: 70%"><span>أغسطس<br>5.5K</span></div>
+                                <div class="bar" style="height: 88%"><span>سبتمبر<br>7.2K</span></div>
+                                <div class="bar" style="height: 92%"><span>أكتوبر<br>7.8K</span></div>
+                                <div class="bar active" style="height: 100%"><span>نوفمبر<br>8.5K</span></div>
+                                <div class="bar" style="height: 45%"><span>ديسمبر<br>3.5K</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="card-header">
+                            <h3>توزيع الاشتراكات</h3>
+                        </div>
+                        <div class="pie-chart">
+                            <div class="pie-item">
+                                <div class="pie-color basic"></div>
+                                <div class="pie-info">
+                                    <span class="pie-label">Basic</span>
+                                    <span class="pie-value" id="basic-count">0</span>
+                                </div>
+                                <div class="pie-percentage">33%</div>
+                            </div>
+                            <div class="pie-item">
+                                <div class="pie-color pro"></div>
+                                <div class="pie-info">
+                                    <span class="pie-label">Pro</span>
+                                    <span class="pie-value" id="pro-count">0</span>
+                                </div>
+                                <div class="pie-percentage">47%</div>
+                            </div>
+                            <div class="pie-item">
+                                <div class="pie-color enterprise"></div>
+                                <div class="pie-info">
+                                    <span class="pie-label">Enterprise</span>
+                                    <span class="pie-value" id="enterprise-count">0</span>
+                                </div>
+                                <div class="pie-percentage">20%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="activity-section">
+                    <div class="section-header">
+                        <h3>النشاطات الأخيرة</h3>
+                        <button class="btn-link">عرض الكل</button>
+                    </div>
+                    <div class="activity-list" id="recent-activity">
+                        <div class="activity-item">
+                            <div class="activity-icon new">➕</div>
+                            <div class="activity-content">
+                                <p class="activity-title">متجر جديد انضم للمنصة</p>
+                                <p class="activity-desc">صالون الفخامة - خطة Enterprise</p>
+                            </div>
+                            <span class="activity-time">منذ 5 دقائق</span>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon upgrade">⬆️</div>
+                            <div class="activity-content">
+                                <p class="activity-title">ترقية اشتراك</p>
+                                <p class="activity-desc">صالون الأناقة ترقى من Basic إلى Pro</p>
+                            </div>
+                            <span class="activity-time">منذ ساعة</span>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon payment">💳</div>
+                            <div class="activity-content">
+                                <p class="activity-title">دفعة جديدة</p>
+                                <p class="activity-desc">صالون النجوم - 99 ر.س (Basic)</p>
+                            </div>
+                            <span class="activity-time">منذ 3 ساعات</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tenants Tab -->
+            <div id="tenants-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>إدارة المتاجر</h1>
+                    <button class="btn-primary" onclick="showAddTenantModal()">
+                        ➕ إضافة متجر جديد
+                    </button>
+                </div>
+
+                <!-- Financial Stats -->
+                <div class="stats-grid" style="margin-bottom: 20px;">
+                    <div class="stat-card primary">
+                        <div class="stat-icon">💰</div>
+                        <div class="stat-info">
+                            <p class="stat-label">إجمالي الإيرادات الشهرية</p>
+                            <h3 class="stat-value" id="total-monthly-revenue">0 ر.س</h3>
+                            <small style="color: #64748b;">من الاشتراكات والعمولات</small>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📅</div>
+                        <div class="stat-info">
+                            <p class="stat-label">المواعيد هذا الشهر</p>
+                            <h3 class="stat-value" id="total-appointments-month">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card warning">
+                        <div class="stat-icon">⚠️</div>
+                        <div class="stat-info">
+                            <p class="stat-label">محلات تجاوزت الحد</p>
+                            <h3 class="stat-value" id="businesses-over-limit">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-info">
+                            <p class="stat-label">متوسط الاقتطاع/محل</p>
+                            <h3 class="stat-value" id="avg-revenue-per-business">0 ر.س</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters">
+                    <input type="search" placeholder="🔍 البحث عن متجر..." class="search-input" id="searchTenants">
+                    <select class="filter-select" id="filterPlan">
+                        <option value="">كل الخطط</option>
+                        <option value="basic">Basic</option>
+                        <option value="pro">Pro</option>
+                        <option value="enterprise">Enterprise</option>
+                        <option value="free">Free</option>
+                    </select>
+                    <select class="filter-select" id="filterStatus">
+                        <option value="">كل الحالات</option>
+                        <option value="active">نشط</option>
+                        <option value="pending">معلق</option>
+                        <option value="trial">تجريبي</option>
+                        <option value="suspended">موقوف</option>
+                    </select>
+                </div>
+
+                <!-- Tenants Table -->
+                <div class="table-card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>المتجر</th>
+                                <th>المالك</th>
+                                <th>الخطة</th>
+                                <th>الاستخدام (شهري)</th>
+                                <th>الاشتراك/الاقتطاع</th>
+                                <th>الحالة</th>
+                                <th>تاريخ الانضمام</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tenants-table-body">
+                            <!-- Will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Subscriptions Tab -->
+            <div id="subscriptions-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>الاشتراكات</h1>
+                </div>
+
+                <div class="subscriptions-grid" id="subscriptions-list">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Revenue Tab -->
+            <div id="revenue-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>تقارير الإيرادات</h1>
+                </div>
+
+                <div class="revenue-summary">
+                    <div class="revenue-card">
+                        <h4>إيرادات اليوم</h4>
+                        <h2 id="today-revenue">0 ر.س</h2>
+                    </div>
+                    <div class="revenue-card">
+                        <h4>إيرادات الشهر</h4>
+                        <h2 id="month-revenue">0 ر.س</h2>
+                    </div>
+                    <div class="revenue-card">
+                        <h4>إيرادات السنة</h4>
+                        <h2 id="year-revenue">0 ر.س</h2>
+                    </div>
+                    <div class="revenue-card">
+                        <h4>متوسط الاشتراك</h4>
+                        <h2 id="avg-subscription">0 ر.س</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plans Tab -->
+            <div id="plans-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>خطط الاشتراك</h1>
+                    <button class="btn-primary" onclick="showAddPlanModal()">
+                        ➕ إضافة خطة جديدة
+                    </button>
+                </div>
+
+                <div class="plans-grid" id="plans-list">
+                    <!-- Will be populated by JS -->
+                </div>
+            </div>
+
+            <!-- Users Tab -->
+            <div id="users-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>المستخدمين</h1>
+                </div>
+
+                <div class="table-card">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>المستخدم</th>
+                                <th>البريد الإلكتروني</th>
+                                <th>الدور</th>
+                                <th>المتجر</th>
+                                <th>تاريخ التسجيل</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body">
+                            <!-- Will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Analytics Tab -->
+            <div id="analytics-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>التحليلات المتقدمة</h1>
+                </div>
+                <div class="analytics-content">
+                    <p>قريباً...</p>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content">
+                <div class="page-header">
+                    <h1>الإعدادات</h1>
+                </div>
+                <div class="settings-content">
+                    <div class="settings-section">
+                        <h3>إعدادات المنصة</h3>
+                        <form class="settings-form">
+                            <div class="form-group">
+                                <label>اسم المنصة</label>
+                                <input type="text" value="SmartBiz AI" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label>البريد الإلكتروني</label>
+                                <input type="email" value="admin@smartbiz.com" class="form-control">
+                            </div>
+                            <button type="submit" class="btn-primary">حفظ التغييرات</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/superadmin/superadmin.js?v=2"></script>
+</body>
+</html>

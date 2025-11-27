@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>احجز موعدك الآن - Nassim Barber</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <h1>✂️ Nassim Barber</h1>
+                    <p>حجز سريع وسهل</p>
+                </div>
+                <div class="header-actions">
+                    <a href="tel:0500000000" class="contact-btn phone-btn">
+                        📞 اتصل بنا
+                    </a>
+                    <a href="https://wa.me/966500000000?text=مرحباً، أريد الاستفسار عن خدماتكم" target="_blank" class="contact-btn whatsapp-btn">
+                        💬 واتساب
+                    </a>
+                    <a href="/book-now/register.html" class="contact-btn register-btn">
+                        👤 تسجيل حساب
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Hero Section -->
+            <div class="hero">
+                <h2>احجز موعدك بسهولة</h2>
+                <p>اختر الخدمة، الوقت، واترك الباقي علينا!</p>
+            </div>
+
+            <!-- Booking Form -->
+            <div class="booking-card">
+                <form id="bookingForm">
+                    <!-- Step 1: Service -->
+                    <div class="form-step active" id="step1">
+                        <h3>اختر الخدمة</h3>
+                        <div class="services-grid" id="servicesList">
+                            <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                                <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+                                <div style="color: #FDB714; font-size: 18px; font-weight: 600;">جاري تحميل الخدمات...</div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-next" onclick="nextStep(2)">التالي →</button>
+                    </div>
+
+                    <!-- Step 2: Barber (Optional) -->
+                    <div class="form-step" id="step2">
+                        <h3>اختر الحلاق (اختياري)</h3>
+                        <div class="barbers-grid" id="barbersList">
+                            <!-- Will be loaded dynamically -->
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-back" onclick="prevStep(1)">← السابق</button>
+                            <button type="button" class="btn-next" onclick="nextStep(3)">التالي →</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Date & Time -->
+                    <div class="form-step" id="step3">
+                        <h3>اختر التاريخ والوقت</h3>
+                        <div class="date-time-picker">
+                            <div class="form-group">
+                                <label>التاريخ</label>
+                                <input type="date" id="bookingDate" required>
+                            </div>
+                            <div class="time-slots" id="timeSlots">
+                                <!-- Will be loaded dynamically -->
+                            </div>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-back" onclick="prevStep(2)">← السابق</button>
+                            <button type="button" class="btn-next" onclick="nextStep(4)">التالي →</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Contact Info -->
+                    <div class="form-step" id="step4">
+                        <h3>معلومات الاتصال</h3>
+                        <div class="form-group">
+                            <label>الاسم</label>
+                            <input type="text" id="customerName" placeholder="أدخل اسمك" required>
+                        </div>
+                        <div class="form-group">
+                            <label>رقم الجوال</label>
+                            <input type="tel" id="customerPhone" placeholder="05XXXXXXXX" required pattern="[0-9]{10}">
+                        </div>
+                        <div class="form-group">
+                            <label>ملاحظات (اختياري)</label>
+                            <textarea id="bookingNotes" placeholder="أي ملاحظات خاصة؟"></textarea>
+                        </div>
+                        
+                        <!-- Summary -->
+                        <div class="booking-summary">
+                            <h4>ملخص الحجز</h4>
+                            <div class="summary-item">
+                                <span>الخدمة:</span>
+                                <strong id="summaryService">-</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>الحلاق:</span>
+                                <strong id="summaryBarber">أي حلاق متاح</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>التاريخ:</span>
+                                <strong id="summaryDate">-</strong>
+                            </div>
+                            <div class="summary-item">
+                                <span>الوقت:</span>
+                                <strong id="summaryTime">-</strong>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-back" onclick="prevStep(3)">← السابق</button>
+                            <button type="submit" class="btn-submit">✓ تأكيد الحجز</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <div class="success-icon">✓</div>
+            <h2>تم الحجز بنجاح!</h2>
+            <p>شكراً لك، تم تأكيد موعدك</p>
+            <div class="booking-details" id="bookingDetails"></div>
+            <div class="loyalty-message" id="loyaltyMessage"></div>
+            <button class="btn-close" onclick="closeModal()">إغلاق</button>
+        </div>
+    </div>
+
+    <script src="booking.js"></script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Captain Barber - احجز موعدك الآن</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --primary: #FDB913;
+            --primary-dark: #E5A510;
+            --dark: #1A1A1A;
+            --dark-light: #252525;
+            --dark-lighter: #2F2F2F;
+            --text-light: #FFFFFF;
+            --text-gray: #B0B0B0;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 100%);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(253, 185, 19, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(253, 185, 19, 0.05) 0%, transparent 50%);
+            z-index: 0;
+        }
+
+        .hero-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(253, 185, 19, 0.03) 50px, rgba(253, 185, 19, 0.03) 51px),
+                repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(253, 185, 19, 0.03) 50px, rgba(253, 185, 19, 0.03) 51px);
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--dark);
+            box-shadow: 0 4px 15px rgba(253, 185, 19, 0.4);
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-light);
+            line-height: 1;
+        }
+
+        .logo-subtitle {
+            font-size: 12px;
+            color: var(--text-gray);
+            font-weight: 600;
+        }
+
+        .version-badge {
+            background: var(--primary);
+            color: var(--dark);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .hero-title {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1.2;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--text-light) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: var(--text-gray);
+            margin-bottom: 50px;
+            line-height: 1.6;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 20px;
+            background: var(--dark-light);
+            border-radius: 16px;
+            border: 1px solid rgba(253, 185, 19, 0.2);
+        }
+
+        .feature-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .feature-text {
+            text-align: right;
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        /* Buttons */
+        .cta-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 18px 32px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--dark);
+            box-shadow: 0 8px 25px rgba(253, 185, 19, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 15px rgba(253, 185, 19, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--dark-light);
+            color: var(--text-light);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:active {
+            background: var(--dark-lighter);
+            transform: scale(0.98);
+        }
+
+        .btn-icon {
+            font-size: 20px;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px 0;
+            color: var(--text-gray);
+            font-size: 13px;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 12px;
+        }
+
+        .footer-link {
+            color: var(--text-gray);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .footer-link:active {
+            color: var(--primary);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+
+        .delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .delay-4 { animation-delay: 0.4s; opacity: 0; }
+        .delay-5 { animation-delay: 0.5s; opacity: 0; }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 36px;
+            }
+            
+            .logo-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 24px;
+            }
+            
+            .logo-title {
+                font-size: 20px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .content {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            
+            .cta-buttons {
+                flex-direction: row;
+            }
+            
+            .btn {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-pattern"></div>
+        
+        <div class="content">
+            <header class="header animate-in">
+                <div class="logo">
+                    <div class="logo-icon">✂</div>
+                    <div class="logo-text">
+                        <div class="logo-title">Captain Barber</div>
+                        <div class="logo-subtitle">منصة الحجز الذكية</div>
+                    </div>
+                </div>
+                <div class="version-badge">v1.0</div>
+            </header>
+
+            <main class="main-content">
+                <h1 class="hero-title animate-in delay-1">
+                    احجز موعدك<br>مع أفضل الحلاقين
+                </h1>
+                
+                <p class="hero-subtitle animate-in delay-2">
+                    منصة متطورة تجمع أفضل صالونات الحلاقة في مكان واحد. احجز، ادفع، واستمتع بتجربة استثنائية.
+                </p>
+
+                <div class="features animate-in delay-3">
+                    <div class="feature-item">
+                        <div class="feature-icon">📅</div>
+                        <div class="feature-text">حجز سريع وسهل خلال دقائق</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">⭐</div>
+                        <div class="feature-text">تقييمات حقيقية من العملاء</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">🎁</div>
+                        <div class="feature-text">برنامج نقاط ومكافآت حصرية</div>
+                    </div>
+                </div>
+
+                <div class="cta-buttons">
+                    <a href="/customer-login" class="btn btn-primary animate-in delay-4">
+                        <span class="btn-icon">👤</span>
+                        <span>أنا عميل</span>
+                    </a>
+                    
+                    <a href="/login" class="btn btn-secondary animate-in delay-5">
+                        <span class="btn-icon">💼</span>
+                        <span>أنا صاحب محل</span>
+                    </a>
+                </div>
+            </main>
+
+            <footer class="footer">
+                <p>© 2025 Captain Barber. جميع الحقوق محفوظة.</p>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">الشروط والأحكام</a>
+                    <a href="#" class="footer-link">سياسة الخصوصية</a>
+                    <a href="#" class="footer-link">تواصل معنا</a>
+                </div>
+            </footer>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,727 @@
+// Configuration
+const API_URL = '/api';
+let customerData = null;
+let token = localStorage.getItem('customerToken');
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    if (!token) {
+        // Redirect to customer login
+        window.location.href = '/customer-login';
+        return;
+    }
+    
+    loadCustomerProfile();
+    loadStats();
+    loadUpcomingAppointments();
+});
+
+// Load Customer Profile
+async function loadCustomerProfile() {
+    try {
+        // Get customer data from localStorage
+        const storedData = localStorage.getItem('customerData');
+        if (storedData) {
+            customerData = JSON.parse(storedData);
+            displayCustomerInfo();
+            return;
+        }
+        
+        // If no stored data, decode the token
+        const tokenParts = token.split('.');
+        if (tokenParts.length === 3) {
+            const payload = JSON.parse(atob(tokenParts[1]));
+            
+            // Fetch customer data by userId using API
+            const response = await fetch(`${API_URL}/customers/profile`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                console.error('Failed to load profile');
+                logout();
+                return;
+            }
+            
+            const data = await response.json();
+            if (data.success && data.data) {
+                customerData = data.data;
+                localStorage.setItem('customerData', JSON.stringify(customerData));
+                displayCustomerInfo();
+            } else {
+                console.error('No customer data');
+                logout();
+            }
+        } else {
+            console.error('Invalid token format');
+            logout();
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        // Don't logout immediately, just show the stored data
+        const storedData = localStorage.getItem('customerData');
+        if (storedData) {
+            customerData = JSON.parse(storedData);
+            displayCustomerInfo();
+        } else {
+            showNotification('فشل تحميل بيانات الحساب', 'error');
+        }
+    }
+}
+
+// Display Customer Info
+function displayCustomerInfo() {
+    if (!customerData) return;
+    
+    // Update name
+    document.getElementById('customer-name').textContent = `مرحباً، ${customerData.name.split(' ')[0]}`;
+    document.getElementById('profile-customer-name').textContent = customerData.name;
+    document.getElementById('profile-phone').textContent = customerData.phone;
+    
+    // Update member since
+    const memberDate = new Date(customerData.createdAt);
+    document.getElementById('member-since').textContent = memberDate.getFullYear();
+    
+    // Update loyalty points
+    const points = customerData.loyaltyPoints || 0;
+    const riyalPerPoint = 0.1; // Assuming 10 points = 1 riyal
+    const riyalValue = (points * riyalPerPoint).toFixed(2);
+    
+    document.getElementById('loyalty-points').textContent = points;
+    document.getElementById('loyalty-riyal').textContent = riyalValue;
+    document.getElementById('rewards-points-display').textContent = `${points} نقطة`;
+    document.getElementById('rewards-riyal-display').textContent = riyalValue;
+    
+    // Update settings form
+    document.getElementById('settings-name').value = customerData.name || '';
+    document.getElementById('settings-phone').value = customerData.phone || '';
+    document.getElementById('settings-email').value = customerData.email || '';
+}
+
+// Load Stats
+async function loadStats() {
+    if (!customerData) return;
+    
+    // Update total appointments
+    document.getElementById('total-appointments').textContent = customerData.totalVisits || 0;
+    
+    // Update total spent
+    const totalSpent = customerData.totalSpent || 0;
+    document.getElementById('total-spent').textContent = `${totalSpent} ر.س`;
+    
+    // Update rating
+    const rating = customerData.rating ? `${customerData.rating} ⭐` : '-';
+    document.getElementById('rating-value').textContent = rating;
+    
+    // Load upcoming count
+    try {
+        const response = await fetch(`${API_URL}/appointments/public/customer/${customerData.phone}`);
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                const today = new Date();
+                const upcoming = data.data.filter(apt => new Date(apt.date) >= today);
+                document.getElementById('upcoming-count').textContent = upcoming.length;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading stats:', error);
+    }
+}
+
+// Load Upcoming Appointments
+async function loadUpcomingAppointments() {
+    if (!customerData) return;
+    
+    const container = document.getElementById('upcoming-appointments');
+    container.innerHTML = '<div class="loading">جاري تحميل المواعيد...</div>';
+    
+    try {
+        const response = await fetch(`${API_URL}/appointments/public/customer/${customerData.phone}`);
+        
+        if (!response.ok) throw new Error('فشل تحميل المواعيد');
+        
+        const data = await response.json();
+        if (data.success) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const upcoming = data.data.filter(apt => {
+                const aptDate = new Date(apt.date);
+                return aptDate >= today && apt.status !== 'cancelled' && apt.status !== 'completed';
+            });
+            
+            if (upcoming.length === 0) {
+                container.innerHTML = '<div class="empty-state">لا توجد مواعيد قادمة<br><button class="btn-primary" onclick="bookNewAppointment()">احجز الآن</button></div>';
+                return;
+            }
+            
+            container.innerHTML = upcoming.map(apt => `
+                <div class="appointment-card">
+                    <div class="appointment-header">
+                        <div class="appointment-title">${apt.service}</div>
+                        <div class="appointment-status status-${apt.status}">
+                            ${getStatusText(apt.status)}
+                        </div>
+                    </div>
+                    <div class="appointment-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">📅</span>
+                            <span>${formatDate(apt.date)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">⏰</span>
+                            <span>${apt.time}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">✂️</span>
+                            <span>${apt.barber}</span>
+                        </div>
+                    </div>
+                    ${apt.status === 'pending' || apt.status === 'confirmed' ? `
+                        <div class="appointment-actions">
+                            <button class="btn-cancel" onclick="cancelAppointment('${apt._id}')">
+                                إلغاء الموعد
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading appointments:', error);
+        container.innerHTML = '<div class="empty-state">فشل تحميل المواعيد</div>';
+    }
+}
+
+// Load History
+async function loadHistory() {
+    if (!customerData) return;
+    
+    const container = document.getElementById('history-appointments');
+    container.innerHTML = '<div class="loading">جاري تحميل السجل...</div>';
+    
+    try {
+        const response = await fetch(`${API_URL}/appointments/public/customer/${customerData.phone}`);
+        
+        if (!response.ok) throw new Error('فشل تحميل السجل');
+        
+        const data = await response.json();
+        if (data.success) {
+            const history = data.data.filter(apt => 
+                apt.status === 'completed' || apt.status === 'cancelled'
+            ).sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if (history.length === 0) {
+                container.innerHTML = '<div class="empty-state">لا يوجد سجل مواعيد سابقة</div>';
+                return;
+            }
+            
+            container.innerHTML = history.map(apt => `
+                <div class="appointment-card">
+                    <div class="appointment-header">
+                        <div class="appointment-title">${apt.service}</div>
+                        <div class="appointment-status status-${apt.status}">
+                            ${getStatusText(apt.status)}
+                        </div>
+                    </div>
+                    <div class="appointment-details">
+                        <div class="detail-item">
+                            <span class="detail-icon">📅</span>
+                            <span>${formatDate(apt.date)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">⏰</span>
+                            <span>${apt.time}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-icon">✂️</span>
+                            <span>${apt.barber}</span>
+                        </div>
+                    </div>
+                    ${apt.status === 'completed' && !apt.rated ? `
+                        <div class="appointment-actions">
+                            <button class="btn-rate" onclick="rateAppointment('${apt._id}')">
+                                ⭐ قيّم الخدمة
+                            </button>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading history:', error);
+        container.innerHTML = '<div class="empty-state">فشل تحميل السجل</div>';
+    }
+}
+
+// Load Invoices
+async function loadInvoices() {
+    if (!customerData) return;
+    
+    const container = document.getElementById('invoices-list');
+    container.innerHTML = '<div class="loading">جاري تحميل الفواتير...</div>';
+    
+    try {
+        const response = await fetch(`${API_URL}/invoices/public/customer/${customerData.phone}`);
+        
+        if (!response.ok) throw new Error('فشل تحميل الفواتير');
+        
+        const data = await response.json();
+        if (data.success) {
+            if (data.data.length === 0) {
+                container.innerHTML = '<div class="empty-state">لا توجد فواتير</div>';
+                return;
+            }
+            
+            container.innerHTML = data.data.map(invoice => `
+                <div class="invoice-card">
+                    <div class="invoice-number">#${invoice.invoiceNumber || invoice._id.slice(-6)}</div>
+                    <div class="invoice-date">${formatDate(invoice.createdAt)}</div>
+                    <div class="invoice-amount">${invoice.total} ر.س</div>
+                    <div class="invoice-status status-${invoice.paymentStatus === 'paid' ? 'paid' : 'pending-payment'}">
+                        ${invoice.paymentStatus === 'paid' ? 'مدفوعة' : 'معلقة'}
+                    </div>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading invoices:', error);
+        container.innerHTML = '<div class="empty-state">فشل تحميل الفواتير</div>';
+    }
+}
+
+// Cancel Appointment
+async function cancelAppointment(id) {
+    if (!confirm('هل أنت متأكد من إلغاء هذا الموعد؟')) return;
+    
+    try {
+        const response = await fetch(`${API_URL}/appointments/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ status: 'cancelled' })
+        });
+        
+        if (!response.ok) throw new Error('فشل إلغاء الموعد');
+        
+        showNotification('تم إلغاء الموعد بنجاح', 'success');
+        loadUpcomingAppointments();
+        loadStats();
+    } catch (error) {
+        console.error('Error cancelling appointment:', error);
+        showNotification('فشل إلغاء الموعد', 'error');
+    }
+}
+
+// Rate Appointment
+function rateAppointment(id) {
+    const rating = prompt('قيّم الخدمة من 1 إلى 5 نجوم:');
+    if (!rating || rating < 1 || rating > 5) return;
+    
+    showNotification('شكراً لتقييمك!', 'success');
+    // Here you would send the rating to the API
+}
+
+// Book New Appointment
+function bookNewAppointment() {
+    window.location.href = '/book';
+}
+
+// Redeem Points
+function redeemPoints() {
+    const points = customerData.loyaltyPoints || 0;
+    if (points < 100) {
+        showNotification('تحتاج إلى 100 نقطة على الأقل للاستبدال', 'error');
+        return;
+    }
+    
+    if (confirm(`هل تريد استبدال ${points} نقطة؟`)) {
+        showNotification('جاري معالجة طلبك...', 'success');
+        // Here you would send the request to the API
+    }
+}
+
+// Show Tab
+function showTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+    
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(`${tabName}-tab`).classList.add('active');
+    event.target.classList.add('active');
+    
+    // Load data for the tab
+    switch(tabName) {
+        case 'history':
+            loadHistory();
+            break;
+        case 'invoices':
+            loadInvoices();
+            break;
+        case 'rewards':
+            // Rewards already loaded
+            break;
+    }
+}
+
+// Save Settings
+document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const name = document.getElementById('settings-name').value;
+    const phone = document.getElementById('settings-phone').value;
+    const email = document.getElementById('settings-email').value;
+    
+    try {
+        const response = await fetch(`${API_URL}/customers/${customerData._id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, phone, email })
+        });
+        
+        if (!response.ok) throw new Error('فشل حفظ التغييرات');
+        
+        showNotification('تم حفظ التغييرات بنجاح', 'success');
+        loadCustomerProfile();
+    } catch (error) {
+        console.error('Error saving settings:', error);
+        showNotification('فشل حفظ التغييرات', 'error');
+    }
+});
+
+// Logout
+function logout() {
+    localStorage.removeItem('customerToken');
+    localStorage.removeItem('customerData');
+    window.location.href = '/';
+}
+
+// === BOOKING SYSTEM ===
+
+let selectedTimeSlot = null;
+let availableServices = [];
+let followedBusinesses = [];
+
+// Open Booking Modal
+async function bookNewAppointment() {
+    const modal = document.getElementById('bookingModal');
+    modal.classList.add('show');
+    modal.style.display = 'flex';
+    
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('appointmentDate').min = today;
+    
+    // Load followed businesses
+    await loadFollowedBusinesses();
+}
+
+// Close Booking Modal
+function closeBookingModal() {
+    const modal = document.getElementById('bookingModal');
+    modal.classList.remove('show');
+    setTimeout(() => {
+        modal.style.display = 'none';
+        document.getElementById('bookingForm').reset();
+        selectedTimeSlot = null;
+        document.getElementById('serviceInfo').style.display = 'none';
+        document.getElementById('timeSlots').innerHTML = '<p class="empty-state">اختر التاريخ أولاً</p>';
+    }, 300);
+}
+
+// Load Followed Businesses
+async function loadFollowedBusinesses() {
+    try {
+        const response = await fetch(`${API_URL}/businesses/public`);
+        
+        if (!response.ok) throw new Error('Failed to load businesses');
+        
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            followedBusinesses = data.data;
+            populateBusinessSelect(data.data);
+        }
+    } catch (error) {
+        console.error('Error loading businesses:', error);
+        showNotification('فشل تحميل المحلات', 'error');
+    }
+}
+
+// Populate Business Select
+function populateBusinessSelect(businesses) {
+    const select = document.getElementById('businessSelect');
+    select.innerHTML = '<option value="">-- اختر المحل --</option>';
+    
+    businesses.forEach(business => {
+        const option = document.createElement('option');
+        option.value = business._id;
+        option.textContent = business.businessName;
+        select.appendChild(option);
+    });
+}
+
+// Load Services for Selected Business
+async function loadServices() {
+    const businessId = document.getElementById('businessSelect').value;
+    const serviceSelect = document.getElementById('serviceSelect');
+    
+    if (!businessId) {
+        serviceSelect.innerHTML = '<option value="">-- اختر الخدمة --</option>';
+        serviceSelect.disabled = true;
+        return;
+    }
+    
+    // Show loading state
+    serviceSelect.innerHTML = '<option value="">جاري تحميل الخدمات...</option>';
+    serviceSelect.disabled = true;
+    
+    try {
+        console.log('Loading services for business:', businessId);
+        const response = await fetch(`${API_URL}/services/public/by-business/${businessId}`);
+        
+        if (!response.ok) throw new Error('Failed to load services');
+        
+        const data = await response.json();
+        console.log('Services response:', data);
+        
+        if (data.success && data.data && data.data.length > 0) {
+            availableServices = data.data;
+            populateServiceSelect(data.data);
+            serviceSelect.disabled = false;
+            console.log('Loaded services:', data.data.length);
+        } else {
+            console.log('No services found for this business');
+            serviceSelect.innerHTML = '<option value="">لا توجد خدمات متاحة - يرجى إضافة خدمات من لوحة التحكم</option>';
+            serviceSelect.disabled = true;
+            showNotification('لا توجد خدمات متاحة لهذا المحل', 'error');
+        }
+    } catch (error) {
+        console.error('Error loading services:', error);
+        serviceSelect.innerHTML = '<option value="">خطأ في تحميل الخدمات</option>';
+        serviceSelect.disabled = true;
+        showNotification('خطأ في تحميل الخدمات', 'error');
+    }
+}
+
+// Populate Service Select
+function populateServiceSelect(services) {
+    const select = document.getElementById('serviceSelect');
+    select.innerHTML = '<option value="">-- اختر الخدمة --</option>';
+    
+    services.forEach(service => {
+        const option = document.createElement('option');
+        option.value = service._id;
+        option.textContent = `${service.name} - ${service.duration} دقيقة`;
+        select.appendChild(option);
+    });
+}
+
+// Update Service Info
+function updateServiceInfo() {
+    const serviceId = document.getElementById('serviceSelect').value;
+    const serviceInfo = document.getElementById('serviceInfo');
+    
+    if (!serviceId) {
+        serviceInfo.style.display = 'none';
+        return;
+    }
+    
+    const service = availableServices.find(s => s._id === serviceId);
+    if (service) {
+        document.getElementById('serviceDuration').textContent = `${service.duration} دقيقة`;
+        document.getElementById('servicePrice').textContent = `${service.price} ريال`;
+        serviceInfo.style.display = 'block';
+    }
+}
+
+// Load Available Time Slots
+async function loadAvailableSlots() {
+    const businessId = document.getElementById('businessSelect').value;
+    const date = document.getElementById('appointmentDate').value;
+    const timeSlotsContainer = document.getElementById('timeSlots');
+    
+    if (!businessId || !date) {
+        timeSlotsContainer.innerHTML = '<p class="empty-state">اختر المحل والتاريخ</p>';
+        return;
+    }
+    
+    timeSlotsContainer.innerHTML = '<p class="empty-state">جاري التحميل...</p>';
+    
+    try {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        
+        // Add token if available
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`${API_URL}/appointments/available-slots?business=${businessId}&date=${date}`, {
+            headers: headers
+        });
+        
+        if (!response.ok) throw new Error('Failed to load slots');
+        
+        const data = await response.json();
+        
+        if (data.success && data.data && data.data.length > 0) {
+            displayTimeSlots(data.data);
+        } else {
+            // Generate default time slots if no API data
+            generateDefaultTimeSlots();
+        }
+    } catch (error) {
+        console.error('Error loading slots:', error);
+        // Generate default time slots on error
+        generateDefaultTimeSlots();
+    }
+}
+
+// Generate Default Time Slots
+function generateDefaultTimeSlots() {
+    const timeSlotsContainer = document.getElementById('timeSlots');
+    const slots = [];
+    
+    // Generate slots from 9 AM to 9 PM
+    for (let hour = 9; hour <= 21; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+            const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+            slots.push({ time, available: true });
+        }
+    }
+    
+    displayTimeSlots(slots);
+}
+
+// Display Time Slots
+function displayTimeSlots(slots) {
+    const timeSlotsContainer = document.getElementById('timeSlots');
+    timeSlotsContainer.innerHTML = '';
+    
+    slots.forEach(slot => {
+        const slotElement = document.createElement('div');
+        slotElement.className = `time-slot ${!slot.available ? 'unavailable' : ''}`;
+        slotElement.textContent = slot.time;
+        
+        if (slot.available) {
+            slotElement.onclick = () => selectTimeSlot(slot.time, slotElement);
+        }
+        
+        timeSlotsContainer.appendChild(slotElement);
+    });
+}
+
+// Select Time Slot
+function selectTimeSlot(time, element) {
+    // Remove previous selection
+    document.querySelectorAll('.time-slot').forEach(slot => {
+        slot.classList.remove('selected');
+    });
+    
+    // Add selection to clicked slot
+    element.classList.add('selected');
+    selectedTimeSlot = time;
+}
+
+// Submit Booking
+document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const businessId = document.getElementById('businessSelect').value;
+    const serviceId = document.getElementById('serviceSelect').value;
+    const date = document.getElementById('appointmentDate').value;
+    const notes = document.getElementById('appointmentNotes').value;
+    
+    if (!selectedTimeSlot) {
+        showNotification('الرجاء اختيار الوقت', 'error');
+        return;
+    }
+    
+    const confirmBtn = document.getElementById('confirmBookingBtn');
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'جاري الحجز...';
+    
+    try {
+        const appointmentData = {
+            business: businessId,
+            service: serviceId,
+            customer: customerData._id,
+            customerName: customerData.name,
+            customerPhone: customerData.phone,
+            date: date,
+            time: selectedTimeSlot,
+            notes: notes || ''
+        };
+        
+        const response = await fetch(`${API_URL}/appointments/public/book`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(appointmentData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok && data.success) {
+            showNotification('✓ تم حجز الموعد بنجاح!', 'success');
+            closeBookingModal();
+            loadUpcomingAppointments();
+            loadStats();
+        } else {
+            showNotification(data.message || 'فشل حجز الموعد', 'error');
+        }
+    } catch (error) {
+        console.error('Booking error:', error);
+        showNotification('حدث خطأ أثناء الحجز', 'error');
+    } finally {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = 'تأكيد الحجز';
+    }
+});
+
+// Utility Functions
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-SA', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+}
+
+function getStatusText(status) {
+    const statuses = {
+        pending: 'معلق',
+        confirmed: 'مؤكد',
+        completed: 'مكتمل',
+        cancelled: 'ملغي',
+        'no-show': 'لم يحضر'
+    };
+    return statuses[status] || status;
+}
+
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.className = `notification ${type} show`;
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}

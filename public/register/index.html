@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سجل محلك الآن - SmartBiz</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/register/register.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                        <circle cx="20" cy="20" r="18" fill="#6366f1"/>
+                        <path d="M20 10 L28 25 L12 25 Z" fill="white"/>
+                    </svg>
+                    <span>SmartBiz AI</span>
+                </div>
+                <a href="/" class="back-link">← العودة للرئيسية</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="container">
+            <div class="progress-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">نوع المحل</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">معلومات المحل</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">معلوماتك</div>
+                </div>
+                <div class="step-line"></div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">الخطة</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Step 1: Business Type -->
+            <div class="form-step active" id="step-1">
+                <div class="step-header">
+                    <h1>ما نوع محلك؟</h1>
+                    <p>اختر نوع نشاطك التجاري لنقدم لك التجربة المثالية</p>
+                </div>
+
+                <div class="business-types-grid">
+                    <div class="business-type-card" data-type="barbershop">
+                        <div class="card-icon">💈</div>
+                        <h3>صالون حلاقة رجالي</h3>
+                        <p>إدارة المواعيد، الحلاقين، والخدمات</p>
+                        <div class="card-badge">الأكثر شعبية</div>
+                    </div>
+
+                    <div class="business-type-card" data-type="salon">
+                        <div class="card-icon">💅</div>
+                        <h3>صالون تجميل نسائي</h3>
+                        <p>خدمات العناية الشاملة والحجوزات</p>
+                    </div>
+
+                    <div class="business-type-card" data-type="restaurant">
+                        <div class="card-icon">🍽️</div>
+                        <h3>مطعم</h3>
+                        <p>إدارة الطاولات، القائمة، والطلبات</p>
+                    </div>
+
+                    <div class="business-type-card" data-type="cafe">
+                        <div class="card-icon">☕</div>
+                        <h3>مقهى</h3>
+                        <p>قائمة المشروبات والحجوزات</p>
+                    </div>
+
+                    <div class="business-type-card" data-type="workshop">
+                        <div class="card-icon">🔧</div>
+                        <h3>ورشة صيانة</h3>
+                        <p>إدارة الأعمال والمخزون</p>
+                    </div>
+
+                    <div class="business-type-card" data-type="spa">
+                        <div class="card-icon">💆</div>
+                        <h3>سبا ومساج</h3>
+                        <p>خدمات الاسترخاء والعناية</p>
+                    </div>
+
+                    <div class="business-type-card" data-type="gym">
+                        <div class="card-icon">💪</div>
+                        <h3>نادي رياضي</h3>
+                        <p>إدارة الاشتراكات والحصص</p>
+                    </div>
+
+                    <div class="business-type-card" data-type="other">
+                        <div class="card-icon">📦</div>
+                        <h3>أخرى</h3>
+                        <p>نشاط تجاري آخر</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Business Info -->
+            <div class="form-step" id="step-2">
+                <div class="step-header">
+                    <h1>معلومات محلك</h1>
+                    <p>أخبرنا عن تفاصيل نشاطك التجاري</p>
+                </div>
+
+                <form class="registration-form">
+                    <div class="form-group">
+                        <label for="businessName">اسم المحل *</label>
+                        <input type="text" id="businessName" name="businessName" required placeholder="مثال: صالون الأناقة">
+                        <span class="form-hint">سيظهر هذا الاسم للعملاء</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subdomain">عنوان محلك على الإنترنت *</label>
+                        <div class="subdomain-input">
+                            <input type="text" id="subdomain" name="subdomain" required placeholder="yourshop">
+                            <span class="subdomain-suffix">.smartbiz.com</span>
+                        </div>
+                        <span class="form-hint">اختر اسماً فريداً لمحلك</span>
+                        <div class="subdomain-check">
+                            <span class="check-icon">✓</span>
+                            <span class="check-message">متاح</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone">رقم الجوال *</label>
+                            <input type="tel" id="phone" name="phone" required placeholder="05xxxxxxxx" pattern="05[0-9]{8}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">البريد الإلكتروني *</label>
+                            <input type="email" id="email" name="email" required placeholder="info@example.com">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="city">المدينة *</label>
+                            <select id="city" name="city" required>
+                                <option value="">اختر المدينة</option>
+                                <option value="riyadh">الرياض</option>
+                                <option value="jeddah">جدة</option>
+                                <option value="dammam">الدمام</option>
+                                <option value="makkah">مكة المكرمة</option>
+                                <option value="madinah">المدينة المنورة</option>
+                                <option value="khobar">الخبر</option>
+                                <option value="tabuk">تبوك</option>
+                                <option value="abha">أبها</option>
+                                <option value="other">أخرى</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">العنوان</label>
+                            <input type="text" id="address" name="address" placeholder="الحي، الشارع (اختياري)">
+                        </div>
+                    </div>
+                </form>
+
+                <div class="step-actions">
+                    <button class="btn-secondary" onclick="previousStep()">← السابق</button>
+                    <button class="btn-primary" onclick="nextStep()">التالي →</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Owner Info -->
+            <div class="form-step" id="step-3">
+                <div class="step-header">
+                    <h1>معلوماتك الشخصية</h1>
+                    <p>بيانات تسجيل الدخول الخاصة بك</p>
+                </div>
+
+                <form class="registration-form">
+                    <div class="form-group">
+                        <label for="ownerName">اسمك الكامل *</label>
+                        <input type="text" id="ownerName" name="ownerName" required placeholder="محمد أحمد">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ownerEmail">بريدك الإلكتروني *</label>
+                        <input type="email" id="ownerEmail" name="ownerEmail" required placeholder="mohammed@example.com">
+                        <span class="form-hint">سيتم استخدامه لتسجيل الدخول</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ownerPhone">رقم جوالك *</label>
+                        <input type="tel" id="ownerPhone" name="ownerPhone" required placeholder="05xxxxxxxx" pattern="05[0-9]{8}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">كلمة المرور *</label>
+                        <div class="password-input">
+                            <input type="password" id="password" name="password" required placeholder="••••••••" minlength="6">
+                            <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                                <span class="toggle-icon">👁️</span>
+                            </button>
+                        </div>
+                        <span class="form-hint">يجب أن تكون 6 أحرف على الأقل</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">تأكيد كلمة المرور *</label>
+                        <div class="password-input">
+                            <input type="password" id="confirmPassword" name="confirmPassword" required placeholder="••••••••" minlength="6">
+                            <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">
+                                <span class="toggle-icon">👁️</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="step-actions">
+                    <button class="btn-secondary" onclick="previousStep()">← السابق</button>
+                    <button class="btn-primary" onclick="nextStep()">التالي →</button>
+                </div>
+            </div>
+
+            <!-- Step 4: Choose Plan -->
+            <div class="form-step" id="step-4">
+                <div class="step-header">
+                    <h1>اختر خطتك</h1>
+                    <p>ابدأ بفترة تجريبية مجانية لمدة 14 يوماً</p>
+                </div>
+
+                <div class="trial-banner">
+                    <div class="trial-icon">🎉</div>
+                    <div class="trial-text">
+                        <h3>جرب مجاناً لمدة 14 يوم!</h3>
+                        <p>لا حاجة لبطاقة ائتمان • يمكنك الإلغاء في أي وقت</p>
+                    </div>
+                </div>
+
+                <div class="pricing-grid">
+                    <div class="pricing-card" data-plan="basic">
+                        <div class="plan-header">
+                            <h3>الأساسية</h3>
+                            <div class="plan-price">
+                                <span class="currency">ر.س</span>
+                                <span class="amount">99</span>
+                                <span class="period">/شهر</span>
+                            </div>
+                            <p>مثالية للمحلات الصغيرة</p>
+                        </div>
+                        <ul class="plan-features">
+                            <li><span class="check">✓</span> حتى 50 موعد شهرياً</li>
+                            <li><span class="check">✓</span> موظف واحد</li>
+                            <li><span class="check">✓</span> فواتير أساسية</li>
+                            <li><span class="check">✓</span> إدارة العملاء</li>
+                            <li><span class="check">✓</span> تطبيق جوال</li>
+                            <li><span class="cross">✗</span> تقارير متقدمة</li>
+                            <li><span class="cross">✗</span> مساعد AI</li>
+                        </ul>
+                        <button class="btn-plan" onclick="selectPlan('basic')">اختر الأساسية</button>
+                    </div>
+
+                    <div class="pricing-card featured" data-plan="pro">
+                        <div class="plan-badge">الأكثر شعبية ⭐</div>
+                        <div class="plan-header">
+                            <h3>الاحترافية</h3>
+                            <div class="plan-price">
+                                <span class="currency">ر.س</span>
+                                <span class="amount">249</span>
+                                <span class="period">/شهر</span>
+                            </div>
+                            <p>للمحلات المتنامية</p>
+                        </div>
+                        <ul class="plan-features">
+                            <li><span class="check">✓</span> حتى 200 موعد شهرياً</li>
+                            <li><span class="check">✓</span> حتى 3 موظفين</li>
+                            <li><span class="check">✓</span> فواتير متقدمة</li>
+                            <li><span class="check">✓</span> تقارير تفصيلية</li>
+                            <li><span class="check">✓</span> مساعد AI</li>
+                            <li><span class="check">✓</span> برنامج ولاء</li>
+                            <li><span class="check">✓</span> إشعارات WhatsApp</li>
+                        </ul>
+                        <button class="btn-plan primary" onclick="selectPlan('pro')">اختر الاحترافية</button>
+                    </div>
+
+                    <div class="pricing-card" data-plan="enterprise">
+                        <div class="plan-header">
+                            <h3>المؤسسات</h3>
+                            <div class="plan-price">
+                                <span class="currency">ر.س</span>
+                                <span class="amount">599</span>
+                                <span class="period">/شهر</span>
+                            </div>
+                            <p>للشركات الكبيرة</p>
+                        </div>
+                        <ul class="plan-features">
+                            <li><span class="check">✓</span> مواعيد غير محدودة</li>
+                            <li><span class="check">✓</span> موظفين غير محدود</li>
+                            <li><span class="check">✓</span> فروع متعددة</li>
+                            <li><span class="check">✓</span> تقارير متقدمة</li>
+                            <li><span class="check">✓</span> مساعد AI متقدم</li>
+                            <li><span class="check">✓</span> API مخصص</li>
+                            <li><span class="check">✓</span> دعم مخصص 24/7</li>
+                        </ul>
+                        <button class="btn-plan" onclick="selectPlan('enterprise')">اختر المؤسسات</button>
+                    </div>
+                </div>
+
+                <div class="terms-section">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="agreeTerms" required>
+                        <span>أوافق على <a href="/terms">شروط الخدمة</a> و <a href="/privacy">سياسة الخصوصية</a></span>
+                    </label>
+                </div>
+
+                <div class="step-actions">
+                    <button class="btn-secondary" onclick="previousStep()">← السابق</button>
+                    <button class="btn-primary" id="submitBtn" onclick="submitRegistration()">
+                        <span class="btn-text">إنشاء حسابي</span>
+                        <span class="btn-loader" style="display: none;">
+                            <span class="spinner"></span> جاري الإنشاء...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Success Modal -->
+    <div class="modal" id="successModal">
+        <div class="modal-content success">
+            <div class="success-icon">🎉</div>
+            <h2>مبروك! تم إنشاء حسابك بنجاح</h2>
+            <p>يمكنك الآن البدء باستخدام SmartBiz لإدارة محلك</p>
+            <div class="success-info">
+                <p><strong>رابط محلك:</strong></p>
+                <p class="shop-url" id="shopUrl">loading...</p>
+            </div>
+            <button class="btn-primary btn-lg" onclick="goToDashboard()">ابدأ الآن →</button>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <script src="/register/register.js"></script>
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - SmartBiz</title>
+    <link rel="stylesheet" href="/public/dashboard/dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>SmartBiz</h2>
+            <button class="close-sidebar" onclick="toggleSidebar()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="#dashboard" class="nav-item active" onclick="showSection('dashboard')">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a href="#appointments" class="nav-item" onclick="showSection('appointments')">
+                <i class="fas fa-calendar-alt"></i>
+                <span>المواعيد</span>
+            </a>
+            <a href="#customers" class="nav-item" onclick="showSection('customers')">
+                <i class="fas fa-users"></i>
+                <span>العملاء</span>
+            </a>
+            <a href="#services" class="nav-item" onclick="showSection('services')">
+                <i class="fas fa-scissors"></i>
+                <span>الخدمات</span>
+            </a>
+            <a href="#employees" class="nav-item" onclick="showSection('employees')">
+                <i class="fas fa-user-tie"></i>
+                <span>الموظفين</span>
+            </a>
+            <a href="#invoices" class="nav-item" onclick="showSection('invoices')">
+                <i class="fas fa-file-invoice-dollar"></i>
+                <span>الفواتير</span>
+            </a>
+            <a href="#subscription" class="nav-item" onclick="showSection('subscription')">
+                <i class="fas fa-crown"></i>
+                <span>الاشتراك</span>
+            </a>
+            <a href="#settings" class="nav-item" onclick="showSection('settings')">
+                <i class="fas fa-cog"></i>
+                <span>الإعدادات</span>
+            </a>
+            <a href="#" class="nav-item logout" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>تسجيل الخروج</span>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <button class="menu-toggle" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="header-title">
+                <h1 id="page-title">الرئيسية</h1>
+            </div>
+            <div class="header-actions">
+                <div class="user-info">
+                    <span id="user-name">جاري التحميل...</span>
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="content-section active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon blue">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-today-appointments">0</h3>
+                        <p>مواعيد اليوم</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-total-customers">0</h3>
+                        <p>إجمالي العملاء</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon orange">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-today-revenue">0 ريال</h3>
+                        <p>إيرادات اليوم</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon purple">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="stat-rating">0</h3>
+                        <p>التقييم</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>المواعيد القادمة</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="upcoming-appointments" class="appointments-list">
+                            <div class="loading">جاري التحميل...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>الإيرادات الأسبوعية</h3>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="revenue-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Appointments Section -->
+        <section id="appointments-section" class="content-section">
+            <div class="section-actions">
+                <button class="btn btn-primary" onclick="showAddAppointmentModal()">
+                    <i class="fas fa-plus"></i> إضافة موعد
+                </button>
+                <div class="filters">
+                    <select id="appointment-status-filter" onchange="filterAppointments()">
+                        <option value="">جميع الحالات</option>
+                        <option value="pending">معلق</option>
+                        <option value="confirmed">مؤكد</option>
+                        <option value="completed">مكتمل</option>
+                        <option value="cancelled">ملغي</option>
+                        <option value="no-show">لم يحضر</option>
+                    </select>
+                    <input type="date" id="appointment-date-filter" onchange="filterAppointments()">
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>التاريخ</th>
+                                    <th>الوقت</th>
+                                    <th>العميل</th>
+                                    <th>الخدمة</th>
+                                    <th>الموظف</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="appointments-table-body">
+                                <tr>
+                                    <td colspan="7" class="loading">جاري التحميل...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Customers Section -->
+        <section id="customers-section" class="content-section">
+            <div class="section-actions">
+                <button class="btn btn-primary" onclick="showAddCustomerModal()">
+                    <i class="fas fa-plus"></i> إضافة عميل
+                </button>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="customer-search" placeholder="البحث عن عميل..." oninput="searchCustomers()">
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>الهاتف</th>
+                                    <th>نقاط الولاء</th>
+                                    <th>عدد الزيارات</th>
+                                    <th>إجمالي الإنفاق</th>
+                                    <th>التقييم</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customers-table-body">
+                                <tr>
+                                    <td colspan="7" class="loading">جاري التحميل...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Services Section -->
+        <section id="services-section" class="content-section">
+            <div class="section-actions">
+                <button class="btn btn-primary" onclick="showAddServiceModal()">
+                    <i class="fas fa-plus"></i> إضافة خدمة
+                </button>
+            </div>
+
+            <div class="services-grid" id="services-grid">
+                <div class="loading">جاري التحميل...</div>
+            </div>
+        </section>
+
+        <!-- Employees Section -->
+        <section id="employees-section" class="content-section">
+            <div class="section-actions">
+                <button class="btn btn-primary" onclick="showAddEmployeeModal()">
+                    <i class="fas fa-plus"></i> إضافة موظف
+                </button>
+            </div>
+
+            <div class="employees-grid" id="employees-grid">
+                <div class="loading">جاري التحميل...</div>
+            </div>
+        </section>
+
+        <!-- Invoices Section -->
+        <section id="invoices-section" class="content-section">
+            <div class="section-actions">
+                <button class="btn btn-primary" onclick="showCreateInvoiceModal()">
+                    <i class="fas fa-plus"></i> إنشاء فاتورة
+                </button>
+                <div class="filters">
+                    <select id="invoice-status-filter" onchange="filterInvoices()">
+                        <option value="">جميع الحالات</option>
+                        <option value="paid">مدفوعة</option>
+                        <option value="pending">معلقة</option>
+                        <option value="cancelled">ملغاة</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>رقم الفاتورة</th>
+                                    <th>التاريخ</th>
+                                    <th>العميل</th>
+                                    <th>المبلغ</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invoices-table-body">
+                                <tr>
+                                    <td colspan="6" class="loading">جاري التحميل...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Subscription Section -->
+        <section id="subscription-section" class="content-section">
+            <div class="subscription-container">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>الاشتراك الحالي</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="subscription-info">
+                            <div class="loading">جاري التحميل...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>تاريخ الدفعات</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="payment-history">
+                            <div class="loading">جاري التحميل...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings-section" class="content-section">
+            <div class="card">
+                <div class="card-header">
+                    <h3>إعدادات المتجر</h3>
+                </div>
+                <div class="card-body">
+                    <form id="settings-form" onsubmit="saveSettings(event)">
+                        <div class="form-group">
+                            <label>اسم المتجر</label>
+                            <input type="text" id="tenant-name" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>البريد الإلكتروني</label>
+                            <input type="email" id="tenant-email" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>تفعيل نظام المكافآت</label>
+                            <label class="switch">
+                                <input type="checkbox" id="rewards-enabled">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="form-group">
+                            <label>نقاط لكل ريال</label>
+                            <input type="number" id="points-per-riyal" class="form-control" min="0" step="0.1">
+                        </div>
+
+                        <div class="form-group">
+                            <label>ريال لكل نقطة</label>
+                            <input type="number" id="riyal-per-point" class="form-control" min="0" step="0.01">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> حفظ التغييرات
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-overlay" class="modal-overlay" onclick="closeAllModals()"></div>
+
+    <!-- Add Appointment Modal -->
+    <div id="add-appointment-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>إضافة موعد جديد</h3>
+                <button class="close-modal" onclick="closeModal('add-appointment-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="add-appointment-form" onsubmit="addAppointment(event)">
+                <div class="form-group">
+                    <label>العميل</label>
+                    <input type="text" id="appointment-customer-phone" class="form-control" placeholder="رقم الهاتف" required>
+                </div>
+                <div class="form-group">
+                    <label>اسم العميل</label>
+                    <input type="text" id="appointment-customer-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>الخدمة</label>
+                    <select id="appointment-service" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>الموظف</label>
+                    <select id="appointment-employee" class="form-control" required></select>
+                </div>
+                <div class="form-group">
+                    <label>التاريخ</label>
+                    <input type="date" id="appointment-date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>الوقت</label>
+                    <input type="time" id="appointment-time" class="form-control" required>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('add-appointment-modal')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Service Modal -->
+    <div id="add-service-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>إضافة خدمة جديدة</h3>
+                <button class="close-modal" onclick="closeModal('add-service-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="add-service-form" onsubmit="addService(event)">
+                <div class="form-group">
+                    <label>اسم الخدمة *</label>
+                    <input type="text" id="service-name" class="form-control" placeholder="مثال: قص شعر" required>
+                </div>
+                <div class="form-group">
+                    <label>الوصف</label>
+                    <textarea id="service-description" class="form-control" rows="3" placeholder="وصف الخدمة (اختياري)"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>السعر (ريال) *</label>
+                        <input type="number" id="service-price" class="form-control" placeholder="50" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>المدة (دقيقة) *</label>
+                        <input type="number" id="service-duration" class="form-control" placeholder="30" min="5" step="5" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>الفئة</label>
+                    <select id="service-category" class="form-control">
+                        <option value="">-- اختر الفئة --</option>
+                        <option value="قص شعر">قص شعر</option>
+                        <option value="حلاقة">حلاقة</option>
+                        <option value="تصفيف">تصفيف</option>
+                        <option value="صبغة">صبغة</option>
+                        <option value="عناية">عناية</option>
+                        <option value="تجميل">تجميل</option>
+                        <option value="مساج">مساج</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="service-active" checked>
+                        خدمة نشطة
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('add-service-modal')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary" id="service-submit-btn">حفظ الخدمة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Service Modal -->
+    <div id="edit-service-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>تعديل الخدمة</h3>
+                <button class="close-modal" onclick="closeModal('edit-service-modal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="edit-service-form" onsubmit="updateService(event)">
+                <input type="hidden" id="edit-service-id">
+                <div class="form-group">
+                    <label>اسم الخدمة *</label>
+                    <input type="text" id="edit-service-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>الوصف</label>
+                    <textarea id="edit-service-description" class="form-control" rows="3"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>السعر (ريال) *</label>
+                        <input type="number" id="edit-service-price" class="form-control" min="0" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>المدة (دقيقة) *</label>
+                        <input type="number" id="edit-service-duration" class="form-control" min="5" step="5" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>الفئة</label>
+                    <select id="edit-service-category" class="form-control">
+                        <option value="">-- اختر الفئة --</option>
+                        <option value="قص شعر">قص شعر</option>
+                        <option value="حلاقة">حلاقة</option>
+                        <option value="تصفيف">تصفيف</option>
+                        <option value="صبغة">صبغة</option>
+                        <option value="عناية">عناية</option>
+                        <option value="تجميل">تجميل</option>
+                        <option value="مساج">مساج</option>
+                        <option value="أخرى">أخرى</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="edit-service-active">
+                        خدمة نشطة
+                    </label>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('edit-service-modal')">إلغاء</button>
+                    <button type="submit" class="btn btn-primary" id="edit-service-submit-btn">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="notification" class="notification"></div>
+
+    <script src="/public/dashboard/dashboard.js"></script>
+</body>
+</html>
