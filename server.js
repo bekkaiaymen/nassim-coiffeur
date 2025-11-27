@@ -10,8 +10,18 @@ dotenv.config();
 // Initialize Express
 const app = express();
 
-// Middleware
-app.use(cors());
+// Middleware - CORS Configuration for Production
+app.use(cors({
+    origin: [
+        'https://nassim-coiffeur.vercel.app',
+        'https://nassim-coiffeur-bekkaiaymen.vercel.app',
+        'http://localhost:3000',
+        'http://192.168.1.2:3000'
+    ],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
