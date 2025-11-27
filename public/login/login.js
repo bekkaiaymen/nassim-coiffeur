@@ -54,9 +54,15 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
             // إظهار رسالة نجاح
             showNotification('تم تسجيل الدخول بنجاح! جاري التحويل...', 'success');
             
-            // Get redirect URL from query params or default to dashboard
-            const urlParams = new URLSearchParams(window.location.search);
-            const redirectTo = urlParams.get('redirect') || 'dashboard';
+            // Check if user is Nassim owner
+            let redirectTo;
+            if (email === 'aymenbekkai179@gmail.com') {
+                redirectTo = 'nassim-owner';
+            } else {
+                // Get redirect URL from query params or default to dashboard
+                const urlParams = new URLSearchParams(window.location.search);
+                redirectTo = urlParams.get('redirect') || 'dashboard';
+            }
             
             // الانتقال للصفحة المطلوبة
             setTimeout(() => {
