@@ -355,7 +355,7 @@ body {
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-sm);
     margin-bottom: 24px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .card-header {
@@ -373,7 +373,14 @@ body {
 }
 
 .card-body {
+    padding: 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.card-body-content {
     padding: 24px;
+    min-width: 100%;
 }
 
 /* ==================== Buttons ==================== */
@@ -844,47 +851,53 @@ body {
 
 /* ==================== Appointments List ==================== */
 .appointments-scroll-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    padding: 0;
 }
 
 .appointment-item {
-    padding: 16px;
+    padding: 16px 24px;
     border-bottom: 1px solid var(--gray-200);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    min-width: 100%;
+    gap: 16px;
+    min-width: 600px;
 }
 
 .appointment-item:hover {
     background: var(--gray-50);
 }
 
+.appointment-item:last-child {
+    border-bottom: none;
+}
+
 .appointment-info {
     flex: 1;
-    min-width: 0;
+    min-width: 200px;
 }
 
 .appointment-customer {
     font-weight: 600;
     margin-bottom: 4px;
+    color: var(--dark);
 }
 
 .appointment-details {
     color: var(--gray-600);
     font-size: 14px;
+    margin-bottom: 4px;
 }
 
 .appointment-time {
     color: var(--gray-500);
     font-size: 12px;
-    margin-top: 4px;
 }
 
 .appointment-status {
     flex-shrink: 0;
+    min-width: 100px;
+    text-align: left;
 }
 
 /* ==================== Badge ==================== */
@@ -1097,17 +1110,51 @@ body {
     .table th,
     .table td {
         padding: 8px;
+        font-size: 13px;
+    }
+    
+    .card-body {
+        padding: 0;
     }
     
     .appointment-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 8px;
+        min-width: 500px;
+        padding: 12px 16px;
+        gap: 12px;
     }
     
-    .appointment-item > div:last-child {
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
+    .appointment-info {
+        min-width: 180px;
+    }
+    
+    .appointment-customer {
+        font-size: 15px;
+    }
+    
+    .appointment-details {
+        font-size: 13px;
+    }
+    
+    .appointment-time {
+        font-size: 11px;
+    }
+    
+    .appointment-status {
+        min-width: 90px;
+    }
+    
+    /* Show scroll hint */
+    .card-body::after {
+        content: '← مرر لليسار لرؤية المزيد';
+        display: block;
+        text-align: center;
+        padding: 8px;
+        background: linear-gradient(to left, var(--gray-100), transparent);
+        color: var(--gray-600);
+        font-size: 12px;
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
     }
 }
