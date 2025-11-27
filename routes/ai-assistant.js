@@ -118,108 +118,56 @@ router.post('/chat/customer', async (req, res) => {
             ...conversationHistory,
             {
                 role: 'user',
-                // منطق الحجز الذكي
-                const bookingKeywords = [
-                    'حجز موعد',
-                    'احجز لي موعد',
-                    'أريد حجز',
-                    'موعد جديد',
-                    'booking',
-                    'reserve'
-                ];
-                const isBookingRequest = bookingKeywords.some(k => message.includes(k));
+                content: message
+            }
+        ];
 
-                if (isBookingRequest) {
-                    // حجز افتراضي: اليوم التالي الساعة 4 عصراً
-                    const Appointment = require('../models/Appointment');
-                    const Customer = require('../models/Customer');
-                    // ابحث عن أول عميل مسجل (أو أنشئ عميل وهمي)
-                    let customer = await Customer.findOne({ followedBusinesses: businessId });
-                    if (!customer) {
-                        customer = await Customer.create({
-                            name: 'زائر من الذكاء الاصطناعي',
-                            phone: '0000000000',
-                            followedBusinesses: [businessId]
-                        });
-                    }
-                    // ابحث عن أول خدمة متوفرة
-                    const service = services[0];
-                    // احجز الموعد غداً الساعة 16:00
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    tomorrow.setHours(16, 0, 0, 0);
-                    const appointment = await Appointment.create({
-                        business: businessId,
-                        customer: customer._id,
-                        service: service?._id,
-                        date: tomorrow,
-                        status: 'pending',
-                        notes: 'تم الحجز عبر مساعد الذكاء الاصطناعي wassim'
-                    });
-                    const aiResponse = `✅ تم حجز موعدك بنجاح!
+        // Call DeepSeek API
+        const response = await axios.post(
+            DEEPSEEK_API_URL,
+            {
+                model: 'deepseek-chat',
+                messages: messages,
+                temperature: 0.7,
+                max_tokens: 500,
+                stream: false
+            },
+            {
+                headers: {
+                    'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        const aiResponse = response.data.choices[0].message.content;
+
+        res.json({
+            success: true,
+            data: {
+                response: aiResponse,
+                conversationHistory: [
+                    ...conversationHistory,
+                    { role: 'user', content: message },
+                    { role: 'assistant', content: aiResponse }
+                ]
+            }
+        });
+
+    } catch (error) {
+        console.error('AI Chat Error:', error.response?.data || error.message);
+        console.error('Full error:', error);
+        console.error('API Key present:', !!DEEPSEEK_API_KEY);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في الذكاء الاصطناعي',
+            error: error.response?.data?.error?.message || error.message,
             details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
 
 // Chat with AI - Owner Assistant
-                    return res.json({
-                        success: true,
-                        data: {
-                            response: aiResponse,
-                            conversationHistory: [
-                                ...conversationHistory,
-                                { role: 'user', content: message },
-                                { role: 'assistant', content: aiResponse }
-                            ]
-                        }
-                    });
-                }
-
-                // إذا لم يكن طلب حجز، استخدم الذكاء الاصطناعي العادي
-                const messages = [
-                    {
-                        role: 'system',
-                        content: getBusinessContext(business)
-                    },
-                    ...conversationHistory,
-                    {
-                        role: 'user',
-                        content: message
-                    }
-                ];
-
-                // Call DeepSeek API
-                const response = await axios.post(
-                    DEEPSEEK_API_URL,
-                    {
-                        model: 'deepseek-chat',
-                        messages: messages,
-                        temperature: 0.7,
-                        max_tokens: 500,
-                        stream: false
-                    },
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-                            'Content-Type': 'application/json'
-                        }
-                    }
-                );
-
-                const aiResponse = response.data.choices[0].message.content;
-
-                res.json({
-                    success: true,
-                    data: {
-                        response: aiResponse,
-                        conversationHistory: [
-                            ...conversationHistory,
-                            { role: 'user', content: message },
-                            { role: 'assistant', content: aiResponse }
-                        ]
-                    }
-                });
 router.post('/chat/owner', async (req, res) => {
     try {
         // Check if API key exists
