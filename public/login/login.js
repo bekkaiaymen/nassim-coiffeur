@@ -30,8 +30,13 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     btnText.style.display = 'none';
     spinner.style.display = 'inline-block';
     
+    // API URL based on environment
+    const API_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/api'
+        : 'https://nassim-coiffeur.onrender.com/api';
+    
     try {
-        const response = await fetch('/api/auth/login', {
+        const response = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

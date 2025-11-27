@@ -17,9 +17,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Load all businesses
 async function loadBusinesses() {
+    // API URL based on environment
+    const API_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/api'
+        : 'https://nassim-coiffeur.onrender.com/api';
+    
     try {
-        const response = await fetch('/api/businesses/public');
-        const result = await response.json();
+        const response = await fetch(`${API_URL}/businesses/public`);
+        const data = await response.json();
 
         if (result.success) {
             allBusinesses = result.data;

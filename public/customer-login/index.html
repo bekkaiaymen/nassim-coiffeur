@@ -417,8 +417,13 @@
                 
                 console.log('Login attempt:', { type: input.type, identifier: input.value });
                 
+                // API URL based on environment
+                const API_URL = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3000/api'
+                    : 'https://nassim-coiffeur.onrender.com/api';
+                
                 // Send login request
-                const response = await fetch('/api/customers/login', {
+                const response = await fetch(`${API_URL}/customers/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

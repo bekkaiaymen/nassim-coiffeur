@@ -4,8 +4,8 @@
 // تطوير محلي
 const DEV_API_URL = 'http://localhost:3000';
 
-// إنتاج (Production) - عدّل هذا بعد رفع Backend إلى Render
-const PROD_API_URL = 'https://nassim-backend.onrender.com';
+// إنتاج (Production) - Backend مرفوع على Render
+const PROD_API_URL = 'https://nassim-coiffeur.onrender.com';
 
 // اختيار تلقائي حسب البيئة
 const API_BASE_URL = window.location.hostname === 'localhost' 

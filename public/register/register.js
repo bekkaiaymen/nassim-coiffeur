@@ -310,8 +310,13 @@ async function submitRegistration() {
             plan: registrationData.selectedPlan
         };
         
+        // API URL based on environment
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api'
+            : 'https://nassim-coiffeur.onrender.com/api';
+        
         // Send request
-        const response = await fetch('/api/businesses/register', {
+        const response = await fetch(`${API_URL}/businesses/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

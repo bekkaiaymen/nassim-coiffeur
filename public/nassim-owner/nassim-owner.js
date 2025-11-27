@@ -1,5 +1,7 @@
 // ==================== Configuration ====================
-const API_URL = 'http://localhost:3000/api';
+const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api'
+    : 'https://nassim-coiffeur.onrender.com/api';
 const NASSIM_BUSINESS_ID = '69259331651b1babc1eb83dc';
 let currentUser = null;
 let currentPage = 'dashboard';
