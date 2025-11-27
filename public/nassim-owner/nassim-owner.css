@@ -811,9 +811,17 @@ body {
 }
 
 /* ==================== Table ==================== */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -20px;
+    padding: 0 20px;
+}
+
 .table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 800px;
 }
 
 .table th,
@@ -821,6 +829,7 @@ body {
     padding: 12px;
     text-align: right;
     border-bottom: 1px solid var(--gray-200);
+    white-space: nowrap;
 }
 
 .table th {
@@ -833,6 +842,20 @@ body {
     background: var(--gray-50);
 }
 
+/* ==================== Appointments List ==================== */
+.appointment-item {
+    padding: 16px;
+    border-bottom: 1px solid var(--gray-200);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.appointment-item:hover {
+    background: var(--gray-50);
+}
+
 /* ==================== Badge ==================== */
 .badge {
     display: inline-block;
@@ -840,6 +863,7 @@ body {
     border-radius: 12px;
     font-size: 12px;
     font-weight: 600;
+    white-space: nowrap;
 }
 
 .badge-success {
@@ -1028,5 +1052,31 @@ body {
     .filters-bar {
         overflow-x: auto;
         flex-wrap: nowrap;
+    }
+    
+    .table-responsive {
+        margin: 0 -16px;
+        padding: 0 16px;
+    }
+    
+    .table {
+        font-size: 14px;
+    }
+    
+    .table th,
+    .table td {
+        padding: 8px;
+    }
+    
+    .appointment-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .appointment-item > div:last-child {
+        width: 100%;
+        display: flex;
+        justify-content: flex-end;
     }
 }
