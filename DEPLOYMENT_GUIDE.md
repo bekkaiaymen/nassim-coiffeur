@@ -152,6 +152,7 @@ NODE_ENV = production
 PORT = 10000
 MONGODB_URI = mongodb+srv://nassim_admin:your_password@nassim-production.xxxxx.mongodb.net/nassim?retryWrites=true&w=majority
 JWT_SECRET = [اضغط Generate لتوليد مفتاح عشوائي]
+JWT_EXPIRE = 7d
 FRONTEND_URL = https://nassim-coiffeur.vercel.app
 ```
 
