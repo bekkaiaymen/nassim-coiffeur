@@ -34,10 +34,7 @@ app.use('/nassim', express.static(path.join(__dirname, 'public/nassim')));
 app.use('/nassim-owner', express.static(path.join(__dirname, 'public/nassim-owner')));
 
 // MongoDB Connection (optional - server will still run without it)
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smartbiz', {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smartbiz')
 .then(async () => {
     console.log('✅ MongoDB متصل بنجاح');
     
