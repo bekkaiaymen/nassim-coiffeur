@@ -225,6 +225,8 @@
     resize: none;
     max-height: 80px;
     transition: border-color 0.3s;
+    color: #222 !important;
+    background: #fff !important;
 }
 .wassim-chat-input:focus {
     outline: none;
