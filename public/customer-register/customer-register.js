@@ -349,8 +349,13 @@ async function submitRegistration() {
 
         console.log('Sending registration data:', data);
 
+        // API URL based on environment
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api'
+            : 'https://nassim-coiffeur.onrender.com/api';
+
         // Send request
-        const response = await fetch('/api/customers/register', {
+        const response = await fetch(`${API_URL}/customers/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
