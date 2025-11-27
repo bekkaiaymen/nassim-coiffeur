@@ -73,6 +73,14 @@ const getOwnerAssistantContext = (business, stats) => {
 // Chat with AI - Customer Assistant
 router.post('/chat/customer', async (req, res) => {
     try {
+        // Check if API key exists
+        if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === 'your-deepseek-api-key-here') {
+            return res.status(500).json({
+                success: false,
+                message: 'مفتاح DeepSeek API غير موجود. يرجى إضافته في ملف .env'
+            });
+        }
+
         const { message, businessId, conversationHistory = [] } = req.body;
 
         if (!message || !businessId) {
@@ -148,10 +156,13 @@ router.post('/chat/customer', async (req, res) => {
 
     } catch (error) {
         console.error('AI Chat Error:', error.response?.data || error.message);
+        console.error('Full error:', error);
+        console.error('API Key present:', !!DEEPSEEK_API_KEY);
         res.status(500).json({
             success: false,
             message: 'حدث خطأ في الذكاء الاصطناعي',
-            error: error.response?.data?.error?.message || error.message
+            error: error.response?.data?.error?.message || error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
@@ -159,6 +170,14 @@ router.post('/chat/customer', async (req, res) => {
 // Chat with AI - Owner Assistant
 router.post('/chat/owner', async (req, res) => {
     try {
+        // Check if API key exists
+        if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY === 'your-deepseek-api-key-here') {
+            return res.status(500).json({
+                success: false,
+                message: 'مفتاح DeepSeek API غير موجود. يرجى إضافته في ملف .env'
+            });
+        }
+
         const { message, businessId, conversationHistory = [] } = req.body;
 
         if (!message || !businessId) {
@@ -257,10 +276,13 @@ router.post('/chat/owner', async (req, res) => {
 
     } catch (error) {
         console.error('AI Owner Chat Error:', error.response?.data || error.message);
+        console.error('Full error:', error);
+        console.error('API Key present:', !!DEEPSEEK_API_KEY);
         res.status(500).json({
             success: false,
             message: 'حدث خطأ في الذكاء الاصطناعي',
-            error: error.response?.data?.error?.message || error.message
+            error: error.response?.data?.error?.message || error.message,
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 });
