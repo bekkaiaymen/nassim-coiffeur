@@ -1,5 +1,7 @@
 // Nassim Customer Portal - Professional JavaScript
-const API_URL = '/api';
+const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000/api'
+    : 'https://nassim-coiffeur.onrender.com/api';
 const NASSIM_BUSINESS_ID = '69259331651b1babc1eb83dc'; // Nassim Business ID
 let customerData = null;
 let token = localStorage.getItem('customerToken');
@@ -1089,7 +1091,7 @@ function searchContent(query) {
 // ==================== PWA Setup ====================
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/public/service-worker.js')
+        navigator.serviceWorker.register('/service-worker.js')
             .then((registration) => {
                 console.log('✅ PWA: Service Worker registered successfully');
                 
