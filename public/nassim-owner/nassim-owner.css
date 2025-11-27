@@ -843,6 +843,11 @@ body {
 }
 
 /* ==================== Appointments List ==================== */
+.appointments-scroll-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
 .appointment-item {
     padding: 16px;
     border-bottom: 1px solid var(--gray-200);
@@ -850,10 +855,36 @@ body {
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+    min-width: 100%;
 }
 
 .appointment-item:hover {
     background: var(--gray-50);
+}
+
+.appointment-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.appointment-customer {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.appointment-details {
+    color: var(--gray-600);
+    font-size: 14px;
+}
+
+.appointment-time {
+    color: var(--gray-500);
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.appointment-status {
+    flex-shrink: 0;
 }
 
 /* ==================== Badge ==================== */

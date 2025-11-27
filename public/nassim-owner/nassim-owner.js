@@ -204,18 +204,22 @@ function displayTodayAppointments(appointments) {
         return;
     }
 
-    const html = appointments.map(apt => `
-        <div class="appointment-item" style="padding: 16px; border-bottom: 1px solid var(--gray-200); display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <div style="font-weight: 600; margin-bottom: 4px;">${apt.customer?.name || 'عميل'}</div>
-                <div style="color: var(--gray-600); font-size: 14px;">${apt.service?.name || 'خدمة'} - ${apt.employee?.name || 'موظف'}</div>
-                <div style="color: var(--gray-500); font-size: 12px; margin-top: 4px;">${formatTime(apt.dateTime)}</div>
-            </div>
-            <div>
-                <span class="badge badge-${getStatusColor(apt.status)}">${getStatusText(apt.status)}</span>
-            </div>
+    const html = `
+        <div class="appointments-scroll-container">
+            ${appointments.map(apt => `
+                <div class="appointment-item">
+                    <div class="appointment-info">
+                        <div class="appointment-customer">${apt.customer?.name || 'عميل'}</div>
+                        <div class="appointment-details">${apt.service?.name || 'خدمة'} - ${apt.employee?.name || 'موظف'}</div>
+                        <div class="appointment-time">${formatTime(apt.dateTime)}</div>
+                    </div>
+                    <div class="appointment-status">
+                        <span class="badge badge-${getStatusColor(apt.status)}">${getStatusText(apt.status)}</span>
+                    </div>
+                </div>
+            `).join('')}
         </div>
-    `).join('');
+    `;
 
     container.innerHTML = html;
 }
