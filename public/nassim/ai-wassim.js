@@ -18,10 +18,12 @@ class WassimAI {
         modal.innerHTML = `
             <div class="wassim-ai-header">
                 <div class="wassim-ai-header-content">
-                    <div class="wassim-ai-header-icon">🧑‍💼</div>
+                    <div class="wassim-ai-header-icon">
+                        <img src="https://ui-avatars.com/api/?name=Wassim&background=FDB714&color=1A1A1A&size=128&bold=true" alt="Wassim">
+                    </div>
                     <div class="wassim-ai-header-text">
                         <h3>wassim - مساعد الزبون</h3>
-                        <p>اسألني عن أي خدمة أو سعر أو احجز موعدك!</p>
+                        <p>Nassim Coiffeur</p>
                     </div>
                 </div>
                 <button class="wassim-ai-close" id="wassimAIClose">×</button>
@@ -34,14 +36,18 @@ class WassimAI {
             </div>
             <div class="wassim-ai-messages" id="wassimAIMessages">
                 <div class="wassim-message assistant">
-                    <div class="wassim-message-avatar">🧑‍💼</div>
+                    <div class="wassim-message-avatar">
+                        <img src="https://ui-avatars.com/api/?name=Wassim&background=FDB714&color=1A1A1A&size=128&bold=true" alt="Wassim">
+                    </div>
                     <div class="wassim-message-content">
-                        <div class="wassim-message-bubble">مرحباً! أنا <b>wassim</b> مساعدك الذكي في صالون Nassim Coiffeur.<br>اسألني عن أي خدمة أو سعر أو احجز موعدك بسهولة!</div>
+                        <div class="wassim-message-bubble">مرحباً! أنا <b>wassim</b> مساعدك الذكي في صالون <strong>Nassim Coiffeur</strong>.<br>اسألني عن أي خدمة أو سعر أو احجز موعدك بسهولة!</div>
                     </div>
                 </div>
             </div>
             <div class="wassim-typing-indicator" id="wassimTypingIndicator">
-                <div class="wassim-message-avatar" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">🧑‍💼</div>
+                <div class="wassim-message-avatar">
+                    <img src="https://ui-avatars.com/api/?name=Wassim&background=FDB714&color=1A1A1A&size=128&bold=true" alt="Wassim">
+                </div>
                 <div class="wassim-typing-dots">
                     <span></span>
                     <span></span>
@@ -148,7 +154,7 @@ class WassimAI {
         const messagesContainer = document.getElementById('wassimAIMessages');
         const messageDiv = document.createElement('div');
         messageDiv.className = `wassim-message ${role}`;
-        const avatar = role === 'user' ? '👤' : '🧑‍💼';
+        const avatar = role === 'user' ? '👤' : `<img src="https://ui-avatars.com/api/?name=Wassim&background=FDB714&color=1A1A1A&size=128&bold=true" alt="Wassim" style="width: 100%; height: 100%; object-fit: cover;">`;
         const time = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
         messageDiv.innerHTML = `
             <div class="wassim-message-avatar">${avatar}</div>

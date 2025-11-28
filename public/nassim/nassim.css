@@ -3476,31 +3476,28 @@ body.offline::before {
     justify-content: center;
     width: 100%;
     height: 100%;
-    gap: 2px;
+    gap: 3px;
+    padding: 4px;
 }
 
-.wassim-avatar {
-    width: 36px;
-    height: 36px;
+.wassim-avatar-img {
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #FDB714 0%, #E6A613 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 18px;
-    color: var(--dark);
     border: 2px solid var(--primary);
-    box-shadow: 0 2px 8px rgba(253, 183, 20, 0.3);
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(253, 183, 20, 0.4);
+    background: var(--primary);
 }
 
 .wassim-name {
-    font-size: 8px;
+    font-size: 9px;
     font-weight: 700;
     color: var(--primary);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: -2px;
+    text-transform: lowercase;
+    letter-spacing: 0.3px;
+    margin-top: -1px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 /* AI Chat Modal */
