@@ -10,13 +10,7 @@ class WassimAI {
         this.setupEventListeners();
     }
     createUI() {
-        // زر عائم
-        const fab = document.createElement('div');
-        fab.className = 'wassim-ai-fab';
-        fab.id = 'wassimAIFab';
-        fab.innerHTML = '🧑‍💼';
-        fab.title = 'اسأل wassim';
-        document.body.appendChild(fab);
+        // لا ننشئ زر عائم هنا - سنستخدم الأيقونة الجديدة
         // نافذة الدردشة
         const modal = document.createElement('div');
         modal.className = 'wassim-ai-modal';
@@ -64,12 +58,21 @@ class WassimAI {
         document.body.appendChild(modal);
     }
     setupEventListeners() {
-        const fab = document.getElementById('wassimAIFab');
+        // ربط الأيقونة الجديدة بالمحادثة
+        const newIcon = document.getElementById('aiFloatingIcon');
+        if (newIcon) {
+            newIcon.addEventListener('click', (e) => {
+                // فقط إذا لم يكن سحب
+                if (!e.target.closest('.ai-floating-icon')?.dataset.dragging) {
+                    this.toggle();
+                }
+            });
+        }
+        
         const modal = document.getElementById('wassimAIModal');
         const closeBtn = document.getElementById('wassimAIClose');
         const input = document.getElementById('wassimChatInput');
         const sendBtn = document.getElementById('wassimSendButton');
-        fab.addEventListener('click', () => this.toggle());
         closeBtn.addEventListener('click', () => this.close());
         input.addEventListener('input', function() {
             this.style.height = 'auto';

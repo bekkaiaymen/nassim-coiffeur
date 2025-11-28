@@ -1288,7 +1288,12 @@ function initAIFloatingIcon() {
     icon.addEventListener('click', (e) => {
         const timeSinceDrag = Date.now() - dragStartTime;
         if (!isDragging && !hasMoved && timeSinceDrag > 100) {
-            openAIChat();
+            // فتح محادثة wassim القديمة
+            if (window.wassimAI) {
+                window.wassimAI.toggle();
+            } else {
+                openAIChat();
+            }
         }
         hasMoved = false;
     });
@@ -1381,20 +1386,29 @@ function initAIChat() {
     });
 }
 
-// Open AI Chat
+// Open AI Chat - استخدام wassim القديم
 function openAIChat() {
-    const modal = document.getElementById('aiChatModal');
-    if (modal) {
-        modal.classList.remove('hidden');
-        document.getElementById('aiChatInput')?.focus();
+    if (window.wassimAI) {
+        window.wassimAI.toggle();
+    } else {
+        // Fallback: فتح النافذة الجديدة
+        const modal = document.getElementById('aiChatModal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            document.getElementById('aiChatInput')?.focus();
+        }
     }
 }
 
 // Close AI Chat
 function closeAIChat() {
-    const modal = document.getElementById('aiChatModal');
-    if (modal) {
-        modal.classList.add('hidden');
+    if (window.wassimAI) {
+        window.wassimAI.close();
+    } else {
+        const modal = document.getElementById('aiChatModal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
     }
 }
 
