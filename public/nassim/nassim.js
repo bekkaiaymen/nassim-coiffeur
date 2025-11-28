@@ -1299,8 +1299,8 @@ function handleWassimImageUpload(event) {
 
 // Update all wassim avatars
 function updateWassimAvatars(imageData) {
-    // Update header avatar
-    const headerIcon = document.querySelector('.wassim-ai-header-icon');
+    // Update header avatar (same as floating icon)
+    const headerIcon = document.getElementById('wassimHeaderIcon') || document.querySelector('.wassim-ai-header-icon');
     if (headerIcon) {
         headerIcon.style.backgroundImage = `url(${imageData})`;
         headerIcon.style.backgroundSize = 'cover';

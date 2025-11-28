@@ -3482,7 +3482,7 @@ body.offline::before {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    background-image: url('/nassim/wassim-logo.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;

@@ -18,8 +18,7 @@ class WassimAI {
         modal.innerHTML = `
             <div class="wassim-ai-header">
                 <div class="wassim-ai-header-content">
-                    <div class="wassim-ai-header-icon">
-                        <div class="wassim-header-avatar">W</div>
+                    <div class="wassim-ai-header-icon" id="wassimHeaderIcon">
                     </div>
                     <div class="wassim-ai-header-text">
                         <h3>wassim - مساعد الزبون</h3>
