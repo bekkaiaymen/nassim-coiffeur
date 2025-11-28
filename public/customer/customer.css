@@ -2794,15 +2794,16 @@ html {
     position: fixed;
     bottom: 100px;
     left: 20px;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #1A1A1A 0%, #0A0A0A 100%);
+    border: 3px solid var(--primary);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: move;
-    box-shadow: 0 8px 24px rgba(253, 183, 20, 0.4), 0 0 0 4px rgba(253, 183, 20, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 0 4px rgba(253, 183, 20, 0.2), 0 0 20px rgba(253, 183, 20, 0.3);
     z-index: 9998;
     transition: all 0.3s ease;
     user-select: none;
@@ -2810,8 +2811,9 @@ html {
 }
 
 .ai-floating-icon:hover {
-    transform: scale(1.1);
-    box-shadow: 0 12px 32px rgba(253, 183, 20, 0.5), 0 0 0 6px rgba(253, 183, 20, 0.15);
+    transform: scale(1.15);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6), 0 0 0 6px rgba(253, 183, 20, 0.3), 0 0 30px rgba(253, 183, 20, 0.5);
+    border-color: var(--primary-light);
 }
 
 .ai-floating-icon:active {
@@ -2819,12 +2821,10 @@ html {
     cursor: grabbing;
 }
 
-.ai-floating-icon {
-    font-size: 32px;
-    line-height: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.ai-floating-icon svg {
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
 }
 
 /* AI Chat Modal */
@@ -3184,7 +3184,7 @@ html {
     }
 
     .ai-floating-icon svg {
-        width: 28px;
-        height: 28px;
+        width: 36px;
+        height: 36px;
     }
 }

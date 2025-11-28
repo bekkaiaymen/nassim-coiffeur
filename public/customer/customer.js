@@ -2415,14 +2415,23 @@ function initAIFloatingIcon() {
     document.addEventListener('touchmove', drag);
     document.addEventListener('touchend', dragEnd);
 
-    // Click to open chat
+    let dragStartTime = 0;
+    let hasMoved = false;
+
+    // Click to open chat (only if not dragged)
     icon.addEventListener('click', (e) => {
-        if (!isDragging) {
+        const timeSinceDrag = Date.now() - dragStartTime;
+        if (!isDragging && !hasMoved && timeSinceDrag > 100) {
             openAIChat();
         }
+        hasMoved = false;
     });
 
     function dragStart(e) {
+        e.stopPropagation();
+        dragStartTime = Date.now();
+        hasMoved = false;
+        
         if (e.type === 'touchstart') {
             initialX = e.touches[0].clientX - xOffset;
             initialY = e.touches[0].clientY - yOffset;
@@ -2434,12 +2443,15 @@ function initAIFloatingIcon() {
         if (e.target === icon || icon.contains(e.target)) {
             isDragging = true;
             icon.style.cursor = 'grabbing';
+            icon.style.transition = 'none'; // Disable transition during drag
         }
     }
 
     function drag(e) {
         if (isDragging) {
             e.preventDefault();
+            e.stopPropagation();
+            hasMoved = true;
             
             if (e.type === 'touchmove') {
                 currentX = e.touches[0].clientX - initialX;
@@ -2462,13 +2474,15 @@ function initAIFloatingIcon() {
             icon.style.left = xOffset + 'px';
             icon.style.top = yOffset + 'px';
             icon.style.bottom = 'auto';
+            icon.style.right = 'auto';
         }
     }
 
-    function dragEnd() {
+    function dragEnd(e) {
         if (isDragging) {
             isDragging = false;
             icon.style.cursor = 'move';
+            icon.style.transition = 'all 0.3s ease'; // Re-enable transition
             
             // Save position
             localStorage.setItem('aiIconPosition', JSON.stringify({
