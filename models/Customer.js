@@ -44,16 +44,35 @@ const customerSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    pendingPoints: {
+        type: Number,
+        default: 0
+    },
     loyaltyTier: {
         type: String,
         default: 'برونزي'
     },
     pointsHistory: [{
         points: Number,
-        type: { type: String, enum: ['earned', 'redeemed', 'expired'] },
+        type: { type: String, enum: ['earned', 'redeemed', 'expired', 'pending'] },
         description: String,
-        date: { type: Date, default: Date.now }
+        date: { type: Date, default: Date.now },
+        appointmentId: mongoose.Schema.Types.ObjectId,
+        status: { type: String, enum: ['pending', 'confirmed'], default: 'pending' }
     }],
+    pendingRewards: [{
+        appointmentId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Appointment'
+        },
+        points: Number,
+        description: String,
+        createdAt: { type: Date, default: Date.now }
+    }],
+    hasSeenFirstBookingOffer: {
+        type: Boolean,
+        default: false
+    },
     totalVisits: {
         type: Number,
         default: 0

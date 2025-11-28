@@ -270,28 +270,29 @@ router.post('/public/book', async (req, res) => {
             status: 'pending'
         });
 
-        // Update customer stats and loyalty points
+        // Update customer stats
         customerDoc.totalVisits += 1;
         customerDoc.lastVisit = new Date();
         
-        // Add loyalty points (10 points per appointment)
-        const pointsEarned = 10;
-        customerDoc.loyaltyPoints += pointsEarned;
+        // Add pending reward (100 points) - will be activated when appointment is completed
+        const pendingPoints = 100;
+        customerDoc.pendingPoints = (customerDoc.pendingPoints || 0) + pendingPoints;
+        customerDoc.pointsHistory = customerDoc.pointsHistory || [];
         customerDoc.pointsHistory.push({
-            points: pointsEarned,
-            type: 'earned',
-            description: `حجز موعد - ${customerName || customerDoc.name}`,
-            date: new Date()
+            points: pendingPoints,
+            type: 'pending',
+            description: `مكافأة حجز موعد - ${customerName || customerDoc.name}`,
+            date: new Date(),
+            appointmentId: appointment._id,
+            status: 'pending'
         });
-        
-        // Update loyalty tier based on points
-        if (customerDoc.loyaltyPoints >= 500) {
-            customerDoc.loyaltyTier = 'ذهبي';
-        } else if (customerDoc.loyaltyPoints >= 200) {
-            customerDoc.loyaltyTier = 'فضي';
-        } else {
-            customerDoc.loyaltyTier = 'برونزي';
-        }
+        customerDoc.pendingRewards = customerDoc.pendingRewards || [];
+        customerDoc.pendingRewards.push({
+            appointmentId: appointment._id,
+            points: pendingPoints,
+            description: `مكافأة حجز موعد - ${customerName || customerDoc.name}`,
+            createdAt: new Date()
+        });
         
         await customerDoc.save();
 
@@ -707,26 +708,90 @@ router.patch('/:id/confirm-employee', protect, ensureTenant, async (req, res) =>
     }
 });
 
-// Complete appointment
-router.patch('/:id/complete', async (req, res) => {
+// Complete appointment and activate pending points
+router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
     try {
         const query = addTenantFilter(req, { _id: req.params.id });
-        const appointment = await Appointment.findOneAndUpdate(
-            query,
-            { status: 'completed' },
-            { new: true }
-        );
+        const appointment = await Appointment.findOne(query)
+            .populate('customerId');
 
         if (!appointment) {
             return res.status(404).json({ success: false, message: 'الموعد غير موجود' });
         }
 
+        // Update appointment status
+        appointment.status = 'completed';
+        await appointment.save();
+
+        // Activate pending points for this appointment
+        if (appointment.customerId) {
+            const customer = await Customer.findById(appointment.customerId);
+            if (customer && customer.pendingRewards && customer.pendingRewards.length > 0) {
+                // Find pending reward for this appointment
+                const pendingReward = customer.pendingRewards.find(
+                    r => r.appointmentId && r.appointmentId.toString() === appointment._id.toString()
+                );
+
+                if (pendingReward) {
+                    // Activate points
+                    const pointsToActivate = pendingReward.points;
+                    customer.loyaltyPoints = (customer.loyaltyPoints || 0) + pointsToActivate;
+                    customer.pendingPoints = Math.max(0, (customer.pendingPoints || 0) - pointsToActivate);
+
+                    // Update points history
+                    const historyEntry = customer.pointsHistory.find(
+                        h => h.appointmentId && h.appointmentId.toString() === appointment._id.toString() && h.status === 'pending'
+                    );
+                    if (historyEntry) {
+                        historyEntry.status = 'confirmed';
+                        historyEntry.type = 'earned';
+                    }
+
+                    // Remove from pending rewards
+                    customer.pendingRewards = customer.pendingRewards.filter(
+                        r => !(r.appointmentId && r.appointmentId.toString() === appointment._id.toString())
+                    );
+
+                    // Update loyalty tier
+                    if (customer.loyaltyPoints >= 500) {
+                        customer.loyaltyTier = 'ذهبي';
+                    } else if (customer.loyaltyPoints >= 200) {
+                        customer.loyaltyTier = 'فضي';
+                    } else {
+                        customer.loyaltyTier = 'برونزي';
+                    }
+
+                    await customer.save();
+
+                    // Create notification for customer
+                    try {
+                        const Notification = require('../models/Notification');
+                        const User = require('../models/User');
+                        const user = await User.findById(customer.user);
+                        if (user) {
+                            await Notification.create({
+                                user: user._id,
+                                type: 'reward',
+                                title: '🎉 تم تفعيل مكافأتك!',
+                                message: `تم تفعيل ${pointsToActivate} نقطة (ما يعادل ${pointsToActivate} دينار جزائري)`,
+                                icon: '🎁',
+                                data: { points: pointsToActivate, appointmentId: appointment._id }
+                            });
+                        }
+                    } catch (notifError) {
+                        console.error('Error creating notification:', notifError);
+                    }
+                }
+            }
+        }
+
         res.json({ 
             success: true, 
-            message: 'تم تأكيد اكتمال الموعد',
+            message: 'تم تأكيد اكتمال الموعد وتفعيل المكافأة',
             data: appointment 
         });
     } catch (error) {
+        console.error('Complete appointment error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });

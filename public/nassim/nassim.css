@@ -1566,6 +1566,197 @@ textarea {
     to { transform: rotate(360deg); }
 }
 
+/* First Booking Offer Notification */
+.first-booking-offer {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 32px rgba(253, 183, 20, 0.4);
+    z-index: 10000;
+    animation: slideDown 0.5s ease-out;
+    border: 2px solid var(--primary);
+    overflow: hidden;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.offer-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    position: relative;
+}
+
+.offer-icon {
+    font-size: 48px;
+    flex-shrink: 0;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.offer-text {
+    flex: 1;
+    color: var(--dark);
+}
+
+.offer-text h3 {
+    margin: 0 0 8px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.offer-text p {
+    margin: 0;
+    font-size: 14px;
+    color: rgba(26, 26, 26, 0.8);
+    line-height: 1.5;
+}
+
+.offer-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(26, 26, 26, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 20px;
+    color: var(--dark);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.offer-close:hover {
+    background: rgba(26, 26, 26, 0.3);
+    transform: scale(1.1);
+}
+
+.offer-action {
+    width: 100%;
+    padding: 15px;
+    background: var(--dark);
+    color: var(--primary);
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-top: 2px solid var(--primary);
+}
+
+.offer-action:hover {
+    background: rgba(26, 26, 26, 0.9);
+    transform: translateY(-2px);
+}
+
+/* Pending Reward Notification */
+.pending-reward-notification {
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    right: 20px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    z-index: 10000;
+    animation: slideUp 0.5s ease-out;
+    border: 2px solid var(--primary);
+    border-left: 4px solid var(--primary);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.reward-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    position: relative;
+}
+
+.reward-icon {
+    font-size: 40px;
+    flex-shrink: 0;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.reward-text {
+    flex: 1;
+}
+
+.reward-text h3 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.reward-text p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.reward-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--surface-light);
+    border: none;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 18px;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.reward-close:hover {
+    background: var(--surface-light);
+    transform: scale(1.1);
+}
+
 /* 💀 Premium Skeleton Loaders */
 .skeleton {
     background: linear-gradient(

@@ -54,6 +54,20 @@ router.post('/register-customer', async (req, res) => {
 
         const token = generateToken(user._id);
 
+        // Create customer profile and set first booking offer
+        const Customer = require('../models/Customer');
+        const customer = await Customer.create({
+            user: user._id,
+            tenant: business,
+            business: business,
+            name: user.name,
+            phone: user.phone,
+            email: user.email,
+            loyaltyPoints: 0,
+            pendingPoints: 0,
+            hasSeenFirstBookingOffer: false
+        });
+
         res.status(201).json({
             success: true,
             message: 'تم التسجيل بنجاح',
@@ -63,7 +77,8 @@ router.post('/register-customer', async (req, res) => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                role: user.role
+                role: user.role,
+                showFirstBookingOffer: true
             }
         });
     } catch (error) {

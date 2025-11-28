@@ -33,6 +33,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         showGuestMode();
     } else {
         await loadCustomerProfile();
+        // Check for first booking offer
+        checkFirstBookingOffer();
     }
     
     await loadServices();
@@ -816,6 +818,12 @@ async function submitBooking(e) {
         
         if (response.ok && data.success) {
             showNotification('تم حجز الموعد بنجاح! 🎉', 'success');
+            
+            // Show pending reward notification
+            setTimeout(() => {
+                showPendingRewardNotification();
+            }, 1500);
+            
             closeBookingModal();
             document.getElementById('bookingForm').reset();
             selectedTimeSlot = null;
@@ -828,6 +836,85 @@ async function submitBooking(e) {
         console.error('Error submitting booking:', error);
         showNotification('حدث خطأ أثناء الحجز', 'error');
     }
+}
+
+// Check First Booking Offer
+async function checkFirstBookingOffer() {
+    if (!customerData) return;
+    
+    // Check if customer has seen the offer
+    if (customerData.hasSeenFirstBookingOffer) return;
+    
+    // Check if customer has any appointments
+    try {
+        const response = await fetch(`${API_URL}/appointments/customer`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.length === 0) {
+                // No appointments yet - show first booking offer
+                setTimeout(() => {
+                    showFirstBookingOfferNotification();
+                }, 4000); // Show after splash screen
+            }
+        }
+    } catch (error) {
+        console.error('Error checking appointments:', error);
+    }
+}
+
+// Show First Booking Offer Notification
+function showFirstBookingOfferNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'first-booking-offer';
+    notification.innerHTML = `
+        <div class="offer-content">
+            <div class="offer-icon">🎁</div>
+            <div class="offer-text">
+                <h3>احصل على 100 نقطة مجاناً!</h3>
+                <p>قم بالحجز لموعدك الأول واحصل على 100 نقطة (ما يعادل 100 دينار جزائري)</p>
+            </div>
+            <button class="offer-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+        <button class="offer-action" onclick="openBookingModal(); this.parentElement.remove();">
+            احجز الآن
+        </button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Mark as seen
+    if (customerData) {
+        customerData.hasSeenFirstBookingOffer = true;
+        localStorage.setItem('customerData', JSON.stringify(customerData));
+    }
+}
+
+// Show Pending Reward Notification
+function showPendingRewardNotification() {
+    const notification = document.createElement('div');
+    notification.className = 'pending-reward-notification';
+    notification.innerHTML = `
+        <div class="reward-content">
+            <div class="reward-icon">⏳</div>
+            <div class="reward-text">
+                <h3>مكافأة معلقة: 100 نقطة</h3>
+                <p>ستحصل على 100 نقطة (100 دينار جزائري) بعد تأكيد صاحب المحل لإكمال الحلاقة</p>
+            </div>
+            <button class="reward-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto remove after 8 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 8000);
 }
 
 // Load Notifications
