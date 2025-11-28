@@ -1232,19 +1232,18 @@ function loadWassimImage() {
     
     // Try to load from localStorage first (user uploaded image)
     const savedImage = localStorage.getItem('wassimAvatarImage');
-    if (savedImage) {
-        avatarCircle.style.backgroundImage = `url(${savedImage})`;
-        avatarCircle.classList.add('has-image');
-        const initial = document.getElementById('wassimInitial');
-        if (initial) initial.style.display = 'none';
-    } else {
-        // Use default image from nassim folder
-        avatarCircle.style.backgroundImage = `url('/nassim/wassim-logo.jpg')`;
-        avatarCircle.style.backgroundSize = 'cover';
-        avatarCircle.style.backgroundPosition = 'center';
-        const initial = document.getElementById('wassimInitial');
-        if (initial) initial.style.display = 'none';
-    }
+    const imageUrl = savedImage || '/nassim/wassim-logo.jpg';
+    
+    // Update floating icon
+    avatarCircle.style.backgroundImage = `url(${imageUrl})`;
+    avatarCircle.style.backgroundSize = 'cover';
+    avatarCircle.style.backgroundPosition = 'center';
+    avatarCircle.classList.add('has-image');
+    const initial = document.getElementById('wassimInitial');
+    if (initial) initial.style.display = 'none';
+    
+    // Update all avatars in chat
+    updateWassimAvatars(imageUrl);
 }
 
 // Handle image upload for wassim avatar
@@ -1300,15 +1299,33 @@ function handleWassimImageUpload(event) {
 
 // Update all wassim avatars
 function updateWassimAvatars(imageData) {
-    const avatars = document.querySelectorAll('.wassim-avatar-initial, .wassim-header-avatar');
-    avatars.forEach(avatar => {
-        if (avatar.parentElement) {
-            avatar.parentElement.style.backgroundImage = `url(${imageData})`;
-            avatar.parentElement.style.backgroundSize = 'cover';
-            avatar.parentElement.style.backgroundPosition = 'center';
-            avatar.style.display = 'none';
-        }
+    // Update header avatar
+    const headerIcon = document.querySelector('.wassim-ai-header-icon');
+    if (headerIcon) {
+        headerIcon.style.backgroundImage = `url(${imageData})`;
+        headerIcon.style.backgroundSize = 'cover';
+        headerIcon.style.backgroundPosition = 'center';
+    }
+    
+    // Update message avatars
+    const messageAvatars = document.querySelectorAll('.wassim-message-avatar');
+    messageAvatars.forEach(avatar => {
+        avatar.style.backgroundImage = `url(${imageData})`;
+        avatar.style.backgroundSize = 'cover';
+        avatar.style.backgroundPosition = 'center';
+        const initial = avatar.querySelector('.wassim-avatar-initial');
+        if (initial) initial.style.display = 'none';
     });
+    
+    // Update typing indicator avatar
+    const typingAvatar = document.querySelector('#wassimTypingIndicator .wassim-message-avatar');
+    if (typingAvatar) {
+        typingAvatar.style.backgroundImage = `url(${imageData})`;
+        typingAvatar.style.backgroundSize = 'cover';
+        typingAvatar.style.backgroundPosition = 'center';
+        const initial = typingAvatar.querySelector('.wassim-avatar-initial');
+        if (initial) initial.style.display = 'none';
+    }
 }
 
 // Add click to upload image - Double click on avatar to upload
