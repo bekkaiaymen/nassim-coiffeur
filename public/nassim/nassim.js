@@ -1227,13 +1227,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Load saved wassim image
 function loadWassimImage() {
+    const avatarCircle = document.getElementById('wassimAvatarCircle');
+    if (!avatarCircle) return;
+    
+    // Try to load from localStorage first (user uploaded image)
     const savedImage = localStorage.getItem('wassimAvatarImage');
     if (savedImage) {
-        const avatarCircle = document.getElementById('wassimAvatarCircle');
-        if (avatarCircle) {
-            avatarCircle.style.backgroundImage = `url(${savedImage})`;
-            avatarCircle.classList.add('has-image');
-        }
+        avatarCircle.style.backgroundImage = `url(${savedImage})`;
+        avatarCircle.classList.add('has-image');
+        const initial = document.getElementById('wassimInitial');
+        if (initial) initial.style.display = 'none';
+    } else {
+        // Use default image from nassim folder
+        avatarCircle.style.backgroundImage = `url('/nassim/wassim-logo.jpg')`;
+        avatarCircle.style.backgroundSize = 'cover';
+        avatarCircle.style.backgroundPosition = 'center';
+        const initial = document.getElementById('wassimInitial');
+        if (initial) initial.style.display = 'none';
     }
 }
 
@@ -1261,7 +1271,11 @@ function handleWassimImageUpload(event) {
             const avatarCircle = document.getElementById('wassimAvatarCircle');
             if (avatarCircle) {
                 avatarCircle.style.backgroundImage = `url(${imageData})`;
+                avatarCircle.style.backgroundSize = 'cover';
+                avatarCircle.style.backgroundPosition = 'center';
                 avatarCircle.classList.add('has-image');
+                const initial = document.getElementById('wassimInitial');
+                if (initial) initial.style.display = 'none';
             }
             
             // Update avatar in chat header and messages
