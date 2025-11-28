@@ -33,8 +33,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         showGuestMode();
     } else {
         await loadCustomerProfile();
-        // Check for first booking offer
-        checkFirstBookingOffer();
+        // Check for first booking offer after customer data is loaded
+        setTimeout(() => {
+            checkFirstBookingOffer();
+        }, 1000);
     }
     
     await loadServices();
@@ -820,8 +822,10 @@ async function submitBooking(e) {
             showNotification('تم حجز الموعد بنجاح! 🎉', 'success');
             
             // Show pending reward notification
+            // Get points from response or determine based on customer type
+            const points = data.pendingPoints || 100; // Default to 100 if not specified
             setTimeout(() => {
-                showPendingRewardNotification();
+                showPendingRewardNotification(points);
             }, 1500);
             
             closeBookingModal();
@@ -840,33 +844,80 @@ async function submitBooking(e) {
 
 // Check First Booking Offer
 async function checkFirstBookingOffer() {
-    if (!customerData) return;
+    if (!customerData) {
+        console.log('⚠️ checkFirstBookingOffer: No customerData');
+        return;
+    }
     
-    // Check if customer has seen the offer
-    if (customerData.hasSeenFirstBookingOffer) return;
+    console.log('🔍 Checking first booking offer...', {
+        hasSeenFirstBookingOffer: customerData.hasSeenFirstBookingOffer,
+        customerId: customerData._id
+    });
     
-    // Check if customer has any appointments
+    // Check if customer has any appointments first
     try {
         const response = await fetch(`${API_URL}/appointments/customer`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
+        console.log('📅 Appointments response:', response.status);
+        
         if (response.ok) {
             const data = await response.json();
+            console.log('📅 Appointments data:', data);
+            
             if (data && data.length === 0) {
-                // No appointments yet - show first booking offer
+                // No appointments yet - NEW CUSTOMER: Show 100 points offer
+                // Reset hasSeenFirstBookingOffer if it was set
+                if (customerData.hasSeenFirstBookingOffer) {
+                    console.log('🔄 Resetting hasSeenFirstBookingOffer - no appointments found');
+                    customerData.hasSeenFirstBookingOffer = false;
+                    localStorage.setItem('customerData', JSON.stringify(customerData));
+                }
+                
+                // Show first booking offer (100 points for new customers)
+                console.log('✅ No appointments found, showing first booking offer (100 points)');
                 setTimeout(() => {
                     showFirstBookingOfferNotification();
                 }, 4000); // Show after splash screen
+            } else {
+                // Has appointments - RETURNING CUSTOMER: Show 50 points offer
+                console.log('✅ Customer has appointments, checking returning customer offer (50 points)');
+                setTimeout(() => {
+                    checkReturningCustomerOffer();
+                }, 4000);
+            }
+        } else {
+            console.log('⚠️ Failed to fetch appointments:', response.status);
+            // If we can't check appointments, check if offer was already seen
+            if (!customerData.hasSeenFirstBookingOffer) {
+                setTimeout(() => {
+                    showFirstBookingOfferNotification();
+                }, 4000);
             }
         }
     } catch (error) {
-        console.error('Error checking appointments:', error);
+        console.error('❌ Error checking appointments:', error);
+        // If there's an error, check if offer was already seen
+        if (!customerData.hasSeenFirstBookingOffer) {
+            setTimeout(() => {
+                showFirstBookingOfferNotification();
+            }, 4000);
+        }
     }
 }
 
 // Show First Booking Offer Notification
 function showFirstBookingOfferNotification() {
+    console.log('🎁 Showing first booking offer notification');
+    
+    // Check if notification already exists
+    const existing = document.querySelector('.first-booking-offer');
+    if (existing) {
+        console.log('ℹ️ Notification already exists');
+        return;
+    }
+    
     const notification = document.createElement('div');
     notification.className = 'first-booking-offer';
     notification.innerHTML = `
@@ -884,24 +935,121 @@ function showFirstBookingOfferNotification() {
     `;
     
     document.body.appendChild(notification);
+    console.log('✅ First booking offer notification added to DOM');
     
     // Mark as seen
     if (customerData) {
         customerData.hasSeenFirstBookingOffer = true;
         localStorage.setItem('customerData', JSON.stringify(customerData));
+        console.log('✅ Marked offer as seen');
+    }
+    
+    // Auto remove after 30 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 30000);
+}
+
+// Check Returning Customer Offer (50 points)
+async function checkReturningCustomerOffer() {
+    if (!customerData) {
+        console.log('⚠️ checkReturningCustomerOffer: No customerData');
+        return;
+    }
+    
+    // Check if customer has already seen the returning customer offer
+    if (customerData.hasSeenReturningCustomerOffer) {
+        console.log('ℹ️ Customer has already seen the returning customer offer');
+        return;
+    }
+    
+    // Check if customer has any pending appointments (not completed)
+    try {
+        const response = await fetch(`${API_URL}/appointments/customer`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.length > 0) {
+                // Check if there are any pending appointments
+                const pendingAppointments = data.filter(apt => 
+                    apt.status !== 'completed' && apt.status !== 'cancelled'
+                );
+                
+                if (pendingAppointments.length === 0) {
+                    // No pending appointments - show 50 points offer
+                    console.log('✅ No pending appointments, showing returning customer offer (50 points)');
+                    setTimeout(() => {
+                        showReturningCustomerOfferNotification();
+                    }, 2000);
+                } else {
+                    console.log('ℹ️ Customer has pending appointments, not showing offer');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error checking appointments for returning customer offer:', error);
     }
 }
 
+// Show Returning Customer Offer Notification (50 points)
+function showReturningCustomerOfferNotification() {
+    console.log('🎁 Showing returning customer offer notification (50 points)');
+    
+    // Check if notification already exists
+    const existing = document.querySelector('.returning-customer-offer');
+    if (existing) {
+        console.log('ℹ️ Notification already exists');
+        return;
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = 'returning-customer-offer';
+    notification.innerHTML = `
+        <div class="offer-content">
+            <div class="offer-icon">🎉</div>
+            <div class="offer-text">
+                <h3>احصل على 50 نقطة مجاناً!</h3>
+                <p>قم بالحجز لموعدك واحصل على 50 نقطة (ما يعادل 50 دينار جزائري)</p>
+            </div>
+            <button class="offer-close" onclick="this.parentElement.parentElement.remove()">×</button>
+        </div>
+        <button class="offer-action" onclick="openBookingModal(); this.parentElement.remove();">
+            احجز الآن
+        </button>
+    `;
+    
+    document.body.appendChild(notification);
+    console.log('✅ Returning customer offer notification added to DOM');
+    
+    // Mark as seen
+    if (customerData) {
+        customerData.hasSeenReturningCustomerOffer = true;
+        localStorage.setItem('customerData', JSON.stringify(customerData));
+        console.log('✅ Marked returning customer offer as seen');
+    }
+    
+    // Auto remove after 30 seconds
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 30000);
+}
+
 // Show Pending Reward Notification
-function showPendingRewardNotification() {
+function showPendingRewardNotification(points = 100) {
     const notification = document.createElement('div');
     notification.className = 'pending-reward-notification';
     notification.innerHTML = `
         <div class="reward-content">
             <div class="reward-icon">⏳</div>
             <div class="reward-text">
-                <h3>مكافأة معلقة: 100 نقطة</h3>
-                <p>ستحصل على 100 نقطة (100 دينار جزائري) بعد تأكيد صاحب المحل لإكمال الحلاقة</p>
+                <h3>مكافأة معلقة: ${points} نقطة</h3>
+                <p>ستحصل على ${points} نقطة (${points} دينار جزائري) بعد تأكيد صاحب المحل لإكمال الحلاقة</p>
             </div>
             <button class="reward-close" onclick="this.parentElement.parentElement.remove()">×</button>
         </div>

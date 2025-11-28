@@ -274,8 +274,16 @@ router.post('/public/book', async (req, res) => {
         customerDoc.totalVisits += 1;
         customerDoc.lastVisit = new Date();
         
-        // Add pending reward (100 points) - will be activated when appointment is completed
-        const pendingPoints = 100;
+        // Determine points based on customer type (new vs returning)
+        // Check if customer has any completed appointments
+        const completedAppointments = await Appointment.find({
+            customerId: customer,
+            status: 'completed'
+        }).countDocuments();
+        
+        // New customer (no completed appointments): 100 points
+        // Returning customer (has completed appointments): 50 points
+        const pendingPoints = completedAppointments === 0 ? 100 : 50;
         customerDoc.pendingPoints = (customerDoc.pendingPoints || 0) + pendingPoints;
         customerDoc.pointsHistory = customerDoc.pointsHistory || [];
         customerDoc.pointsHistory.push({
@@ -342,10 +350,12 @@ router.post('/public/book', async (req, res) => {
             console.error('❌ Failed to update business usage stats:', usageError);
         }
 
+        // Return appointment with pending points info
         res.status(201).json({ 
             success: true, 
             message: 'تم حجز الموعد بنجاح',
-            data: appointment 
+            data: appointment,
+            pendingPoints: pendingPoints
         });
     } catch (error) {
         console.error('Booking error:', error);

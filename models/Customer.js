@@ -73,6 +73,10 @@ const customerSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    hasSeenReturningCustomerOffer: {
+        type: Boolean,
+        default: false
+    },
     totalVisits: {
         type: Number,
         default: 0

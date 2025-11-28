@@ -1671,6 +1671,95 @@ textarea {
     transform: translateY(-2px);
 }
 
+/* Returning Customer Offer (50 points) */
+.returning-customer-offer {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 32px rgba(253, 183, 20, 0.4);
+    z-index: 10000;
+    animation: slideDown 0.5s ease-out;
+    border: 2px solid var(--primary);
+    overflow: hidden;
+}
+
+.returning-customer-offer .offer-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    position: relative;
+}
+
+.returning-customer-offer .offer-icon {
+    font-size: 48px;
+    flex-shrink: 0;
+    animation: bounce 2s infinite;
+}
+
+.returning-customer-offer .offer-text {
+    flex: 1;
+    color: var(--dark);
+}
+
+.returning-customer-offer .offer-text h3 {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--dark);
+}
+
+.returning-customer-offer .offer-text p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--dark);
+    opacity: 0.9;
+}
+
+.returning-customer-offer .offer-close {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border: none;
+    color: var(--dark);
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.returning-customer-offer .offer-close:hover {
+    background: rgba(26, 26, 26, 0.3);
+    transform: scale(1.1);
+}
+
+.returning-customer-offer .offer-action {
+    width: 100%;
+    padding: 15px;
+    background: var(--dark);
+    color: var(--primary);
+    border: none;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    border-top: 2px solid var(--primary);
+}
+
+.returning-customer-offer .offer-action:hover {
+    background: rgba(26, 26, 26, 0.9);
+    transform: translateY(-2px);
+}
+
 /* Pending Reward Notification */
 .pending-reward-notification {
     position: fixed;
