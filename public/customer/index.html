@@ -903,6 +903,56 @@
     <!-- Notification -->
     <div id="notification" class="notification"></div>
 
+    <!-- AI Assistant Floating Icon -->
+    <div id="aiFloatingIcon" class="ai-floating-icon" title="المساعد الذكي - Nassim Coiffeur">
+        🤖
+    </div>
+
+    <!-- AI Chat Modal -->
+    <div id="aiChatModal" class="ai-chat-modal hidden">
+        <div class="ai-chat-header">
+            <div class="ai-chat-header-content">
+                <div class="ai-chat-icon">🤖</div>
+                <div class="ai-chat-header-text">
+                    <h3>المساعد الذكي</h3>
+                    <p>Nassim Coiffeur</p>
+                </div>
+            </div>
+            <button class="ai-chat-close" onclick="closeAIChat()">×</button>
+        </div>
+
+        <div class="ai-chat-messages" id="aiChatMessages">
+            <div class="ai-welcome-message">
+                <div class="ai-welcome-icon">🤖</div>
+                <h3>مرحباً بك!</h3>
+                <p>أنا مساعدك الذكي في صالون <strong>Nassim Coiffeur</strong>.<br>
+                اسألني عن أي خدمة، سعر، أو احجز موعدك بسهولة!</p>
+            </div>
+        </div>
+
+        <div class="ai-typing-indicator" id="aiTypingIndicator">
+            <div class="ai-typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="ai-chat-input-container">
+            <div class="ai-chat-input-wrapper">
+                <textarea 
+                    id="aiChatInput" 
+                    class="ai-chat-input" 
+                    placeholder="اكتب سؤالك هنا..."
+                    rows="1"
+                ></textarea>
+                <button class="ai-send-button" id="aiSendButton" onclick="sendAIMessage()">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="/public/customer/customer.js"></script>
 </body>
 </html>

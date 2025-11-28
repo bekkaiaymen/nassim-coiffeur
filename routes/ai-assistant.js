@@ -9,10 +9,10 @@ const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
 // Business context for AI
 const getBusinessContext = (business) => {
     return `
-أنت مساعد ذكي لصالون حلاقة "${business.name}".
+أنت مساعد ذكي لصالون حلاقة "Nassim Coiffeur".
 
 معلومات الصالون:
-- الاسم: ${business.name}
+- الاسم: Nassim Coiffeur
 - الموقع: ${business.location || 'غير محدد'}
 - ساعات العمل: ${business.workingHours || 'من 9 صباحاً إلى 9 مساءً'}
 
@@ -47,7 +47,7 @@ ${business.employees?.map(e => `- ${e.name}: ${e.specialty || 'حلاق'}`).join
 // System prompt for owner assistance
 const getOwnerAssistantContext = (business, stats) => {
     return `
-أنت مستشار أعمال ذكي لصاحب صالون حلاقة "${business.name}".
+أنت مستشار أعمال ذكي لصاحب صالون حلاقة "Nassim Coiffeur".
 
 إحصائيات العمل الحالية:
 - عدد المواعيد هذا الشهر: ${stats.totalAppointments || 0}
@@ -328,7 +328,7 @@ router.get('/suggestions/:businessId', async (req, res) => {
             .sort((a, b) => b[1] - a[1])[0];
 
         const prompt = `
-بناءً على بيانات صالون "${business.name}" خلال آخر 30 يوم:
+بناءً على بيانات صالون "Nassim Coiffeur" خلال آخر 30 يوم:
 - عدد المواعيد: ${appointments.length}
 - الإيرادات: ${totalRevenue} ريال
 - الخدمة الأكثر طلباً: ${mostPopularService?.[0] || 'لا توجد'} (${mostPopularService?.[1] || 0} مرات)
