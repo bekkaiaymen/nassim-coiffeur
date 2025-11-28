@@ -927,7 +927,9 @@ async function loadNotifications() {
         });
         
         if (!response.ok) {
-            console.log('Notifications endpoint not available yet');
+            if (response.status !== 404) {
+                console.log('Notifications endpoint not available yet');
+            }
             return;
         }
         
@@ -1321,16 +1323,29 @@ function loadWassimImage() {
     const savedImage = localStorage.getItem('wassimAvatarImage');
     const imageUrl = savedImage || '/nassim/wassim-logo.jpg';
     
-    // Update floating icon
-    avatarCircle.style.backgroundImage = `url(${imageUrl})`;
-    avatarCircle.style.backgroundSize = 'cover';
-    avatarCircle.style.backgroundPosition = 'center';
-    avatarCircle.classList.add('has-image');
-    const initial = document.getElementById('wassimInitial');
-    if (initial) initial.style.display = 'none';
-    
-    // Update all avatars in chat
-    updateWassimAvatars(imageUrl);
+    // Check if image exists before setting it
+    const img = new Image();
+    img.onload = function() {
+        // Image exists, set it
+        avatarCircle.style.backgroundImage = `url(${imageUrl})`;
+        avatarCircle.style.backgroundSize = 'cover';
+        avatarCircle.style.backgroundPosition = 'center';
+        avatarCircle.classList.add('has-image');
+        const initial = document.getElementById('wassimInitial');
+        if (initial) initial.style.display = 'none';
+        
+        // Update all avatars in chat
+        updateWassimAvatars(imageUrl);
+    };
+    img.onerror = function() {
+        // Image doesn't exist, keep default (W initial)
+        console.log('⚠️ wassim-logo.jpg not found, using default avatar');
+        avatarCircle.style.backgroundImage = '';
+        avatarCircle.classList.remove('has-image');
+        const initial = document.getElementById('wassimInitial');
+        if (initial) initial.style.display = 'flex';
+    };
+    img.src = imageUrl;
 }
 
 // Handle image upload for wassim avatar
