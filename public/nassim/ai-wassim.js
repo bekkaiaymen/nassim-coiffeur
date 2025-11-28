@@ -19,7 +19,7 @@ class WassimAI {
             <div class="wassim-ai-header">
                 <div class="wassim-ai-header-content">
                     <div class="wassim-ai-header-icon">
-                        <img src="https://ui-avatars.com/api/?name=Wassim&background=FDB714&color=1A1A1A&size=128&bold=true" alt="Wassim">
+                        <div class="wassim-header-avatar">W</div>
                     </div>
                     <div class="wassim-ai-header-text">
                         <h3>wassim - مساعد الزبون</h3>
@@ -37,7 +37,7 @@ class WassimAI {
             <div class="wassim-ai-messages" id="wassimAIMessages">
                 <div class="wassim-message assistant">
                     <div class="wassim-message-avatar">
-                        <img src="https://ui-avatars.com/api/?name=Wassim&background=FDB714&color=1A1A1A&size=128&bold=true" alt="Wassim">
+                        <div class="wassim-avatar-initial">W</div>
                     </div>
                     <div class="wassim-message-content">
                         <div class="wassim-message-bubble">مرحباً! أنا <b>wassim</b> مساعدك الذكي في صالون <strong>Nassim Coiffeur</strong>.<br>اسألني عن أي خدمة أو سعر أو احجز موعدك بسهولة!</div>
@@ -46,7 +46,7 @@ class WassimAI {
             </div>
             <div class="wassim-typing-indicator" id="wassimTypingIndicator">
                 <div class="wassim-message-avatar">
-                    <img src="https://ui-avatars.com/api/?name=Wassim&background=FDB714&color=1A1A1A&size=128&bold=true" alt="Wassim">
+                    <div class="wassim-avatar-initial">W</div>
                 </div>
                 <div class="wassim-typing-dots">
                     <span></span>
@@ -154,7 +154,7 @@ class WassimAI {
         const messagesContainer = document.getElementById('wassimAIMessages');
         const messageDiv = document.createElement('div');
         messageDiv.className = `wassim-message ${role}`;
-        const avatar = role === 'user' ? '👤' : `<img src="https://ui-avatars.com/api/?name=Wassim&background=FDB714&color=1A1A1A&size=128&bold=true" alt="Wassim" style="width: 100%; height: 100%; object-fit: cover;">`;
+        const avatar = role === 'user' ? '👤' : '<div class="wassim-avatar-initial">W</div>';
         const time = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
         messageDiv.innerHTML = `
             <div class="wassim-message-avatar">${avatar}</div>

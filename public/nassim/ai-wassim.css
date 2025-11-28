@@ -63,7 +63,33 @@
     font-size: 24px;
     overflow: hidden;
 }
-.wassim-ai-header-icon img {
+.wassim-header-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 20px;
+    color: var(--dark);
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+.wassim-avatar-initial {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 16px;
+    color: var(--dark);
+    box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+.wassim-message-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
