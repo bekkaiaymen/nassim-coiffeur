@@ -28,6 +28,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const today = new Date().toISOString().split('T')[0];
     const dateInput = document.getElementById('appointmentDate');
     if (dateInput) dateInput.min = today;
+    
+    // Initialize AI Assistant
+    initAIFloatingIcon();
+    initAIChat();
 });
 
 // Setup Event Listeners
@@ -2375,16 +2379,36 @@ function logout() {
 let aiConversationHistory = [];
 const AI_BUSINESS_ID = '69259331651b1babc1eb83dc'; // Nassim Coiffeur
 
-// Initialize AI Assistant
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize AI Assistant (also called from main init)
+// This ensures it works even if DOMContentLoaded already fired
+function initializeAIAssistant() {
     initAIFloatingIcon();
     initAIChat();
-});
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeAIAssistant);
+} else {
+    // DOM already loaded, initialize immediately
+    initializeAIAssistant();
+}
+
+// Also try after a short delay to ensure everything is ready
+setTimeout(initializeAIAssistant, 500);
 
 // Initialize Floating Icon - Draggable
 function initAIFloatingIcon() {
     const icon = document.getElementById('aiFloatingIcon');
-    if (!icon) return;
+    if (!icon) {
+        console.warn('⚠️ AI Floating Icon not found in DOM');
+        return;
+    }
+    
+    console.log('✅ AI Floating Icon initialized');
+    // Ensure icon is visible
+    icon.style.display = 'flex';
+    icon.style.visibility = 'visible';
+    icon.style.opacity = '1';
 
     let isDragging = false;
     let currentX;
