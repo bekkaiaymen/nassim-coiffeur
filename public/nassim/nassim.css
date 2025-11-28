@@ -3497,11 +3497,16 @@ body.offline::before {
     overflow: hidden;
     cursor: pointer;
     transition: all 0.3s ease;
+    user-select: none;
 }
 
 .wassim-avatar-circle:hover {
     transform: scale(1.05);
     box-shadow: 0 4px 12px rgba(253, 183, 20, 0.6);
+}
+
+.wassim-avatar-circle:active {
+    transform: scale(0.95);
 }
 
 .wassim-avatar-circle.has-image .wassim-initial {
@@ -3511,6 +3516,29 @@ body.offline::before {
 .wassim-avatar-circle.has-image::before,
 .wassim-avatar-circle.has-image::after {
     display: none;
+}
+
+/* Tooltip for avatar */
+.wassim-avatar-circle::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 100000;
+}
+
+.wassim-avatar-circle:hover::after {
+    opacity: 1;
 }
 
 .wassim-avatar-circle::before {

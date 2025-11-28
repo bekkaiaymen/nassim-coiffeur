@@ -1241,6 +1241,18 @@ function loadWassimImage() {
 function handleWassimImageUpload(event) {
     const file = event.target.files[0];
     if (file) {
+        // Check file size (max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('حجم الصورة كبير جداً! يرجى اختيار صورة أصغر من 2MB');
+            return;
+        }
+        
+        // Check file type
+        if (!file.type.startsWith('image/')) {
+            alert('الرجاء اختيار ملف صورة صحيح');
+            return;
+        }
+        
         const reader = new FileReader();
         reader.onload = function(e) {
             const imageData = e.target.result;
@@ -1254,9 +1266,22 @@ function handleWassimImageUpload(event) {
             
             // Update avatar in chat header and messages
             updateWassimAvatars(imageData);
+            
+            // Show success message
+            if (window.showNotification) {
+                showNotification('✅ تم تحديث صورة wassim بنجاح!', 'success');
+            } else {
+                console.log('✅ تم تحديث صورة wassim بنجاح!');
+            }
+        };
+        reader.onerror = function() {
+            alert('حدث خطأ أثناء قراءة الصورة. يرجى المحاولة مرة أخرى.');
         };
         reader.readAsDataURL(file);
     }
+    
+    // Reset input to allow selecting same file again
+    event.target.value = '';
 }
 
 // Update all wassim avatars
@@ -1272,17 +1297,22 @@ function updateWassimAvatars(imageData) {
     });
 }
 
-// Add click to upload image
+// Add click to upload image - Double click on avatar to upload
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         const avatarCircle = document.getElementById('wassimAvatarCircle');
         const uploadInput = document.getElementById('wassimImageUpload');
         
         if (avatarCircle && uploadInput) {
-            avatarCircle.addEventListener('click', (e) => {
+            // Double click to upload image
+            avatarCircle.addEventListener('dblclick', (e) => {
                 e.stopPropagation();
+                e.preventDefault();
                 uploadInput.click();
             });
+            
+            // Add tooltip
+            avatarCircle.title = 'انقر مرتين لتغيير الصورة';
         }
     }, 4000);
 });
@@ -1349,6 +1379,11 @@ function initAIFloatingIcon() {
 
     // Click to open chat (only if not dragged)
     icon.addEventListener('click', (e) => {
+        // إذا كان النقر على الصورة (avatar circle)، لا تفتح المحادثة
+        if (e.target.closest('.wassim-avatar-circle') || e.target.closest('#wassimImageUpload')) {
+            return; // دع handleWassimImageUpload يتعامل معه
+        }
+        
         const timeSinceDrag = Date.now() - dragStartTime;
         if (!isDragging && !hasMoved && timeSinceDrag > 100) {
             // فتح محادثة wassim القديمة
