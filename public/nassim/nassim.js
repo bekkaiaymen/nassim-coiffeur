@@ -1221,6 +1221,69 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         initAIFloatingIcon();
         initAIChat();
+        loadWassimImage();
+    }, 4000);
+});
+
+// Load saved wassim image
+function loadWassimImage() {
+    const savedImage = localStorage.getItem('wassimAvatarImage');
+    if (savedImage) {
+        const avatarCircle = document.getElementById('wassimAvatarCircle');
+        if (avatarCircle) {
+            avatarCircle.style.backgroundImage = `url(${savedImage})`;
+            avatarCircle.classList.add('has-image');
+        }
+    }
+}
+
+// Handle image upload for wassim avatar
+function handleWassimImageUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const imageData = e.target.result;
+            localStorage.setItem('wassimAvatarImage', imageData);
+            
+            const avatarCircle = document.getElementById('wassimAvatarCircle');
+            if (avatarCircle) {
+                avatarCircle.style.backgroundImage = `url(${imageData})`;
+                avatarCircle.classList.add('has-image');
+            }
+            
+            // Update avatar in chat header and messages
+            updateWassimAvatars(imageData);
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Update all wassim avatars
+function updateWassimAvatars(imageData) {
+    const avatars = document.querySelectorAll('.wassim-avatar-initial, .wassim-header-avatar');
+    avatars.forEach(avatar => {
+        if (avatar.parentElement) {
+            avatar.parentElement.style.backgroundImage = `url(${imageData})`;
+            avatar.parentElement.style.backgroundSize = 'cover';
+            avatar.parentElement.style.backgroundPosition = 'center';
+            avatar.style.display = 'none';
+        }
+    });
+}
+
+// Add click to upload image
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        const avatarCircle = document.getElementById('wassimAvatarCircle');
+        const uploadInput = document.getElementById('wassimImageUpload');
+        
+        if (avatarCircle && uploadInput) {
+            avatarCircle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                uploadInput.click();
+            });
+        }
     }, 4000);
 });
 

@@ -483,11 +483,12 @@
     <!-- AI Assistant Floating Icon - Wassim -->
     <div id="aiFloatingIcon" class="ai-floating-icon" title="اسأل wassim - المساعد الذكي" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
         <div class="wassim-avatar-container">
-            <div class="wassim-avatar-circle">
+            <div class="wassim-avatar-circle" id="wassimAvatarCircle">
                 <div class="wassim-initial">W</div>
             </div>
             <div class="wassim-name">wassim</div>
         </div>
+        <input type="file" id="wassimImageUpload" accept="image/*" style="display: none;" onchange="handleWassimImageUpload(event)">
     </div>
 
     <!-- AI Chat Modal -->
