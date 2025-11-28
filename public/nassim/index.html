@@ -480,6 +480,71 @@
     <!-- Notification -->
     <div id="notification" class="notification"></div>
 
+    <!-- AI Assistant Floating Icon -->
+    <div id="aiFloatingIcon" class="ai-floating-icon" title="المساعد الذكي - Nassim Coiffeur" style="display: flex !important; visibility: visible !important; opacity: 1 !important;">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Robot Head -->
+            <rect x="6" y="8" width="12" height="10" rx="2" fill="#1A1A1A" stroke="#FDB714" stroke-width="1.5"/>
+            <!-- Eyes -->
+            <circle cx="10" cy="13" r="1.5" fill="#FDB714"/>
+            <circle cx="14" cy="13" r="1.5" fill="#FDB714"/>
+            <!-- Mouth -->
+            <path d="M10 16h4" stroke="#FDB714" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Antenna -->
+            <circle cx="12" cy="6" r="1.5" fill="#FDB714"/>
+            <line x1="12" y1="6" x2="12" y2="8" stroke="#FDB714" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- AI Sparkles -->
+            <circle cx="4" cy="12" r="1" fill="#FDB714" opacity="0.8"/>
+            <circle cx="20" cy="12" r="1" fill="#FDB714" opacity="0.8"/>
+            <circle cx="12" cy="4" r="0.8" fill="#FDB714" opacity="0.6"/>
+        </svg>
+    </div>
+
+    <!-- AI Chat Modal -->
+    <div id="aiChatModal" class="ai-chat-modal hidden">
+        <div class="ai-chat-header">
+            <div class="ai-chat-header-content">
+                <div class="ai-chat-icon">🤖</div>
+                <div class="ai-chat-header-text">
+                    <h3>المساعد الذكي</h3>
+                    <p>Nassim Coiffeur</p>
+                </div>
+            </div>
+            <button class="ai-chat-close" onclick="closeAIChat()">×</button>
+        </div>
+
+        <div class="ai-chat-messages" id="aiChatMessages">
+            <div class="ai-welcome-message">
+                <div class="ai-welcome-icon">🤖</div>
+                <h3>مرحباً بك!</h3>
+                <p>أنا مساعدك الذكي في صالون <strong>Nassim Coiffeur</strong>.<br>
+                اسألني عن أي خدمة، سعر، أو احجز موعدك بسهولة!</p>
+            </div>
+        </div>
+
+        <div class="ai-typing-indicator" id="aiTypingIndicator">
+            <div class="ai-typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="ai-chat-input-container">
+            <div class="ai-chat-input-wrapper">
+                <textarea 
+                    id="aiChatInput" 
+                    class="ai-chat-input" 
+                    placeholder="اكتب سؤالك هنا..."
+                    rows="1"
+                ></textarea>
+                <button class="ai-send-button" id="aiSendButton" onclick="sendAIMessage()">
+                    ➤
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="/public/nassim/nassim.js"></script>
     <script src="/nassim/ai-wassim.js"></script>
 </body>

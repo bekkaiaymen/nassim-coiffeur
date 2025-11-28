@@ -1208,3 +1208,296 @@ function showAllServices() {
 function showNotificationSettings() {
     showNotification('قريباً', 'info');
 }
+
+// ============================================
+// AI Assistant - Floating Icon & Chat
+// ============================================
+
+let aiConversationHistory = [];
+
+// Initialize AI Assistant
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait for splash screen to finish
+    setTimeout(() => {
+        initAIFloatingIcon();
+        initAIChat();
+    }, 4000);
+});
+
+// Also initialize after page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+            initAIFloatingIcon();
+            initAIChat();
+        }, 4000);
+    });
+} else {
+    setTimeout(() => {
+        initAIFloatingIcon();
+        initAIChat();
+    }, 4000);
+}
+
+// Initialize Floating Icon - Draggable
+function initAIFloatingIcon() {
+    const icon = document.getElementById('aiFloatingIcon');
+    if (!icon) {
+        console.warn('⚠️ AI Floating Icon not found in DOM');
+        return;
+    }
+    
+    console.log('✅ AI Floating Icon initialized');
+    // Ensure icon is visible
+    icon.style.display = 'flex';
+    icon.style.visibility = 'visible';
+    icon.style.opacity = '1';
+
+    let isDragging = false;
+    let currentX;
+    let currentY;
+    let initialX;
+    let initialY;
+    let xOffset = 0;
+    let yOffset = 0;
+    let dragStartTime = 0;
+    let hasMoved = false;
+
+    // Load saved position
+    const savedPos = localStorage.getItem('aiIconPosition');
+    if (savedPos) {
+        const pos = JSON.parse(savedPos);
+        xOffset = pos.x;
+        yOffset = pos.y;
+        icon.style.left = pos.x + 'px';
+        icon.style.bottom = 'auto';
+        icon.style.top = pos.y + 'px';
+    }
+
+    // Mouse events
+    icon.addEventListener('mousedown', dragStart);
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('mouseup', dragEnd);
+
+    // Touch events
+    icon.addEventListener('touchstart', dragStart);
+    document.addEventListener('touchmove', drag);
+    document.addEventListener('touchend', dragEnd);
+
+    // Click to open chat (only if not dragged)
+    icon.addEventListener('click', (e) => {
+        const timeSinceDrag = Date.now() - dragStartTime;
+        if (!isDragging && !hasMoved && timeSinceDrag > 100) {
+            openAIChat();
+        }
+        hasMoved = false;
+    });
+
+    function dragStart(e) {
+        e.stopPropagation();
+        dragStartTime = Date.now();
+        hasMoved = false;
+        
+        if (e.type === 'touchstart') {
+            initialX = e.touches[0].clientX - xOffset;
+            initialY = e.touches[0].clientY - yOffset;
+        } else {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+        }
+
+        if (e.target === icon || icon.contains(e.target)) {
+            isDragging = true;
+            icon.style.cursor = 'grabbing';
+            icon.style.transition = 'none';
+        }
+    }
+
+    function drag(e) {
+        if (isDragging) {
+            e.preventDefault();
+            e.stopPropagation();
+            hasMoved = true;
+            
+            if (e.type === 'touchmove') {
+                currentX = e.touches[0].clientX - initialX;
+                currentY = e.touches[0].clientY - initialY;
+            } else {
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+            }
+
+            xOffset = currentX;
+            yOffset = currentY;
+
+            // Constrain to viewport
+            const maxX = window.innerWidth - icon.offsetWidth;
+            const maxY = window.innerHeight - icon.offsetHeight;
+
+            xOffset = Math.max(0, Math.min(xOffset, maxX));
+            yOffset = Math.max(0, Math.min(yOffset, maxY));
+
+            icon.style.left = xOffset + 'px';
+            icon.style.top = yOffset + 'px';
+            icon.style.bottom = 'auto';
+            icon.style.right = 'auto';
+        }
+    }
+
+    function dragEnd(e) {
+        if (isDragging) {
+            isDragging = false;
+            icon.style.cursor = 'move';
+            icon.style.transition = 'all 0.3s ease';
+            
+            // Save position
+            localStorage.setItem('aiIconPosition', JSON.stringify({
+                x: xOffset,
+                y: yOffset
+            }));
+        }
+    }
+}
+
+// Initialize AI Chat
+function initAIChat() {
+    const chatInput = document.getElementById('aiChatInput');
+    const sendButton = document.getElementById('aiSendButton');
+    
+    if (!chatInput || !sendButton) return;
+
+    // Auto-resize textarea
+    chatInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+
+    // Send on Enter (Shift+Enter for new line)
+    chatInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendAIMessage();
+        }
+    });
+}
+
+// Open AI Chat
+function openAIChat() {
+    const modal = document.getElementById('aiChatModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.getElementById('aiChatInput')?.focus();
+    }
+}
+
+// Close AI Chat
+function closeAIChat() {
+    const modal = document.getElementById('aiChatModal');
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+}
+
+// Send AI Message
+async function sendAIMessage() {
+    const chatInput = document.getElementById('aiChatInput');
+    const sendButton = document.getElementById('aiSendButton');
+    const messagesContainer = document.getElementById('aiChatMessages');
+    const typingIndicator = document.getElementById('aiTypingIndicator');
+    
+    if (!chatInput || !sendButton) return;
+
+    const message = chatInput.value.trim();
+    if (!message) return;
+
+    // Remove welcome message
+    const welcomeMsg = messagesContainer.querySelector('.ai-welcome-message');
+    if (welcomeMsg) {
+        welcomeMsg.remove();
+    }
+
+    // Add user message
+    addAIMessage('user', message);
+    chatInput.value = '';
+    chatInput.style.height = 'auto';
+
+    // Disable input
+    sendButton.disabled = true;
+    chatInput.disabled = true;
+
+    // Show typing indicator
+    if (typingIndicator) {
+        typingIndicator.classList.add('active');
+    }
+    scrollAIChatToBottom();
+
+    try {
+        const response = await fetch(`${API_URL}/ai/chat/customer`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                message,
+                businessId: NASSIM_BUSINESS_ID,
+                conversationHistory: aiConversationHistory
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            aiConversationHistory = data.data.conversationHistory;
+            addAIMessage('assistant', data.data.response);
+        } else {
+            addAIMessage('assistant', '❌ عذراً، حدث خطأ. يرجى المحاولة مرة أخرى.');
+        }
+    } catch (error) {
+        console.error('AI Chat Error:', error);
+        addAIMessage('assistant', '❌ عذراً، حدث خطأ في الاتصال. يرجى المحاولة مرة أخرى.');
+    } finally {
+        if (typingIndicator) {
+            typingIndicator.classList.remove('active');
+        }
+        sendButton.disabled = false;
+        chatInput.disabled = false;
+        chatInput.focus();
+    }
+}
+
+// Add AI Message
+function addAIMessage(role, content) {
+    const messagesContainer = document.getElementById('aiChatMessages');
+    if (!messagesContainer) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `ai-message ${role}`;
+
+    const avatar = role === 'user' ? '👤' : '🤖';
+    const time = new Date().toLocaleTimeString('ar-SA', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+    });
+
+    messageDiv.innerHTML = `
+        <div class="ai-message-avatar">${avatar}</div>
+        <div>
+            <div class="ai-message-bubble">${content.replace(/\n/g, '<br>')}</div>
+            <div class="ai-message-time">${time}</div>
+        </div>
+    `;
+
+    messagesContainer.appendChild(messageDiv);
+    scrollAIChatToBottom();
+}
+
+// Scroll AI Chat to Bottom
+function scrollAIChatToBottom() {
+    const messagesContainer = document.getElementById('aiChatMessages');
+    if (messagesContainer) {
+        setTimeout(() => {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }, 100);
+    }
+}
