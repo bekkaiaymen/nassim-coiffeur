@@ -3519,8 +3519,8 @@ body.offline::before {
     display: none;
 }
 
-/* Tooltip for avatar */
-.wassim-avatar-circle::after {
+/* Tooltip for avatar - only show when no image */
+.wassim-avatar-circle:not(.has-image):not([style*="background-image"])::after {
     content: attr(title);
     position: absolute;
     bottom: -30px;
@@ -3538,11 +3538,12 @@ body.offline::before {
     z-index: 100000;
 }
 
-.wassim-avatar-circle:hover::after {
+.wassim-avatar-circle:not(.has-image):not([style*="background-image"]):hover::after {
     opacity: 1;
 }
 
-.wassim-avatar-circle::before {
+/* Face features - only show when no image */
+.wassim-avatar-circle:not(.has-image):not([style*="background-image"])::before {
     content: '';
     position: absolute;
     top: 8px;
@@ -3553,19 +3554,7 @@ body.offline::before {
     border-radius: 50%;
     background: var(--dark);
     opacity: 0.3;
-}
-
-.wassim-avatar-circle::after {
-    content: '';
-    position: absolute;
-    bottom: 6px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 20px;
-    height: 10px;
-    border-radius: 0 0 20px 20px;
-    background: var(--dark);
-    opacity: 0.2;
+    z-index: 0;
 }
 
 .wassim-initial {
