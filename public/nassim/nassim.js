@@ -880,13 +880,9 @@ async function checkFirstBookingOffer() {
                     showFirstBookingOfferNotification();
                 }, 4000);
             } else {
-                // Has appointments - RETURNING CUSTOMER: Show 50 points offer
-                if (customerData.hasSeenReturningCustomerOffer) {
-                    console.log('ℹ️ Returning customer offer already seen');
-                    return;
-                }
+                // Has appointments - RETURNING CUSTOMER: Always show 50 points offer
                 setTimeout(() => {
-                    checkReturningCustomerOffer();
+                    showReturningCustomerOfferNotification();
                 }, 4000);
             }
         } else {
