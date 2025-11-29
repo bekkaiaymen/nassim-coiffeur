@@ -21,7 +21,7 @@ router.get('/customer', protect, async (req, res) => {
             });
         }
         
-        const appointments = await Appointment.find({ customer: customer._id })
+        const appointments = await Appointment.find({ customerId: customer._id })
             .populate('business', 'name')
             .populate('service', 'name price duration')
             .populate('employee', 'name photo')
