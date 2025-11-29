@@ -550,11 +550,18 @@ async function loadAppointments() {
         const response = await fetch(`${API_URL}/appointments/customer`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
+        console.log('📡 [loadAppointments] Response status:', response.status);
         const data = await response.json();
-        if (data.success && data.data) {
-            displayAppointments(data.data);
+        console.log('📡 [loadAppointments] API response:', data);
+        // Defensive: handle both data.data and data
+        let appointments = [];
+        if (data.success && Array.isArray(data.data)) {
+            appointments = data.data;
+        } else if (Array.isArray(data)) {
+            appointments = data;
         }
+        console.log('📡 [loadAppointments] Appointments array:', appointments);
+        displayAppointments(appointments);
     } catch (error) {
         console.error('Error loading appointments:', error);
     }
