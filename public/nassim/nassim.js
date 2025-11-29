@@ -848,48 +848,43 @@ async function checkFirstBookingOffer() {
         console.log('⚠️ checkFirstBookingOffer: No customerData');
         return;
     }
-    
     console.log('🔍 Checking first booking offer...', {
         hasSeenFirstBookingOffer: customerData.hasSeenFirstBookingOffer,
         customerId: customerData._id
     });
-    
-    // Check if customer has any appointments first
+    // Always check appointments to determine correct offer
     try {
         const response = await fetch(`${API_URL}/appointments/customer`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        
         console.log('📅 Appointments response:', response.status);
-        
         if (response.ok) {
             const data = await response.json();
             console.log('📅 Appointments data:', data);
-            
-            if (data && data.length === 0) {
+            // Defensive: data.data for new API, data for legacy
+            const appointments = Array.isArray(data.data) ? data.data : data;
+            if (appointments && appointments.length === 0) {
                 // No appointments yet - NEW CUSTOMER: Show 100 points offer
-                // Reset hasSeenFirstBookingOffer if it was set
                 if (customerData.hasSeenFirstBookingOffer) {
-                    console.log('🔄 Resetting hasSeenFirstBookingOffer - no appointments found');
                     customerData.hasSeenFirstBookingOffer = false;
                     localStorage.setItem('customerData', JSON.stringify(customerData));
                 }
-                
-                // Show first booking offer (100 points for new customers)
-                console.log('✅ No appointments found, showing first booking offer (100 points)');
                 setTimeout(() => {
                     showFirstBookingOfferNotification();
-                }, 4000); // Show after splash screen
+                }, 4000);
             } else {
                 // Has appointments - RETURNING CUSTOMER: Show 50 points offer
-                console.log('✅ Customer has appointments, checking returning customer offer (50 points)');
+                if (customerData.hasSeenReturningCustomerOffer) {
+                    console.log('ℹ️ Returning customer offer already seen');
+                    return;
+                }
                 setTimeout(() => {
                     checkReturningCustomerOffer();
                 }, 4000);
             }
         } else {
             console.log('⚠️ Failed to fetch appointments:', response.status);
-            // If we can't check appointments, check if offer was already seen
+            // If we can't check appointments, only show first booking offer if not seen
             if (!customerData.hasSeenFirstBookingOffer) {
                 setTimeout(() => {
                     showFirstBookingOfferNotification();
@@ -898,7 +893,6 @@ async function checkFirstBookingOffer() {
         }
     } catch (error) {
         console.error('❌ Error checking appointments:', error);
-        // If there's an error, check if offer was already seen
         if (!customerData.hasSeenFirstBookingOffer) {
             setTimeout(() => {
                 showFirstBookingOfferNotification();
