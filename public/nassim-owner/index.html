@@ -191,13 +191,26 @@
                 </button>
             </div>
 
-            <!-- Filters -->
+            <!-- Filters and Sorting -->
             <div class="filters-bar">
-                <button class="filter-btn active" onclick="filterAppointments('all')">الكل</button>
-                <button class="filter-btn" onclick="filterAppointments('pending')">قيد الانتظار</button>
-                <button class="filter-btn" onclick="filterAppointments('confirmed')">مؤكد</button>
-                <button class="filter-btn" onclick="filterAppointments('completed')">مكتمل</button>
-                <button class="filter-btn" onclick="filterAppointments('cancelled')">ملغي</button>
+                <div class="filters-group">
+                    <button class="filter-btn active" onclick="filterAppointments('all')">الكل</button>
+                    <button class="filter-btn" onclick="filterAppointments('pending')">قيد الانتظار</button>
+                    <button class="filter-btn" onclick="filterAppointments('confirmed')">مؤكد</button>
+                    <button class="filter-btn" onclick="filterAppointments('completed')">مكتمل</button>
+                    <button class="filter-btn" onclick="filterAppointments('cancelled')">ملغي</button>
+                </div>
+                <div class="sort-group">
+                    <label style="color: var(--text-secondary); margin-left: 8px; font-size: 14px;">ترتيب:</label>
+                    <select id="appointmentSort" class="sort-select" onchange="sortAppointments(this.value)">
+                        <option value="createdAt-desc">⬇️ آخر طلب (الأحدث)</option>
+                        <option value="createdAt-asc">⬆️ أول طلب (الأقدم)</option>
+                        <option value="date-asc">📅 تاريخ الموعد (الأقرب)</option>
+                        <option value="date-desc">📅 تاريخ الموعد (الأبعد)</option>
+                        <option value="price-desc">💰 السعر (الأعلى)</option>
+                        <option value="price-asc">💰 السعر (الأقل)</option>
+                    </select>
+                </div>
             </div>
 
             <div class="card">

@@ -227,7 +227,52 @@ function displayTodayAppointments(appointments) {
 }
 
 // ==================== Appointments ====================
+// Sort appointments by selected option
+function sortAppointmentsByOption(appointments, option) {
+    const sorted = [...appointments];
+    
+    switch(option) {
+        case 'createdAt-desc': // آخر طلب (الأحدث أولاً)
+            sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            break;
+        case 'createdAt-asc': // أول طلب (الأقدم أولاً)
+            sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            break;
+        case 'date-asc': // تاريخ الموعد (الأقرب)
+            sorted.sort((a, b) => {
+                const dateA = new Date(a.date + 'T' + a.time);
+                const dateB = new Date(b.date + 'T' + b.time);
+                return dateA - dateB;
+            });
+            break;
+        case 'date-desc': // تاريخ الموعد (الأبعد)
+            sorted.sort((a, b) => {
+                const dateA = new Date(a.date + 'T' + a.time);
+                const dateB = new Date(b.date + 'T' + b.time);
+                return dateB - dateA;
+            });
+            break;
+        case 'price-desc': // السعر (الأعلى)
+            sorted.sort((a, b) => (b.totalPrice || b.service?.price || 0) - (a.totalPrice || a.service?.price || 0));
+            break;
+        case 'price-asc': // السعر (الأقل)
+            sorted.sort((a, b) => (a.totalPrice || a.service?.price || 0) - (b.totalPrice || b.service?.price || 0));
+            break;
+        default:
+            // Default: newest booking first
+            sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+    
+    return sorted;
+}
+
+// Sort appointments function (called from UI)
+function sortAppointments(sortOption) {
+    loadAppointments(window.currentAppointmentFilter || 'all');
+}
+
 async function loadAppointments(filter = 'all') {
+    window.currentAppointmentFilter = filter;
     try {
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/appointments/business/${NASSIM_BUSINESS_ID}`, {
@@ -242,12 +287,9 @@ async function loadAppointments(filter = 'all') {
             appointments = appointments.filter(apt => apt.status === filter);
         }
 
-        // Sort by date (newest first)
-        appointments.sort((a, b) => {
-            const dateA = new Date(a.date + 'T' + a.time);
-            const dateB = new Date(b.date + 'T' + b.time);
-            return dateB - dateA;
-        });
+        // Get current sort option (default: newest booking first)
+        const sortOption = document.getElementById('appointmentSort')?.value || 'createdAt-desc';
+        appointments = sortAppointmentsByOption(appointments, sortOption);
 
         displayAppointments(appointments);
 
