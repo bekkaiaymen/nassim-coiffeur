@@ -26,6 +26,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use('/superadmin', express.static(path.join(__dirname, 'public/superadmin')));
 app.use('/register', express.static(path.join(__dirname, 'public/register')));
 app.use('/customer-register', express.static(path.join(__dirname, 'public/customer-register')));

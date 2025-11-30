@@ -768,7 +768,10 @@ function displayServices(services) {
 
     const html = services.map(service => `
         <div class="service-card">
-            <img src="${service.image || 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&h=180&fit=crop'}" alt="${service.name}" class="service-image">
+            <img src="${service.image || 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&h=180&fit=crop'}" 
+                 alt="${service.name}" 
+                 class="service-image" 
+                 onerror="console.error('Failed to load image:', this.src); this.src='https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&h=180&fit=crop';">
             <div class="service-content">
                 <h3 class="service-title">${service.name}</h3>
                 <p class="service-description">${service.description || 'لا يوجد وصف'}</p>
@@ -873,6 +876,7 @@ async function submitAddService() {
         if (selectedServiceImage) {
             showToast('جاري رفع الصورة...', 'info');
             imageUrl = await uploadImage(selectedServiceImage);
+            console.log('✅ Image uploaded successfully:', imageUrl);
         }
         
         const serviceData = {
@@ -2014,12 +2018,16 @@ async function uploadImage(file) {
         
         if (response.ok) {
             const data = await response.json();
+            console.log('📤 Upload response:', data);
             // Convert relative URL to absolute URL
             const imageUrl = data.imageUrl || data.url;
             if (imageUrl && imageUrl.startsWith('/uploads/')) {
                 // Always use Render URL for images since that's where they're stored
-                return 'https://nassim-coiffeur.onrender.com' + imageUrl;
+                const fullUrl = 'https://nassim-coiffeur.onrender.com' + imageUrl;
+                console.log('🔗 Full image URL:', fullUrl);
+                return fullUrl;
             }
+            console.log('🔗 Image URL:', imageUrl);
             return imageUrl;
         } else {
             throw new Error('فشل رفع الصورة');
