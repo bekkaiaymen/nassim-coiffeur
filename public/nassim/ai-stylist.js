@@ -1,12 +1,36 @@
-// AI Stylist - AI Image Generation Integration
-// API Configuration
-const AI_API_KEY = 'd8b63d13b884c0f284533e6927b651be';
-const AI_API_URL = 'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image';
-const REPLICATE_API_URL = 'https://api.replicate.com/v1/predictions';
+// AI Stylist - Hairstyle Recommendation System
+// Hairstyle Database
+const hairstyleDatabase = {
+    classic: [
+        { name: 'Side Part Classic', image: 'https://i.pinimg.com/736x/8f/3d/73/8f3d73e0a8e3c8e3d4c2f9e5c3e7f1a2.jpg', desc: 'قصة جانبية كلاسيكية أنيقة' },
+        { name: 'Slicked Back', image: 'https://i.pinimg.com/736x/4d/8e/2f/4d8e2f9c7d6e5a4b3c2d1e0f9a8b7c6d.jpg', desc: 'شعر ممشط للخلف بأناقة' },
+        { name: 'Gentleman Cut', image: 'https://i.pinimg.com/736x/1a/2b/3c/1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d.jpg', desc: 'قصة الرجل الأنيق' },
+        { name: 'Executive Style', image: 'https://i.pinimg.com/736x/9d/8c/7b/9d8c7b6a5d4e3f2a1b0c9d8e7f6a5b4c.jpg', desc: 'أسلوب تنفيذي محترف' }
+    ],
+    modern: [
+        { name: 'Textured Quiff', image: 'https://i.pinimg.com/736x/5e/4d/3c/5e4d3c2b1a0f9e8d7c6b5a4d3e2f1a0b.jpg', desc: 'كويف عصري مع تكستشر' },
+        { name: 'Modern Pompadour', image: 'https://i.pinimg.com/736x/2f/1e/0d/2f1e0d9c8b7a6d5e4f3a2b1c0d9e8f7a.jpg', desc: 'بومبادور عصري مميز' },
+        { name: 'Spiky Fade', image: 'https://i.pinimg.com/736x/7c/6b/5a/7c6b5a4d3e2f1a0b9c8d7e6f5a4b3c2d.jpg', desc: 'قصة شائكة مع فيد' },
+        { name: 'Messy Style', image: 'https://i.pinimg.com/736x/0a/9b/8c/0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d.jpg', desc: 'أسلوب عفوي عصري' }
+    ],
+    fade: [
+        { name: 'Low Fade', image: 'https://i.pinimg.com/736x/3d/2c/1b/3d2c1b0a9f8e7d6c5b4a3d2e1f0a9b8c.jpg', desc: 'فيد منخفض احترافي' },
+        { name: 'High Fade', image: 'https://i.pinimg.com/736x/6f/5e/4d/6f5e4d3c2b1a0f9e8d7c6b5a4d3e2f1a.jpg', desc: 'فيد عالي جريء' },
+        { name: 'Skin Fade', image: 'https://i.pinimg.com/736x/8a/7b/6c/8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d.jpg', desc: 'فيد بالموس نظيف' },
+        { name: 'Taper Fade', image: 'https://i.pinimg.com/736x/1c/0b/9a/1c0b9a8d7e6f5a4b3c2d1e0f9a8b7c6d.jpg', desc: 'تيبر فيد متدرج' }
+    ],
+    beard: [
+        { name: 'Full Beard Style', image: 'https://i.pinimg.com/736x/4e/3d/2c/4e3d2c1b0a9f8e7d6c5b4a3d2e1f0a9b.jpg', desc: 'لحية كاملة أنيقة' },
+        { name: 'Goatee Modern', image: 'https://i.pinimg.com/736x/7d/6c/5b/7d6c5b4a3d2e1f0a9b8c7d6e5f4a3b2c.jpg', desc: 'لحية جوتي عصرية' },
+        { name: 'Stubble Look', image: 'https://i.pinimg.com/736x/0f/9e/8d/0f9e8d7c6b5a4d3e2f1a0b9c8d7e6f5a.jpg', desc: 'مظهر الشعر الخفيف' },
+        { name: 'Shaped Beard', image: 'https://i.pinimg.com/736x/2a/1b/0c/2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d.jpg', desc: 'لحية مشكلة احترافية' }
+    ]
+};
 
 let uploadedImage = null;
 let uploadedImageFile = null;
 let currentAIResult = null;
+let selectedHairstyle = null;
 
 // Show AI Stylist Modal
 function showAIStylist() {
@@ -103,161 +127,40 @@ function removeAIImage() {
     if (fileInput) fileInput.value = '';
 }
 
-// Simulate AI Processing (Demo Mode)
+// Simulate AI Processing - Analyze and Suggest Hairstyles
 async function simulateAIProcessing(prompt, style) {
-    // Update loading message progressively
     const loadingState = document.getElementById('aiLoadingState');
     const loadingText = loadingState?.querySelector('p');
     const loadingSmall = loadingState?.querySelector('small');
     
-    if (loadingText) loadingText.textContent = 'جاري تحليل الصورة...';
+    if (loadingText) loadingText.textContent = '🔍 جاري تحليل ملامح وجهك...';
+    if (loadingSmall) loadingSmall.textContent = 'تحديد شكل الوجه ونوع الشعر';
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (loadingText) loadingText.textContent = '🤖 البحث في قاعدة بيانات التسريحات...';
+    if (loadingSmall) loadingSmall.textContent = `تحليل أفضل تسريحات ${getStyleName(style)}`;
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (loadingText) loadingText.textContent = '✨ اختيار التسريحات الأنسب لك...';
+    if (loadingSmall) loadingSmall.textContent = 'مطابقة النمط مع ملامحك';
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    if (loadingText) loadingText.textContent = `تطبيق فلتر ${getStyleName(style)}...`;
-    if (loadingSmall) loadingSmall.textContent = 'معالجة الألوان والتباين';
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    if (loadingText) loadingText.textContent = 'إضافة التحسينات النهائية...';
-    if (loadingSmall) loadingSmall.textContent = 'تطبيق التأثيرات الاحترافية';
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
-    // Apply canvas-based image enhancement
-    const enhancedImage = await enhanceImageWithCanvas(uploadedImage, style);
-    currentAIResult = enhancedImage;
-    displayAIResult(currentAIResult);
+    // Get hairstyle suggestions
+    displayHairstyleSuggestions(style);
 }
 
 // Get style name in Arabic
 function getStyleName(style) {
     const names = {
-        classic: 'الكلاسيكي',
-        modern: 'العصري',
+        classic: 'الكلاسيكية',
+        modern: 'العصرية',
         fade: 'الفيد',
-        beard: 'اللحية المحترفة'
+        beard: 'اللحية'
     };
     return names[style] || 'AI';
 }
 
-// Enhance Image with Canvas (Client-side processing)
-async function enhanceImageWithCanvas(imageUrl, style) {
-    return new Promise((resolve) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            // Set canvas size
-            canvas.width = img.width;
-            canvas.height = img.height;
-            
-            // Draw original image
-            ctx.drawImage(img, 0, 0);
-            
-            // Get image data
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const data = imageData.data;
-            
-            // Apply dramatic style-based filters
-            switch(style) {
-                case 'classic':
-                    // Black & White with high contrast (Classic barber look)
-                    for (let i = 0; i < data.length; i += 4) {
-                        const avg = (data[i] + data[i+1] + data[i+2]) / 3;
-                        const contrast = 1.5;
-                        let newValue = ((avg - 128) * contrast) + 128;
-                        newValue = Math.max(0, Math.min(255, newValue));
-                        data[i] = newValue;
-                        data[i+1] = newValue;
-                        data[i+2] = newValue;
-                    }
-                    break;
-                    
-                case 'modern':
-                    // Vibrant colors with cool tone
-                    for (let i = 0; i < data.length; i += 4) {
-                        data[i] = Math.min(255, data[i] * 1.3);     // Red boost
-                        data[i+1] = Math.min(255, data[i+1] * 1.2); // Green boost
-                        data[i+2] = Math.min(255, data[i+2] * 1.4); // Blue strong boost
-                    }
-                    break;
-                    
-                case 'fade':
-                    // Sharp edges with vignette effect
-                    for (let i = 0; i < data.length; i += 4) {
-                        const x = (i / 4) % canvas.width;
-                        const y = Math.floor((i / 4) / canvas.width);
-                        const centerX = canvas.width / 2;
-                        const centerY = canvas.height / 2;
-                        const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
-                        const maxDistance = Math.sqrt(Math.pow(centerX, 2) + Math.pow(centerY, 2));
-                        const vignette = 1 - (distance / maxDistance) * 0.7;
-                        
-                        // High contrast
-                        data[i] = Math.min(255, data[i] * 1.4 * vignette);
-                        data[i+1] = Math.min(255, data[i+1] * 1.4 * vignette);
-                        data[i+2] = Math.min(255, data[i+2] * 1.4 * vignette);
-                    }
-                    break;
-                    
-                case 'beard':
-                    // Warm sepia tone (Professional grooming look)
-                    for (let i = 0; i < data.length; i += 4) {
-                        const r = data[i];
-                        const g = data[i+1];
-                        const b = data[i+2];
-                        
-                        data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189) + 40);
-                        data[i+1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168) + 20);
-                        data[i+2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
-                    }
-                    break;
-            }
-            
-            // Put modified data back
-            ctx.putImageData(imageData, 0, 0);
-            
-            // Add decorative frame
-            ctx.strokeStyle = 'rgba(203, 163, 92, 0.8)';
-            ctx.lineWidth = 8;
-            ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
-            
-            // Add style badge
-            const badgeTexts = {
-                classic: '👔 CLASSIC',
-                modern: '✨ MODERN',
-                fade: '🔥 FADE',
-                beard: '🧔 GROOMED'
-            };
-            
-            // Badge background
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(10, 10, 160, 50);
-            
-            // Badge text
-            ctx.font = 'bold 24px Arial';
-            ctx.fillStyle = '#CBA35C';
-            ctx.fillText(badgeTexts[style] || '✨ AI', 20, 45);
-            
-            // Bottom watermark
-            ctx.font = 'bold 16px Arial';
-            ctx.fillStyle = 'rgba(203, 163, 92, 0.9)';
-            ctx.fillText('Nassim Coiffeur AI', canvas.width - 200, canvas.height - 20);
-            
-            resolve(canvas.toDataURL('image/png', 0.95));
-        };
-        
-        img.onerror = () => {
-            console.error('Image enhancement failed');
-            resolve(imageUrl);
-        };
-        
-        img.src = imageUrl;
-    });
-}
-
-// Generate AI Hairstyle
+// Generate AI Hairstyle Recommendations
 async function generateAIHairstyle() {
     // Validate image upload
     if (!uploadedImage) {
@@ -314,60 +217,123 @@ async function generateAIHairstyle() {
     }
 }
 
-// Display AI Result
-function displayAIResult(imageUrl) {
+// Display Hairstyle Suggestions
+function displayHairstyleSuggestions(style) {
     const resultsSection = document.getElementById('aiResultsSection');
-    const resultImage = document.getElementById('resultImage');
-    const originalImage = document.getElementById('originalImage');
+    const resultsContainer = document.querySelector('.ai-results-container');
     
-    if (resultsSection) resultsSection.style.display = 'block';
-    if (resultImage) {
-        resultImage.src = imageUrl;
-        resultImage.style.animation = 'fadeIn 0.5s ease';
-        resultImage.style.display = 'block';
-    }
-    if (originalImage) {
-        originalImage.src = uploadedImage;
-        originalImage.style.display = 'none';
-    }
+    if (!resultsSection || !resultsContainer) return;
     
-    // Scroll to results
+    // Get hairstyles for selected style
+    const suggestions = hairstyleDatabase[style] || hairstyleDatabase.classic;
+    
+    // Clear previous results
+    resultsContainer.innerHTML = '';
+    
+    // Create title
+    const title = document.createElement('h4');
+    title.className = 'suggestions-title';
+    title.textContent = `✨ أفضل ${suggestions.length} تسريحات مقترحة لك`;
+    resultsContainer.appendChild(title);
+    
+    // Create grid of suggestions
+    const grid = document.createElement('div');
+    grid.className = 'suggestions-grid';
+    
+    suggestions.forEach((hairstyle, index) => {
+        const card = document.createElement('div');
+        card.className = 'hairstyle-card';
+        card.innerHTML = `
+            <div class="hairstyle-image-wrapper">
+                <img src="${hairstyle.image}" alt="${hairstyle.name}" class="hairstyle-image">
+                <div class="hairstyle-badge">#${index + 1}</div>
+            </div>
+            <div class="hairstyle-info">
+                <h5 class="hairstyle-name">${hairstyle.name}</h5>
+                <p class="hairstyle-desc">${hairstyle.desc}</p>
+                <button class="select-hairstyle-btn" onclick="selectHairstyle('${style}', ${index})">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    اختر هذه التسريحة
+                </button>
+            </div>
+        `;
+        grid.appendChild(card);
+    });
+    
+    resultsContainer.appendChild(grid);
+    
+    // Show results section
+    resultsSection.style.display = 'block';
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     
-    showToast('✨ تم تحسين الصورة بنجاح! قارن بين قبل وبعد', 'success');
+    showToast(`✨ وجدنا ${suggestions.length} تسريحات مثالية لك!`, 'success');
 }
 
-// Show Comparison (Before/After)
-function showComparison(view) {
-    const resultImage = document.getElementById('resultImage');
-    const originalImage = document.getElementById('originalImage');
-    const buttons = document.querySelectorAll('.comparison-toggle .toggle-btn');
+// Select a hairstyle
+function selectHairstyle(style, index) {
+    const hairstyle = hairstyleDatabase[style][index];
+    selectedHairstyle = hairstyle;
     
-    buttons.forEach(btn => btn.classList.remove('active'));
+    // Highlight selected card
+    document.querySelectorAll('.hairstyle-card').forEach(card => {
+        card.classList.remove('selected');
+    });
+    document.querySelectorAll('.hairstyle-card')[index].classList.add('selected');
     
-    if (view === 'after') {
-        if (resultImage) resultImage.style.display = 'block';
-        if (originalImage) originalImage.style.display = 'none';
-        buttons[0].classList.add('active');
-    } else {
-        if (resultImage) resultImage.style.display = 'none';
-        if (originalImage) originalImage.style.display = 'block';
-        buttons[1].classList.add('active');
+    // Show booking action
+    showBookingAction(hairstyle);
+    
+    showToast(`✅ تم اختيار: ${hairstyle.name}`, 'success');
+}
+
+// Show booking action for selected hairstyle
+function showBookingAction(hairstyle) {
+    // Remove existing booking banner if any
+    const existingBanner = document.querySelector('.booking-banner');
+    if (existingBanner) existingBanner.remove();
+    
+    const banner = document.createElement('div');
+    banner.className = 'booking-banner';
+    banner.innerHTML = `
+        <div class="booking-banner-content">
+            <div class="booking-info">
+                <img src="${hairstyle.image}" alt="${hairstyle.name}" class="booking-preview">
+                <div>
+                    <h5>التسريحة المختارة: ${hairstyle.name}</h5>
+                    <p>${hairstyle.desc}</p>
+                </div>
+            </div>
+            <button class="book-now-btn" onclick="bookSelectedHairstyle()">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                احجز موعد الآن
+            </button>
+        </div>
+    `;
+    
+    const resultsSection = document.getElementById('aiResultsSection');
+    if (resultsSection) {
+        resultsSection.appendChild(banner);
+        banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 }
 
-// Book AI Hairstyle
-function bookAIHairstyle() {
-    if (!currentAIResult) {
-        showToast('⚠️ لا يوجد تصفيفة لحجزها', 'warning');
+// Book Selected Hairstyle
+function bookSelectedHairstyle() {
+    if (!selectedHairstyle) {
+        showToast('⚠️ الرجاء اختيار تسريحة أولاً', 'warning');
         return;
     }
     
     // Close AI modal
     closeAIStylist();
     
-    // Store AI result for booking reference
-    sessionStorage.setItem('aiHairstyleImage', currentAIResult);
+    // Store selected hairstyle for booking reference
+    sessionStorage.setItem('aiSelectedHairstyle', JSON.stringify(selectedHairstyle));
+    sessionStorage.setItem('aiHairstyleImage', selectedHairstyle.image);
     
     // Scroll to booking section
     const bookingSection = document.querySelector('.services-section');
@@ -375,40 +341,12 @@ function bookAIHairstyle() {
         bookingSection.scrollIntoView({ behavior: 'smooth' });
     }
     
-    showToast('✅ يمكنك الآن اختيار الخدمات وإتمام الحجز', 'success');
-}
-
-// Download AI Image
-function downloadAIImage() {
-    if (!currentAIResult) {
-        showToast('⚠️ لا يوجد صورة لتحميلها', 'warning');
-        return;
-    }
+    showToast(`✅ جاهز للحجز! التسريحة: ${selectedHairstyle.name}`, 'success');
     
-    try {
-        // Create download link
-        const link = document.createElement('a');
-        link.href = currentAIResult;
-        link.download = `nassim-ai-hairstyle-${Date.now()}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        showToast('✅ تم تحميل الصورة بنجاح', 'success');
-    } catch (error) {
-        console.error('Download Error:', error);
-        showToast('❌ حدث خطأ أثناء تحميل الصورة', 'error');
-    }
-}
-
-// Retry AI Generation
-function retryAIGeneration() {
-    const resultsSection = document.getElementById('aiResultsSection');
-    if (resultsSection) resultsSection.style.display = 'none';
-    
-    currentAIResult = null;
-    
-    showToast('🔄 يمكنك تجربة نمط آخر الآن', 'info');
+    // Show note about selected hairstyle
+    setTimeout(() => {
+        showToast('💡 أخبر الحلاق عن التسريحة المختارة عند الموعد', 'info');
+    }, 2000);
 }
 
 // Drag and Drop Support

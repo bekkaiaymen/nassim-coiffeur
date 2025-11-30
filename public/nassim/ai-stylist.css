@@ -472,3 +472,219 @@
     background: rgba(102, 126, 234, 0.2);
     transform: scale(1.02);
 }
+
+/* Hairstyle Suggestions Grid */
+.suggestions-title {
+    color: #fff;
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.suggestions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.hairstyle-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.hairstyle-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
+.hairstyle-card.selected {
+    border-color: #CBA35C;
+    box-shadow: 0 0 30px rgba(203, 163, 92, 0.5);
+    background: rgba(203, 163, 92, 0.1);
+}
+
+.hairstyle-image-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 100%;
+    overflow: hidden;
+}
+
+.hairstyle-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.hairstyle-card:hover .hairstyle-image {
+    transform: scale(1.1);
+}
+
+.hairstyle-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 4px 10px;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.hairstyle-info {
+    padding: 12px;
+}
+
+.hairstyle-name {
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+}
+
+.hairstyle-desc {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    margin: 0 0 10px 0;
+}
+
+.select-hairstyle-btn {
+    width: 100%;
+    padding: 8px;
+    background: rgba(203, 163, 92, 0.2);
+    border: 1px solid rgba(203, 163, 92, 0.3);
+    border-radius: 6px;
+    color: #CBA35C;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+}
+
+.select-hairstyle-btn:hover {
+    background: rgba(203, 163, 92, 0.3);
+    transform: translateY(-2px);
+}
+
+.hairstyle-card.selected .select-hairstyle-btn {
+    background: linear-gradient(135deg, #CBA35C 0%, #E4C678 100%);
+    color: #000;
+    border-color: #CBA35C;
+}
+
+/* Booking Banner */
+.booking-banner {
+    margin-top: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(203, 163, 92, 0.2) 0%, rgba(228, 198, 120, 0.2) 100%);
+    border: 2px solid #CBA35C;
+    border-radius: 12px;
+    animation: slideInUp 0.4s ease;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.booking-banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.booking-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.booking-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #CBA35C;
+}
+
+.booking-info h5 {
+    color: #fff;
+    font-size: 16px;
+    margin: 0 0 4px 0;
+}
+
+.booking-info p {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    margin: 0;
+}
+
+.book-now-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #CBA35C 0%, #E4C678 100%);
+    border: none;
+    border-radius: 8px;
+    color: #000;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(203, 163, 92, 0.4);
+}
+
+.book-now-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(203, 163, 92, 0.6);
+}
+
+/* Responsive for suggestions */
+@media (max-width: 600px) {
+    .suggestions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .booking-banner-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .booking-info {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .book-now-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
