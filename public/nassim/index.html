@@ -22,6 +22,7 @@
     <title>✂️ Nassim Coiffeur - صالون الحلاقة الأول</title>
     <link rel="stylesheet" href="/nassim/nassim.css">
     <link rel="stylesheet" href="/nassim/ai-wassim.css">
+    <link rel="stylesheet" href="/nassim/ai-stylist.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
 </head>
 <body>
@@ -102,6 +103,14 @@
                         </svg>
                     </div>
                     <span class="quick-action-label">الأخبار</span>
+                </div>
+                <div class="quick-action ai-action" onclick="showAIStylist()">
+                    <div class="quick-action-icon ai-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                    </div>
+                    <span class="quick-action-label">AI مصمم</span>
                 </div>
             </div>
 
@@ -608,7 +617,119 @@
         </div>
     </div>
 
+    <!-- AI Stylist Modal -->
+    <div id="aiStylistModal" class="ai-stylist-modal" style="display: none;">
+        <div class="ai-stylist-content">
+            <div class="ai-stylist-header">
+                <button class="close-ai-btn" onclick="closeAIStylist()">✕</button>
+                <h2>🤖 مصمم AI للحلاقة</h2>
+                <p>اكتشف أفضل تصفيفة شعر تناسبك باستخدام الذكاء الاصطناعي</p>
+            </div>
+
+            <div class="ai-stylist-body">
+                <!-- Upload Section -->
+                <div class="ai-upload-section">
+                    <div class="upload-box" id="uploadBox">
+                        <input type="file" id="aiImageInput" accept="image/*" onchange="handleAIImageUpload(event)" style="display: none;">
+                        <label for="aiImageInput" class="upload-label">
+                            <svg width="48" height="48" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span>انقر لتحميل صورتك</span>
+                            <small>أو اسحب الصورة هنا</small>
+                        </label>
+                        <div id="imagePreviewContainer" style="display: none;">
+                            <img id="imagePreview" class="ai-image-preview" alt="Preview">
+                            <button class="remove-image-btn" onclick="removeAIImage()">✕</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Style Selection -->
+                <div class="ai-style-section">
+                    <h3>اختر نوع التصفيفة المفضلة</h3>
+                    <div class="style-options">
+                        <label class="style-option">
+                            <input type="radio" name="hairStyle" value="classic" checked>
+                            <span class="style-card">
+                                <span class="style-icon">👔</span>
+                                <span>كلاسيكي</span>
+                            </span>
+                        </label>
+                        <label class="style-option">
+                            <input type="radio" name="hairStyle" value="modern">
+                            <span class="style-card">
+                                <span class="style-icon">✨</span>
+                                <span>عصري</span>
+                            </span>
+                        </label>
+                        <label class="style-option">
+                            <input type="radio" name="hairStyle" value="fade">
+                            <span class="style-card">
+                                <span class="style-icon">🔥</span>
+                                <span>فيد</span>
+                            </span>
+                        </label>
+                        <label class="style-option">
+                            <input type="radio" name="hairStyle" value="beard">
+                            <span class="style-card">
+                                <span class="style-icon">🧔</span>
+                                <span>لحية</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Generate Button -->
+                <button class="ai-generate-btn" onclick="generateAIHairstyle()" id="generateBtn">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    <span>توليد التصفيفة بالذكاء الاصطناعي</span>
+                </button>
+
+                <!-- Loading State -->
+                <div id="aiLoadingState" class="ai-loading-state" style="display: none;">
+                    <div class="loading-spinner"></div>
+                    <p>جاري معالجة صورتك وتوليد أفضل تصفيفة...</p>
+                    <small>قد يستغرق هذا بضع ثوان</small>
+                </div>
+
+                <!-- Results Section -->
+                <div id="aiResultsSection" class="ai-results-section" style="display: none;">
+                    <h3>✨ النتيجة</h3>
+                    <div class="ai-results-container">
+                        <div class="result-image-box">
+                            <img id="resultImage" class="result-image" alt="AI Generated Hairstyle">
+                        </div>
+                        <div class="result-actions">
+                            <button class="result-btn book-btn" onclick="bookAIHairstyle()">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                احجز موعد لهذه التصفيفة
+                            </button>
+                            <button class="result-btn download-btn" onclick="downloadAIImage()">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                                حفظ الصورة
+                            </button>
+                            <button class="result-btn retry-btn" onclick="retryAIGeneration()">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                                </svg>
+                                جرب مرة أخرى
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="/public/nassim/nassim.js"></script>
     <script src="/nassim/ai-wassim.js"></script>
+    <script src="/nassim/ai-stylist.js"></script>
 </body>
 </html>
