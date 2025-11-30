@@ -153,13 +153,15 @@ async function loadDashboardData() {
         const appointmentsRes = await fetch(`${API_URL}/appointments/business/${NASSIM_BUSINESS_ID}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const appointments = await appointmentsRes.json();
+        const appointmentsData = await appointmentsRes.json();
+        const appointments = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []);
 
         // Load customers
         const customersRes = await fetch(`${API_URL}/customers/business/${NASSIM_BUSINESS_ID}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const customers = await customersRes.json();
+        const customersData = await customersRes.json();
+        const customers = Array.isArray(customersData) ? customersData : (customersData.data || []);
 
         // Calculate stats
         const today = new Date();
@@ -418,7 +420,8 @@ async function loadEmployees() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        const employees = await response.json();
+        const result = await response.json();
+        const employees = Array.isArray(result) ? result : (result.data || []);
         displayEmployees(employees);
 
     } catch (error) {
@@ -745,7 +748,8 @@ async function loadServices() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        const services = await response.json();
+        const result = await response.json();
+        const services = Array.isArray(result) ? result : (result.data || []);
         displayServices(services);
 
     } catch (error) {
@@ -1052,7 +1056,8 @@ async function loadPosts() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        const posts = await response.json();
+        const result = await response.json();
+        const posts = Array.isArray(result) ? result : (result.data || []);
         displayPosts(posts);
 
     } catch (error) {
@@ -1346,7 +1351,8 @@ async function loadRewards() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        const rewards = await response.json();
+        const result = await response.json();
+        const rewards = Array.isArray(result) ? result : (result.data || []);
         displayRewards(rewards);
 
     } catch (error) {
@@ -1663,7 +1669,8 @@ async function loadCustomers() {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        const customers = await response.json();
+        const result = await response.json();
+        const customers = Array.isArray(result) ? result : (result.data || []);
         displayCustomers(customers);
 
     } catch (error) {
@@ -2010,10 +2017,8 @@ async function uploadImage(file) {
             // Convert relative URL to absolute URL
             const imageUrl = data.imageUrl || data.url;
             if (imageUrl && imageUrl.startsWith('/uploads/')) {
-                const baseUrl = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:3000'
-                    : 'https://nassim-coiffeur.onrender.com';
-                return baseUrl + imageUrl;
+                // Always use Render URL for images since that's where they're stored
+                return 'https://nassim-coiffeur.onrender.com' + imageUrl;
             }
             return imageUrl;
         } else {
