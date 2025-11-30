@@ -182,9 +182,15 @@ function displayServices(services) {
     }
     
     container.innerHTML = services.map(service => `
-        <div class="service-card" onclick="selectService('${service._id}')">
-            ${service.image ? `<div class="service-image" style="width: 80px; height: 100px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0; background: linear-gradient(to bottom, #1a1a1a, #2d2d2d);"><img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: contain;"></div>` : `<div class="service-icon">${getServiceIcon(service.name)}</div>`}
-            <div class="service-info">
+        <div class="service-card">
+            ${service.image 
+                ? `<div class="service-image" onclick="openImageLightbox('${service.image}', '${service.name}')" style="width: 80px; height: 100px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0; background: linear-gradient(to bottom, #1a1a1a, #2d2d2d); cursor: zoom-in; position: relative;">
+                    <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: contain;">
+                    <div class="zoom-icon" style="position: absolute; top: 4px; right: 4px; background: rgba(203, 163, 92, 0.9); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; pointer-events: none;">🔍</div>
+                   </div>` 
+                : `<div class="service-icon">${getServiceIcon(service.name)}</div>`
+            }
+            <div class="service-info" onclick="selectService('${service._id}')">
                 <div class="service-name">${service.name}</div>
                 <div class="service-description">${service.description || ''}</div>
                 <div class="service-meta">
@@ -216,14 +222,16 @@ function populateBookingServices(services) {
              data-service-id="${service._id}"
              data-service-name="${service.name}"
              data-service-price="${service.price}"
-             data-service-duration="${service.duration}"
-             onclick="toggleServiceSelection('${service._id}')">
+             data-service-duration="${service.duration}">
             ${service.image 
-                ? `<div class="booking-service-image"><img src="${service.image}" alt="${service.name}"></div>` 
-                : `<div class="service-icon">${getServiceIcon(service.name)}</div>`
+                ? `<div class="booking-service-image" onclick="openImageLightbox('${service.image}', '${service.name}')">
+                    <img src="${service.image}" alt="${service.name}">
+                    <div class="zoom-overlay">🔍</div>
+                   </div>` 
+                : `<div class="service-icon" onclick="toggleServiceSelection('${service._id}')">${getServiceIcon(service.name)}</div>`
             }
-            <div class="service-name">${service.name}</div>
-            <div class="service-meta">
+            <div class="service-name" onclick="toggleServiceSelection('${service._id}')">${service.name}</div>
+            <div class="service-meta" onclick="toggleServiceSelection('${service._id}')">
                 <span class="service-duration">⏱ ${service.duration} دقيقة</span>
                 <span class="service-price">${service.price} دج</span>
             </div>
@@ -1439,6 +1447,45 @@ function formatDateArabic(dateString) {
         day: 'numeric' 
     });
     return formatted;
+}
+
+// Image Lightbox - Professional Zoom
+function openImageLightbox(imageUrl, serviceName) {
+    // Create lightbox if doesn't exist
+    let lightbox = document.getElementById('imageLightbox');
+    if (!lightbox) {
+        lightbox = document.createElement('div');
+        lightbox.id = 'imageLightbox';
+        lightbox.className = 'image-lightbox';
+        lightbox.innerHTML = `
+            <div class="lightbox-overlay" onclick="closeImageLightbox()"></div>
+            <div class="lightbox-content">
+                <button class="lightbox-close" onclick="closeImageLightbox()">✕</button>
+                <img src="" alt="" class="lightbox-image">
+                <div class="lightbox-title"></div>
+            </div>
+        `;
+        document.body.appendChild(lightbox);
+    }
+    
+    // Set image and title
+    const img = lightbox.querySelector('.lightbox-image');
+    const title = lightbox.querySelector('.lightbox-title');
+    img.src = imageUrl;
+    img.alt = serviceName;
+    title.textContent = serviceName;
+    
+    // Show lightbox
+    lightbox.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageLightbox() {
+    const lightbox = document.getElementById('imageLightbox');
+    if (lightbox) {
+        lightbox.classList.remove('active');
+        document.body.style.overflow = '';
+    }
 }
 
 function searchContent(query) {
