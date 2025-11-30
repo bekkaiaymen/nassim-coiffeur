@@ -188,8 +188,8 @@ function displayServices(services) {
                 <div class="service-name">${service.name}</div>
                 <div class="service-description">${service.description || ''}</div>
                 <div class="service-meta">
-                    <span class="service-duration">⏱ ${toArabicNumerals(service.duration)} دقيقة</span>
-                    <span class="service-price">${toArabicNumerals(service.price)} دج</span>
+                    <span class="service-duration">⏱ ${service.duration} دقيقة</span>
+                    <span class="service-price">${service.price} دج</span>
                 </div>
             </div>
         </div>
@@ -279,7 +279,7 @@ function displaySelectedServices() {
             <div class="selected-service-info">
                 <div class="selected-service-name">${service.name}</div>
                 <div class="selected-service-details">
-                    ⏱ ${toArabicNumerals(service.duration)} دقيقة • ${toArabicNumerals(service.price)} دج
+                    ⏱ ${service.duration} دقيقة • ${service.price} دج
                 </div>
             </div>
             <button type="button" class="remove-service-btn" onclick="removeService(${index})">×</button>
@@ -287,8 +287,8 @@ function displaySelectedServices() {
     `).join('');
     
     // Update totals
-    document.getElementById('totalDuration').textContent = toArabicNumerals(totalDuration) + ' دقيقة';
-    document.getElementById('totalPrice').textContent = toArabicNumerals(totalPrice) + ' دج';
+    document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
+    document.getElementById('totalPrice').textContent = totalPrice + ' دج';
 }
 
 // Remove Service from Selection
@@ -565,8 +565,8 @@ function displayAllRewards(rewards) {
                 <h3 class="reward-name">${reward.name}</h3>
                 <p class="reward-description">${reward.description}</p>
                 <div class="reward-footer">
-                    <div class="reward-cost">⭐ ${toArabicNumerals(reward.pointsCost)} نقطة</div>
-                    ${canRedeem ? '<button class="redeem-btn" onclick="redeemReward(\'' + reward._id + '\')"><span>🎁</span> استبدال</button>' : '<span class="need-points">تحتاج ' + toArabicNumerals(reward.pointsCost - userPoints) + ' نقطة</span>'}
+                    <div class="reward-cost">⭐ ${reward.pointsCost} نقطة</div>
+                    ${canRedeem ? '<button class="redeem-btn" onclick="redeemReward(\'' + reward._id + '\')"><span>🎁</span> استبدال</button>' : '<span class="need-points">تحتاج ' + (reward.pointsCost - userPoints) + ' نقطة</span>'}
                 </div>
             </div>
         </div>
@@ -669,7 +669,7 @@ function displayAppointments(appointments) {
                     </div>
                     <div class="booking-detail">
                         <span class="detail-label">السعر:</span>
-                        <span class="detail-value">${toArabicNumerals(apt.service?.price || 0)} دج</span>
+                        <span class="detail-value">${apt.service?.price || 0} دج</span>
                     </div>
                 </div>
                 ${apt.status === 'pending' ? `<button class="cancel-booking-btn" onclick="cancelBooking('${apt._id}')">إلغاء الموعد</button>` : ''}
@@ -915,7 +915,7 @@ async function submitBooking(e) {
             });
             
             // Show professional confirmation message
-            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${servicesNames}\n💰 ${toArabicNumerals(totalPrice)} دج\n⏱ ${toArabicNumerals(totalDuration)} دقيقة\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
+            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${servicesNames}\n💰 ${totalPrice} دج\n⏱ ${totalDuration} دقيقة\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
             
             showNotification(confirmationMessage, 'success', 10000);
             
@@ -1390,12 +1390,12 @@ function formatDate(dateString) {
     const diff = Math.floor((now - date) / 1000);
     
     if (diff < 60) return 'الآن';
-    if (diff < 3600) return toArabicNumerals(Math.floor(diff / 60)) + ' د';
-    if (diff < 86400) return toArabicNumerals(Math.floor(diff / 3600)) + ' س';
-    if (diff < 604800) return toArabicNumerals(Math.floor(diff / 86400)) + ' يوم';
+    if (diff < 3600) return Math.floor(diff / 60) + ' د';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' س';
+    if (diff < 604800) return Math.floor(diff / 86400) + ' يوم';
     
     const formatted = date.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' });
-    return toArabicNumerals(formatted);
+    return formatted;
 }
 
 function showNotification(message, type = 'info', duration = 3000) {
@@ -1421,12 +1421,12 @@ function toArabicNumerals(text) {
     return text.toString().replace(/[0-9]/g, (digit) => arabicNumerals[parseInt(digit)]);
 }
 
-// Format time with Arabic numerals
+// Format time (keep French numerals)
 function formatTimeArabic(time) {
-    return toArabicNumerals(time);
+    return time;
 }
 
-// Format date with Arabic numerals
+// Format date (keep French numerals)
 function formatDateArabic(dateString) {
     const date = new Date(dateString);
     const formatted = date.toLocaleDateString('ar-DZ', { 
@@ -1435,7 +1435,7 @@ function formatDateArabic(dateString) {
         month: 'long', 
         day: 'numeric' 
     });
-    return toArabicNumerals(formatted);
+    return formatted;
 }
 
 function searchContent(query) {
