@@ -120,10 +120,10 @@ function updateUIWithCustomerData() {
     // Update loyalty points
     const points = customerData.loyaltyPoints || 0;
     if (document.getElementById('loyaltyPoints')) {
-        document.getElementById('loyaltyPoints').textContent = points;
+        document.getElementById('loyaltyPoints').textContent = toArabicNumerals(points);
     }
     if (document.getElementById('userPoints')) {
-        document.getElementById('userPoints').textContent = points;
+        document.getElementById('userPoints').textContent = toArabicNumerals(points);
     }
     
     // Update tier
@@ -187,8 +187,8 @@ function displayServices(services) {
                 <div class="service-name">${service.name}</div>
                 <div class="service-description">${service.description || ''}</div>
                 <div class="service-meta">
-                    <span class="service-duration">⏱ ${service.duration} دقيقة</span>
-                    <span class="service-price">${service.price} ريال</span>
+                    <span class="service-duration">⏱ ${toArabicNumerals(service.duration)} دقيقة</span>
+                    <span class="service-price">${toArabicNumerals(service.price)} دج</span>
                 </div>
             </div>
         </div>
@@ -502,8 +502,8 @@ function displayAllRewards(rewards) {
                 <h3 class="reward-name">${reward.name}</h3>
                 <p class="reward-description">${reward.description}</p>
                 <div class="reward-footer">
-                    <div class="reward-cost">⭐ ${reward.pointsCost} نقطة</div>
-                    ${canRedeem ? '<button class="redeem-btn" onclick="redeemReward(\'' + reward._id + '\')"><span>🎁</span> استبدال</button>' : '<span class="need-points">تحتاج ' + (reward.pointsCost - userPoints) + ' نقطة</span>'}
+                    <div class="reward-cost">⭐ ${toArabicNumerals(reward.pointsCost)} نقطة</div>
+                    ${canRedeem ? '<button class="redeem-btn" onclick="redeemReward(\'' + reward._id + '\')"><span>🎁</span> استبدال</button>' : '<span class="need-points">تحتاج ' + toArabicNumerals(reward.pointsCost - userPoints) + ' نقطة</span>'}
                 </div>
             </div>
         </div>
@@ -602,11 +602,11 @@ function displayAppointments(appointments) {
                     </div>
                     <div class="booking-detail">
                         <span class="detail-label">الوقت:</span>
-                        <span class="detail-value">${apt.time}</span>
+                        <span class="detail-value">${formatTimeArabic(apt.time)}</span>
                     </div>
                     <div class="booking-detail">
                         <span class="detail-label">السعر:</span>
-                        <span class="detail-value">${apt.service?.price || 0} ريال</span>
+                        <span class="detail-value">${toArabicNumerals(apt.service?.price || 0)} دج</span>
                     </div>
                 </div>
                 ${apt.status === 'pending' ? `<button class="cancel-booking-btn" onclick="cancelBooking('${apt._id}')">إلغاء الموعد</button>` : ''}
@@ -721,7 +721,7 @@ function displayTimeSlots(slots) {
     
     container.innerHTML = slots.map(slot => `
         <button type="button" class="time-slot-btn ${selectedTimeSlot === slot ? 'selected' : ''}" data-time="${slot}">
-            ${slot}
+            ${formatTimeArabic(slot)}
         </button>
     `).join('');
     
@@ -1315,11 +1315,12 @@ function formatDate(dateString) {
     const diff = Math.floor((now - date) / 1000);
     
     if (diff < 60) return 'الآن';
-    if (diff < 3600) return `${Math.floor(diff / 60)} د`;
-    if (diff < 86400) return `${Math.floor(diff / 3600)} س`;
-    if (diff < 604800) return `${Math.floor(diff / 86400)} يوم`;
+    if (diff < 3600) return toArabicNumerals(Math.floor(diff / 60)) + ' د';
+    if (diff < 86400) return toArabicNumerals(Math.floor(diff / 3600)) + ' س';
+    if (diff < 604800) return toArabicNumerals(Math.floor(diff / 86400)) + ' يوم';
     
-    return date.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' });
+    const formatted = date.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' });
+    return toArabicNumerals(formatted);
 }
 
 function showNotification(message, type = 'info', duration = 3000) {
