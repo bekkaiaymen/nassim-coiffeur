@@ -1,7 +1,7 @@
 // AI Stylist - Gemini AI Integration
 // Google Gemini API Configuration
 const GEMINI_API_KEY = 'AIzaSyC-xpvmexsAZKxjcIArIoRvVfT42OmKuNY';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 // Hairstyle Database
 const hairstyleDatabase = {
@@ -170,8 +170,8 @@ async function analyzeImageWithGemini(imageBase64, style) {
                     parts: [
                         { text: prompt },
                         {
-                            inline_data: {
-                                mime_type: "image/jpeg",
+                            inlineData: {
+                                mimeType: "image/jpeg",
                                 data: base64Data
                             }
                         }
