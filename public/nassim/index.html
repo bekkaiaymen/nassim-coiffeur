@@ -60,7 +60,7 @@
                 <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                 </svg>
-                <input type="text" class="search-input" placeholder="ابحث عن خدمة أو موظف..." id="searchInput">
+                <input type="text" class="search-input" placeholder="ابحث عن خدمة أو حلاق..." id="searchInput">
             </div>
         </div>
 
@@ -119,7 +119,7 @@
 
             <!-- Specialists -->
             <div class="section-header">
-                <h2 class="section-title">المختصين</h2>
+                <h2 class="section-title">الحلاقين</h2>
                 <button class="see-all-btn" onclick="showAllSpecialists()">عرض الكل</button>
             </div>
             
@@ -313,20 +313,20 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">اختر الموظف *</label>
+                    <label class="form-label">اختر الحلاق *</label>
                     <select id="employeeSelect" class="form-select" required>
-                        <option value="">-- اختر الموظف --</option>
+                        <option value="">-- اختر الحلاق --</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">التاريخ *</label>
-                    <input type="date" id="appointmentDate" class="form-input" required onchange="loadAvailableSlots()">
+                    <input type="date" id="appointmentDate" class="form-input" required onchange="loadAvailableSlots()" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">الوقت *</label>
-                    <input type="time" id="appointmentTime" class="form-input" required style="font-size: 16px; padding: 14px;">
+                    <input type="time" id="appointmentTime" class="form-input" required style="font-size: 16px; padding: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
                 </div>
 
                 <div class="form-group">

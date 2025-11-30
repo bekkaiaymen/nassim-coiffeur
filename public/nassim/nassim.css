@@ -1657,7 +1657,7 @@ textarea::placeholder {
     padding-left: 45px;
 }
 
-/* Time and Date inputs - optimized for mobile */
+/* Time and Date inputs - optimized for mobile with French numerals */
 input[type="time"],
 input[type="date"] {
     cursor: pointer;
@@ -1665,6 +1665,8 @@ input[type="date"] {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    direction: ltr !important;
 }
 
 input[type="time"]::-webkit-calendar-picker-indicator,
@@ -1674,6 +1676,32 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
     font-size: 20px;
     padding: 8px;
+}
+
+/* Force French numerals in date/time inputs */
+input[type="time"]::-webkit-datetime-edit,
+input[type="date"]::-webkit-datetime-edit {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+input[type="time"]::-webkit-datetime-edit-fields-wrapper,
+input[type="date"]::-webkit-datetime-edit-fields-wrapper {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+}
+
+input[type="time"]::-webkit-datetime-edit-text,
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="time"]::-webkit-datetime-edit-month-field,
+input[type="date"]::-webkit-datetime-edit-month-field,
+input[type="time"]::-webkit-datetime-edit-day-field,
+input[type="date"]::-webkit-datetime-edit-day-field,
+input[type="time"]::-webkit-datetime-edit-year-field,
+input[type="date"]::-webkit-datetime-edit-year-field,
+input[type="time"]::-webkit-datetime-edit-hour-field,
+input[type="time"]::-webkit-datetime-edit-minute-field,
+input[type="time"]::-webkit-datetime-edit-second-field,
+input[type="time"]::-webkit-datetime-edit-ampm-field {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
 /* تحسين عرض الساعة في الموبايل */

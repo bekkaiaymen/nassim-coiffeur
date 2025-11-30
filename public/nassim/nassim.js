@@ -50,7 +50,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
     const dateInput = document.getElementById('appointmentDate');
-    if (dateInput) dateInput.min = today;
+    if (dateInput) {
+        dateInput.min = today;
+        // Force French numerals in date/time inputs
+        dateInput.setAttribute('lang', 'en');
+    }
+    
+    const timeInput = document.getElementById('appointmentTime');
+    if (timeInput) {
+        timeInput.setAttribute('lang', 'en');
+    }
 });
 
 // Setup Event Listeners
@@ -360,7 +369,7 @@ function populateEmployeeSelect(employees) {
     const select = document.getElementById('employeeSelect');
     if (!select) return;
     
-    select.innerHTML = '<option value="">-- اختر الموظف --</option>' +
+    select.innerHTML = '<option value="">-- اختر الحلاق --</option>' +
         employees.map(e => `<option value="${e._id}">${e.name}</option>`).join('');
 }
 
@@ -718,7 +727,7 @@ function displayAppointments(appointments) {
                 <h3 class="booking-service">${apt.service?.name || 'خدمة'}</h3>
                 <div class="booking-details">
                     <div class="booking-detail">
-                        <span class="detail-label">الموظف:</span>
+                        <span class="detail-label">الحلاق:</span>
                         <span class="detail-value">${apt.employee?.name || 'غير محدد'}</span>
                     </div>
                     <div class="booking-detail">
@@ -785,7 +794,7 @@ async function loadAvailableSlots() {
     const serviceId = document.getElementById('serviceSelect').value;
     
     if (!date || !employeeId || !serviceId) {
-        document.getElementById('timeSlots').innerHTML = '<div class="empty-state">اختر التاريخ والموظف والخدمة أولاً</div>';
+        document.getElementById('timeSlots').innerHTML = '<div class="empty-state">اختر التاريخ والحلاق والخدمة أولاً</div>';
         return;
     }
     
