@@ -183,7 +183,7 @@ function displayServices(services) {
     
     container.innerHTML = services.map(service => `
         <div class="service-card" onclick="selectService('${service._id}')">
-            ${service.image ? `<div class="service-image" style="width: 80px; height: 80px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0;"><img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: cover;"></div>` : `<div class="service-icon">${getServiceIcon(service.name)}</div>`}
+            ${service.image ? `<div class="service-image" style="width: 80px; height: 100px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0; background: linear-gradient(to bottom, #1a1a1a, #2d2d2d);"><img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: contain;"></div>` : `<div class="service-icon">${getServiceIcon(service.name)}</div>`}
             <div class="service-info">
                 <div class="service-name">${service.name}</div>
                 <div class="service-description">${service.description || ''}</div>
