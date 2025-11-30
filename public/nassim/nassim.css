@@ -1819,6 +1819,196 @@ textarea {
     opacity: 0.8;
 }
 
+/* Working Hours Info Card */
+.working-hours-info {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--bg-dark) 100%);
+    border: 2px solid rgba(203, 163, 92, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 16px 0;
+}
+
+.working-hours-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(203, 163, 92, 0.15);
+}
+
+.hours-icon {
+    font-size: 28px;
+    filter: drop-shadow(0 2px 4px rgba(203, 163, 92, 0.3));
+}
+
+.working-hours-header h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: 0.5px;
+}
+
+.working-hours-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.working-shift {
+    background: rgba(203, 163, 92, 0.08);
+    border: 1px solid rgba(203, 163, 92, 0.2);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+}
+
+.working-shift:hover {
+    background: rgba(203, 163, 92, 0.12);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(203, 163, 92, 0.2);
+}
+
+.shift-icon {
+    font-size: 32px;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.shift-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.shift-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.shift-time {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Restricted Time Notice */
+.restricted-time-notice {
+    background: linear-gradient(135deg, rgba(217, 83, 79, 0.15) 0%, rgba(217, 83, 79, 0.08) 100%);
+    border: 2px dashed rgba(217, 83, 79, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    animation: pulseNotice 3s ease-in-out infinite;
+}
+
+@keyframes pulseNotice {
+    0%, 100% {
+        border-color: rgba(217, 83, 79, 0.3);
+        box-shadow: 0 0 0 rgba(217, 83, 79, 0.3);
+    }
+    50% {
+        border-color: rgba(217, 83, 79, 0.5);
+        box-shadow: 0 0 15px rgba(217, 83, 79, 0.2);
+    }
+}
+
+.notice-icon {
+    font-size: 28px;
+    animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+.notice-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.notice-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--error);
+    margin-bottom: 2px;
+}
+
+.notice-time {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: 0.5px;
+}
+
+.notice-reason {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.notice-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(203, 163, 92, 0.1);
+    border: 1px solid rgba(203, 163, 92, 0.3);
+    border-radius: 8px;
+    width: fit-content;
+}
+
+.vip-badge-small {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--text-dark);
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(203, 163, 92, 0.4);
+}
+
+.notice-text {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .working-hours-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .restricted-time-notice {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .notice-action {
+        margin: 0 auto;
+    }
+}
+
 /* 🔔 Premium Notification */
 .notification {
     position: fixed;
