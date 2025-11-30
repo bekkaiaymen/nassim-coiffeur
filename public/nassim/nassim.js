@@ -913,7 +913,7 @@ function selectTimeSlot(time) {
     // Check VIP restriction
     const isVIP = customerData && customerData.loyaltyPoints >= 500;
     if (isTimeVIPOnly(time) && !isVIP) {
-        showNotification('هذا الوقت غير متاح للحجز (قبيل المغرب) 🌅', 'error');
+        showNotification('⚠️ هذا الوقت غير متاح<br><br>📌 للحجز في هذا الوقت:<br>• كن عضو VIP (ذهبي 🥇)<br>• أو ادفع 50 دج 💰', 'error', 4000);
         return;
     }
     
@@ -979,7 +979,7 @@ async function submitBooking(e) {
     // Check VIP restriction for evening slots (17:40 - 21:00)
     const isVIP = customerData.loyaltyPoints >= 500;
     if (isTimeVIPOnly(selectedTime) && !isVIP) {
-        showNotification('هذا الوقت غير متاح للحجز (وقت الصلاة) 🕌', 'error');
+        showNotification('⚠️ هذا الوقت يتطلب:<br><br>🥇 عضوية VIP (500+ نقطة)<br>💰 أو دفع 50 دج<br><br>📍 اتصل بنا للحجز: 0123456789', 'error', 5000);
         return;
     }
     
