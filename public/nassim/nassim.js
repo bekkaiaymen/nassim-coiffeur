@@ -211,7 +211,7 @@ function populateServiceSelect(services) {
     if (!select) return;
     
     select.innerHTML = '<option value="">-- اختر الخدمة --</option>' +
-        services.map(s => `<option value="${s._id}" data-price="${s.price}" data-duration="${s.duration}">${s.name} - ${s.price} ريال</option>`).join('');
+        services.map(s => `<option value="${s._id}" data-price="${s.price}" data-duration="${s.duration}">${s.name} - ${toArabicNumerals(s.price)} دج</option>`).join('');
 }
 
 // Select Service
@@ -232,8 +232,8 @@ function updateServiceInfo() {
     
     if (select.value) {
         const option = select.options[select.selectedIndex];
-        document.getElementById('serviceDuration').textContent = option.dataset.duration + ' دقيقة';
-        document.getElementById('servicePrice').textContent = option.dataset.price + ' ريال';
+        document.getElementById('serviceDuration').textContent = toArabicNumerals(option.dataset.duration) + ' دقيقة';
+        document.getElementById('servicePrice').textContent = toArabicNumerals(option.dataset.price) + ' دج';
         infoDiv.classList.remove('hidden');
     } else {
         infoDiv.classList.add('hidden');
