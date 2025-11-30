@@ -1060,7 +1060,7 @@ async function submitBooking(e) {
             document.getElementById('bookingForm').reset();
             selectedTimeSlot = null;
             selectedServices = []; // Clear selected services
-            displaySelectedServices(); // Update display
+            updateBookingSummary(); // Update display
             await loadAppointments();
             await loadCustomerProfile();
         } else {
