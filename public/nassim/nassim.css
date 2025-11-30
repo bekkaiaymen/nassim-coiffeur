@@ -313,6 +313,15 @@ body::after {
     z-index: 2;
 }
 
+.header-logo {
+    width: 64px;
+    height: 64px;
+    border-radius: 14px;
+    object-fit: cover;
+    border: 3px solid rgba(255,255,255,0.95);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45), 0 0 18px rgba(203,163,92,0.12);
+}
+
 .welcome-text {
     font-size: 14px;
     color: rgba(26, 26, 26, 0.7);

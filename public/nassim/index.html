@@ -28,7 +28,7 @@
     <!-- Splash Screen / Welcome Logo Animation -->
     <div id="splashScreen" class="splash-screen">
         <div class="splash-content">
-            <img src="/public/nassim/logo.jpg" alt="Nassim Coiffeur" class="splash-logo">
+            <img src="/nassim/logo.jpg" alt="Nassim Coiffeur" class="splash-logo">
             <div class="splash-text">Nassim Coiffeur</div>
             <div class="loading-dots">
                 <span></span>
@@ -43,18 +43,20 @@
         <!-- Header -->
         <div class="header">
             <div class="header-top">
-                <div>
-                    <div class="welcome-text">مرحباً بعودتك في</div>
-                    <h1 class="header-title">✂️ Nassim Barber<br>صالونك المفضل!</h1>
-                </div>
-                <button class="notification-btn" onclick="showNotifications()">
+                    <div>
+                        <div class="welcome-text">مرحباً بعودتك في</div>
+                        <h1 class="header-title">✂️ Nassim Barber<br>صالونك المفضل!</h1>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <img src="/nassim/logo.jpg" alt="Nassim Logo" class="header-logo">
+                        <button class="notification-btn" onclick="showNotifications()">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                     </svg>
                     <span class="notification-badge"></span>
                 </button>
-            </div>
-            
+                </div>
+                
             <!-- Search -->
             <div class="search-box">
                 <svg class="search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
