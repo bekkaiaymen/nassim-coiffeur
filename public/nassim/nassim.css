@@ -1331,6 +1331,65 @@ body::after {
     letter-spacing: 0.3px;
 }
 
+.selected-services-container {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: var(--bg-primary);
+    border-radius: var(--radius);
+    border: 2px dashed var(--primary);
+}
+
+.selected-service-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: white;
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+    transition: all 0.2s;
+}
+
+.selected-service-item:hover {
+    transform: translateX(-4px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.selected-service-info {
+    flex: 1;
+}
+
+.selected-service-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.selected-service-details {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.remove-service-btn {
+    background: var(--danger);
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    font-size: 18px;
+}
+
+.remove-service-btn:hover {
+    background: #c0392b;
+    transform: scale(1.1);
+}
+
 .form-input,
 .form-select,
 textarea {

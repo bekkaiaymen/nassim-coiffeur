@@ -256,21 +256,24 @@
             </div>
             <form id="bookingForm">
                 <div class="form-group">
-                    <label class="form-label">اختر الخدمة *</label>
-                    <select id="serviceSelect" class="form-select" required onchange="updateServiceInfo()">
-                        <option value="">-- اختر الخدمة --</option>
+                    <label class="form-label">اختر الخدمات *</label>
+                    <select id="serviceSelect" class="form-select" onchange="addService()">
+                        <option value="">-- اختر خدمة --</option>
                     </select>
+                    <small style="color: var(--text-secondary); display: block; margin-top: 8px;">يمكنك اختيار عدة خدمات</small>
                 </div>
 
-                <div id="serviceInfo" class="form-group hidden">
-                    <div style="background: var(--bg-dark); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 16px;">
+                <div id="selectedServices" class="selected-services-container" style="display: none;">
+                    <h4 style="font-size: 14px; margin-bottom: 12px; color: var(--text-secondary);">الخدمات المختارة:</h4>
+                    <div id="selectedServicesList"></div>
+                    <div style="background: var(--bg-dark); padding: 16px; border-radius: var(--radius-sm); margin-top: 12px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                            <span style="color: var(--text-secondary);">المدة:</span>
-                            <strong id="serviceDuration">-</strong>
+                            <span style="color: var(--text-secondary);">المدة الإجمالية:</span>
+                            <strong id="totalDuration">٠ دقيقة</strong>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span style="color: var(--text-secondary);">السعر:</span>
-                            <strong style="color: var(--primary);" id="servicePrice">-</strong>
+                            <span style="color: var(--text-secondary);">السعر الإجمالي:</span>
+                            <strong style="color: var(--primary);" id="totalPrice">٠ دج</strong>
                         </div>
                     </div>
                 </div>

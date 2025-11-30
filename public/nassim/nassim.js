@@ -8,6 +8,7 @@ let token = localStorage.getItem('customerToken');
 let selectedTimeSlot = null;
 let availableServices = [];
 let availableEmployees = [];
+let selectedServices = []; // Array to track multiple selected services
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -223,21 +224,83 @@ function selectService(serviceId) {
     openBookingModal();
 }
 
-// Update Service Info
-function updateServiceInfo() {
+// Add Service to Selection
+function addService() {
     const select = document.getElementById('serviceSelect');
-    const infoDiv = document.getElementById('serviceInfo');
+    if (!select || !select.value) return;
     
-    if (!select || !infoDiv) return;
+    const serviceId = select.value;
+    const option = select.options[select.selectedIndex];
+    const serviceName = option.text.split(' - ')[0];
+    const servicePrice = parseInt(option.dataset.price);
+    const serviceDuration = parseInt(option.dataset.duration);
     
-    if (select.value) {
-        const option = select.options[select.selectedIndex];
-        document.getElementById('serviceDuration').textContent = toArabicNumerals(option.dataset.duration) + ' دقيقة';
-        document.getElementById('servicePrice').textContent = toArabicNumerals(option.dataset.price) + ' دج';
-        infoDiv.classList.remove('hidden');
-    } else {
-        infoDiv.classList.add('hidden');
+    // Check if service already selected
+    if (selectedServices.find(s => s.id === serviceId)) {
+        showNotification('هذه الخدمة مضافة بالفعل', 'warning');
+        select.value = '';
+        return;
     }
+    
+    // Add service to array
+    selectedServices.push({
+        id: serviceId,
+        name: serviceName,
+        price: servicePrice,
+        duration: serviceDuration
+    });
+    
+    // Reset select
+    select.value = '';
+    
+    // Update display
+    displaySelectedServices();
+}
+
+// Display Selected Services
+function displaySelectedServices() {
+    const container = document.getElementById('selectedServices');
+    const listContainer = document.getElementById('selectedServicesList');
+    
+    if (selectedServices.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+    
+    container.style.display = 'block';
+    
+    // Calculate totals
+    const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+    const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
+    
+    // Display services
+    listContainer.innerHTML = selectedServices.map((service, index) => `
+        <div class="selected-service-item">
+            <div class="selected-service-info">
+                <div class="selected-service-name">${service.name}</div>
+                <div class="selected-service-details">
+                    ⏱ ${toArabicNumerals(service.duration)} دقيقة • ${toArabicNumerals(service.price)} دج
+                </div>
+            </div>
+            <button type="button" class="remove-service-btn" onclick="removeService(${index})">×</button>
+        </div>
+    `).join('');
+    
+    // Update totals
+    document.getElementById('totalDuration').textContent = toArabicNumerals(totalDuration) + ' دقيقة';
+    document.getElementById('totalPrice').textContent = toArabicNumerals(totalPrice) + ' دج';
+}
+
+// Remove Service from Selection
+function removeService(index) {
+    selectedServices.splice(index, 1);
+    displaySelectedServices();
+}
+
+// Update Service Info (legacy support)
+function updateServiceInfo() {
+    // This function is now replaced by addService
+    addService();
 }
 
 // Load Employees
@@ -800,17 +863,26 @@ async function submitBooking(e) {
         return;
     }
     
+    // Validate that at least one service is selected
+    if (selectedServices.length === 0) {
+        showNotification('الرجاء اختيار خدمة واحدة على الأقل', 'error');
+        return;
+    }
+    
     const bookingData = {
         business: NASSIM_BUSINESS_ID,
         customer: customerData._id,
         customerName: customerData.name,
         customerPhone: customerData.phone,
-        service: document.getElementById('serviceSelect').value,
+        services: selectedServices.map(s => s.id), // Multiple services
+        service: selectedServices[0].id, // First service for compatibility
         employee: document.getElementById('employeeSelect').value,
         date: selectedDate,
         time: selectedTime,
         dateTime: dateTime,
-        notes: document.getElementById('appointmentNotes').value || ''
+        notes: document.getElementById('appointmentNotes').value || '',
+        totalPrice: selectedServices.reduce((sum, s) => sum + s.price, 0),
+        totalDuration: selectedServices.reduce((sum, s) => sum + s.duration, 0)
     };
     
     try {
@@ -827,8 +899,9 @@ async function submitBooking(e) {
         
         if (response.ok && data.success) {
             // Get booking details for confirmation message
-            const serviceSelect = document.getElementById('serviceSelect');
-            const serviceName = serviceSelect.options[serviceSelect.selectedIndex]?.text || 'الخدمة';
+            const servicesNames = selectedServices.map(s => s.name).join(' + ');
+            const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+            const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
             const selectedDate = document.getElementById('appointmentDate').value;
             const selectedTime = document.getElementById('timeSlots').querySelector('.time-slot.selected')?.textContent;
             
@@ -842,9 +915,9 @@ async function submitBooking(e) {
             });
             
             // Show professional confirmation message
-            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${serviceName}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
+            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${servicesNames}\n💰 ${toArabicNumerals(totalPrice)} دج\n⏱ ${toArabicNumerals(totalDuration)} دقيقة\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
             
-            showNotification(confirmationMessage, 'success', 8000);
+            showNotification(confirmationMessage, 'success', 10000);
             
             // Show pending reward notification
             const points = data.pendingPoints || 100;
@@ -855,6 +928,8 @@ async function submitBooking(e) {
             closeBookingModal();
             document.getElementById('bookingForm').reset();
             selectedTimeSlot = null;
+            selectedServices = []; // Clear selected services
+            displaySelectedServices(); // Update display
             await loadAppointments();
             await loadCustomerProfile();
         } else {
