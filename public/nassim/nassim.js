@@ -164,7 +164,7 @@ async function loadServices() {
         if (data.success && data.data) {
             availableServices = data.data;
             displayServices(data.data);
-            populateServiceSelect(data.data);
+            populateBookingServices(data.data);
         }
     } catch (error) {
         console.error('Error loading services:', error);
@@ -206,61 +206,72 @@ function getServiceIcon(serviceName) {
     return '💈';
 }
 
-// Populate Service Select
-function populateServiceSelect(services) {
-    const select = document.getElementById('serviceSelect');
-    if (!select) return;
+// Populate Booking Services Grid
+function populateBookingServices(services) {
+    const container = document.getElementById('bookingServicesList');
+    if (!container) return;
     
-    select.innerHTML = '<option value="">-- اختر الخدمة --</option>' +
-        services.map(s => `<option value="${s._id}" data-price="${s.price}" data-duration="${s.duration}">${s.name} - ${toArabicNumerals(s.price)} دج</option>`).join('');
+    container.innerHTML = services.map(service => `
+        <div class="booking-service-card" 
+             data-service-id="${service._id}"
+             data-service-name="${service.name}"
+             data-service-price="${service.price}"
+             data-service-duration="${service.duration}"
+             onclick="toggleServiceSelection('${service._id}')">
+            <div class="service-icon">${getServiceIcon(service.name)}</div>
+            <div class="service-name">${service.name}</div>
+            <div class="service-meta">
+                <span class="service-duration">⏱ ${service.duration} دقيقة</span>
+                <span class="service-price">${service.price} دج</span>
+            </div>
+        </div>
+    `).join('');
 }
 
-// Select Service
+// Toggle Service Selection
+function toggleServiceSelection(serviceId) {
+    const card = document.querySelector(`[data-service-id="${serviceId}"]`);
+    if (!card) return;
+    
+    // Check if already selected
+    const existingIndex = selectedServices.findIndex(s => s.id === serviceId);
+    
+    if (existingIndex !== -1) {
+        // Remove from selection
+        selectedServices.splice(existingIndex, 1);
+        card.classList.remove('selected');
+    } else {
+        // Add to selection
+        const serviceName = card.dataset.serviceName;
+        const servicePrice = parseInt(card.dataset.servicePrice);
+        const serviceDuration = parseInt(card.dataset.serviceDuration);
+        
+        selectedServices.push({
+            id: serviceId,
+            name: serviceName,
+            price: servicePrice,
+            duration: serviceDuration
+        });
+        
+        card.classList.add('selected');
+    }
+    
+    // Update summary display
+    updateBookingSummary();
+}
+
+// Select Service (from service cards view)
 function selectService(serviceId) {
-    if (document.getElementById('serviceSelect')) {
-        document.getElementById('serviceSelect').value = serviceId;
-        updateServiceInfo();
-    }
     openBookingModal();
+    // Wait for modal to load services
+    setTimeout(() => {
+        toggleServiceSelection(serviceId);
+    }, 100);
 }
 
-// Add Service to Selection
-function addService() {
-    const select = document.getElementById('serviceSelect');
-    if (!select || !select.value) return;
-    
-    const serviceId = select.value;
-    const option = select.options[select.selectedIndex];
-    const serviceName = option.text.split(' - ')[0];
-    const servicePrice = parseInt(option.dataset.price);
-    const serviceDuration = parseInt(option.dataset.duration);
-    
-    // Check if service already selected
-    if (selectedServices.find(s => s.id === serviceId)) {
-        showNotification('هذه الخدمة مضافة بالفعل', 'warning');
-        select.value = '';
-        return;
-    }
-    
-    // Add service to array
-    selectedServices.push({
-        id: serviceId,
-        name: serviceName,
-        price: servicePrice,
-        duration: serviceDuration
-    });
-    
-    // Reset select
-    select.value = '';
-    
-    // Update display
-    displaySelectedServices();
-}
-
-// Display Selected Services
-function displaySelectedServices() {
+// Update Booking Summary
+function updateBookingSummary() {
     const container = document.getElementById('selectedServices');
-    const listContainer = document.getElementById('selectedServicesList');
     
     if (selectedServices.length === 0) {
         container.style.display = 'none';
@@ -273,28 +284,10 @@ function displaySelectedServices() {
     const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
     const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
     
-    // Display services
-    listContainer.innerHTML = selectedServices.map((service, index) => `
-        <div class="selected-service-item">
-            <div class="selected-service-info">
-                <div class="selected-service-name">${service.name}</div>
-                <div class="selected-service-details">
-                    ⏱ ${service.duration} دقيقة • ${service.price} دج
-                </div>
-            </div>
-            <button type="button" class="remove-service-btn" onclick="removeService(${index})">×</button>
-        </div>
-    `).join('');
-    
-    // Update totals
+    // Update summary
+    document.getElementById('servicesCount').textContent = selectedServices.length;
     document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
     document.getElementById('totalPrice').textContent = totalPrice + ' دج';
-}
-
-// Remove Service from Selection
-function removeService(index) {
-    selectedServices.splice(index, 1);
-    displaySelectedServices();
 }
 
 // Update Service Info (legacy support)
@@ -1371,6 +1364,13 @@ function closeBookingModal() {
     if (modal) {
         modal.classList.remove('show');
         document.body.style.overflow = '';
+        
+        // Clear selections
+        selectedServices = [];
+        document.querySelectorAll('.booking-service-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        updateBookingSummary();
     }
 }
 
