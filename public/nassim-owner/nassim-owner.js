@@ -520,8 +520,19 @@ function openAddEmployeeModal() {
             </div>
             
             <div class="form-group">
-                <label class="form-label">الصورة (URL)</label>
-                <input type="url" class="form-input" name="photo" placeholder="https://...">
+                <label class="form-label">صورة الموظف</label>
+                <div class="image-upload-container">
+                    <input type="file" id="employeeImageFile" class="file-input" accept="image/*" onchange="previewEmployeeImage(event)">
+                    <label for="employeeImageFile" class="file-upload-btn">
+                        📷 اختر صورة من الجهاز
+                    </label>
+                    <div id="employeeImagePreview" class="image-preview" style="display: none;">
+                        <img id="employeePreviewImg" src="" alt="Preview">
+                        <button type="button" class="remove-image-btn" onclick="removeEmployeeImage()">✕</button>
+                    </div>
+                    <small style="color: #666; display: block; margin-top: 8px;">أو أدخل رابط صورة:</small>
+                    <input type="url" class="form-input" name="photoUrl" placeholder="https://..." style="margin-top: 8px;">
+                </div>
             </div>
             
             <div class="form-group">
@@ -543,16 +554,23 @@ async function submitAddEmployee() {
     const form = document.getElementById('addEmployeeForm');
     const formData = new FormData(form);
     
-    const employeeData = {
-        name: formData.get('name'),
-        phone: formData.get('phone'),
-        email: formData.get('email'),
-        photo: formData.get('photo'),
-        isAvailable: formData.get('isAvailable') === 'on',
-        business: NASSIM_BUSINESS_ID
-    };
-
     try {
+        // Upload image if selected
+        let photoUrl = formData.get('photoUrl');
+        if (selectedEmployeeImage) {
+            showToast('جاري رفع الصورة...', 'info');
+            photoUrl = await uploadImage(selectedEmployeeImage);
+        }
+        
+        const employeeData = {
+            name: formData.get('name'),
+            phone: formData.get('phone'),
+            email: formData.get('email'),
+            photo: photoUrl || null,
+            isAvailable: formData.get('isAvailable') === 'on',
+            business: NASSIM_BUSINESS_ID
+        };
+
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/employees`, {
             method: 'POST',
@@ -811,8 +829,19 @@ function openAddServiceModal() {
             </div>
             
             <div class="form-group">
-                <label class="form-label">صورة الخدمة (URL)</label>
-                <input type="url" class="form-input" name="image" placeholder="https://...">
+                <label class="form-label">صورة الخدمة</label>
+                <div class="image-upload-container">
+                    <input type="file" id="serviceImageFile" class="file-input" accept="image/*" onchange="previewServiceImage(event)">
+                    <label for="serviceImageFile" class="file-upload-btn">
+                        📷 اختر صورة من الجهاز
+                    </label>
+                    <div id="serviceImagePreview" class="image-preview" style="display: none;">
+                        <img id="servicePreviewImg" src="" alt="Preview">
+                        <button type="button" class="remove-image-btn" onclick="removeServiceImage()">✕</button>
+                    </div>
+                    <small style="color: #666; display: block; margin-top: 8px;">أو أدخل رابط صورة:</small>
+                    <input type="url" class="form-input" name="imageUrl" placeholder="https://..." style="margin-top: 8px;">
+                </div>
             </div>
             
             <div class="form-group">
@@ -834,18 +863,25 @@ async function submitAddService() {
     const form = document.getElementById('addServiceForm');
     const formData = new FormData(form);
     
-    const serviceData = {
-        name: formData.get('name'),
-        description: formData.get('description'),
-        price: parseFloat(formData.get('price')),
-        duration: parseInt(formData.get('duration')),
-        category: formData.get('category'),
-        image: formData.get('image'),
-        available: formData.get('available') === 'on',
-        business: NASSIM_BUSINESS_ID
-    };
-
     try {
+        // Upload image if selected
+        let imageUrl = formData.get('imageUrl');
+        if (selectedServiceImage) {
+            showToast('جاري رفع الصورة...', 'info');
+            imageUrl = await uploadImage(selectedServiceImage);
+        }
+        
+        const serviceData = {
+            name: formData.get('name'),
+            description: formData.get('description'),
+            price: parseFloat(formData.get('price')),
+            duration: parseInt(formData.get('duration')),
+            category: formData.get('category'),
+            image: imageUrl || null,
+            available: formData.get('available') === 'on',
+            business: NASSIM_BUSINESS_ID
+        };
+
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/services`, {
             method: 'POST',
@@ -1093,9 +1129,19 @@ function openAddPostModal() {
             </div>
             
             <div class="form-group">
-                <label class="form-label">صورة المنشور (URL - اختياري)</label>
-                <input type="url" class="form-input" name="image" placeholder="https://...">
-                <small class="form-hint">أضف رابط صورة لعرضها مع المنشور</small>
+                <label class="form-label">صورة المنشور (اختياري)</label>
+                <div class="image-upload-container">
+                    <input type="file" id="postImageFile" class="file-input" accept="image/*" onchange="previewPostImage(event)">
+                    <label for="postImageFile" class="file-upload-btn">
+                        📷 اختر صورة من الجهاز
+                    </label>
+                    <div id="postImagePreview" class="image-preview" style="display: none;">
+                        <img id="postPreviewImg" src="" alt="Preview">
+                        <button type="button" class="remove-image-btn" onclick="removePostImage()">✕</button>
+                    </div>
+                    <small style="color: #666; display: block; margin-top: 8px;">أو أدخل رابط صورة:</small>
+                    <input type="url" class="form-input" name="imageUrl" placeholder="https://..." style="margin-top: 8px;">
+                </div>
             </div>
             
             <div class="form-group">
@@ -1123,17 +1169,24 @@ async function submitAddPost() {
     const form = document.getElementById('addPostForm');
     const formData = new FormData(form);
     
-    const postData = {
-        type: formData.get('type'),
-        title: formData.get('title'),
-        content: formData.get('content'),
-        image: formData.get('image') || null,
-        expiresAt: formData.get('expiresAt') || null,
-        isActive: formData.get('isActive') === 'on',
-        business: NASSIM_BUSINESS_ID
-    };
-
     try {
+        // Upload image if selected
+        let imageUrl = formData.get('imageUrl');
+        if (selectedPostImage) {
+            showToast('جاري رفع الصورة...', 'info');
+            imageUrl = await uploadImage(selectedPostImage);
+        }
+        
+        const postData = {
+            type: formData.get('type'),
+            title: formData.get('title'),
+            content: formData.get('content'),
+            image: imageUrl || null,
+            expiresAt: formData.get('expiresAt') || null,
+            isActive: formData.get('isActive') === 'on',
+            business: NASSIM_BUSINESS_ID
+        };
+
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/posts`, {
             method: 'POST',
@@ -1371,9 +1424,19 @@ function openAddRewardModal() {
             </div>
             
             <div class="form-group">
-                <label class="form-label">صورة المكافأة (URL - اختياري)</label>
-                <input type="url" class="form-input" name="image" placeholder="https://...">
-                <small class="form-hint">أضف رابط صورة لعرضها مع المكافأة</small>
+                <label class="form-label">صورة المكافأة (اختياري)</label>
+                <div class="image-upload-container">
+                    <input type="file" id="rewardImageFile" class="file-input" accept="image/*" onchange="previewRewardImage(event)">
+                    <label for="rewardImageFile" class="file-upload-btn">
+                        📷 اختر صورة من الجهاز
+                    </label>
+                    <div id="rewardImagePreview" class="image-preview" style="display: none;">
+                        <img id="rewardPreviewImg" src="" alt="Preview">
+                        <button type="button" class="remove-image-btn" onclick="removeRewardImage()">✕</button>
+                    </div>
+                    <small style="color: #666; display: block; margin-top: 8px;">أو أدخل رابط صورة:</small>
+                    <input type="url" class="form-input" name="imageUrl" placeholder="https://..." style="margin-top: 8px;">
+                </div>
             </div>
             
             <div class="form-group">
@@ -1395,22 +1458,29 @@ async function submitAddReward() {
     const form = document.getElementById('addRewardForm');
     const formData = new FormData(form);
     
-    const rewardData = {
-        name: formData.get('name'),
-        description: formData.get('description'),
-        icon: formData.get('icon') || '🎁',
-        image: formData.get('image') || null,
-        pointsCost: parseInt(formData.get('pointsCost')),
-        quantityLimit: formData.get('quantityLimit') ? parseInt(formData.get('quantityLimit')) : null,
-        isActive: formData.get('isActive') === 'on',
-        business: NASSIM_BUSINESS_ID
-    };
-
-    if (rewardData.quantityLimit) {
-        rewardData.quantityRemaining = rewardData.quantityLimit;
-    }
-
     try {
+        // Upload image if selected
+        let imageUrl = formData.get('imageUrl');
+        if (selectedRewardImage) {
+            showToast('جاري رفع الصورة...', 'info');
+            imageUrl = await uploadImage(selectedRewardImage);
+        }
+        
+        const rewardData = {
+            name: formData.get('name'),
+            description: formData.get('description'),
+            icon: formData.get('icon') || '🎁',
+            image: imageUrl || null,
+            pointsCost: parseInt(formData.get('pointsCost')),
+            quantityLimit: formData.get('quantityLimit') ? parseInt(formData.get('quantityLimit')) : null,
+            isActive: formData.get('isActive') === 'on',
+            business: NASSIM_BUSINESS_ID
+        };
+
+        if (rewardData.quantityLimit) {
+            rewardData.quantityRemaining = rewardData.quantityLimit;
+        }
+
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/rewards`, {
             method: 'POST',
@@ -1796,6 +1866,155 @@ function showModal(modalHTML) {
 function closeModal() {
     const container = document.getElementById('modalContainer');
     container.innerHTML = '';
+}
+
+// ==================== Image Upload Functions ====================
+let selectedServiceImage = null;
+let selectedPostImage = null;
+let selectedRewardImage = null;
+let selectedEmployeeImage = null;
+
+function previewServiceImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        showToast('الرجاء اختيار صورة فقط', 'error');
+        return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+        return;
+    }
+    
+    selectedServiceImage = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('servicePreviewImg').src = e.target.result;
+        document.getElementById('serviceImagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeServiceImage() {
+    selectedServiceImage = null;
+    document.getElementById('serviceImageFile').value = '';
+    document.getElementById('serviceImagePreview').style.display = 'none';
+}
+
+function previewPostImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        showToast('الرجاء اختيار صورة فقط', 'error');
+        return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+        return;
+    }
+    
+    selectedPostImage = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('postPreviewImg').src = e.target.result;
+        document.getElementById('postImagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removePostImage() {
+    selectedPostImage = null;
+    document.getElementById('postImageFile').value = '';
+    document.getElementById('postImagePreview').style.display = 'none';
+}
+
+function previewRewardImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        showToast('الرجاء اختيار صورة فقط', 'error');
+        return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+        return;
+    }
+    
+    selectedRewardImage = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('rewardPreviewImg').src = e.target.result;
+        document.getElementById('rewardImagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeRewardImage() {
+    selectedRewardImage = null;
+    document.getElementById('rewardImageFile').value = '';
+    document.getElementById('rewardImagePreview').style.display = 'none';
+}
+
+function previewEmployeeImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        showToast('الرجاء اختيار صورة فقط', 'error');
+        return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+        return;
+    }
+    
+    selectedEmployeeImage = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('employeePreviewImg').src = e.target.result;
+        document.getElementById('employeeImagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeEmployeeImage() {
+    selectedEmployeeImage = null;
+    document.getElementById('employeeImageFile').value = '';
+    document.getElementById('employeeImagePreview').style.display = 'none';
+}
+
+// Upload image to server
+async function uploadImage(file) {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/upload/image`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            body: formData
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            return data.imageUrl || data.url;
+        } else {
+            throw new Error('فشل رفع الصورة');
+        }
+    } catch (error) {
+        console.error('Error uploading image:', error);
+        throw error;
+    }
 }
 
 // ==================== Toast Notifications ====================
