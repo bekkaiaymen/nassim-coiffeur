@@ -1789,36 +1789,34 @@ textarea {
     box-shadow: none;
 }
 
-/* VIP Time Slots */
-.time-slot-btn.vip-slot {
-    position: relative;
-    border-color: var(--primary);
-    background: linear-gradient(135deg, rgba(203, 163, 92, 0.1) 0%, rgba(203, 163, 92, 0.05) 100%);
-}
-
-.time-slot-btn.vip-only.disabled {
-    opacity: 0.4;
+/* Unavailable Time Slots (Evening Prayer Time) */
+.time-slot-btn.unavailable {
+    opacity: 0.35;
     cursor: not-allowed;
-    background: var(--surface);
-    border-color: var(--text-muted);
+    background: repeating-linear-gradient(
+        45deg,
+        var(--surface),
+        var(--surface) 10px,
+        rgba(217, 83, 79, 0.1) 10px,
+        rgba(217, 83, 79, 0.1) 20px
+    );
+    border-color: rgba(217, 83, 79, 0.3);
     position: relative;
 }
 
-.time-slot-btn.vip-only.disabled:hover {
+.time-slot-btn.unavailable:hover {
     transform: none;
-    border-color: var(--text-muted);
+    border-color: rgba(217, 83, 79, 0.3);
+    box-shadow: none;
 }
 
-.vip-badge {
-    display: inline-block;
+.unavailable-badge {
+    display: block;
     font-size: 10px;
-    color: var(--primary);
-    margin-right: 4px;
-    font-weight: 700;
-}
-
-.time-slot-btn.disabled .vip-badge {
-    opacity: 0.6;
+    color: var(--error);
+    margin-top: 4px;
+    font-weight: 600;
+    opacity: 0.8;
 }
 
 /* 🔔 Premium Notification */

@@ -884,11 +884,11 @@ function displayTimeSlots(slots) {
         
         return `
             <button type="button" 
-                class="time-slot-btn ${selectedTimeSlot === slot ? 'selected' : ''} ${isDisabled ? 'disabled vip-only' : ''} ${isVIPOnly ? 'vip-slot' : ''}" 
+                class="time-slot-btn ${selectedTimeSlot === slot ? 'selected' : ''} ${isDisabled ? 'unavailable' : ''}" 
                 data-time="${slot}"
                 ${isDisabled ? 'disabled' : ''}>
                 ${formatTimeArabic(slot)}
-                ${isVIPOnly ? '<span class="vip-badge">⭐ VIP</span>' : ''}
+                ${isDisabled ? '<span class="unavailable-badge">🚫 غير متاح</span>' : ''}
             </button>
         `;
     }).join('');
@@ -913,7 +913,7 @@ function selectTimeSlot(time) {
     // Check VIP restriction
     const isVIP = customerData && customerData.loyaltyPoints >= 500;
     if (isTimeVIPOnly(time) && !isVIP) {
-        showNotification('هذا الوقت متاح فقط لعملاء VIP 🥇', 'error');
+        showNotification('هذا الوقت غير متاح للحجز (قبيل المغرب) 🌅', 'error');
         return;
     }
     
@@ -979,7 +979,7 @@ async function submitBooking(e) {
     // Check VIP restriction for evening slots (17:40 - 21:00)
     const isVIP = customerData.loyaltyPoints >= 500;
     if (isTimeVIPOnly(selectedTime) && !isVIP) {
-        showNotification('هذا الوقت متاح فقط لعملاء VIP (الذهبيين) 🥇', 'error');
+        showNotification('هذا الوقت غير متاح للحجز (وقت الصلاة) 🕌', 'error');
         return;
     }
     
