@@ -842,7 +842,7 @@ async function submitBooking(e) {
             });
             
             // Show professional confirmation message
-            const confirmationMessage = `✅ تم حجز موعدك بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${serviceName}\n\n📱 سنرسل لك تذكيراً قبل موعدك بـ:\n• 24 ساعة\n• ساعة واحدة\n• 15 دقيقة\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
+            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${serviceName}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
             
             showNotification(confirmationMessage, 'success', 8000);
             
