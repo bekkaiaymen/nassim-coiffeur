@@ -320,7 +320,38 @@
     color: #fff;
     font-size: 20px;
     text-align: center;
+    margin-bottom: 16px;
+}
+
+.comparison-toggle {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
     margin-bottom: 20px;
+}
+
+.toggle-btn {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(102, 126, 234, 0.3);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-btn:hover {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.5);
+}
+
+.toggle-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .ai-results-container {

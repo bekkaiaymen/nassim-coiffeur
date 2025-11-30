@@ -703,10 +703,15 @@
 
                 <!-- Results Section -->
                 <div id="aiResultsSection" class="ai-results-section" style="display: none;">
-                    <h3>✨ النتيجة</h3>
+                    <h3>✨ النتيجة - قبل وبعد</h3>
+                    <div class="comparison-toggle">
+                        <button class="toggle-btn active" onclick="showComparison('after')">بعد التحسين</button>
+                        <button class="toggle-btn" onclick="showComparison('before')">الصورة الأصلية</button>
+                    </div>
                     <div class="ai-results-container">
                         <div class="result-image-box">
-                            <img id="resultImage" class="result-image" alt="AI Generated Hairstyle">
+                            <img id="resultImage" class="result-image" alt="AI Enhanced Hairstyle">
+                            <img id="originalImage" class="result-image" style="display: none;" alt="Original Image">
                         </div>
                         <div class="result-actions">
                             <button class="result-btn book-btn" onclick="bookAIHairstyle()">

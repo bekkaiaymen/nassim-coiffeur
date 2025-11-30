@@ -105,13 +105,37 @@ function removeAIImage() {
 
 // Simulate AI Processing (Demo Mode)
 async function simulateAIProcessing(prompt, style) {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Update loading message progressively
+    const loadingState = document.getElementById('aiLoadingState');
+    const loadingText = loadingState?.querySelector('p');
+    const loadingSmall = loadingState?.querySelector('small');
+    
+    if (loadingText) loadingText.textContent = 'جاري تحليل الصورة...';
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    if (loadingText) loadingText.textContent = `تطبيق فلتر ${getStyleName(style)}...`;
+    if (loadingSmall) loadingSmall.textContent = 'معالجة الألوان والتباين';
+    await new Promise(resolve => setTimeout(resolve, 800));
+    
+    if (loadingText) loadingText.textContent = 'إضافة التحسينات النهائية...';
+    if (loadingSmall) loadingSmall.textContent = 'تطبيق التأثيرات الاحترافية';
+    await new Promise(resolve => setTimeout(resolve, 600));
     
     // Apply canvas-based image enhancement
     const enhancedImage = await enhanceImageWithCanvas(uploadedImage, style);
     currentAIResult = enhancedImage;
     displayAIResult(currentAIResult);
+}
+
+// Get style name in Arabic
+function getStyleName(style) {
+    const names = {
+        classic: 'الكلاسيكي',
+        modern: 'العصري',
+        fade: 'الفيد',
+        beard: 'اللحية المحترفة'
+    };
+    return names[style] || 'AI';
 }
 
 // Enhance Image with Canvas (Client-side processing)
@@ -124,65 +148,108 @@ async function enhanceImageWithCanvas(imageUrl, style) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
+            // Set canvas size
             canvas.width = img.width;
             canvas.height = img.height;
             
             // Draw original image
             ctx.drawImage(img, 0, 0);
             
-            // Apply style-based filters
+            // Get image data
             const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
             const data = imageData.data;
             
-            // Apply different effects based on style
+            // Apply dramatic style-based filters
             switch(style) {
                 case 'classic':
-                    // Increase contrast and sharpness
-                    for (let i = 0; i < data.length; i += 4) {
-                        data[i] = Math.min(255, data[i] * 1.1);     // Red
-                        data[i+1] = Math.min(255, data[i+1] * 1.1); // Green
-                        data[i+2] = Math.min(255, data[i+2] * 1.1); // Blue
-                    }
-                    break;
-                case 'modern':
-                    // Slight saturation boost
-                    for (let i = 0; i < data.length; i += 4) {
-                        data[i] = Math.min(255, data[i] * 1.15);
-                        data[i+1] = Math.min(255, data[i+1] * 1.05);
-                        data[i+2] = Math.min(255, data[i+2] * 1.1);
-                    }
-                    break;
-                case 'fade':
-                    // Enhance edges and contrast
+                    // Black & White with high contrast (Classic barber look)
                     for (let i = 0; i < data.length; i += 4) {
                         const avg = (data[i] + data[i+1] + data[i+2]) / 3;
-                        data[i] = data[i] > avg ? Math.min(255, data[i] * 1.2) : data[i] * 0.9;
-                        data[i+1] = data[i+1] > avg ? Math.min(255, data[i+1] * 1.2) : data[i+1] * 0.9;
-                        data[i+2] = data[i+2] > avg ? Math.min(255, data[i+2] * 1.2) : data[i+2] * 0.9;
+                        const contrast = 1.5;
+                        let newValue = ((avg - 128) * contrast) + 128;
+                        newValue = Math.max(0, Math.min(255, newValue));
+                        data[i] = newValue;
+                        data[i+1] = newValue;
+                        data[i+2] = newValue;
                     }
                     break;
-                case 'beard':
-                    // Warm tone enhancement
+                    
+                case 'modern':
+                    // Vibrant colors with cool tone
                     for (let i = 0; i < data.length; i += 4) {
-                        data[i] = Math.min(255, data[i] * 1.1);     // Red boost
-                        data[i+1] = Math.min(255, data[i+1] * 1.05);
-                        data[i+2] = data[i+2] * 0.95;               // Blue reduce
+                        data[i] = Math.min(255, data[i] * 1.3);     // Red boost
+                        data[i+1] = Math.min(255, data[i+1] * 1.2); // Green boost
+                        data[i+2] = Math.min(255, data[i+2] * 1.4); // Blue strong boost
+                    }
+                    break;
+                    
+                case 'fade':
+                    // Sharp edges with vignette effect
+                    for (let i = 0; i < data.length; i += 4) {
+                        const x = (i / 4) % canvas.width;
+                        const y = Math.floor((i / 4) / canvas.width);
+                        const centerX = canvas.width / 2;
+                        const centerY = canvas.height / 2;
+                        const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+                        const maxDistance = Math.sqrt(Math.pow(centerX, 2) + Math.pow(centerY, 2));
+                        const vignette = 1 - (distance / maxDistance) * 0.7;
+                        
+                        // High contrast
+                        data[i] = Math.min(255, data[i] * 1.4 * vignette);
+                        data[i+1] = Math.min(255, data[i+1] * 1.4 * vignette);
+                        data[i+2] = Math.min(255, data[i+2] * 1.4 * vignette);
+                    }
+                    break;
+                    
+                case 'beard':
+                    // Warm sepia tone (Professional grooming look)
+                    for (let i = 0; i < data.length; i += 4) {
+                        const r = data[i];
+                        const g = data[i+1];
+                        const b = data[i+2];
+                        
+                        data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189) + 40);
+                        data[i+1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168) + 20);
+                        data[i+2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
                     }
                     break;
             }
             
+            // Put modified data back
             ctx.putImageData(imageData, 0, 0);
             
-            // Add watermark/badge
-            ctx.font = 'bold 20px Arial';
-            ctx.fillStyle = 'rgba(203, 163, 92, 0.8)';
-            ctx.fillText('✨ AI Enhanced', 10, 30);
+            // Add decorative frame
+            ctx.strokeStyle = 'rgba(203, 163, 92, 0.8)';
+            ctx.lineWidth = 8;
+            ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
             
-            resolve(canvas.toDataURL('image/png'));
+            // Add style badge
+            const badgeTexts = {
+                classic: '👔 CLASSIC',
+                modern: '✨ MODERN',
+                fade: '🔥 FADE',
+                beard: '🧔 GROOMED'
+            };
+            
+            // Badge background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+            ctx.fillRect(10, 10, 160, 50);
+            
+            // Badge text
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = '#CBA35C';
+            ctx.fillText(badgeTexts[style] || '✨ AI', 20, 45);
+            
+            // Bottom watermark
+            ctx.font = 'bold 16px Arial';
+            ctx.fillStyle = 'rgba(203, 163, 92, 0.9)';
+            ctx.fillText('Nassim Coiffeur AI', canvas.width - 200, canvas.height - 20);
+            
+            resolve(canvas.toDataURL('image/png', 0.95));
         };
         
         img.onerror = () => {
-            // If enhancement fails, return original
+            console.error('Image enhancement failed');
             resolve(imageUrl);
         };
         
@@ -251,17 +318,42 @@ async function generateAIHairstyle() {
 function displayAIResult(imageUrl) {
     const resultsSection = document.getElementById('aiResultsSection');
     const resultImage = document.getElementById('resultImage');
+    const originalImage = document.getElementById('originalImage');
     
     if (resultsSection) resultsSection.style.display = 'block';
     if (resultImage) {
         resultImage.src = imageUrl;
         resultImage.style.animation = 'fadeIn 0.5s ease';
+        resultImage.style.display = 'block';
+    }
+    if (originalImage) {
+        originalImage.src = uploadedImage;
+        originalImage.style.display = 'none';
     }
     
     // Scroll to results
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     
-    showToast('✨ تم توليد التصفيفة بنجاح!', 'success');
+    showToast('✨ تم تحسين الصورة بنجاح! قارن بين قبل وبعد', 'success');
+}
+
+// Show Comparison (Before/After)
+function showComparison(view) {
+    const resultImage = document.getElementById('resultImage');
+    const originalImage = document.getElementById('originalImage');
+    const buttons = document.querySelectorAll('.comparison-toggle .toggle-btn');
+    
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    if (view === 'after') {
+        if (resultImage) resultImage.style.display = 'block';
+        if (originalImage) originalImage.style.display = 'none';
+        buttons[0].classList.add('active');
+    } else {
+        if (resultImage) resultImage.style.display = 'none';
+        if (originalImage) originalImage.style.display = 'block';
+        buttons[1].classList.add('active');
+    }
 }
 
 // Book AI Hairstyle
