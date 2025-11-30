@@ -831,13 +831,39 @@ async function loadAvailableSlots() {
 // Generate default time slots
 function generateDefaultSlots() {
     const slots = [];
-    for (let hour = 9; hour <= 20; hour++) {
+    
+    // Morning shift: 10:00 - 14:00
+    for (let hour = 10; hour <= 13; hour++) {
+        slots.push(`${hour.toString().padStart(2, '0')}:00`);
+        slots.push(`${hour.toString().padStart(2, '0')}:30`);
+    }
+    slots.push('14:00');
+    
+    // Evening shift: 16:30 - 21:00
+    slots.push('16:30');
+    for (let hour = 17; hour <= 20; hour++) {
         slots.push(`${hour.toString().padStart(2, '0')}:00`);
         if (hour < 20) {
             slots.push(`${hour.toString().padStart(2, '0')}:30`);
         }
     }
+    slots.push('21:00');
+    
     return slots;
+}
+
+// Check if time slot is VIP only (17:40 - 21:00)
+function isTimeVIPOnly(timeString) {
+    if (!timeString) return false;
+    
+    const [hours, minutes] = timeString.split(':').map(Number);
+    const timeInMinutes = hours * 60 + minutes;
+    
+    // VIP only: 17:40 (1060 minutes) to 21:00 (1260 minutes)
+    const vipStartTime = 17 * 60 + 40; // 17:40 = 1060 minutes
+    const vipEndTime = 21 * 60; // 21:00 = 1260 minutes
+    
+    return timeInMinutes >= vipStartTime && timeInMinutes <= vipEndTime;
 }
 
 // Display Time Slots
@@ -849,11 +875,23 @@ function displayTimeSlots(slots) {
         return;
     }
     
-    container.innerHTML = slots.map(slot => `
-        <button type="button" class="time-slot-btn ${selectedTimeSlot === slot ? 'selected' : ''}" data-time="${slot}">
-            ${formatTimeArabic(slot)}
-        </button>
-    `).join('');
+    // Check if customer is VIP (Gold tier = 500+ points)
+    const isVIP = customerData && customerData.loyaltyPoints >= 500;
+    
+    container.innerHTML = slots.map(slot => {
+        const isVIPOnly = isTimeVIPOnly(slot);
+        const isDisabled = isVIPOnly && !isVIP;
+        
+        return `
+            <button type="button" 
+                class="time-slot-btn ${selectedTimeSlot === slot ? 'selected' : ''} ${isDisabled ? 'disabled vip-only' : ''} ${isVIPOnly ? 'vip-slot' : ''}" 
+                data-time="${slot}"
+                ${isDisabled ? 'disabled' : ''}>
+                ${formatTimeArabic(slot)}
+                ${isVIPOnly ? '<span class="vip-badge">⭐ VIP</span>' : ''}
+            </button>
+        `;
+    }).join('');
     
     // إضافة event listeners للأزرار
     setTimeout(() => {
@@ -871,6 +909,14 @@ function displayTimeSlots(slots) {
 // Select Time Slot
 function selectTimeSlot(time) {
     console.log('Selecting time slot:', time);
+    
+    // Check VIP restriction
+    const isVIP = customerData && customerData.loyaltyPoints >= 500;
+    if (isTimeVIPOnly(time) && !isVIP) {
+        showNotification('هذا الوقت متاح فقط لعملاء VIP 🥇', 'error');
+        return;
+    }
+    
     selectedTimeSlot = time;
     
     // تحديث input الوقت
@@ -927,6 +973,13 @@ async function submitBooking(e) {
     
     if (!customerData) {
         showNotification('الرجاء تسجيل الدخول', 'error');
+        return;
+    }
+    
+    // Check VIP restriction for evening slots (17:40 - 21:00)
+    const isVIP = customerData.loyaltyPoints >= 500;
+    if (isTimeVIPOnly(selectedTime) && !isVIP) {
+        showNotification('هذا الوقت متاح فقط لعملاء VIP (الذهبيين) 🥇', 'error');
         return;
     }
     

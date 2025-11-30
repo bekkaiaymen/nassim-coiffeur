@@ -1789,6 +1789,38 @@ textarea {
     box-shadow: none;
 }
 
+/* VIP Time Slots */
+.time-slot-btn.vip-slot {
+    position: relative;
+    border-color: var(--primary);
+    background: linear-gradient(135deg, rgba(203, 163, 92, 0.1) 0%, rgba(203, 163, 92, 0.05) 100%);
+}
+
+.time-slot-btn.vip-only.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: var(--surface);
+    border-color: var(--text-muted);
+    position: relative;
+}
+
+.time-slot-btn.vip-only.disabled:hover {
+    transform: none;
+    border-color: var(--text-muted);
+}
+
+.vip-badge {
+    display: inline-block;
+    font-size: 10px;
+    color: var(--primary);
+    margin-right: 4px;
+    font-weight: 700;
+}
+
+.time-slot-btn.disabled .vip-badge {
+    opacity: 0.6;
+}
+
 /* 🔔 Premium Notification */
 .notification {
     position: fixed;
