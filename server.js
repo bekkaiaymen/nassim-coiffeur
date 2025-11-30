@@ -71,6 +71,7 @@ const rewardRoutes = require('./routes/rewards');
 const commentRoutes = require('./routes/comments');
 const reactionRoutes = require('./routes/reactions');
 const settingsRoutes = require('./routes/settings');
+const uploadRoutes = require('./routes/upload');
 
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/invoices', invoiceRoutes);
@@ -96,6 +97,7 @@ app.use('/api/rewards', rewardRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/reactions', reactionRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // Serve frontend pages
 app.get('/', (req, res) => {
