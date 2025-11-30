@@ -826,20 +826,37 @@ async function submitBooking(e) {
         const data = await response.json();
         
         if (response.ok && data.success) {
-            showNotification('تم حجز الموعد بنجاح! 🎉', 'success');
+            // Get booking details for confirmation message
+            const serviceSelect = document.getElementById('serviceSelect');
+            const serviceName = serviceSelect.options[serviceSelect.selectedIndex]?.text || 'الخدمة';
+            const selectedDate = document.getElementById('appointmentDate').value;
+            const selectedTime = document.getElementById('timeSlots').querySelector('.time-slot.selected')?.textContent;
+            
+            // Format date in Arabic
+            const dateObj = new Date(selectedDate);
+            const formattedDate = dateObj.toLocaleDateString('ar-DZ', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            // Show professional confirmation message
+            const confirmationMessage = `✅ تم حجز موعدك بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${serviceName}\n\n📱 سنرسل لك تذكيراً قبل موعدك بـ:\n• 24 ساعة\n• ساعة واحدة\n• 15 دقيقة\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
+            
+            showNotification(confirmationMessage, 'success', 8000);
             
             // Show pending reward notification
-            // Get points from response or determine based on customer type
-            const points = data.pendingPoints || 100; // Default to 100 if not specified
+            const points = data.pendingPoints || 100;
             setTimeout(() => {
                 showPendingRewardNotification(points);
-            }, 1500);
+            }, 2000);
             
             closeBookingModal();
             document.getElementById('bookingForm').reset();
             selectedTimeSlot = null;
             await loadAppointments();
-            await loadCustomerProfile(); // Refresh points
+            await loadCustomerProfile();
         } else {
             showNotification(data.message || 'فشل حجز الموعد', 'error');
         }
@@ -1305,16 +1322,44 @@ function formatDate(dateString) {
     return date.toLocaleDateString('ar-SA', { month: 'short', day: 'numeric' });
 }
 
-function showNotification(message, type = 'info') {
+function showNotification(message, type = 'info', duration = 3000) {
     const notification = document.getElementById('notification');
     if (notification) {
-        notification.textContent = message;
+        // Support multiline messages
+        notification.innerHTML = message.replace(/\n/g, '<br>');
         notification.className = `notification ${type} show`;
+        notification.style.whiteSpace = 'pre-wrap';
+        notification.style.textAlign = 'right';
+        notification.style.maxWidth = '90%';
+        notification.style.margin = '0 auto';
         
         setTimeout(() => {
             notification.classList.remove('show');
-        }, 3000);
+        }, duration);
     }
+}
+
+// Convert numbers to Arabic numerals
+function toArabicNumerals(text) {
+    const arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    return text.toString().replace(/[0-9]/g, (digit) => arabicNumerals[parseInt(digit)]);
+}
+
+// Format time with Arabic numerals
+function formatTimeArabic(time) {
+    return toArabicNumerals(time);
+}
+
+// Format date with Arabic numerals
+function formatDateArabic(dateString) {
+    const date = new Date(dateString);
+    const formatted = date.toLocaleDateString('ar-DZ', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    return toArabicNumerals(formatted);
 }
 
 function searchContent(query) {

@@ -46,6 +46,19 @@
                 <div class="step-content active" data-step="1">
                     <h3>📝 معلوماتك الشخصية</h3>
                     
+                    <div class="form-group photo-upload-group">
+                        <label>صورة الملف الشخصي (اختياري)</label>
+                        <div class="photo-upload-container">
+                            <div class="photo-preview" id="photoPreview">
+                                <span class="photo-icon">📷</span>
+                                <img id="previewImage" style="display: none;" alt="صورة المعاينة">
+                            </div>
+                            <input type="file" id="profilePhoto" accept="image/*" onchange="previewPhoto(event)">
+                            <label for="profilePhoto" class="upload-btn">اختر صورة</label>
+                            <small>الصورة ستساعد الحلاق في التعرف عليك</small>
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label>الاسم الكامل</label>
                         <input type="text" id="customerName" name="name" required 

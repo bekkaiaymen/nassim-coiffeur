@@ -5,10 +5,42 @@ let registrationData = {
     phone: '',
     email: '',
     password: '',
+    photo: null,
     followedBusinesses: []
 };
 let allBusinesses = [];
 let currentFilter = 'all';
+
+// Preview uploaded photo
+function previewPhoto(event) {
+    const file = event.target.files[0];
+    if (file) {
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            showNotification('حجم الصورة يجب أن لا يتجاوز 5 ميجابايت', 'error');
+            return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            showNotification('الرجاء اختيار ملف صورة فقط', 'error');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('previewImage');
+            const icon = document.querySelector('.photo-icon');
+            
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+            if (icon) icon.style.display = 'none';
+            
+            registrationData.photo = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
