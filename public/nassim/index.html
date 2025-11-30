@@ -68,13 +68,13 @@
         <div class="main-content">
             <!-- Quick Actions -->
             <div class="quick-actions">
-                <div class="quick-action" onclick="openBookingModal()">
+                <div class="quick-action" onclick="showCoins()">
                     <div class="quick-action-icon">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
-                    <span class="quick-action-label">احجز موعد</span>
+                    <span class="quick-action-label">العملات</span>
                 </div>
                 <div class="quick-action" onclick="showBookingHistory()">
                     <div class="quick-action-icon">
@@ -87,7 +87,7 @@
                 <div class="quick-action" onclick="showRewards()">
                     <div class="quick-action-icon">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
                         </svg>
                     </div>
                     <span class="quick-action-label">المكافآت</span>
@@ -214,6 +214,40 @@
         </div>
     </div>
 
+    <!-- Coins Page -->
+    <div id="coinsPage" class="page-container hidden">
+        <div class="page-header">
+            <button class="back-btn-page" onclick="goBackToHome()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <h1 class="page-title">💰 العملات</h1>
+        </div>
+
+        <!-- User Coins Balance -->
+        <div class="coins-balance-card">
+            <div class="balance-content">
+                <div class="balance-icon">🪙</div>
+                <div class="balance-info">
+                    <div class="balance-value" id="userCoins">0</div>
+                    <div class="balance-label">عملاتك الحالية</div>
+                </div>
+            </div>
+            <button class="buy-coins-btn" onclick="showBuyCoinsModal()">
+                <span>+</span> شراء عملات
+            </button>
+        </div>
+
+        <!-- Coins History -->
+        <div class="section-header" style="margin: 24px 0 16px;">
+            <h3>سجل العملات</h3>
+        </div>
+        <div id="coinsHistoryList" class="coins-history-container">
+            <!-- Coins history will be loaded here -->
+        </div>
+    </div>
+
     <!-- Bottom Navigation -->
     <nav class="bottom-nav">
         <button class="nav-item active" onclick="showHome()">
@@ -233,11 +267,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
             </svg>
         </button>
-        <button class="nav-item" onclick="showRewards()">
+        <button class="nav-item" onclick="showCoins()">
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            <span class="nav-label">المكافآت</span>
+            <span class="nav-label">العملات</span>
         </button>
         <button class="nav-item" onclick="showAccount()">
             <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">

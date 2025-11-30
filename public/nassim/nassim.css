@@ -3712,6 +3712,156 @@ html {
 }
 
 /* ============================================
+   COINS PAGE - Luxury Design
+   ============================================ */
+.coins-balance-card {
+    background: var(--gradient-primary);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin: 20px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+.balance-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.balance-icon {
+    font-size: 48px;
+    animation: coinRotate 3s ease-in-out infinite;
+}
+
+@keyframes coinRotate {
+    0%, 100% { transform: rotateY(0deg); }
+    50% { transform: rotateY(180deg); }
+}
+
+.balance-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.balance-value {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--text-dark);
+    line-height: 1;
+}
+
+.balance-label {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.7);
+    font-weight: 600;
+}
+
+.buy-coins-btn {
+    background: var(--text-dark);
+    color: var(--primary);
+    border: none;
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.buy-coins-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.buy-coins-btn span {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+.coins-history-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 20px 100px;
+}
+
+.coin-history-item {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.coin-history-item:hover {
+    border-color: var(--primary);
+    transform: translateX(-4px);
+}
+
+.coin-history-item.earned {
+    border-left: 4px solid var(--success);
+}
+
+.coin-history-item.spent {
+    border-left: 4px solid var(--error);
+}
+
+.coin-icon {
+    font-size: 32px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-secondary);
+    border-radius: 50%;
+}
+
+.coin-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.coin-description {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.coin-date {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.coin-amount {
+    font-size: 20px;
+    font-weight: 800;
+    text-align: right;
+}
+
+.coin-amount.earned {
+    color: var(--success);
+}
+
+.coin-amount.spent {
+    color: var(--error);
+}
+
+/* ============================================
    POST CARDS - Enhanced Design
    ============================================ */
 .posts-list {

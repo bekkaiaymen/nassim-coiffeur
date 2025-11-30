@@ -609,6 +609,60 @@ async function redeemReward(rewardId) {
     }
 }
 
+// Load Coins and History
+async function loadCoins() {
+    if (!token) return;
+    
+    try {
+        // Update coins balance from customer data
+        const userCoins = customerData?.coins || 0;
+        document.getElementById('userCoins').textContent = userCoins;
+        
+        // Load coins history (transactions)
+        displayCoinsHistory();
+        
+    } catch (error) {
+        console.error('Error loading coins:', error);
+        showNotification('حدث خطأ في تحميل العملات', 'error');
+    }
+}
+
+// Display Coins History
+function displayCoinsHistory() {
+    const container = document.getElementById('coinsHistoryList');
+    if (!container) return;
+    
+    // Sample data - replace with real API call later
+    const history = [
+        { date: new Date(), type: 'earned', amount: 50, description: 'مكافأة إتمام حجز' },
+        { date: new Date(Date.now() - 86400000), type: 'spent', amount: 100, description: 'استبدال مكافأة' },
+        { date: new Date(Date.now() - 172800000), type: 'earned', amount: 100, description: 'مكافأة تسجيل جديد' }
+    ];
+    
+    if (history.length === 0) {
+        container.innerHTML = '<div class="empty-state">لا يوجد سجل للعملات</div>';
+        return;
+    }
+    
+    container.innerHTML = history.map(item => `
+        <div class="coin-history-item ${item.type}">
+            <div class="coin-icon">${item.type === 'earned' ? '🪙' : '💸'}</div>
+            <div class="coin-details">
+                <div class="coin-description">${item.description}</div>
+                <div class="coin-date">${formatDate(item.date)}</div>
+            </div>
+            <div class="coin-amount ${item.type}">
+                ${item.type === 'earned' ? '+' : '-'}${item.amount}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Show Buy Coins Modal
+function showBuyCoinsModal() {
+    showNotification('ميزة شراء العملات ستتوفر قريباً! 🚀', 'info');
+}
+
 // Load Appointments
 async function loadAppointments() {
     if (!token) return;
@@ -1294,6 +1348,20 @@ function showPosts() {
 function showRewards() {
     hideAllPages();
     document.getElementById('rewardsPage').classList.remove('hidden');
+    updateActiveNav(3);
+}
+
+function showCoins() {
+    if (!token) {
+        showNotification('سجل دخول لعرض عملاتك', 'error');
+        setTimeout(() => {
+            window.location.href = '/customer-login';
+        }, 2000);
+        return;
+    }
+    hideAllPages();
+    document.getElementById('coinsPage').classList.remove('hidden');
+    loadCoins();
     updateActiveNav(3);
 }
 
