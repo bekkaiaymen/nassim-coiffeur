@@ -2007,7 +2007,15 @@ async function uploadImage(file) {
         
         if (response.ok) {
             const data = await response.json();
-            return data.imageUrl || data.url;
+            // Convert relative URL to absolute URL
+            const imageUrl = data.imageUrl || data.url;
+            if (imageUrl && imageUrl.startsWith('/uploads/')) {
+                const baseUrl = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:3000'
+                    : 'https://nassim-coiffeur.onrender.com';
+                return baseUrl + imageUrl;
+            }
+            return imageUrl;
         } else {
             throw new Error('فشل رفع الصورة');
         }
