@@ -218,7 +218,10 @@ function populateBookingServices(services) {
              data-service-price="${service.price}"
              data-service-duration="${service.duration}"
              onclick="toggleServiceSelection('${service._id}')">
-            <div class="service-icon">${getServiceIcon(service.name)}</div>
+            ${service.image 
+                ? `<div class="booking-service-image"><img src="${service.image}" alt="${service.name}"></div>` 
+                : `<div class="service-icon">${getServiceIcon(service.name)}</div>`
+            }
             <div class="service-name">${service.name}</div>
             <div class="service-meta">
                 <span class="service-duration">⏱ ${service.duration} دقيقة</span>

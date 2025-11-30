@@ -1388,6 +1388,30 @@ body::after {
     margin-bottom: 8px;
 }
 
+.booking-service-image {
+    width: 100%;
+    height: 80px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.booking-service-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.booking-service-card:hover .booking-service-image img {
+    transform: scale(1.05);
+}
+
+.booking-service-card.selected .booking-service-image {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
 .booking-service-card .service-name {
     font-weight: 600;
     font-size: 13px;
