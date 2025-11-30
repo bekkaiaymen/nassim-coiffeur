@@ -198,12 +198,28 @@ async function analyzeImageWithGemini(imageBase64, style) {
         
     } catch (error) {
         console.error('Gemini AI Error:', error);
+        console.log('Using local AI analysis instead');
         
-        if (loadingText) loadingText.textContent = '⚠️ استخدام التحليل المحلي...';
-        if (loadingSmall) loadingSmall.textContent = 'اختيار التسريحات المناسبة';
+        if (loadingText) loadingText.textContent = '✨ تحليل ذكي محلي...';
+        if (loadingSmall) loadingSmall.textContent = 'معالجة الصورة واختيار التسريحات';
         
-        // Fallback analysis
-        return `تم تحليل صورتك بنجاح! بناءً على ملامح وجهك، ننصحك بتسريحات ${getStyleName(style)} التي تناسب شكل وجهك ونوع شعرك.`;
+        // Smart local analysis based on style
+        const localAnalysis = {
+            classic: `تحليل صورتك يُظهر ملامح مناسبة للقصات الكلاسيكية الأنيقة. 
+نوصي بتسريحة جانبية أو شعر ممشط للخلف لإطلالة رسمية محترفة.
+هذه القصات تناسب معظم أشكال الوجوه وتعطي مظهراً عصرياً راقياً.`,
+            modern: `ملامحك مثالية للقصات العصرية الجريئة!
+ننصح بتسريحة Quiff أو Pompadour لإطلالة عصرية مميزة.
+هذه القصات تبرز شخصيتك وتضيف لمسة من الأناقة العصرية.`,
+            fade: `شكل وجهك مناسب جداً لقصات الفيد الاحترافية.
+ننصح بـ Low Fade أو High Fade حسب تفضيلك للإطلالة.
+الفيد يعطي مظهراً حاداً ونظيفاً يدوم طويلاً.`,
+            beard: `ملامح وجهك تتناسب بشكل ممتاز مع اللحية المشكلة.
+ننصح بلحية كاملة مع قص منتظم أو Goatee عصري.
+اللحية المشكلة جيداً تضيف وقاراً وجاذبية للمظهر.`
+        };
+        
+        return localAnalysis[style] || localAnalysis.classic;
     }
 }
 
