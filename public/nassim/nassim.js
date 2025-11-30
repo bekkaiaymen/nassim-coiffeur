@@ -34,10 +34,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         showGuestMode();
     } else {
         await loadCustomerProfile();
-        // Check for first booking offer after customer data is loaded
-        setTimeout(() => {
-            checkFirstBookingOffer();
-        }, 1000);
+        // Don't show automatic booking offers
+        // Notifications will only appear when owner confirms appointment
     }
     
     await loadServices();
@@ -46,6 +44,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadRewards();
     await loadNotifications();
     setupEventListeners();
+    
+    // Don't show automatic booking offers
+    // checkFirstBookingOffer(); // Disabled
     
     // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
@@ -1287,10 +1288,10 @@ function showPendingRewardNotification(points = 100) {
 
 // Load Notifications
 async function loadNotifications() {
-    if (!token) return;
+    if (!token || !customerData || !customerData._id) return;
     
     try {
-        const response = await fetch(`${API_URL}/notifications`, {
+        const response = await fetch(`${API_URL}/notifications/customer/${customerData._id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -1305,10 +1306,25 @@ async function loadNotifications() {
         if (data.success && data.data) {
             displayNotifications(data.data);
             updateNotificationBadge(data.data.filter(n => !n.read).length);
+            
+            // Check for new unread notifications and show toast
+            const unreadNotifications = data.data.filter(n => !n.read);
+            if (unreadNotifications.length > 0) {
+                const latestNotif = unreadNotifications[0];
+                // Show toast for the latest notification
+                showNotificationToast(latestNotif.title, latestNotif.message);
+            }
         }
     } catch (error) {
         console.error('Error loading notifications:', error);
     }
+}
+
+// Auto-refresh notifications every 30 seconds
+if (token) {
+    setInterval(() => {
+        loadNotifications();
+    }, 30000); // Check every 30 seconds
 }
 
 // Display Notifications
@@ -1363,6 +1379,41 @@ function updateNotificationBadge(count) {
             badge.style.display = 'none';
         }
     }
+}
+
+// Show Notification Toast
+function showNotificationToast(title, message) {
+    // Check if toast already exists
+    const existingToast = document.querySelector('.notification-toast');
+    if (existingToast) return;
+    
+    const toast = document.createElement('div');
+    toast.className = 'notification-toast';
+    toast.innerHTML = `
+        <div class="toast-icon">🔔</div>
+        <div class="toast-content">
+            <h4>${title}</h4>
+            <p>${message}</p>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Play notification sound (optional)
+    try {
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLVgh0FG2m98NuaQAoUXrTp66hVFApGn+DyvmwhBSt///8=');
+        audio.volume = 0.3;
+        audio.play().catch(() => {});
+    } catch (e) {}
+    
+    // Auto remove after 5 seconds
+    setTimeout(() => {
+        if (toast.parentElement) {
+            toast.style.animation = 'slideOutRight 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }
+    }, 5000);
 }
 
 // Update Profile

@@ -2385,6 +2385,107 @@ textarea {
     transform: scale(1.1);
 }
 
+/* Notification Toast */
+.notification-toast {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    z-index: 10000;
+    animation: slideInRight 0.4s ease-out;
+    border: 2px solid var(--primary);
+    border-right: 4px solid var(--primary);
+    max-width: 400px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+
+.toast-icon {
+    font-size: 32px;
+    flex-shrink: 0;
+    animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-content h4 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.toast-content p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+.toast-close {
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.toast-close:hover {
+    background: var(--surface-light);
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+@media (max-width: 768px) {
+    .notification-toast {
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+
 /* 💀 Premium Skeleton Loaders */
 .skeleton {
     background: linear-gradient(
