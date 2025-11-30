@@ -1,33 +1,33 @@
 // AI Stylist - Gemini AI Integration
 // Google Gemini API Configuration
 const GEMINI_API_KEY = 'AIzaSyC-xpvmexsAZKxjcIArIoRvVfT42OmKuNY';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${GEMINI_API_KEY}`;
 
-// Hairstyle Database
+// Hairstyle Database  
 const hairstyleDatabase = {
     classic: [
-        { name: 'Side Part Classic', image: 'https://i.pinimg.com/736x/8f/3d/73/8f3d73e0a8e3c8e3d4c2f9e5c3e7f1a2.jpg', desc: 'قصة جانبية كلاسيكية أنيقة' },
-        { name: 'Slicked Back', image: 'https://i.pinimg.com/736x/4d/8e/2f/4d8e2f9c7d6e5a4b3c2d1e0f9a8b7c6d.jpg', desc: 'شعر ممشط للخلف بأناقة' },
-        { name: 'Gentleman Cut', image: 'https://i.pinimg.com/736x/1a/2b/3c/1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d.jpg', desc: 'قصة الرجل الأنيق' },
-        { name: 'Executive Style', image: 'https://i.pinimg.com/736x/9d/8c/7b/9d8c7b6a5d4e3f2a1b0c9d8e7f6a5b4c.jpg', desc: 'أسلوب تنفيذي محترف' }
+        { name: 'Side Part Classic', image: 'https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400', desc: 'قصة جانبية كلاسيكية أنيقة' },
+        { name: 'Slicked Back', image: 'https://images.unsplash.com/photo-1622286342621-4bd786c2447c?w=400', desc: 'شعر ممشط للخلف بأناقة' },
+        { name: 'Gentleman Cut', image: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=400', desc: 'قصة الرجل الأنيق' },
+        { name: 'Executive Style', image: 'https://images.unsplash.com/photo-1595475207225-428b62bda831?w=400', desc: 'أسلوب تنفيذي محترف' }
     ],
     modern: [
-        { name: 'Textured Quiff', image: 'https://i.pinimg.com/736x/5e/4d/3c/5e4d3c2b1a0f9e8d7c6b5a4d3e2f1a0b.jpg', desc: 'كويف عصري مع تكستشر' },
-        { name: 'Modern Pompadour', image: 'https://i.pinimg.com/736x/2f/1e/0d/2f1e0d9c8b7a6d5e4f3a2b1c0d9e8f7a.jpg', desc: 'بومبادور عصري مميز' },
-        { name: 'Spiky Fade', image: 'https://i.pinimg.com/736x/7c/6b/5a/7c6b5a4d3e2f1a0b9c8d7e6f5a4b3c2d.jpg', desc: 'قصة شائكة مع فيد' },
-        { name: 'Messy Style', image: 'https://i.pinimg.com/736x/0a/9b/8c/0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d.jpg', desc: 'أسلوب عفوي عصري' }
+        { name: 'Textured Quiff', image: 'https://images.unsplash.com/photo-1633681926022-84c23e8cb2d6?w=400', desc: 'كويف عصري مع تكستشر' },
+        { name: 'Modern Pompadour', image: 'https://images.unsplash.com/photo-1599351431202-1e0f0137899a?w=400', desc: 'بومبادور عصري مميز' },
+        { name: 'Spiky Fade', image: 'https://images.unsplash.com/photo-1618840142498-9eeb70cd7d46?w=400', desc: 'قصة شائكة مع فيد' },
+        { name: 'Messy Style', image: 'https://images.unsplash.com/photo-1621607512214-68297480165e?w=400', desc: 'أسلوب عفوي عصري' }
     ],
     fade: [
-        { name: 'Low Fade', image: 'https://i.pinimg.com/736x/3d/2c/1b/3d2c1b0a9f8e7d6c5b4a3d2e1f0a9b8c.jpg', desc: 'فيد منخفض احترافي' },
-        { name: 'High Fade', image: 'https://i.pinimg.com/736x/6f/5e/4d/6f5e4d3c2b1a0f9e8d7c6b5a4d3e2f1a.jpg', desc: 'فيد عالي جريء' },
-        { name: 'Skin Fade', image: 'https://i.pinimg.com/736x/8a/7b/6c/8a7b6c5d4e3f2a1b0c9d8e7f6a5b4c3d.jpg', desc: 'فيد بالموس نظيف' },
-        { name: 'Taper Fade', image: 'https://i.pinimg.com/736x/1c/0b/9a/1c0b9a8d7e6f5a4b3c2d1e0f9a8b7c6d.jpg', desc: 'تيبر فيد متدرج' }
+        { name: 'Low Fade', image: 'https://images.unsplash.com/photo-1627872334522-a5cf9d9a8c95?w=400', desc: 'فيد منخفض احترافي' },
+        { name: 'High Fade', image: 'https://images.unsplash.com/photo-1616155078657-3ee2d5a6f6b1?w=400', desc: 'فيد عالي جريء' },
+        { name: 'Skin Fade', image: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400', desc: 'فيد بالموس نظيف' },
+        { name: 'Taper Fade', image: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=400', desc: 'تيبر فيد متدرج' }
     ],
     beard: [
-        { name: 'Full Beard Style', image: 'https://i.pinimg.com/736x/4e/3d/2c/4e3d2c1b0a9f8e7d6c5b4a3d2e1f0a9b.jpg', desc: 'لحية كاملة أنيقة' },
-        { name: 'Goatee Modern', image: 'https://i.pinimg.com/736x/7d/6c/5b/7d6c5b4a3d2e1f0a9b8c7d6e5f4a3b2c.jpg', desc: 'لحية جوتي عصرية' },
-        { name: 'Stubble Look', image: 'https://i.pinimg.com/736x/0f/9e/8d/0f9e8d7c6b5a4d3e2f1a0b9c8d7e6f5a.jpg', desc: 'مظهر الشعر الخفيف' },
-        { name: 'Shaped Beard', image: 'https://i.pinimg.com/736x/2a/1b/0c/2a1b0c9d8e7f6a5b4c3d2e1f0a9b8c7d.jpg', desc: 'لحية مشكلة احترافية' }
+        { name: 'Full Beard Style', image: 'https://images.unsplash.com/photo-1560307310-67832a61353f?w=400', desc: 'لحية كاملة أنيقة' },
+        { name: 'Goatee Modern', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400', desc: 'لحية جوتي عصرية' },
+        { name: 'Stubble Look', image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400', desc: 'مظهر الشعر الخفيف' },
+        { name: 'Shaped Beard', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=400', desc: 'لحية مشكلة احترافية' }
     ]
 };
 
