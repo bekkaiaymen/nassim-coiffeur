@@ -978,9 +978,14 @@ async function submitBooking(e) {
     
     // Check VIP restriction for evening slots (17:40 - 21:00)
     const isVIP = customerData.loyaltyPoints >= 500;
-    if (isTimeVIPOnly(selectedTime) && !isVIP) {
-        showNotification('⚠️ هذا الوقت يتطلب:<br><br>🥇 عضوية VIP (500+ نقطة)<br>💰 أو دفع 50 دج<br><br>📍 اتصل بنا للحجز: 0123456789', 'error', 5000);
-        return;
+    if (isTimeVIPOnly(selectedTime) && !isVIP && !window.paidForVIPSlot) {
+        if (confirm('⚠️ هذا الوقت يتطلب:\n\n🥇 عضوية VIP\n💰 أو دفع 50 دج\n\nهل تؤكد الحجز مع دفع 50 دج؟')) {
+            window.paidForVIPSlot = true;
+            showNotification('✅ تم التأكيد. ادفع 50 دج عند الحضور', 'success');
+            // Continue with booking
+        } else {
+            return;
+        }
     }
     
     // Validate that at least one service is selected
@@ -994,6 +999,8 @@ async function submitBooking(e) {
         customer: customerData._id,
         customerName: customerData.name,
         customerPhone: customerData.phone,
+        paidVIPSlot: window.paidForVIPSlot || false,
+        extraCharge: window.paidForVIPSlot ? 50 : 0,
         services: selectedServices.map(s => s.id), // Multiple services
         service: selectedServices[0].id, // First service for compatibility
         employee: document.getElementById('employeeSelect').value,
@@ -1035,7 +1042,8 @@ async function submitBooking(e) {
             });
             
             // Show professional confirmation message
-            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${servicesNames}\n💰 ${totalPrice} دج\n⏱ ${totalDuration} دقيقة\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
+            const extraChargeNote = window.paidForVIPSlot ? '\n\n💰 رسوم إضافية: 50 دج (سيتم التحصيل عند الحضور)' : '';
+            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${servicesNames}\n💰 ${totalPrice} دج\n⏱ ${totalDuration} دقيقة${extraChargeNote}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
             
             showNotification(confirmationMessage, 'success', 10000);
             
@@ -1044,6 +1052,9 @@ async function submitBooking(e) {
             setTimeout(() => {
                 showPendingRewardNotification(points);
             }, 2000);
+            
+            // Reset payment flag after successful booking
+            window.paidForVIPSlot = false;
             
             closeBookingModal();
             document.getElementById('bookingForm').reset();
