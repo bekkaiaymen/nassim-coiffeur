@@ -1711,15 +1711,18 @@ async function deleteReward(rewardId) {
 }
 
 // ==================== Products ====================
+// Note: Using rewards API with type='product' until products endpoint is available
 async function loadProducts() {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/products/business/${NASSIM_BUSINESS_ID}`, {
+        const response = await fetch(`${API_URL}/rewards/business/${NASSIM_BUSINESS_ID}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
         const result = await response.json();
-        const products = result.data || [];
+        const allItems = result.data || [];
+        // Filter items with type='product'
+        const products = allItems.filter(item => item.type === 'product');
         displayProducts(products);
 
     } catch (error) {
@@ -1742,7 +1745,7 @@ function displayProducts(products) {
             <div class="reward-content">
                 <h3 class="reward-title">${product.name}</h3>
                 <p class="reward-description">${product.description || ''}</p>
-                <div class="reward-price">${product.price} دج</div>
+                <div class="reward-price">${product.price || product.pointsCost} دج</div>
                 ${product.stock !== undefined ? `<div class="product-stock">المخزون: ${product.stock}</div>` : ''}
             </div>
             <div class="reward-actions">
@@ -1838,19 +1841,22 @@ async function submitAddProduct() {
             image = await uploadImage(selectedProductImage);
         }
 
+        // Using rewards API with type='product'
         const productData = {
             tenant: NASSIM_BUSINESS_ID,
             name: formData.get('name'),
             description: formData.get('description'),
+            pointsCost: parseFloat(formData.get('price')), // Using pointsCost field for price
             price: parseFloat(formData.get('price')),
             stock: parseInt(formData.get('stock')) || 0,
             category: formData.get('category'),
             image: image,
-            isAvailable: formData.get('isAvailable') === 'on'
+            isActive: formData.get('isAvailable') === 'on',
+            type: 'product' // Mark as product
         };
 
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/products`, {
+        const response = await fetch(`${API_URL}/rewards`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1875,7 +1881,7 @@ async function submitAddProduct() {
 async function openEditProductModal(productId) {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/products/${productId}`, {
+        const response = await fetch(`${API_URL}/rewards/${productId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
@@ -1898,7 +1904,7 @@ async function openEditProductModal(productId) {
                 
                 <div class="form-group">
                     <label class="form-label">السعر (دج) *</label>
-                    <input type="number" class="form-input" name="price" value="${product.price}" required min="0">
+                    <input type="number" class="form-input" name="price" value="${product.price || product.pointsCost}" required min="0">
                 </div>
                 
                 <div class="form-group">
@@ -1967,18 +1973,21 @@ async function submitEditProduct() {
             image = await uploadImage(selectedProductImage);
         }
 
+        // Using rewards API with type='product'
         const productData = {
             name: formData.get('name'),
             description: formData.get('description'),
+            pointsCost: parseFloat(formData.get('price')),
             price: parseFloat(formData.get('price')),
             stock: parseInt(formData.get('stock')) || 0,
             category: formData.get('category'),
             image: image,
-            isAvailable: formData.get('isAvailable') === 'on'
+            isActive: formData.get('isAvailable') === 'on',
+            type: 'product'
         };
 
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/products/${productId}`, {
+        const response = await fetch(`${API_URL}/rewards/${productId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -2005,7 +2014,7 @@ async function deleteProduct(productId) {
 
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/products/${productId}`, {
+        const response = await fetch(`${API_URL}/rewards/${productId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
         });

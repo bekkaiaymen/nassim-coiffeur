@@ -519,11 +519,13 @@ async function loadRewards() {
 // Load Products
 async function loadProducts() {
     try {
-        const response = await fetch(`${API_URL}/products/public/by-business/${NASSIM_BUSINESS_ID}`);
+        // Using rewards API with type='product' filter
+        const response = await fetch(`${API_URL}/rewards/public/by-business/${NASSIM_BUSINESS_ID}`);
         const data = await response.json();
         
         if (data.success && data.data) {
-            const availableProducts = data.data.filter(p => p.isAvailable);
+            // Filter for products only (type='product') and active items
+            const availableProducts = data.data.filter(p => p.type === 'product' && p.isActive);
             displayAllProducts(availableProducts);
         }
     } catch (error) {
@@ -555,7 +557,7 @@ function displayAllProducts(products) {
             ${!product.image ? '<div class="product-image-placeholder" style="display: none;">📦</div>' : ''}
             <div class="product-info">
                 <div class="product-name">${product.name}</div>
-                <div class="product-price">${product.price} دج</div>
+                <div class="product-price">${product.price || product.pointsCost} دج</div>
                 ${stockText}
                 <div class="product-actions">
                     <button class="btn-buy" onclick="buyProduct('${product._id}')" ${!isAvailable ? 'disabled' : ''}>
