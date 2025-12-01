@@ -6,6 +6,22 @@ const NASSIM_BUSINESS_ID = '69259331651b1babc1eb83dc';
 let currentUser = null;
 let currentPage = 'dashboard';
 
+function isProductItem(item) {
+    return item?.metadata?.isProduct === true || item?.icon === '🛍️';
+}
+
+const PRODUCT_CATEGORY_LABELS = {
+    'hair-care': 'عناية بالشعر',
+    'beard-care': 'عناية باللحية',
+    'styling': 'تصفيف',
+    'tools': 'أدوات',
+    'other': 'أخرى'
+};
+
+function formatProductCategory(category) {
+    return PRODUCT_CATEGORY_LABELS[category] || category || '';
+}
+
 // ==================== Initialize ====================
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
@@ -785,7 +801,7 @@ async function deleteEmployee(employeeId) {
     }
 }
 
-// ==================== Services ====================
+// ==================== Products ====================
 async function loadServices() {
     try {
         const token = localStorage.getItem('token');
@@ -795,7 +811,7 @@ async function loadServices() {
 
         const result = await response.json();
         const services = Array.isArray(result) ? result : (result.data || []);
-        displayServices(services);
+        const products = rewards.filter(item => isProductItem(item));
 
     } catch (error) {
         console.error('Error loading services:', error);
@@ -1402,7 +1418,8 @@ async function loadRewards() {
 
         const result = await response.json();
         const rewards = Array.isArray(result) ? result : (result.data || []);
-        displayRewards(rewards);
+        const rewardItems = rewards.filter(item => !isProductItem(item));
+        displayRewards(rewardItems);
 
     } catch (error) {
         console.error('Error loading rewards:', error);
@@ -1715,14 +1732,13 @@ async function deleteReward(rewardId) {
 async function loadProducts() {
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/rewards/business/${NASSIM_BUSINESS_ID}`, {
+        const response = await fetch(`${API_URL}/rewards?business=${NASSIM_BUSINESS_ID}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
         const result = await response.json();
-        const allItems = result.data || [];
-        // Filter items with type='product'
-        const products = allItems.filter(item => item.type === 'product');
+        const rewards = Array.isArray(result) ? result : (result.data || []);
+        const products = rewards.filter(item => isProductItem(item));
         displayProducts(products);
 
     } catch (error) {
@@ -1739,14 +1755,21 @@ function displayProducts(products) {
         return;
     }
 
-    container.innerHTML = products.map(product => `
+    container.innerHTML = products.map(product => {
+        const price = product.pointsCost || 0;
+        const quantity = product.metadata?.stock;
+        const categorySlug = product.metadata?.category;
+        const category = formatProductCategory(categorySlug);
+
+        return `
         <div class="reward-card">
             ${product.image ? `<img src="${product.image}" alt="${product.name}" class="reward-image">` : '<div class="reward-image-placeholder">📦</div>'}
             <div class="reward-content">
                 <h3 class="reward-title">${product.name}</h3>
                 <p class="reward-description">${product.description || ''}</p>
-                <div class="reward-price">${product.price || product.pointsCost} دج</div>
-                ${product.stock !== undefined ? `<div class="product-stock">المخزون: ${product.stock}</div>` : ''}
+                <div class="reward-price">${price} دج</div>
+                ${quantity !== undefined && quantity !== null ? `<div class="product-stock">المخزون المتوفر: ${quantity}</div>` : ''}
+                ${category ? `<div class="product-stock">الفئة: ${category}</div>` : ''}
             </div>
             <div class="reward-actions">
                 <button class="btn-icon" onclick="openEditProductModal('${product._id}')" title="تعديل">
@@ -1761,7 +1784,8 @@ function displayProducts(products) {
                 </button>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 function openAddProductModal() {
@@ -1841,19 +1865,35 @@ async function submitAddProduct() {
             image = await uploadImage(selectedProductImage);
         }
 
-        // Using rewards API with type='product'
+        const priceValue = parseInt(formData.get('price'), 10) || 0;
+        const stockValue = formData.get('stock') ? parseInt(formData.get('stock'), 10) : null;
+        const categoryValue = formData.get('category');
+        const baseDescription = formData.get('description') || '';
+
+        // Using rewards API - store product as 'gift' type with metadata
         const productData = {
-            tenant: NASSIM_BUSINESS_ID,
+            business: NASSIM_BUSINESS_ID,
             name: formData.get('name'),
-            description: formData.get('description'),
-            pointsCost: parseFloat(formData.get('price')), // Using pointsCost field for price
-            price: parseFloat(formData.get('price')),
-            stock: parseInt(formData.get('stock')) || 0,
-            category: formData.get('category'),
-            image: image,
+            description: baseDescription,
+            icon: '🛍️',
+            image: image || null,
+            pointsCost: priceValue,
+            type: 'gift',
+            value: priceValue,
             isActive: formData.get('isAvailable') === 'on',
-            type: 'product' // Mark as product
+            metadata: {
+                isProduct: true,
+                category: categoryValue,
+                stock: stockValue
+            }
         };
+
+        if (!categoryValue) {
+            delete productData.metadata.category;
+        }
+        if (stockValue === null || stockValue === undefined) {
+            delete productData.metadata.stock;
+        }
 
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/rewards`, {
@@ -1887,6 +1927,9 @@ async function openEditProductModal(productId) {
 
         const result = await response.json();
         const product = result.data || result;
+        const priceValue = product.pointsCost || 0;
+        const stockValue = product.metadata?.stock ?? '';
+        const categoryValue = product.metadata?.category || '';
 
         const modal = createModal('تعديل المنتج', `
             <form id="editProductForm">
@@ -1904,22 +1947,22 @@ async function openEditProductModal(productId) {
                 
                 <div class="form-group">
                     <label class="form-label">السعر (دج) *</label>
-                    <input type="number" class="form-input" name="price" value="${product.price || product.pointsCost}" required min="0">
+                    <input type="number" class="form-input" name="price" value="${priceValue}" required min="0">
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">المخزون</label>
-                    <input type="number" class="form-input" name="stock" value="${product.stock || 0}" min="0">
+                    <input type="number" class="form-input" name="stock" value="${stockValue}" min="0">
                 </div>
                 
                 <div class="form-group">
                     <label class="form-label">الفئة</label>
                     <select class="form-input" name="category">
-                        <option value="hair-care" ${product.category === 'hair-care' ? 'selected' : ''}>عناية بالشعر</option>
-                        <option value="beard-care" ${product.category === 'beard-care' ? 'selected' : ''}>عناية باللحية</option>
-                        <option value="styling" ${product.category === 'styling' ? 'selected' : ''}>تصفيف</option>
-                        <option value="tools" ${product.category === 'tools' ? 'selected' : ''}>أدوات</option>
-                        <option value="other" ${product.category === 'other' ? 'selected' : ''}>أخرى</option>
+                        <option value="hair-care" ${categoryValue === 'hair-care' ? 'selected' : ''}>عناية بالشعر</option>
+                        <option value="beard-care" ${categoryValue === 'beard-care' ? 'selected' : ''}>عناية باللحية</option>
+                        <option value="styling" ${categoryValue === 'styling' ? 'selected' : ''}>تصفيف</option>
+                        <option value="tools" ${categoryValue === 'tools' ? 'selected' : ''}>أدوات</option>
+                        <option value="other" ${categoryValue === 'other' ? 'selected' : ''}>أخرى</option>
                     </select>
                 </div>
                 
@@ -1942,7 +1985,7 @@ async function openEditProductModal(productId) {
                 
                 <div class="form-group">
                     <label class="form-label">
-                        <input type="checkbox" name="isAvailable" ${product.isAvailable ? 'checked' : ''}>
+                        <input type="checkbox" name="isAvailable" ${product.isActive !== false ? 'checked' : ''}>
                         <span>متاح للبيع</span>
                     </label>
                 </div>
@@ -1973,18 +2016,33 @@ async function submitEditProduct() {
             image = await uploadImage(selectedProductImage);
         }
 
-        // Using rewards API with type='product'
+        const priceValue = parseInt(formData.get('price'), 10) || 0;
+        const stockValue = formData.get('stock') ? parseInt(formData.get('stock'), 10) : null;
+        const categoryValue = formData.get('category');
+
+        // Using rewards API - store product as 'gift' type with metadata
         const productData = {
             name: formData.get('name'),
             description: formData.get('description'),
-            pointsCost: parseFloat(formData.get('price')),
-            price: parseFloat(formData.get('price')),
-            stock: parseInt(formData.get('stock')) || 0,
-            category: formData.get('category'),
-            image: image,
+            icon: '🛍️',
+            image: image || null,
+            pointsCost: priceValue,
+            type: 'gift',
+            value: priceValue,
             isActive: formData.get('isAvailable') === 'on',
-            type: 'product'
+            metadata: {
+                isProduct: true,
+                category: categoryValue,
+                stock: stockValue
+            }
         };
+
+        if (!categoryValue) {
+            delete productData.metadata.category;
+        }
+        if (stockValue === null || stockValue === undefined) {
+            delete productData.metadata.stock;
+        }
 
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/rewards/${productId}`, {

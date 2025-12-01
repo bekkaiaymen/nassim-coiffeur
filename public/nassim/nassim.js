@@ -11,6 +11,22 @@ let availableEmployees = [];
 let selectedServices = []; // Array to track multiple selected services
 let lastAppointmentStatuses = {}; // Track appointment statuses to detect confirmations
 
+function isProductItem(item) {
+    return item?.metadata?.isProduct === true || item?.icon === '🛍️';
+}
+
+const PRODUCT_CATEGORY_LABELS = {
+    'hair-care': 'عناية بالشعر',
+    'beard-care': 'عناية باللحية',
+    'styling': 'تصفيف',
+    'tools': 'أدوات',
+    'other': 'أخرى'
+};
+
+function formatProductCategory(category) {
+    return PRODUCT_CATEGORY_LABELS[category] || category || '';
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
     
@@ -507,7 +523,7 @@ async function loadRewards() {
         const data = await response.json();
         
         if (data.success && data.data) {
-            const activeRewards = data.data.filter(r => r.isActive);
+            const activeRewards = data.data.filter(r => r.isActive && !isProductItem(r));
             displayRewards(activeRewards.slice(0, 3)); // Show only 3 on home
             displayAllRewards(activeRewards); // Show all on rewards page
         }
@@ -524,8 +540,8 @@ async function loadProducts() {
         const data = await response.json();
         
         if (data.success && data.data) {
-            // Filter for products only (type='product') and active items
-            const availableProducts = data.data.filter(p => p.type === 'product' && p.isActive);
+            // Filter for product entries stored through rewards endpoint
+            const availableProducts = data.data.filter(p => isProductItem(p) && p.isActive);
             displayAllProducts(availableProducts);
         }
     } catch (error) {
@@ -548,8 +564,14 @@ function displayAllProducts(products) {
             ? `<img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
             : `<div class="product-image-placeholder">📦</div>`;
         
-        const stockText = product.stock !== undefined ? `<div class="product-stock">${product.stock > 0 ? `المخزون: ${product.stock}` : 'نفذ من المخزون'}</div>` : '';
-        const isAvailable = product.stock === undefined || product.stock > 0;
+        const quantity = product.metadata?.stock;
+        const stockText = (quantity !== undefined && quantity !== null)
+            ? `<div class="product-stock">${quantity > 0 ? `المخزون المتوفر: ${quantity}` : 'نفذ من المخزون'}</div>`
+            : '';
+        const isAvailable = (quantity === undefined || quantity === null || quantity > 0) && product.isActive !== false;
+        const price = product.pointsCost || 0;
+        const categorySlug = product.metadata?.category;
+        const category = formatProductCategory(categorySlug);
         
         return `
         <div class="product-card">
@@ -557,8 +579,9 @@ function displayAllProducts(products) {
             ${!product.image ? '<div class="product-image-placeholder" style="display: none;">📦</div>' : ''}
             <div class="product-info">
                 <div class="product-name">${product.name}</div>
-                <div class="product-price">${product.price || product.pointsCost} دج</div>
+                <div class="product-price">${price} دج</div>
                 ${stockText}
+                ${category ? `<div class="product-stock">الفئة: ${category}</div>` : ''}
                 <div class="product-actions">
                     <button class="btn-buy" onclick="buyProduct('${product._id}')" ${!isAvailable ? 'disabled' : ''}>
                         ${isAvailable ? '🛒 شراء' : 'غير متوفر'}
@@ -580,6 +603,8 @@ function displayRewards(rewards) {
     const container = document.getElementById('rewardsList');
     if (!container) return;
     
+    rewards = rewards.filter(reward => !isProductItem(reward));
+
     if (!rewards || rewards.length === 0) {
         container.innerHTML = '<div class="empty-state">لا توجد مكافآت متاحة</div>';
         return;
@@ -612,6 +637,8 @@ function displayAllRewards(rewards) {
     const container = document.getElementById('allRewardsList');
     if (!container) return;
     
+    rewards = rewards.filter(reward => !isProductItem(reward));
+
     if (!rewards || rewards.length === 0) {
         container.innerHTML = '<div class="empty-state">لا توجد مكافآت متاحة</div>';
         return;
@@ -1734,23 +1761,23 @@ function showRewards() {
 function showShop() {
     hideAllPages();
     document.getElementById('rewardsPage').classList.remove('hidden');
-    loadProducts();
     switchShopTab('products');
     updateActiveNav(3);
 }
 
-function switchShopTab(tab) {
+function switchShopTab(tab, button) {
     // Update tab buttons
-    document.querySelectorAll('.shop-tab').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event?.target.closest('.shop-tab')?.classList.add('active');
-    
+    document.querySelectorAll('.shop-tab').forEach(btn => btn.classList.remove('active'));
+    if (button) {
+        button.classList.add('active');
+    } else {
+        const matchingTab = document.querySelector(`.shop-tab[data-tab="${tab}"]`);
+        matchingTab?.classList.add('active');
+    }
+
     // Update tab content
-    document.querySelectorAll('.shop-tab-content').forEach(content => {
-        content.classList.remove('active');
-    });
-    
+    document.querySelectorAll('.shop-tab-content').forEach(content => content.classList.remove('active'));
+
     if (tab === 'products') {
         document.getElementById('productsTabContent').classList.add('active');
         loadProducts();
