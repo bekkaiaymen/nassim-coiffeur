@@ -37,6 +37,11 @@ if (!fs.existsSync(uploadsDir)) {
 // Configure multer storage (use memory for Cloudinary)
 const useCloudinary = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY;
 
+console.log('📸 Cloudinary status:', useCloudinary ? '✅ Enabled' : '❌ Disabled (using local storage)');
+if (useCloudinary) {
+    console.log('☁️  Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME);
+}
+
 const storage = useCloudinary 
     ? multer.memoryStorage() // Store in memory for Cloudinary upload
     : multer.diskStorage({
