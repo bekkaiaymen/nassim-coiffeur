@@ -1,6 +1,6 @@
 // AI Stylist - Gemini AI Integration
 // Google Gemini API Configuration
-const GEMINI_API_KEY = 'AIzaSyAkqclwQhhgOBDqWa_mhQJRTmf0wRiMahE';
+const GEMINI_API_KEY = 'AIzaSyAr8dqYS4X-hDxOA-MV68QbU-rZUw2hEH4';
 const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
 
 // Hairstyle Database  
