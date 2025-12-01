@@ -1,3 +1,33 @@
+ai-stylist.js:542 ✨ AI Stylist Module Loaded - Nano Banana Integration Ready
+nassim.js:15 🚀 Nassim App initialized
+nassim.js:16 🔑 Token: exists
+nassim.js:90 📡 Loading customer profile...
+nassim.js:1642 ✅ PWA: Service Worker registered successfully
+nassim.js:1933 ✅ AI Floating Icon initialized
+nassim.js:1933 ✅ AI Floating Icon initialized
+nassim.js:100 ✅ Customer data loaded: {pendingPoints: 0, hasSeenFirstBookingOffer: false, hasSeenReturningCustomerOffer: false, _id: '692773d4afc65fe0f574403d', tenant: '69259331651b1babc1eb83dc', …}
+nassim.js:683 📡 [loadAppointments] Response status: 200
+nassim.js:685 📡 [loadAppointments] API response: {success: true, data: Array(16)}
+nassim.js:693 📡 [loadAppointments] Appointments array: (16) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+nassim.js:171 ✅ Loaded services for nassim: {success: true, count: 3, data: Array(3)}
+nassim.js:325 ✅ Loaded employees for nassim: {success: true, count: 2, data: Array(2)}
+nassim.js:1081 🔍 Checking first booking offer... {hasSeenFirstBookingOffer: false, customerId: '692773d4afc65fe0f574403d'}
+nassim:1 Failed to load service image: https://nassim-coiffeur.onrender.com/uploads/image-1764520060786-587276726.webp
+onerror @ nassim:1
+nassim.js:1090 📅 Appointments response: 200
+nassim.js:1093 📅 Appointments data: {success: true, data: Array(16)}
+nassim.js:390 ✅ Loaded posts for nassim: {success: true, data: Array(2)}
+nassim.js:513 ✅ Loaded rewards for nassim: {success: true, data: Array(4)}
+nassim.js:1220 🎁 Showing returning customer offer notification (50 points)
+nassim.js:1246 ✅ Returning customer offer notification added to DOM
+nassim.js:1252 ✅ Marked returning customer offer as seen
+nassim.js:1293  GET https://nassim-coiffeur.onrender.com/api/notifications 404 (Not Found)
+loadNotifications @ nassim.js:1293
+(anonymous) @ nassim.js:47
+nassim.js:1293  GET https://nassim-coiffeur.onrender.com/api/notifications 404 (Not Found)
+loadNotifications @ nassim.js:1293
+showNotifications @ nassim.js:1471
+onclick @ nassim:50
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -52,6 +82,12 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                         </svg>
                         <span class="notification-badge"></span>
+                    </button>
+                    <button class="header-icon-btn" onclick="showNotificationToast('تم تأكيد موعدك! 🎉', 'تم تأكيد موعد الحلاقة الكلاسيكية في 10:00 صباحاً')" title="اختبار الإشعار">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span style="position: absolute; top: -5px; right: -5px; background: #ff4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: flex; align-items: center; justify-content: center;">🧪</span>
                     </button>
                     <button class="header-icon-btn" onclick="document.getElementById('searchInput').focus()">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="22" height="22">

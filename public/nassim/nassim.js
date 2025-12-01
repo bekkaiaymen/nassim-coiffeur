@@ -9,6 +9,7 @@ let selectedTimeSlot = null;
 let availableServices = [];
 let availableEmployees = [];
 let selectedServices = []; // Array to track multiple selected services
+let lastAppointmentStatuses = {}; // Track appointment statuses to detect confirmations
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
@@ -693,6 +694,21 @@ async function loadAppointments() {
             appointments = data;
         }
         console.log('📡 [loadAppointments] Appointments array:', appointments);
+        
+        // Check for status changes (confirmed appointments)
+        appointments.forEach(apt => {
+            const previousStatus = lastAppointmentStatuses[apt._id];
+            if (previousStatus === 'pending' && apt.status === 'confirmed') {
+                // Appointment was just confirmed!
+                console.log('✅ Appointment confirmed:', apt._id);
+                showNotificationToast(
+                    'تم تأكيد موعدك! 🎉',
+                    `تم تأكيد موعد ${apt.service?.name || 'الحلاقة'} في ${formatTimeArabic(apt.time)}`
+                );
+            }
+            lastAppointmentStatuses[apt._id] = apt.status;
+        });
+        
         displayAppointments(appointments);
     } catch (error) {
         console.error('Error loading appointments:', error);
@@ -1235,10 +1251,11 @@ async function loadNotifications() {
     }
 }
 
-// Auto-refresh notifications every 30 seconds
+// Auto-refresh notifications and appointments every 30 seconds
 if (token) {
     setInterval(() => {
         loadNotifications();
+        loadAppointments(); // Also check for appointment status changes
     }, 30000); // Check every 30 seconds
 }
 
