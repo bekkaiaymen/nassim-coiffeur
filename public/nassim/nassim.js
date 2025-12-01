@@ -27,6 +27,18 @@ function formatProductCategory(category) {
     return PRODUCT_CATEGORY_LABELS[category] || category || '';
 }
 
+// Helper function to get headers with token
+function getAuthHeaders() {
+    const currentToken = localStorage.getItem('customerToken');
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    if (currentToken) {
+        headers['Authorization'] = `Bearer ${currentToken}`;
+    }
+    return headers;
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
     
@@ -2765,7 +2777,7 @@ function refreshTimelineView() {
 
 async function loadTimelineData(date) {
     try {
-        const response = await fetch(`/api/appointments?date=${date}`);
+        const response = await fetch(`/api/appointments/public?date=${date}`);
         if (!response.ok) throw new Error('فشل تحميل البيانات');
         
         const appointments = await response.json();
@@ -2901,7 +2913,7 @@ async function handleRatingPhoneLookup(event) {
     }
     
     try {
-        const response = await fetch(`/api/appointments?phone=${phone}&status=completed`);
+        const response = await fetch(`/api/appointments/public?phone=${phone}&status=completed`);
         if (!response.ok) throw new Error('فشل البحث');
         
         const result = await response.json();
@@ -3051,7 +3063,9 @@ async function handleCustomerRatingSubmit(event) {
     try {
         const response = await fetch(`/api/appointments/${selectedRatingAppointment._id}/customer-rating`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 rating: selectedRatingValue,
                 comment: comment || ''

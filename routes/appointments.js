@@ -368,6 +368,42 @@ router.use(protect);
 router.use(ensureTenant);
 
 // Get all appointments
+// Public route for customers to view appointments (no auth required)
+router.get('/public', async (req, res) => {
+    try {
+        const { date, status, phone } = req.query;
+        const tenantId = '69259331651b1babc1eb83dc'; // Nassim tenant ID
+        let query = { tenant: tenantId };
+
+        // Handle phone search
+        if (phone) {
+            query.customerPhone = phone;
+        }
+
+        // Handle date filter
+        if (date) {
+            const startDate = new Date(date);
+            const endDate = new Date(date);
+            endDate.setDate(endDate.getDate() + 1);
+            query.appointmentDate = { $gte: startDate, $lt: endDate };
+        }
+
+        // Handle status filter
+        if (status) {
+            query.status = status;
+        }
+
+        const appointments = await Appointment.find(query)
+            .select('-__v') // Exclude version field
+            .sort({ appointmentDate: 1 });
+
+        res.json({ success: true, count: appointments.length, data: appointments });
+    } catch (error) {
+        console.error('Public appointments error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 router.get('/', protect, ensureTenant, async (req, res) => {
     try {
         const { date, status, barber, filter, phone } = req.query;
