@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FDB714">
+    <title>✂️ Nassim Barber - الواجهات</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FDB714;
+            --primary-dark: #e6a612;
+            --secondary-color: #2C3E50;
+            --text-dark: #2C3E50;
+            --text-light: #7F8C8D;
+            --bg-white: #FFFFFF;
+            --shadow: 0 4px 16px rgba(0,0,0,0.1);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .title {
+            font-size: 3rem;
+            font-weight: 800;
+            color: white;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.9);
+            font-weight: 600;
+        }
+
+        .interfaces-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .interface-card {
+            background: var(--bg-white);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+        }
+
+        .interface-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-description {
+            color: var(--text-light);
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .card-badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 0.375rem 0.875rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 700;
+        }
+
+        .admin-section {
+            background: var(--bg-white);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            text-align: center;
+        }
+
+        .admin-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+        }
+
+        .admin-link {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: var(--secondary-color);
+            padding: 1rem 2.5rem;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 1.25rem;
+            font-weight: 800;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .admin-link:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+            }
+
+            .interfaces-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            body {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">✂️</div>
+            <h1 class="title">Nassim Barber</h1>
+            <p class="subtitle">اختر الواجهة المناسبة لك</p>
+        </div>
+
+        <div class="interfaces-grid">
+            <!-- Customer Timeline Interface -->
+            <a href="/nassim-customer/timeline.html" class="interface-card">
+                <span class="card-icon">📅</span>
+                <h2 class="card-title">الجدول الزمني</h2>
+                <p class="card-description">تصفح المواعيد المتاحة حسب الساعات واختر الوقت المناسب لك</p>
+                <span class="card-badge">للعملاء</span>
+            </a>
+
+            <!-- Customer Rating Interface -->
+            <a href="/nassim-customer/rating.html" class="interface-card">
+                <span class="card-icon">⭐</span>
+                <h2 class="card-title">تقييم الخدمة</h2>
+                <p class="card-description">قيّم تجربتك معنا وشاركنا رأيك لتحسين خدماتنا</p>
+                <span class="card-badge">للعملاء</span>
+            </a>
+
+            <!-- Employee Interface -->
+            <a href="/nassim-employee/" class="interface-card">
+                <span class="card-icon">👨‍💼</span>
+                <h2 class="card-title">لوحة الموظفين</h2>
+                <p class="card-description">إضافة عملاء جدد بسرعة وتقييم أداء العملاء</p>
+                <span class="card-badge">للموظفين</span>
+            </a>
+
+            <!-- Customer Portal -->
+            <a href="/nassim" class="interface-card">
+                <span class="card-icon">🏠</span>
+                <h2 class="card-title">بوابة العملاء</h2>
+                <p class="card-description">احجز موعدك، تابع حجوزاتك، واستعرض خدماتنا</p>
+                <span class="card-badge">للعملاء</span>
+            </a>
+        </div>
+
+        <div class="admin-section">
+            <h3 class="admin-title">🔐 لوحة التحكم الرئيسية</h3>
+            <a href="/nassim-owner" class="admin-link">
+                دخول لوحة المالك
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>© 2025 Nassim Barber - جميع الحقوق محفوظة</p>
+        </div>
+    </div>
+</body>
+</html>
