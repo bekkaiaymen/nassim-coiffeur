@@ -236,6 +236,8 @@ body {
     -moz-osx-font-smoothing: grayscale;
     position: relative;
     padding-top: 82px; /* Account for fixed header */
+    padding-bottom: 80px; /* Account for bottom nav */
+    min-height: 100vh;
 }
 
 /* Background Pattern with Image - Luxury Dark */
@@ -581,10 +583,10 @@ body::after {
 
 /* 📱 Main Content */
 .main-content {
-    padding: 12px 20px 100px;
+    padding: 12px 20px;
     position: relative;
     z-index: 1;
-    min-height: calc(100vh - 82px - 100px);
+    min-height: calc(100vh - 162px); /* 100vh - header(82px) - bottom_nav(80px) */
 }
 
 .section-header {
@@ -4433,6 +4435,7 @@ html {
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
