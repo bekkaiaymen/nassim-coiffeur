@@ -1915,9 +1915,9 @@ if ('serviceWorker' in navigator) {
             
             // Handle messages from service worker
             navigator.serviceWorker.addEventListener('message', event => {
-                if (event.data.type === 'GET_TOKEN') {
+                if (event.data.type === 'GET_TOKEN' && event.ports && event.ports[0]) {
                     event.ports[0].postMessage(token);
-                } else if (event.data.type === 'GET_CUSTOMER_ID') {
+                } else if (event.data.type === 'GET_CUSTOMER_ID' && event.ports && event.ports[0]) {
                     event.ports[0].postMessage(customerData?._id);
                 }
             });

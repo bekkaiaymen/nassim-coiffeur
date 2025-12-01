@@ -7,7 +7,7 @@ const urlsToCache = [
     '/nassim/index.html',
     '/nassim/nassim.css',
     '/nassim/nassim.js',
-    '/favicon.svg',
+    '/nassim/favicon.svg',
     '/nassim/logo.jpg'
 ];
 
@@ -46,7 +46,7 @@ self.addEventListener('fetch', event => {
 
     // Serve favicon.ico from our SVG asset to avoid 404s
     if (request.url.endsWith('/favicon.ico')) {
-        const svgRequest = new Request('/favicon.svg', { cache: 'reload' });
+        const svgRequest = new Request('/nassim/favicon.svg', { cache: 'reload' });
 
         event.respondWith(
             caches.match(svgRequest).then(cached => {
@@ -88,7 +88,6 @@ self.addEventListener('fetch', event => {
 
 // Push Notification Handler
 self.addEventListener('push', event => {
-    console.log('🔔 Push notification received:', event);
     
     let notificationData = {
         title: 'Nassim Coiffeur',
@@ -147,8 +146,6 @@ self.addEventListener('push', event => {
 
 // Notification Click Handler
 self.addEventListener('notificationclick', event => {
-    console.log('🖱️ Notification clicked:', event);
-    
     event.notification.close();
     
     if (event.action === 'open' || !event.action) {
@@ -172,8 +169,6 @@ self.addEventListener('notificationclick', event => {
 
 // Background Sync for Notifications Check
 self.addEventListener('sync', event => {
-    console.log('🔄 Background sync:', event.tag);
-    
     if (event.tag === 'check-notifications') {
         event.waitUntil(checkForNewNotifications());
     }
@@ -184,7 +179,6 @@ async function checkForNewNotifications() {
     try {
         const token = await getTokenFromStorage();
         if (!token) {
-            console.log('⚠️ No token available for background sync');
             return;
         }
         
@@ -192,26 +186,20 @@ async function checkForNewNotifications() {
         const customerId = await getCustomerIdFromStorage();
         
         if (!customerId) {
-            console.log('⚠️ No customer ID available for background sync');
             return;
         }
-        
-        console.log('🔄 Checking for new notifications...');
         
         const response = await fetch(`${API_URL}/notifications/customer/${customerId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (!response.ok) {
-            console.log('⚠️ Notifications API returned:', response.status);
             return;
         }
         
         const data = await response.json();
         if (data.success && data.data) {
             const unreadNotifications = data.data.filter(n => !n.read);
-            
-            console.log('📬 Found', unreadNotifications.length, 'unread notifications');
             
             // Show notification for each unread (up to 3)
             const toShow = unreadNotifications.slice(0, 3);
@@ -233,7 +221,6 @@ async function checkForNewNotifications() {
                         { action: 'close', title: 'إغلاق' }
                     ]
                 });
-                console.log('✅ Showed notification:', notif.title);
             }
         }
     } catch (error) {
@@ -272,7 +259,6 @@ async function getCustomerIdFromStorage() {
 
 // Periodic Background Sync (if supported)
 self.addEventListener('periodicsync', event => {
-    console.log('⏰ Periodic sync:', event.tag);
     
     if (event.tag === 'check-notifications-periodic') {
         event.waitUntil(checkForNewNotifications());
