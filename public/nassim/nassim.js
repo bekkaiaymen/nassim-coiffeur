@@ -2728,3 +2728,364 @@ function scrollAIChatToBottom() {
         }, 100);
     }
 }
+
+// ==================== Timeline Page Functions ====================
+
+let currentTimelineDate = null;
+let currentRatingAppointments = [];
+let selectedRatingAppointment = null;
+let selectedRatingValue = 0;
+
+function showTimeline() {
+    const timelinePage = document.getElementById('timelinePage');
+    const homePage = document.getElementById('homePage');
+    
+    timelinePage.style.display = 'block';
+    homePage.style.display = 'none';
+    
+    // Initialize with today's date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('timelineDate').value = today;
+    document.getElementById('timelineDate').max = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    loadTimelineData(today);
+}
+
+function closeTimeline() {
+    document.getElementById('timelinePage').style.display = 'none';
+    document.getElementById('homePage').style.display = 'block';
+}
+
+function refreshTimelineView() {
+    const date = document.getElementById('timelineDate').value;
+    if (date) {
+        loadTimelineData(date);
+    }
+}
+
+async function loadTimelineData(date) {
+    try {
+        const response = await fetch(`/api/appointments?date=${date}`);
+        if (!response.ok) throw new Error('فشل تحميل البيانات');
+        
+        const appointments = await response.json();
+        renderTimelineGrid(date, appointments.data || appointments);
+        renderTimelineSummary(appointments.data || appointments);
+    } catch (error) {
+        console.error('Error loading timeline:', error);
+        showToast('حدث خطأ أثناء تحميل البيانات', 'error');
+    }
+}
+
+function renderTimelineGrid(date, appointments) {
+    const grid = document.getElementById('timelineGridView');
+    grid.innerHTML = '';
+    
+    // Generate time slots (9 AM to 9 PM, every 30 minutes)
+    const slots = [];
+    for (let hour = 9; hour < 21; hour++) {
+        for (let minute = 0; minute < 60; minute += 30) {
+            const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+            slots.push({ time, appointments: [] });
+        }
+    }
+    
+    // Map appointments to slots
+    appointments.forEach(apt => {
+        const aptTime = new Date(apt.appointmentDate || apt.date).toLocaleTimeString('en-GB', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        const slot = slots.find(s => s.time === aptTime);
+        if (slot) {
+            slot.appointments.push(apt);
+        }
+    });
+    
+    // Render slots
+    slots.forEach(slot => {
+        const slotEl = document.createElement('div');
+        
+        let statusClass = 'available';
+        let statusText = 'متاح للحجز';
+        let details = '';
+        
+        if (slot.appointments.length > 0) {
+            const bookedCount = slot.appointments.length;
+            const confirmedCount = slot.appointments.filter(a => a.status === 'confirmed').length;
+            
+            if (confirmedCount >= 3) {
+                statusClass = 'booked';
+                statusText = 'محجوز بالكامل';
+                details = `${bookedCount} موعد`;
+            } else if (bookedCount > 0) {
+                statusClass = 'partially';
+                statusText = 'متاح جزئياً';
+                details = `${bookedCount} موعد`;
+            }
+        }
+        
+        slotEl.className = `timeline-slot ${statusClass}`;
+        slotEl.innerHTML = `
+            <div class="slot-time">${slot.time}</div>
+            <div class="slot-status">${statusText}</div>
+            ${details ? `<div class="slot-details">${details}</div>` : ''}
+        `;
+        
+        if (statusClass !== 'booked') {
+            slotEl.onclick = () => {
+                openBookingModal();
+                closeTimeline();
+            };
+        }
+        
+        grid.appendChild(slotEl);
+    });
+}
+
+function renderTimelineSummary(appointments) {
+    const summaryEl = document.getElementById('timelineSummaryCards');
+    
+    const total = appointments.length;
+    const confirmed = appointments.filter(a => a.status === 'confirmed').length;
+    const pending = appointments.filter(a => a.status === 'pending').length;
+    const completed = appointments.filter(a => a.status === 'completed').length;
+    
+    summaryEl.innerHTML = `
+        <div class="summary-card">
+            <div class="summary-value">${total}</div>
+            <div class="summary-label">إجمالي المواعيد</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value">${confirmed}</div>
+            <div class="summary-label">محجوز</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value">${pending}</div>
+            <div class="summary-label">قيد الانتظار</div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-value">${completed}</div>
+            <div class="summary-label">مكتمل</div>
+        </div>
+    `;
+}
+
+// ==================== Rating Page Functions ====================
+
+function showRating() {
+    const ratingPage = document.getElementById('ratingPage');
+    const homePage = document.getElementById('homePage');
+    
+    ratingPage.style.display = 'block';
+    homePage.style.display = 'none';
+    
+    // Reset to lookup section
+    resetRatingForm();
+}
+
+function closeRating() {
+    document.getElementById('ratingPage').style.display = 'none';
+    document.getElementById('homePage').style.display = 'block';
+}
+
+async function handleRatingPhoneLookup(event) {
+    event.preventDefault();
+    
+    const phone = document.getElementById('ratingPhoneNumber').value.trim();
+    
+    if (!phone || phone.length !== 10) {
+        showToast('الرجاء إدخال رقم هاتف صحيح (10 أرقام)', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/appointments?phone=${phone}&status=completed`);
+        if (!response.ok) throw new Error('فشل البحث');
+        
+        const result = await response.json();
+        const appointments = result.data || result;
+        
+        if (appointments.length === 0) {
+            showToast('لا توجد مواعيد مكتملة لهذا الرقم', 'error');
+            return;
+        }
+        
+        currentRatingAppointments = appointments;
+        showRatingAppointmentsList();
+    } catch (error) {
+        console.error('Error looking up appointments:', error);
+        showToast('حدث خطأ أثناء البحث', 'error');
+    }
+}
+
+function showRatingAppointmentsList() {
+    document.getElementById('ratingLookupSection').style.display = 'none';
+    document.getElementById('ratingAppointmentsSection').style.display = 'block';
+    
+    const listEl = document.getElementById('ratingAppointmentsList');
+    listEl.innerHTML = '';
+    
+    currentRatingAppointments.forEach(apt => {
+        const aptEl = document.createElement('div');
+        aptEl.className = 'appointment-item';
+        
+        const date = new Date(apt.appointmentDate || apt.date);
+        const dateStr = date.toLocaleDateString('ar-SA');
+        const timeStr = date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+        
+        const hasRating = apt.customerRating && apt.customerRating.rating;
+        
+        aptEl.innerHTML = `
+            <div class="appointment-info">
+                <div>
+                    <div class="info-label">التاريخ</div>
+                    <div class="info-value">${dateStr}</div>
+                </div>
+                <div>
+                    <div class="info-label">الوقت</div>
+                    <div class="info-value">${timeStr}</div>
+                </div>
+                <div>
+                    <div class="info-label">اسم العميل</div>
+                    <div class="info-value">${apt.customerName}</div>
+                </div>
+                <div>
+                    <div class="info-label">الحالة</div>
+                    <div class="info-value" style="color: ${hasRating ? 'var(--success)' : 'var(--warning)'}">
+                        ${hasRating ? '✓ تم التقييم' : 'لم يتم التقييم'}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        if (!hasRating) {
+            aptEl.onclick = () => selectRatingAppointment(apt);
+        } else {
+            aptEl.style.opacity = '0.6';
+            aptEl.style.cursor = 'not-allowed';
+        }
+        
+        listEl.appendChild(aptEl);
+    });
+}
+
+function selectRatingAppointment(appointment) {
+    selectedRatingAppointment = appointment;
+    showRatingFormSection();
+}
+
+function showRatingFormSection() {
+    document.getElementById('ratingAppointmentsSection').style.display = 'none';
+    document.getElementById('ratingFormSection').style.display = 'block';
+    
+    const detailsEl = document.getElementById('ratingSelectedAppointmentDetails');
+    const date = new Date(selectedRatingAppointment.appointmentDate || selectedRatingAppointment.date);
+    const dateStr = date.toLocaleDateString('ar-SA');
+    const timeStr = date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+    
+    detailsEl.innerHTML = `
+        <h4 style="margin-bottom: 15px; color: var(--text-primary);">تفاصيل الموعد</h4>
+        <div class="appointment-info">
+            <div>
+                <div class="info-label">الاسم</div>
+                <div class="info-value">${selectedRatingAppointment.customerName}</div>
+            </div>
+            <div>
+                <div class="info-label">التاريخ</div>
+                <div class="info-value">${dateStr}</div>
+            </div>
+            <div>
+                <div class="info-label">الوقت</div>
+                <div class="info-value">${timeStr}</div>
+            </div>
+            <div>
+                <div class="info-label">الخدمة</div>
+                <div class="info-value">${selectedRatingAppointment.serviceType || '-'}</div>
+            </div>
+        </div>
+    `;
+    
+    // Reset rating
+    selectedRatingValue = 0;
+    document.getElementById('ratingValueInput').value = '';
+    document.getElementById('ratingComment').value = '';
+    document.querySelectorAll('#ratingStarsContainer .star').forEach(s => s.classList.remove('active'));
+    document.getElementById('ratingTextDisplay').textContent = 'اختر التقييم';
+}
+
+function selectRatingStar(rating) {
+    selectedRatingValue = rating;
+    document.getElementById('ratingValueInput').value = rating;
+    
+    const stars = document.querySelectorAll('#ratingStarsContainer .star');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.add('active');
+        } else {
+            star.classList.remove('active');
+        }
+    });
+    
+    const texts = {
+        1: 'سيء جداً 😞',
+        2: 'سيء 😕',
+        3: 'متوسط 😐',
+        4: 'جيد 😊',
+        5: 'ممتاز 😍'
+    };
+    document.getElementById('ratingTextDisplay').textContent = texts[rating];
+}
+
+async function handleCustomerRatingSubmit(event) {
+    event.preventDefault();
+    
+    if (selectedRatingValue === 0) {
+        showToast('الرجاء اختيار التقييم', 'error');
+        return;
+    }
+    
+    const comment = document.getElementById('ratingComment').value.trim();
+    
+    try {
+        const response = await fetch(`/api/appointments/${selectedRatingAppointment._id}/customer-rating`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                rating: selectedRatingValue,
+                comment: comment || ''
+            })
+        });
+        
+        if (!response.ok) throw new Error('فشل إرسال التقييم');
+        
+        document.getElementById('ratingFormSection').style.display = 'none';
+        document.getElementById('ratingSuccessSection').style.display = 'block';
+    } catch (error) {
+        console.error('Error submitting rating:', error);
+        showToast('حدث خطأ أثناء إرسال التقييم', 'error');
+    }
+}
+
+function backToRatingLookup() {
+    document.getElementById('ratingAppointmentsSection').style.display = 'none';
+    document.getElementById('ratingLookupSection').style.display = 'block';
+}
+
+function backToRatingAppointments() {
+    document.getElementById('ratingFormSection').style.display = 'none';
+    document.getElementById('ratingAppointmentsSection').style.display = 'block';
+}
+
+function resetRatingForm() {
+    document.getElementById('ratingLookupSection').style.display = 'block';
+    document.getElementById('ratingAppointmentsSection').style.display = 'none';
+    document.getElementById('ratingFormSection').style.display = 'none';
+    document.getElementById('ratingSuccessSection').style.display = 'none';
+    
+    document.getElementById('ratingPhoneNumber').value = '';
+    currentRatingAppointments = [];
+    selectedRatingAppointment = null;
+    selectedRatingValue = 0;
+}
