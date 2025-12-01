@@ -235,8 +235,6 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
-    padding-top: 130px; /* Header height (90px approx) + search box */
-    padding-bottom: 90px; /* Bottom nav height */
     min-height: 100vh;
 }
 
@@ -275,7 +273,7 @@ body::after {
 /* ✨ Ultra Modern Header - Fixed at Top */
 .header {
     background: rgba(14, 14, 15, 0.95);
-    padding: 16px 20px;
+    padding: 12px 20px;
     border-bottom: 1px solid rgba(203, 163, 92, 0.15);
     position: fixed;
     top: 0;
@@ -284,6 +282,7 @@ body::after {
     z-index: 1000;
     backdrop-filter: blur(20px) saturate(180%);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+    height: 140px; /* Fixed header height */
 }
 
 .header-content {
@@ -583,10 +582,12 @@ body::after {
 
 /* 📱 Main Content */
 .main-content {
-    padding: 0 20px 20px;
+    padding: 16px 20px 20px;
     position: relative;
     z-index: 1;
-    min-height: calc(100vh - 162px); /* 100vh - header(82px) - bottom_nav(80px) */
+    margin-top: 140px; /* Exact header height */
+    margin-bottom: 90px; /* Bottom nav space */
+    min-height: calc(100vh - 230px); /* 100vh - header(140px) - bottom_nav(90px) */
 }
 
 .section-header {
@@ -1287,6 +1288,7 @@ body::after {
     box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
     z-index: 100;
     border-top: 1px solid rgba(203, 163, 92, 0.1);
+    height: 90px; /* Fixed bottom nav height */
 }
 
 .nav-item {
