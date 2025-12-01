@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Don't show automatic booking offers
     // checkFirstBookingOffer(); // Disabled
+    // checkReturningCustomerOffer(); // Disabled
     
     // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
@@ -1073,59 +1074,11 @@ async function submitBooking(e) {
     }
 }
 
-// Check First Booking Offer
+// Check First Booking Offer - DISABLED (Offers only shown when owner confirms)
 async function checkFirstBookingOffer() {
-    if (!customerData) {
-        console.log('⚠️ checkFirstBookingOffer: No customerData');
-        return;
-    }
-    console.log('🔍 Checking first booking offer...', {
-        hasSeenFirstBookingOffer: customerData.hasSeenFirstBookingOffer,
-        customerId: customerData._id
-    });
-    // Always check appointments to determine correct offer
-    try {
-        const response = await fetch(`${API_URL}/appointments/customer`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        console.log('📅 Appointments response:', response.status);
-        if (response.ok) {
-            const data = await response.json();
-            console.log('📅 Appointments data:', data);
-            // Defensive: data.data for new API, data for legacy
-            const appointments = Array.isArray(data.data) ? data.data : data;
-            if (appointments && appointments.length === 0) {
-                // No appointments yet - NEW CUSTOMER: Show 100 points offer
-                if (customerData.hasSeenFirstBookingOffer) {
-                    customerData.hasSeenFirstBookingOffer = false;
-                    localStorage.setItem('customerData', JSON.stringify(customerData));
-                }
-                setTimeout(() => {
-                    showFirstBookingOfferNotification();
-                }, 4000);
-            } else {
-                // Has appointments - RETURNING CUSTOMER: Always show 50 points offer
-                setTimeout(() => {
-                    showReturningCustomerOfferNotification();
-                }, 4000);
-            }
-        } else {
-            console.log('⚠️ Failed to fetch appointments:', response.status);
-            // If we can't check appointments, only show first booking offer if not seen
-            if (!customerData.hasSeenFirstBookingOffer) {
-                setTimeout(() => {
-                    showFirstBookingOfferNotification();
-                }, 4000);
-            }
-        }
-    } catch (error) {
-        console.error('❌ Error checking appointments:', error);
-        if (!customerData.hasSeenFirstBookingOffer) {
-            setTimeout(() => {
-                showFirstBookingOfferNotification();
-            }, 4000);
-        }
-    }
+    // This function is disabled. Notifications only appear when owner confirms appointments.
+    console.log('ℹ️ checkFirstBookingOffer: Disabled - Offers only shown on owner confirmation');
+    return;
 }
 
 // Show First Booking Offer Notification
@@ -1216,48 +1169,11 @@ async function checkReturningCustomerOffer() {
     }
 }
 
-// Show Returning Customer Offer Notification (50 points)
+// Show Returning Customer Offer Notification - DISABLED
 function showReturningCustomerOfferNotification() {
-    console.log('🎁 Showing returning customer offer notification (50 points)');
-    
-    // Check if notification already exists
-    const existing = document.querySelector('.returning-customer-offer');
-    if (existing) {
-        console.log('ℹ️ Notification already exists');
-        return;
-    }
-    
-    const notification = document.createElement('div');
-    notification.className = 'returning-customer-offer';
-    notification.innerHTML = `
-        <div class="offer-content">
-            <div class="offer-icon">🎉</div>
-            <div class="offer-text">
-                <h3>احصل على 50 نقطة مجاناً!</h3>
-                <p>قم بالحجز لموعدك واحصل على 50 نقطة (ما يعادل 50 دينار جزائري)</p>
-            </div>
-            <button class="offer-close" onclick="this.parentElement.parentElement.remove()">×</button>
-        </div>
-        <button class="offer-action" onclick="openBookingModal(); this.parentElement.remove();">
-            احجز الآن
-        </button>
-    `;
-    
-    document.body.appendChild(notification);
-    console.log('✅ Returning customer offer notification added to DOM');
-    
-    // Mark as seen
-    if (customerData) {
-        customerData.hasSeenReturningCustomerOffer = true;
-        localStorage.setItem('customerData', JSON.stringify(customerData));
-        console.log('✅ Marked returning customer offer as seen');
-    }
-    
-    // Auto remove after 30 seconds
-    setTimeout(() => {
-        if (notification.parentElement) {
-            notification.remove();
-        }
+    // This function is disabled. Notifications only appear when owner confirms appointments.
+    console.log('ℹ️ showReturningCustomerOfferNotification: Disabled - Offers only shown on owner confirmation');
+    return;
     }, 30000);
 }
 
