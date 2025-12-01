@@ -13,8 +13,9 @@ let lastAppointmentStatuses = {}; // Track appointment statuses to detect confir
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('🚀 Nassim App initialized');
-    console.log('🔑 Token:', token ? 'exists' : 'missing');
+    console.log('%c🚀 Nassim Coiffeur Portal', 'color: #CBA35C; font-size: 20px; font-weight: bold;');
+    console.log('%c✨ Notification System Active', 'color: #4CAF50; font-size: 14px;');
+    console.log('🔑 Authentication:', token ? '✅ Logged In' : '⚠️ Guest Mode');
     
     // Hide splash screen and show main page after 3.5 seconds
     setTimeout(() => {
@@ -695,17 +696,34 @@ async function loadAppointments() {
         }
         console.log('📡 [loadAppointments] Appointments array:', appointments);
         
-        // Check for status changes (confirmed appointments)
+        // Check for status changes (confirmed/cancelled appointments)
         appointments.forEach(apt => {
             const previousStatus = lastAppointmentStatuses[apt._id];
+            
+            // Appointment confirmed
             if (previousStatus === 'pending' && apt.status === 'confirmed') {
-                // Appointment was just confirmed!
                 console.log('✅ Appointment confirmed:', apt._id);
+                const timeFormatted = formatTimeArabic(apt.time);
+                const dateFormatted = formatDate(apt.date);
                 showNotificationToast(
-                    'تم تأكيد موعدك! 🎉',
-                    `تم تأكيد موعد ${apt.service?.name || 'الحلاقة'} في ${formatTimeArabic(apt.time)}`
+                    '✨ تم تأكيد موعدك!',
+                    `موعد ${apt.service?.name || 'الحلاقة'} - ${timeFormatted} في ${dateFormatted}`
+                );
+                // Vibrate if supported
+                if (navigator.vibrate) {
+                    navigator.vibrate([200, 100, 200]);
+                }
+            }
+            
+            // Appointment cancelled by owner
+            if (previousStatus === 'confirmed' && apt.status === 'cancelled') {
+                console.log('❌ Appointment cancelled:', apt._id);
+                showNotificationToast(
+                    '⚠️ تم إلغاء موعدك',
+                    `عذراً، تم إلغاء موعد ${apt.service?.name || 'الحلاقة'}. يرجى التواصل معنا.`
                 );
             }
+            
             lastAppointmentStatuses[apt._id] = apt.status;
         });
         
@@ -1217,6 +1235,16 @@ function showPendingRewardNotification(points = 100) {
     }, 8000);
 }
 
+// Track shown notifications to avoid duplicates
+let shownNotificationIds = new Set();
+// Clear old notification IDs every 10 minutes to prevent memory leak
+setInterval(() => {
+    if (shownNotificationIds.size > 100) {
+        console.log('🧹 Clearing old notification IDs');
+        shownNotificationIds.clear();
+    }
+}, 600000); // 10 minutes
+
 // Load Notifications
 async function loadNotifications() {
     if (!token || !customerData || !customerData._id) return;
@@ -1228,7 +1256,7 @@ async function loadNotifications() {
         
         if (!response.ok) {
             if (response.status !== 404) {
-                console.log('Notifications endpoint not available yet');
+                console.log('⚠️ Notifications endpoint not available yet');
             }
             return;
         }
@@ -1236,18 +1264,23 @@ async function loadNotifications() {
         const data = await response.json();
         if (data.success && data.data) {
             displayNotifications(data.data);
-            updateNotificationBadge(data.data.filter(n => !n.read).length);
+            const unreadCount = data.data.filter(n => !n.read).length;
+            updateNotificationBadge(unreadCount);
             
-            // Check for new unread notifications and show toast
+            // Show toast only for NEW unread notifications (not shown before)
             const unreadNotifications = data.data.filter(n => !n.read);
             if (unreadNotifications.length > 0) {
                 const latestNotif = unreadNotifications[0];
-                // Show toast for the latest notification
-                showNotificationToast(latestNotif.title, latestNotif.message);
+                // Only show if not already shown
+                if (!shownNotificationIds.has(latestNotif._id)) {
+                    console.log('🔔 New notification:', latestNotif.title);
+                    showNotificationToast(latestNotif.title, latestNotif.message);
+                    shownNotificationIds.add(latestNotif._id);
+                }
             }
         }
     } catch (error) {
-        console.error('Error loading notifications:', error);
+        console.error('❌ Error loading notifications:', error);
     }
 }
 
@@ -1305,8 +1338,13 @@ function updateNotificationBadge(count) {
     const badge = document.querySelector('.notification-badge');
     if (badge) {
         if (count > 0) {
-            badge.textContent = count > 9 ? '9+' : count;
+            badge.textContent = count > 99 ? '99+' : count;
             badge.style.display = 'flex';
+            // Pulse animation for new notifications
+            badge.style.animation = 'pulse 0.6s ease-out';
+            setTimeout(() => {
+                badge.style.animation = '';
+            }, 600);
         } else {
             badge.style.display = 'none';
         }
@@ -1315,10 +1353,21 @@ function updateNotificationBadge(count) {
 
 // Show Notification Toast
 function showNotificationToast(title, message) {
-    // Check if toast already exists
+    // Remove existing toast if any
     const existingToast = document.querySelector('.notification-toast');
-    if (existingToast) return;
+    if (existingToast) {
+        existingToast.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => existingToast.remove(), 300);
+        // Wait for animation to complete before showing new toast
+        setTimeout(() => createToast(title, message), 400);
+        return;
+    }
     
+    createToast(title, message);
+}
+
+// Create Toast Element
+function createToast(title, message) {
     const toast = document.createElement('div');
     toast.className = 'notification-toast';
     toast.innerHTML = `
@@ -1327,25 +1376,65 @@ function showNotificationToast(title, message) {
             <h4>${title}</h4>
             <p>${message}</p>
         </div>
-        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+        <button class="toast-close" onclick="dismissToast(this.parentElement)">×</button>
+        <div class="toast-progress"></div>
     `;
     
     document.body.appendChild(toast);
     
-    // Play notification sound (optional)
-    try {
-        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLVgh0FG2m98NuaQAoUXrTp66hVFApGn+DyvmwhBSt///8=');
-        audio.volume = 0.3;
-        audio.play().catch(() => {});
-    } catch (e) {}
+    // Trigger reflow for animation
+    toast.offsetHeight;
     
-    // Auto remove after 5 seconds
+    // Play notification sound if enabled
+    const soundEnabled = localStorage.getItem('notificationSound') !== 'false';
+    if (soundEnabled) {
+        playNotificationSound();
+    }
+    
+    // Start progress bar animation
+    const progressBar = toast.querySelector('.toast-progress');
+    progressBar.style.animation = 'toast-progress 5s linear forwards';
+    
+    // Auto dismiss after 5 seconds
+    const dismissTimeout = setTimeout(() => {
+        dismissToast(toast);
+    }, 5000);
+    
+    // Cancel auto-dismiss on hover
+    toast.addEventListener('mouseenter', () => {
+        clearTimeout(dismissTimeout);
+        progressBar.style.animationPlayState = 'paused';
+    });
+    
+    // Resume auto-dismiss on mouse leave
+    toast.addEventListener('mouseleave', () => {
+        progressBar.style.animationPlayState = 'running';
+        setTimeout(() => dismissToast(toast), 1000);
+    });
+}
+
+// Dismiss Toast with Animation
+function dismissToast(toast) {
+    if (!toast || !toast.parentElement) return;
+    
+    toast.style.animation = 'slideOutRight 0.3s ease';
     setTimeout(() => {
         if (toast.parentElement) {
-            toast.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
+            toast.remove();
         }
-    }, 5000);
+    }, 300);
+}
+
+// Play Notification Sound
+function playNotificationSound() {
+    try {
+        // Professional notification sound
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLVgh0FG2m98NuaQAoUXrTp66hVFApGn+DyvmwhBSt///8=');
+        audio.volume = 0.25;
+        audio.play().catch(() => {});
+    } catch (e) {
+        console.log('Notification sound disabled');
+    }
 }
 
 // Update Profile

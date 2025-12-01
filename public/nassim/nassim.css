@@ -370,19 +370,34 @@ body::after {
 
 .notification-badge {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 10px;
-    height: 10px;
-    background: var(--error);
-    border-radius: 50%;
-    border: 2px solid white;
+    top: 5px;
+    right: 5px;
+    min-width: 18px;
+    height: 18px;
+    background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+    border-radius: 10px;
+    border: 2px solid var(--bg);
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    box-shadow: 0 2px 8px rgba(255, 68, 68, 0.4);
     animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.1); opacity: 0.8; }
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 1; 
+    }
+    50% { 
+        transform: scale(1.15); 
+        opacity: 0.85; 
+        box-shadow: 0 4px 12px rgba(255, 68, 68, 0.6);
+    }
 }
 
 /* 🔍 Modern Search Box */
@@ -2390,27 +2405,40 @@ textarea {
     position: fixed;
     top: 80px;
     right: 20px;
-    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    border-radius: 12px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(203, 163, 92, 0.3);
     z-index: 10000;
-    animation: slideInRight 0.4s ease-out;
-    border: 2px solid var(--primary);
-    border-right: 4px solid var(--primary);
-    max-width: 400px;
+    animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border: 1px solid rgba(203, 163, 92, 0.4);
+    border-left: 4px solid var(--primary);
+    max-width: 420px;
+    min-width: 320px;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 16px;
+    gap: 14px;
+    padding: 16px 18px;
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+    position: relative;
+    transition: transform 0.2s ease;
+}
+
+.notification-toast:hover {
+    transform: translateX(-5px);
+    box-shadow: 0 16px 56px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(203, 163, 92, 0.5);
 }
 
 @keyframes slideInRight {
-    from {
-        transform: translateX(400px);
+    0% {
+        transform: translateX(450px) scale(0.8);
         opacity: 0;
     }
-    to {
-        transform: translateX(0);
+    50% {
+        transform: translateX(-10px) scale(1.02);
+    }
+    100% {
+        transform: translateX(0) scale(1);
         opacity: 1;
     }
 }
@@ -2473,16 +2501,52 @@ textarea {
 }
 
 .toast-close:hover {
-    background: var(--surface-light);
-    color: var(--text-primary);
-    transform: rotate(90deg);
+    background: rgba(203, 163, 92, 0.2);
+    color: var(--primary);
+    transform: rotate(90deg) scale(1.1);
+}
+
+/* Toast Progress Bar */
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary) 0%, #ffd700 100%);
+    width: 100%;
+    transform-origin: left;
+    border-radius: 0 0 12px 12px;
+}
+
+@keyframes toast-progress {
+    from {
+        transform: scaleX(1);
+    }
+    to {
+        transform: scaleX(0);
+    }
 }
 
 @media (max-width: 768px) {
     .notification-toast {
-        right: 10px;
-        left: 10px;
+        top: 70px;
+        right: 12px;
+        left: 12px;
         max-width: none;
+        min-width: auto;
+        padding: 14px 16px;
+    }
+    
+    .toast-content h4 {
+        font-size: 14px;
+    }
+    
+    .toast-content p {
+        font-size: 12px;
+    }
+    
+    .toast-icon {
+        font-size: 28px;
     }
 }
 

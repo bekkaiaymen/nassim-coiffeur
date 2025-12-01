@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار نظام الإشعارات - Nassim Coiffeur</title>
+    <link rel="stylesheet" href="nassim.css">
+    <style>
+        body {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: var(--surface);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(203, 163, 92, 0.2);
+        }
+        .test-button {
+            background: linear-gradient(135deg, var(--primary) 0%, #daa520 100%);
+            color: var(--bg);
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 8px;
+            transition: all 0.3s ease;
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(203, 163, 92, 0.4);
+        }
+        .test-button.danger {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+        }
+        .test-button.success {
+            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+        }
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+        .info-box {
+            background: rgba(203, 163, 92, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border-left: 4px solid var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <h1>🔔 اختبار نظام الإشعارات</h1>
+
+    <div class="test-section">
+        <h2>📌 الإشعارات الأساسية</h2>
+        <button class="test-button success" onclick="testConfirmation()">
+            ✅ تأكيد موعد
+        </button>
+        <button class="test-button danger" onclick="testCancellation()">
+            ❌ إلغاء موعد
+        </button>
+        <button class="test-button" onclick="testReminder()">
+            ⏰ تذكير بموعد
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h2>🎨 أنواع مختلفة</h2>
+        <button class="test-button" onclick="testPromotion()">
+            🎉 عرض ترويجي
+        </button>
+        <button class="test-button" onclick="testUpdate()">
+            ✨ تحديث جديد
+        </button>
+        <button class="test-button" onclick="testLongMessage()">
+            📝 رسالة طويلة
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h2>⚡ اختبارات متقدمة</h2>
+        <button class="test-button" onclick="testMultipleToasts()">
+            🔄 إشعارات متعددة
+        </button>
+        <button class="test-button" onclick="testWithVibration()">
+            📳 مع اهتزاز
+        </button>
+        <button class="test-button danger" onclick="clearAllToasts()">
+            🗑️ مسح جميع الإشعارات
+        </button>
+    </div>
+
+    <div class="info-box">
+        <strong>ℹ️ معلومات:</strong>
+        <ul style="margin: 10px 0 0 20px;">
+            <li>الإشعار يختفي تلقائياً بعد 5 ثواني</li>
+            <li>مرر الماوس فوق الإشعار لإيقاف المؤقت</li>
+            <li>انقر على × لإغلاق الإشعار فوراً</li>
+            <li>يتم استبدال الإشعار القديم بآخر جديد</li>
+        </ul>
+    </div>
+
+    <script src="nassim.js"></script>
+    <script>
+        // Test Functions
+        function testConfirmation() {
+            showNotificationToast(
+                '✨ تم تأكيد موعدك!',
+                'موعد الحلاقة الكلاسيكية - 10:00 صباحاً في 15 ديسمبر 2025'
+            );
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+            }
+        }
+
+        function testCancellation() {
+            showNotificationToast(
+                '⚠️ تم إلغاء موعدك',
+                'عذراً، تم إلغاء موعد الحلاقة الحديثة. يرجى التواصل معنا.'
+            );
+        }
+
+        function testReminder() {
+            showNotificationToast(
+                '⏰ تذكير بموعدك',
+                'موعدك مع الحلاق أحمد غداً في تمام الساعة 3:00 مساءً'
+            );
+        }
+
+        function testPromotion() {
+            showNotificationToast(
+                '🎉 عرض خاص!',
+                'احصل على 100 نقطة عند حجز موعدك القادم هذا الأسبوع'
+            );
+        }
+
+        function testUpdate() {
+            showNotificationToast(
+                '✨ تحديث جديد',
+                'تم إضافة خدمات جديدة لتلبية احتياجاتك'
+            );
+        }
+
+        function testLongMessage() {
+            showNotificationToast(
+                '📢 إعلان مهم',
+                'نحن سعداء بإعلامك أن محل Nassim Coiffeur سيقدم خدمات جديدة ومميزة خلال الأسبوع القادم. لا تفوت الفرصة!'
+            );
+        }
+
+        function testMultipleToasts() {
+            const messages = [
+                { title: '🎯 الأول', message: 'هذا هو الإشعار الأول' },
+                { title: '🎯 الثاني', message: 'هذا هو الإشعار الثاني' },
+                { title: '🎯 الثالث', message: 'هذا هو الإشعار الثالث' }
+            ];
+
+            messages.forEach((msg, index) => {
+                setTimeout(() => {
+                    showNotificationToast(msg.title, msg.message);
+                }, index * 1000);
+            });
+        }
+
+        function testWithVibration() {
+            showNotificationToast(
+                '📳 إشعار مع اهتزاز',
+                'يجب أن تشعر باهتزاز جهازك الآن'
+            );
+            if (navigator.vibrate) {
+                navigator.vibrate([100, 50, 100, 50, 100, 50, 200]);
+            } else {
+                console.log('الاهتزاز غير مدعوم في هذا المتصفح');
+            }
+        }
+
+        function clearAllToasts() {
+            const toasts = document.querySelectorAll('.notification-toast');
+            toasts.forEach(toast => {
+                dismissToast(toast);
+            });
+            if (toasts.length === 0) {
+                showNotificationToast('ℹ️ لا توجد إشعارات', 'لا توجد إشعارات نشطة لحذفها');
+            }
+        }
+
+        console.log('%c🧪 صفحة اختبار الإشعارات', 'color: #CBA35C; font-size: 18px; font-weight: bold;');
+        console.log('%c✅ جميع وظائف الاختبار جاهزة', 'color: #4CAF50; font-size: 14px;');
+    </script>
+</body>
+</html>
