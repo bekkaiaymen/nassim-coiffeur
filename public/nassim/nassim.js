@@ -207,14 +207,14 @@ function displayServices(services) {
     }
     
     container.innerHTML = services.map(service => {
-        // Check if image is valid (not a broken local upload path)
-        const hasValidImage = service.image && (service.image.startsWith('http') || service.image.startsWith('https'));
+        // Check if image is valid (Cloudinary or external URL)
+        const hasValidImage = service.image && (service.image.startsWith('http://') || service.image.startsWith('https://'));
         
         return `
         <div class="service-card">
             ${hasValidImage
                 ? `<div class="service-image" onclick="openImageLightbox('${service.image}', '${service.name}')" style="width: 80px; height: 100px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0; background: linear-gradient(to bottom, #1a1a1a, #2d2d2d); cursor: zoom-in; position: relative;">
-                    <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: contain;" onerror="this.parentElement.outerHTML='<div class=\\'service-icon\\'>${getServiceIcon(service.name)}</div>';">
+                    <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: contain;" onerror="console.log('Failed to load service image:', this.src); this.parentElement.outerHTML='<div class=\\'service-icon\\'>${getServiceIcon(service.name)}</div>';">
                     <div class="zoom-icon" style="position: absolute; top: 4px; right: 4px; background: rgba(203, 163, 92, 0.9); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; pointer-events: none;">🔍</div>
                    </div>` 
                 : `<div class="service-icon">${getServiceIcon(service.name)}</div>`
@@ -565,8 +565,10 @@ function displayAllProducts(products) {
     }
     
     container.innerHTML = products.map(product => {
-        const imageHtml = product.image 
-            ? `<img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
+        // Only show valid Cloudinary/external URLs
+        const hasValidImage = product.image && (product.image.startsWith('http://') || product.image.startsWith('https://'));
+        const imageHtml = hasValidImage
+            ? `<img src="${product.image}" alt="${product.name}" class="product-image" onerror="console.log('Failed to load product image:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">`
             : `<div class="product-image-placeholder">📦</div>`;
         
         const quantity = product.metadata?.stock;

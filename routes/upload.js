@@ -95,10 +95,11 @@ router.post('/image', auth, upload.single('image'), async (req, res) => {
                 },
                 (error, result) => {
                     if (error) {
-                        console.error('Cloudinary upload error:', error);
+                        console.error('❌ Cloudinary upload error:', error);
                         return res.status(500).json({ message: 'فشل رفع الصورة إلى السحابة' });
                     }
                     imageUrl = result.secure_url;
+                    console.log('✅ Image uploaded to Cloudinary:', imageUrl);
                     res.json({
                         message: 'تم رفع الصورة بنجاح',
                         imageUrl: imageUrl
