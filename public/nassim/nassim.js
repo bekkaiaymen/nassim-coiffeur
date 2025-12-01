@@ -13,9 +13,6 @@ let lastAppointmentStatuses = {}; // Track appointment statuses to detect confir
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('%c🚀 Nassim Coiffeur Portal', 'color: #CBA35C; font-size: 20px; font-weight: bold;');
-    console.log('%c✨ Notification System Active', 'color: #4CAF50; font-size: 14px;');
-    console.log('🔑 Authentication:', token ? '✅ Logged In' : '⚠️ Guest Mode');
     
     // Hide splash screen and show main page after 3.5 seconds
     setTimeout(() => {
@@ -94,8 +91,6 @@ function showGuestMode() {
 // Load Customer Profile
 async function loadCustomerProfile() {
     try {
-        console.log('📡 Loading customer profile...');
-        
         const response = await fetch(`${API_URL}/customers/public/profile`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -104,7 +99,6 @@ async function loadCustomerProfile() {
             const data = await response.json();
             if (data.success && data.data) {
                 customerData = data.data;
-                console.log('✅ Customer data loaded:', customerData);
                 localStorage.setItem('customerData', JSON.stringify(customerData));
                 updateUIWithCustomerData();
                 await loadAppointments();
@@ -174,8 +168,6 @@ async function loadServices() {
     try {
         const response = await fetch(`${API_URL}/services/public/by-business/${NASSIM_BUSINESS_ID}`);
         const data = await response.json();
-        
-        console.log('✅ Loaded services for nassim:', data);
         
         if (data.success && data.data) {
             availableServices = data.data;
@@ -328,8 +320,6 @@ async function loadEmployees() {
     try {
         const response = await fetch(`${API_URL}/employees/public/by-business/${NASSIM_BUSINESS_ID}`);
         const data = await response.json();
-        
-        console.log('✅ Loaded employees for nassim:', data);
         
         if (data.success && data.data) {
             availableEmployees = data.data;
@@ -687,9 +677,7 @@ async function loadAppointments() {
         const response = await fetch(`${API_URL}/appointments/customer`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        console.log('📡 [loadAppointments] Response status:', response.status);
         const data = await response.json();
-        console.log('📡 [loadAppointments] API response:', data);
         // Defensive: handle both data.data and data
         let appointments = [];
         if (data.success && Array.isArray(data.data)) {
@@ -697,7 +685,6 @@ async function loadAppointments() {
         } else if (Array.isArray(data)) {
             appointments = data;
         }
-        console.log('📡 [loadAppointments] Appointments array:', appointments);
         
         // Check for status changes (confirmed/cancelled appointments)
         appointments.forEach(apt => {
@@ -736,7 +723,6 @@ async function loadAppointments() {
         
         // Clean up notifications for completed appointments
         cleanupCompletedNotifications(appointments);
-        });
         
         displayAppointments(appointments);
     } catch (error) {
@@ -985,10 +971,6 @@ function selectTimeSlot(time) {
 async function submitBooking(e) {
     e.preventDefault();
     
-    console.log('📋 Submit booking called');
-    console.log('🔑 Token:', token ? 'exists' : 'missing');
-    console.log('👤 CustomerData:', customerData);
-    
     if (!token) {
         showNotification('يجب تسجيل الدخول للحجز', 'error');
         setTimeout(() => {
@@ -1199,13 +1181,10 @@ async function checkReturningCustomerOffer() {
                 );
                 
                 if (pendingAppointments.length === 0) {
-                    // No pending appointments - show 50 points offer
-                    console.log('✅ No pending appointments, showing returning customer offer (50 points)');
-                    setTimeout(() => {
-                        showReturningCustomerOfferNotification();
-                    }, 2000);
+                    // DISABLED: No automatic offers
+                    console.log('ℹ️ Automatic offers disabled - notifications only on owner confirmation');
                 } else {
-                    console.log('ℹ️ Customer has pending appointments, not showing offer');
+                    console.log('ℹ️ Customer has pending appointments');
                 }
             }
         }
@@ -1905,7 +1884,6 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
             swRegistration = await navigator.serviceWorker.register('/nassim/service-worker.js');
-            console.log('✅ PWA: Service Worker registered successfully');
             
             // Request notification permission
             requestNotificationPermission();
@@ -2361,7 +2339,6 @@ function initAIFloatingIcon() {
         return;
     }
     
-    console.log('✅ AI Floating Icon initialized');
     // Ensure icon is visible
     icon.style.display = 'flex';
     icon.style.visibility = 'visible';

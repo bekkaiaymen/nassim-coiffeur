@@ -539,4 +539,4 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-console.log('✨ AI Stylist Module Loaded - Nano Banana Integration Ready');
+// AI Stylist module loaded silently
