@@ -522,7 +522,7 @@ router.post('/', protect, ensureTenant, checkLimit('appointments'), async (req, 
             employee: resolvedEmployeeId,
             employeeName: resolvedEmployeeName,
             notes,
-            status: 'confirmed'
+            status: 'confirmed',
             completion: {
                 performedBy: resolvedEmployeeId || undefined,
                 performedByName: resolvedEmployeeName || undefined
