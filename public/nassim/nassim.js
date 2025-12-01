@@ -208,7 +208,9 @@ function displayServices(services) {
     
     container.innerHTML = services.map(service => {
         // Check if image is valid (Cloudinary or external URL)
-        const hasValidImage = service.image && (service.image.startsWith('http://') || service.image.startsWith('https://'));
+        const hasValidImage = service.image 
+            && (service.image.startsWith('http://') || service.image.startsWith('https://'))
+            && !service.image.includes('/uploads/');
         
         return `
         <div class="service-card">
@@ -247,13 +249,18 @@ function populateBookingServices(services) {
     const container = document.getElementById('bookingServicesList');
     if (!container) return;
     
-    container.innerHTML = services.map(service => `
+    container.innerHTML = services.map(service => {
+        const hasValidImage = service.image 
+            && (service.image.startsWith('http://') || service.image.startsWith('https://'))
+            && !service.image.includes('/uploads/');
+
+        return `
         <div class="booking-service-card" 
              data-service-id="${service._id}"
              data-service-name="${service.name}"
              data-service-price="${service.price}"
              data-service-duration="${service.duration}">
-            ${service.image 
+            ${hasValidImage
                 ? `<div class="booking-service-image" onclick="openImageLightbox('${service.image}', '${service.name}')">
                     <img src="${service.image}" alt="${service.name}">
                     <div class="zoom-overlay">🔍</div>
@@ -266,7 +273,8 @@ function populateBookingServices(services) {
                 <span class="service-price">${service.price} دج</span>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Toggle Service Selection
@@ -566,7 +574,9 @@ function displayAllProducts(products) {
     
     container.innerHTML = products.map(product => {
         // Only show valid Cloudinary/external URLs
-        const hasValidImage = product.image && (product.image.startsWith('http://') || product.image.startsWith('https://'));
+        const hasValidImage = product.image 
+            && (product.image.startsWith('http://') || product.image.startsWith('https://'))
+            && !product.image.includes('/uploads/');
         const imageHtml = hasValidImage
             ? `<img src="${product.image}" alt="${product.name}" class="product-image" onerror="console.log('Failed to load product image:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">`
             : `<div class="product-image-placeholder">📦</div>`;
