@@ -705,9 +705,10 @@ async function loadAppointments() {
                 console.log('✅ Appointment confirmed:', apt._id);
                 const timeFormatted = formatTimeArabic(apt.time);
                 const dateFormatted = formatDate(apt.date);
-                showNotificationToast(
+                createToast(
                     '✨ تم تأكيد موعدك!',
-                    `موعد ${apt.service?.name || 'الحلاقة'} - ${timeFormatted} في ${dateFormatted}`
+                    `موعد ${apt.service?.name || 'الحلاقة'} - ${timeFormatted} في ${dateFormatted}`,
+                    'confirmation'
                 );
                 // Vibrate if supported
                 if (navigator.vibrate) {
@@ -718,9 +719,10 @@ async function loadAppointments() {
             // Appointment cancelled by owner
             if (previousStatus === 'confirmed' && apt.status === 'cancelled') {
                 console.log('❌ Appointment cancelled:', apt._id);
-                showNotificationToast(
+                createToast(
                     '⚠️ تم إلغاء موعدك',
-                    `عذراً، تم إلغاء موعد ${apt.service?.name || 'الحلاقة'}. يرجى التواصل معنا.`
+                    `عذراً، تم إلغاء موعد ${apt.service?.name || 'الحلاقة'}. يرجى التواصل معنا.`,
+                    'cancellation'
                 );
             }
             
@@ -1367,7 +1369,10 @@ function showNotificationToast(title, message) {
 }
 
 // Create Toast Element
-function createToast(title, message) {
+function createToast(title, message, type = 'notification') {
+    // Add to history
+    addNotificationToHistory(title, message, type);
+    
     const toast = document.createElement('div');
     toast.className = 'notification-toast';
     toast.innerHTML = `
@@ -1423,6 +1428,157 @@ function dismissToast(toast) {
             toast.remove();
         }
     }, 300);
+}
+
+// Notification Panel Management
+let notificationHistory = JSON.parse(localStorage.getItem('notificationHistory') || '[]');
+
+// Open Notification Panel
+function showNotifications() {
+    const panel = document.getElementById('notificationPanel');
+    const overlay = document.getElementById('notificationPanelOverlay');
+    
+    panel.classList.add('open');
+    overlay.classList.add('open');
+    
+    displayNotificationHistory();
+}
+
+// Close Notification Panel
+function closeNotificationPanel() {
+    const panel = document.getElementById('notificationPanel');
+    const overlay = document.getElementById('notificationPanelOverlay');
+    
+    panel.classList.remove('open');
+    overlay.classList.remove('open');
+}
+
+// Display Notification History
+function displayNotificationHistory() {
+    const container = document.getElementById('notificationPanelList');
+    
+    if (notificationHistory.length === 0) {
+        container.innerHTML = `
+            <div class="panel-empty">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+                <h3>لا توجد إشعارات</h3>
+                <p>سنعلمك بأي تحديثات مهمة</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = notificationHistory
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+        .map(notif => `
+            <div class="panel-notification-item ${notif.read ? '' : 'unread'}" onclick="markNotificationAsRead('${notif.id}')">
+                <div class="panel-notif-header">
+                    <div class="panel-notif-icon">${getNotifIcon(notif.type)}</div>
+                    <div class="panel-notif-content">
+                        <h4 class="panel-notif-title">${notif.title}</h4>
+                        <p class="panel-notif-message">${notif.message}</p>
+                        <div class="panel-notif-time">
+                            <svg fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+                            </svg>
+                            ${formatNotificationTime(notif.timestamp)}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    
+    updateNotificationBadge(notificationHistory.filter(n => !n.read).length);
+}
+
+// Get Notification Icon
+function getNotifIcon(type) {
+    const icons = {
+        'confirmation': '✨',
+        'cancellation': '⚠️',
+        'reminder': '⏰',
+        'promotion': '🎉',
+        'update': '📢',
+        'booking': '📅'
+    };
+    return icons[type] || '🔔';
+}
+
+// Format Notification Time
+function formatNotificationTime(timestamp) {
+    const now = new Date();
+    const notifTime = new Date(timestamp);
+    const diffMs = now - notifTime;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'الآن';
+    if (diffMins < 60) return `منذ ${diffMins} دقيقة`;
+    if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+    if (diffDays < 7) return `منذ ${diffDays} يوم`;
+    
+    return notifTime.toLocaleDateString('ar-DZ', { 
+        day: 'numeric', 
+        month: 'short' 
+    });
+}
+
+// Mark Notification as Read
+function markNotificationAsRead(notifId) {
+    const notif = notificationHistory.find(n => n.id === notifId);
+    if (notif && !notif.read) {
+        notif.read = true;
+        saveNotificationHistory();
+        displayNotificationHistory();
+    }
+}
+
+// Mark All as Read
+function markAllAsRead() {
+    notificationHistory.forEach(notif => notif.read = true);
+    saveNotificationHistory();
+    displayNotificationHistory();
+    showNotification('تم تحديد جميع الإشعارات كمقروءة', 'success');
+}
+
+// Clear All Notifications
+function clearAllNotifications() {
+    if (confirm('هل أنت متأكد من حذف جميع الإشعارات؟')) {
+        notificationHistory = [];
+        saveNotificationHistory();
+        displayNotificationHistory();
+        updateNotificationBadge(0);
+        showNotification('تم مسح جميع الإشعارات', 'success');
+    }
+}
+
+// Save Notification History
+function saveNotificationHistory() {
+    // Keep only last 50 notifications
+    if (notificationHistory.length > 50) {
+        notificationHistory = notificationHistory.slice(0, 50);
+    }
+    localStorage.setItem('notificationHistory', JSON.stringify(notificationHistory));
+}
+
+// Add Notification to History
+function addNotificationToHistory(title, message, type = 'notification') {
+    const notification = {
+        id: Date.now().toString(),
+        title,
+        message,
+        type,
+        timestamp: new Date().toISOString(),
+        read: false
+    };
+    
+    notificationHistory.unshift(notification);
+    saveNotificationHistory();
+    updateNotificationBadge(notificationHistory.filter(n => !n.read).length);
 }
 
 // Play Notification Sound
@@ -1707,38 +1863,136 @@ function searchContent(query) {
 }
 
 // ==================== PWA Setup ====================
+let swRegistration = null;
+
 if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-            .then((registration) => {
-                console.log('✅ PWA: Service Worker registered successfully');
-                
-                // Check for updates
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // New version available
-                            if (confirm('🆕 تحديث جديد متوفر! هل تريد التحديث الآن؟')) {
-                                window.location.reload();
-                            }
+    window.addEventListener('load', async () => {
+        try {
+            swRegistration = await navigator.serviceWorker.register('/nassim/service-worker.js');
+            console.log('✅ PWA: Service Worker registered successfully');
+            
+            // Request notification permission
+            requestNotificationPermission();
+            
+            // Setup background sync
+            setupBackgroundSync();
+            
+            // Check for updates
+            swRegistration.addEventListener('updatefound', () => {
+                const newWorker = swRegistration.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // New version available
+                        if (confirm('🆕 تحديث جديد متوفر! هل تريد التحديث الآن؟')) {
+                            window.location.reload();
                         }
-                    });
+                    }
                 });
-            })
-            .catch((error) => {
-                console.error('❌ PWA: Service Worker registration failed:', error);
             });
+            
+            // Handle messages from service worker
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data.type === 'GET_TOKEN') {
+                    event.ports[0].postMessage(token);
+                } else if (event.data.type === 'GET_CUSTOMER_ID') {
+                    event.ports[0].postMessage(customerData?._id);
+                }
+            });
+            
+        } catch (error) {
+            console.error('❌ PWA: Service Worker registration failed:', error);
+        }
     });
 }
 
 // Request Notification Permission
-if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission().then((permission) => {
+async function requestNotificationPermission() {
+    if ('Notification' in window && Notification.permission === 'default') {
+        const permission = await Notification.requestPermission();
         if (permission === 'granted') {
             console.log('✅ PWA: Notification permission granted');
+            subscribeToPushNotifications();
+        } else {
+            console.log('⚠️ PWA: Notification permission denied');
         }
-    });
+    }
+}
+
+// Subscribe to Push Notifications
+async function subscribeToPushNotifications() {
+    if (!swRegistration) return;
+    
+    try {
+        // Check if already subscribed
+        let subscription = await swRegistration.pushManager.getSubscription();
+        
+        if (!subscription) {
+            // Create new subscription
+            subscription = await swRegistration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(
+                    'YOUR_VAPID_PUBLIC_KEY' // Replace with your VAPID public key
+                )
+            });
+            
+            console.log('✅ Push subscription created');
+            
+            // Send subscription to server
+            if (token && customerData) {
+                await fetch(`${API_URL}/notifications/subscribe`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        subscription,
+                        customerId: customerData._id
+                    })
+                });
+            }
+        }
+    } catch (error) {
+        console.error('❌ Push subscription failed:', error);
+    }
+}
+
+// Helper: Convert VAPID key
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+// Setup Background Sync
+async function setupBackgroundSync() {
+    if ('sync' in swRegistration) {
+        try {
+            await swRegistration.sync.register('check-notifications');
+            console.log('✅ Background sync registered');
+        } catch (error) {
+            console.log('⚠️ Background sync not available:', error);
+        }
+    }
+    
+    // Setup periodic sync (if supported)
+    if ('periodicSync' in swRegistration) {
+        try {
+            await swRegistration.periodicSync.register('check-notifications-periodic', {
+                minInterval: 15 * 60 * 1000 // 15 minutes
+            });
+            console.log('✅ Periodic background sync registered');
+        } catch (error) {
+            console.log('⚠️ Periodic sync not available:', error);
+        }
+    }
 }
 
 // Install Prompt
