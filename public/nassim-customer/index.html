@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ناسيم - واجهة الزبون</title>
+    <link rel="stylesheet" href="nassim-customer.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navigation -->
+        <nav class="nav-bar">
+            <div class="nav-brand">
+                <h1>ناسيم كوافير</h1>
+                <span class="nav-subtitle">واجهة الزبون</span>
+            </div>
+            <div class="nav-menu">
+                <button class="nav-item active" data-page="timeline">
+                    <span class="nav-icon">📅</span>
+                    <span class="nav-text">الجدول الزمني</span>
+                </button>
+                <button class="nav-item" data-page="rating">
+                    <span class="nav-icon">⭐</span>
+                    <span class="nav-text">تقييم الحلاقة</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Timeline Page -->
+            <div id="timelinePage" class="page active">
+                <div class="page-header">
+                    <h2 class="page-title">الجدول الزمني اليومي</h2>
+                    <p class="page-description">تصفح المواعيد المتاحة حسب الساعات</p>
+                </div>
+
+                <div class="timeline-controls">
+                    <div class="date-selector">
+                        <label for="timelineDate" class="control-label">اختر التاريخ</label>
+                        <input type="date" id="timelineDate" class="date-input">
+                    </div>
+                    <button id="refreshTimeline" class="btn btn-secondary">
+                        <span>🔄</span> تحديث
+                    </button>
+                </div>
+
+                <div class="timeline-summary">
+                    <div class="summary-card">
+                        <div class="summary-icon">✅</div>
+                        <div class="summary-content">
+                            <div class="summary-value" id="availableSlots">0</div>
+                            <div class="summary-label">مواعيد متاحة</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">📌</div>
+                        <div class="summary-content">
+                            <div class="summary-value" id="bookedSlots">0</div>
+                            <div class="summary-label">مواعيد محجوزة</div>
+                        </div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-icon">🕐</div>
+                        <div class="summary-content">
+                            <div class="summary-value" id="totalSlots">0</div>
+                            <div class="summary-label">إجمالي المواعيد</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot available"></span>
+                        <span class="legend-text">متاح</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot booked"></span>
+                        <span class="legend-text">محجوز</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot completed"></span>
+                        <span class="legend-text">مكتمل</span>
+                    </div>
+                </div>
+
+                <div id="timelineGrid" class="timeline-grid">
+                    <!-- Slots will be generated here -->
+                </div>
+            </div>
+
+            <!-- Rating Page -->
+            <div id="ratingPage" class="page">
+                <div class="page-header">
+                    <h2 class="page-title">تقييم الحلاقة</h2>
+                    <p class="page-description">شاركنا رأيك في تجربتك</p>
+                </div>
+
+                <div class="rating-container">
+                    <form id="haircutRatingForm" class="rating-form">
+                        <div class="form-section">
+                            <h3 class="section-title">معلومات الموعد</h3>
+                            
+                            <div class="form-group">
+                                <label for="customerPhone" class="form-label">رقم الهاتف</label>
+                                <input type="tel" id="customerPhone" class="form-input" placeholder="أدخل رقم هاتفك" required>
+                                <small class="form-hint">للبحث عن موعدك الأخير</small>
+                            </div>
+
+                            <button type="button" id="findAppointment" class="btn btn-secondary full-width">
+                                🔍 البحث عن الموعد
+                            </button>
+
+                            <div id="appointmentInfo" class="appointment-info" style="display: none;">
+                                <div class="info-card">
+                                    <div class="info-row">
+                                        <span class="info-label">التاريخ:</span>
+                                        <span class="info-value" id="appointmentDate">-</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">الوقت:</span>
+                                        <span class="info-value" id="appointmentTime">-</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">الحلاق:</span>
+                                        <span class="info-value" id="appointmentBarber">-</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label">الخدمة:</span>
+                                        <span class="info-value" id="appointmentService">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="ratingSection" class="form-section" style="display: none;">
+                            <h3 class="section-title">تقييمك</h3>
+
+                            <div class="form-group">
+                                <label class="form-label">تقييم الحلاقة</label>
+                                <div class="stars-container" id="haircutStars">
+                                    <span class="star" data-value="1">★</span>
+                                    <span class="star" data-value="2">★</span>
+                                    <span class="star" data-value="3">★</span>
+                                    <span class="star" data-value="4">★</span>
+                                    <span class="star" data-value="5">★</span>
+                                </div>
+                                <input type="hidden" id="haircutRating" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">تقييم الحلاق</label>
+                                <div class="stars-container" id="barberStars">
+                                    <span class="star" data-value="1">★</span>
+                                    <span class="star" data-value="2">★</span>
+                                    <span class="star" data-value="3">★</span>
+                                    <span class="star" data-value="4">★</span>
+                                    <span class="star" data-value="5">★</span>
+                                </div>
+                                <input type="hidden" id="barberRating" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="ratingComment" class="form-label">تعليقك (اختياري)</label>
+                                <textarea id="ratingComment" class="form-textarea" rows="4" placeholder="شاركنا تجربتك..."></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">هل تنصح بهذا المحل؟</label>
+                                <div class="radio-group">
+                                    <label class="radio-option">
+                                        <input type="radio" name="recommend" value="yes" required>
+                                        <span class="radio-label">نعم 👍</span>
+                                    </label>
+                                    <label class="radio-option">
+                                        <input type="radio" name="recommend" value="no">
+                                        <span class="radio-label">لا 👎</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary full-width">
+                                ⭐ إرسال التقييم
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+
+        <!-- Toast Notification -->
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <script src="nassim-customer.js"></script>
+</body>
+</html>

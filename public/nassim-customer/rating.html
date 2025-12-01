@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FDB714">
+    <title>✂️ Nassim - تقييم الخدمة</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/nassim-customer/rating.css">
+</head>
+<body>
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <h1 class="app-title">✂️ Nassim Barber - تقييم الخدمة</h1>
+        </div>
+        <div class="top-bar-right">
+            <a href="/nassim" class="btn-link">← رجوع للصفحة الرئيسية</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="rating-container">
+            <div class="rating-header">
+                <h2 class="rating-title">كيف كانت تجربتك معنا؟</h2>
+                <p class="rating-subtitle">نقدر رأيك ويهمنا تحسين خدماتنا باستمرار</p>
+            </div>
+
+            <!-- Phone Lookup Section -->
+            <div class="lookup-section" id="lookupSection">
+                <div class="lookup-card">
+                    <h3 class="section-title">البحث عن موعدك</h3>
+                    <p class="section-subtitle">أدخل رقم هاتفك لعرض مواعيدك المكتملة</p>
+                    
+                    <form id="lookupForm" class="lookup-form">
+                        <div class="form-group">
+                            <label for="phoneNumber" class="form-label">رقم الهاتف</label>
+                            <input 
+                                type="tel" 
+                                id="phoneNumber" 
+                                class="form-input" 
+                                placeholder="05XXXXXXXX"
+                                pattern="[0-9]{10}"
+                                required
+                            >
+                        </div>
+                        <button type="submit" class="btn-primary">البحث عن المواعيد</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Appointments List Section (Hidden initially) -->
+            <div class="appointments-section" id="appointmentsSection" style="display: none;">
+                <div class="appointments-card">
+                    <h3 class="section-title">مواعيدك المكتملة</h3>
+                    <p class="section-subtitle">اختر الموعد الذي تريد تقييمه</p>
+                    <div id="appointmentsList" class="appointments-list"></div>
+                </div>
+            </div>
+
+            <!-- Rating Form Section (Hidden initially) -->
+            <div class="rating-section" id="ratingSection" style="display: none;">
+                <div class="rating-card">
+                    <div class="appointment-details" id="selectedAppointmentDetails"></div>
+                    
+                    <form id="ratingForm" class="rating-form">
+                        <input type="hidden" id="appointmentId">
+                        
+                        <div class="form-group">
+                            <label class="form-label">تقييمك للخدمة</label>
+                            <div class="stars-container" id="starsContainer">
+                                <span class="star" data-rating="1">★</span>
+                                <span class="star" data-rating="2">★</span>
+                                <span class="star" data-rating="3">★</span>
+                                <span class="star" data-rating="4">★</span>
+                                <span class="star" data-rating="5">★</span>
+                            </div>
+                            <input type="hidden" id="ratingValue" required>
+                            <p class="rating-text" id="ratingText">اختر التقييم</p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="comment" class="form-label">ملاحظاتك (اختياري)</label>
+                            <textarea 
+                                id="comment" 
+                                class="form-textarea" 
+                                rows="4"
+                                placeholder="شاركنا رأيك وملاحظاتك حول الخدمة..."
+                            ></textarea>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="backToAppointments()">← رجوع</button>
+                            <button type="submit" class="btn-primary">إرسال التقييم</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Success Message (Hidden initially) -->
+            <div class="success-section" id="successSection" style="display: none;">
+                <div class="success-card">
+                    <div class="success-icon">✓</div>
+                    <h3 class="success-title">شكراً لتقييمك!</h3>
+                    <p class="success-message">تم إرسال تقييمك بنجاح. نقدر وقتك وملاحظاتك القيمة.</p>
+                    <div class="success-actions">
+                        <a href="/nassim" class="btn-primary">← العودة للصفحة الرئيسية</a>
+                        <button type="button" class="btn-secondary" onclick="resetRating()">تقييم موعد آخر</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/nassim-customer/rating.js"></script>
+</body>
+</html>

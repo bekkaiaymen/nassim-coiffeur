@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FDB714">
+    <title>✂️ Nassim - لوحة الموظفين</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/nassim-employee/employee.css">
+</head>
+<body>
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <h1 class="app-title">✂️ Nassim Barber - لوحة الموظفين</h1>
+        </div>
+        <div class="top-bar-right">
+            <a href="/nassim-owner" class="btn-link">لوحة التحكم</a>
+            <a href="/nassim" class="btn-link">الصفحة الرئيسية</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="employee-grid">
+            <!-- Quick Add Customer Section -->
+            <section class="employee-section">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">➕ إضافة عميل سريع</h2>
+                        <p class="section-subtitle">أضف عميل جديد بسرعة وسهولة</p>
+                    </div>
+
+                    <form id="quickAddForm" class="employee-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="customerName" class="form-label">اسم العميل *</label>
+                                <input 
+                                    type="text" 
+                                    id="customerName" 
+                                    class="form-input" 
+                                    placeholder="أدخل اسم العميل"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="customerPhone" class="form-label">رقم الهاتف *</label>
+                                <input 
+                                    type="tel" 
+                                    id="customerPhone" 
+                                    class="form-input" 
+                                    placeholder="05XXXXXXXX"
+                                    pattern="[0-9]{10}"
+                                    required
+                                >
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="appointmentDate" class="form-label">التاريخ *</label>
+                                <input 
+                                    type="date" 
+                                    id="appointmentDate" 
+                                    class="form-input"
+                                    required
+                                >
+                            </div>
+
+                            <div class="form-group">
+                                <label for="appointmentTime" class="form-label">الوقت *</label>
+                                <select id="appointmentTime" class="form-input" required>
+                                    <option value="">اختر الوقت</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="serviceType" class="form-label">نوع الخدمة *</label>
+                            <select id="serviceType" class="form-input" required>
+                                <option value="">اختر الخدمة</option>
+                                <option value="حلاقة">حلاقة</option>
+                                <option value="حلاقة وتشذيب لحية">حلاقة وتشذيب لحية</option>
+                                <option value="صبغة">صبغة</option>
+                                <option value="حمام مغربي">حمام مغربي</option>
+                                <option value="تشذيب لحية فقط">تشذيب لحية فقط</option>
+                                <option value="قص أطفال">قص أطفال</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes" class="form-label">ملاحظات</label>
+                            <textarea 
+                                id="notes" 
+                                class="form-textarea" 
+                                rows="3"
+                                placeholder="أي ملاحظات إضافية..."
+                            ></textarea>
+                        </div>
+
+                        <button type="submit" class="btn-primary-large">➕ إضافة الموعد</button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Rate Customer Section -->
+            <section class="employee-section">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">⭐ تقييم العميل</h2>
+                        <p class="section-subtitle">قيّم أداء العميل وسلوكه</p>
+                    </div>
+
+                    <!-- Search Customer -->
+                    <div class="search-section">
+                        <div class="form-group">
+                            <label for="searchPhone" class="form-label">البحث برقم الهاتف</label>
+                            <div class="search-input-group">
+                                <input 
+                                    type="tel" 
+                                    id="searchPhone" 
+                                    class="form-input" 
+                                    placeholder="05XXXXXXXX"
+                                    pattern="[0-9]{10}"
+                                >
+                                <button type="button" class="btn-search" onclick="searchCustomer()">بحث</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Appointments List -->
+                    <div id="customerAppointments" class="appointments-list" style="display: none;">
+                        <h3 class="subsection-title">مواعيد العميل</h3>
+                        <div id="appointmentsList"></div>
+                    </div>
+
+                    <!-- Rating Form -->
+                    <div id="ratingFormSection" class="rating-form-section" style="display: none;">
+                        <form id="employeeRatingForm" class="employee-form">
+                            <input type="hidden" id="ratingAppointmentId">
+
+                            <div class="selected-appointment-info" id="selectedAppointmentInfo"></div>
+
+                            <div class="form-group">
+                                <label class="form-label">تقييم العميل</label>
+                                <div class="stars-container" id="starsContainer">
+                                    <span class="star" data-rating="1">★</span>
+                                    <span class="star" data-rating="2">★</span>
+                                    <span class="star" data-rating="3">★</span>
+                                    <span class="star" data-rating="4">★</span>
+                                    <span class="star" data-rating="5">★</span>
+                                </div>
+                                <input type="hidden" id="ratingValue" required>
+                                <p class="rating-text" id="ratingText">اختر التقييم</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="ratingComment" class="form-label">ملاحظات حول العميل</label>
+                                <textarea 
+                                    id="ratingComment" 
+                                    class="form-textarea" 
+                                    rows="3"
+                                    placeholder="ملاحظات حول سلوك العميل، الالتزام بالموعد، إلخ..."
+                                ></textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="button" class="btn-secondary" onclick="cancelRating()">إلغاء</button>
+                                <button type="submit" class="btn-primary">إرسال التقييم</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/nassim-employee/employee.js"></script>
+</body>
+</html>

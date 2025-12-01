@@ -97,6 +97,90 @@ const appointmentSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    completion: {
+        performedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Employee'
+        },
+        performedByName: {
+            type: String,
+            trim: true
+        },
+        finishedAt: {
+            type: Date
+        },
+        servicesProvided: [String],
+        style: {
+            type: String,
+            trim: true
+        },
+        productsUsed: [String],
+        notes: {
+            type: String,
+            trim: true
+        },
+        photo: {
+            type: String
+        },
+        rating: {
+            type: Number,
+            min: 1,
+            max: 5
+        },
+        warnings: [String],
+        aftercareAdvice: {
+            type: String,
+            trim: true
+        }
+    },
+    customerFeedback: {
+        rating: {
+            type: Number,
+            min: 1,
+            max: 5
+        },
+        comment: {
+            type: String,
+            trim: true
+        },
+        punctuality: {
+            type: String,
+            enum: ['early', 'on-time', 'late', 'very-late']
+        },
+        photoConsent: {
+            type: Boolean,
+            default: false
+        },
+        behaviourNotes: [String],
+        submittedAt: {
+            type: Date
+        }
+    },
+    // تقييم الحلاقة من العميل
+    haircutRating: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    // تقييم الحلاق من العميل
+    barberRating: {
+        type: Number,
+        min: 1,
+        max: 5
+    },
+    // تعليق التقييم من العميل
+    ratingComment: {
+        type: String,
+        trim: true
+    },
+    // هل ينصح بالمحل
+    recommendShop: {
+        type: Boolean
+    },
+    // تاريخ التقييم
+    ratedAt: {
+        type: Date
+    },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'

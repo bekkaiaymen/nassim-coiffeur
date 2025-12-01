@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FDB714">
+    <title>✂️ Nassim - الجدول الزمني</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/nassim-customer/timeline.css">
+</head>
+<body>
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="top-bar-left">
+            <h1 class="app-title">✂️ Nassim Barber - الجدول الزمني</h1>
+        </div>
+        <div class="top-bar-right">
+            <a href="/nassim" class="btn-link">← رجوع للصفحة الرئيسية</a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div>
+                <h2 class="page-title">الجدول الزمني اليومي</h2>
+                <p class="page-subtitle">تصفح المواعيد المتاحة واختر الوقت المناسب لك</p>
+            </div>
+            <div class="timeline-controls">
+                <label for="timelineDate" class="form-label">اختيار اليوم</label>
+                <input type="date" id="timelineDate" class="form-input">
+                <button type="button" class="btn-primary" onclick="refreshTimeline()">تحديث</button>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="timeline-summary-card" id="timelineSummary"></div>
+
+        <!-- Timeline View -->
+        <div class="timeline-wrapper">
+            <div class="timeline-legend">
+                <span class="legend-item"><span class="legend-dot available"></span>متاح للحجز</span>
+                <span class="legend-item"><span class="legend-dot booked"></span>محجوز</span>
+                <span class="legend-item"><span class="legend-dot partially"></span>متاح جزئياً</span>
+            </div>
+            <div class="timeline-grid" id="timelineGrid"></div>
+        </div>
+
+        <div class="action-footer">
+            <a href="/book-now" class="btn-primary-large">احجز موعدك الآن</a>
+        </div>
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/nassim-customer/timeline.js"></script>
+</body>
+</html>

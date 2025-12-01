@@ -5,6 +5,11 @@ const API_URL = window.location.hostname === 'localhost'
 const NASSIM_BUSINESS_ID = '69259331651b1babc1eb83dc';
 let currentUser = null;
 let currentPage = 'dashboard';
+let servicesCache = null;
+let employeesCache = null;
+let appointmentsCache = null;
+let appointmentsCacheTimestamp = 0;
+let timelineSelectedDate = new Date();
 
 function isProductItem(item) {
     return item?.metadata?.isProduct === true || item?.icon === '🛍️';
@@ -22,6 +27,73 @@ function formatProductCategory(category) {
     return PRODUCT_CATEGORY_LABELS[category] || category || '';
 }
 
+async function fetchBusinessAppointments({ useCache = true } = {}) {
+    const now = Date.now();
+    if (useCache && appointmentsCache && (now - appointmentsCacheTimestamp) < 60000) {
+        return appointmentsCache;
+    }
+
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/appointments/business/${NASSIM_BUSINESS_ID}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+        throw new Error('فشل تحميل المواعيد');
+    }
+
+    const result = await response.json();
+    const appointments = Array.isArray(result) ? result : (result.data || result || []);
+
+    appointmentsCache = appointments;
+    appointmentsCacheTimestamp = now;
+    return appointments;
+}
+
+async function fetchEmployeesData({ useCache = true } = {}) {
+    if (useCache && Array.isArray(employeesCache)) {
+        return employeesCache;
+    }
+
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/employees?business=${NASSIM_BUSINESS_ID}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+        throw new Error('فشل تحميل الموظفين');
+    }
+
+    const result = await response.json();
+    const employees = Array.isArray(result) ? result : (result.data || result || []);
+    employeesCache = employees;
+    return employees;
+}
+
+async function fetchServicesData({ useCache = true } = {}) {
+    if (useCache && Array.isArray(servicesCache)) {
+        return servicesCache;
+    }
+
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_URL}/services?business=${NASSIM_BUSINESS_ID}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    });
+
+    if (!response.ok) {
+        throw new Error('فشل تحميل الخدمات');
+    }
+
+    const result = await response.json();
+    const services = Array.isArray(result) ? result : (result.data || result || []);
+    servicesCache = services;
+    return services;
+}
+
+function invalidateAppointmentsCache() {
+    appointmentsCacheTimestamp = 0;
+}
+
 // ==================== Initialize ====================
 document.addEventListener('DOMContentLoaded', () => {
     initOwnerDashboard().catch(error => {
@@ -35,6 +107,10 @@ async function initOwnerDashboard() {
     await loadDashboardData();
     setupEventListeners(); // Initialize event listeners
     loadServices(); // Load services on page load
+    prepareQuickBookingForm().catch(error => console.error('Quick booking init error:', error));
+    prepareCompletionForm().catch(error => console.error('Completion init error:', error));
+    prepareCustomerFeedbackForm().catch(error => console.error('Feedback init error:', error));
+    loadTimelineView(timelineSelectedDate).catch(error => console.error('Timeline init error:', error));
 }
 
 // ==================== Authentication ====================
@@ -88,6 +164,57 @@ function setupEventListeners() {
             await saveReminderSettings();
         });
     }
+
+    const timelineDateInput = document.getElementById('timelineDate');
+    if (timelineDateInput) {
+        timelineDateInput.value = formatDateForInput(timelineSelectedDate);
+        timelineDateInput.addEventListener('change', (event) => {
+            const value = event.target.value;
+            if (value) {
+                timelineSelectedDate = new Date(value);
+                loadTimelineView(timelineSelectedDate);
+            }
+        });
+    }
+
+    const quickBookingForm = document.getElementById('quickBookingForm');
+    if (quickBookingForm) {
+        quickBookingForm.addEventListener('submit', handleQuickBookingSubmit);
+    }
+
+    const quickBookingDateInput = document.getElementById('quickBookingDate');
+    if (quickBookingDateInput && !quickBookingDateInput.value) {
+        quickBookingDateInput.value = formatDateForInput(new Date());
+    }
+    if (quickBookingDateInput) {
+        quickBookingDateInput.addEventListener('change', () => {
+            prepareQuickBookingForm();
+        });
+    }
+
+    const quickBookingTimeSelect = document.getElementById('quickBookingTime');
+    if (quickBookingTimeSelect) {
+        populateTimeSelect(
+            quickBookingTimeSelect,
+            quickBookingTimeSelect.value || null,
+            quickBookingDateInput ? new Date(quickBookingDateInput.value) : timelineSelectedDate
+        );
+    }
+
+    const completionForm = document.getElementById('completionForm');
+    if (completionForm) {
+        completionForm.addEventListener('submit', handleCompletionSubmit);
+    }
+
+    const completionAppointmentSelect = document.getElementById('completionAppointmentSelect');
+    if (completionAppointmentSelect) {
+        completionAppointmentSelect.addEventListener('change', handleCompletionAppointmentChange);
+    }
+
+    const customerFeedbackForm = document.getElementById('customerFeedbackForm');
+    if (customerFeedbackForm) {
+        customerFeedbackForm.addEventListener('submit', handleCustomerFeedbackSubmit);
+    }
 }
 
 // ==================== Navigation ====================
@@ -122,6 +249,18 @@ function showPage(pageName) {
             break;
         case 'appointments':
             loadAppointments();
+            break;
+        case 'timeline':
+            loadTimelineView(timelineSelectedDate);
+            break;
+        case 'quickBooking':
+            prepareQuickBookingForm();
+            break;
+        case 'serviceCompletion':
+            prepareCompletionForm();
+            break;
+        case 'customerFeedback':
+            prepareCustomerFeedbackForm();
             break;
         case 'employees':
             loadEmployees();
@@ -301,13 +440,8 @@ function sortAppointments(sortOption) {
 async function loadAppointments(filter = 'all') {
     window.currentAppointmentFilter = filter;
     try {
-        const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/appointments/business/${NASSIM_BUSINESS_ID}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        const result = await response.json();
-        let appointments = result.data || result || [];
+        const allAppointments = await fetchBusinessAppointments({ useCache: false });
+        let appointments = [...allAppointments];
 
         // Filter appointments
         if (filter !== 'all') {
@@ -2224,6 +2358,13 @@ async function loadRecentReminders() {
 }
 
 // ==================== Utilities ====================
+function formatDateForInput(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toISOString().split('T')[0];
+}
+
 function formatDateTime(dateString, timeString) {
     if (timeString) {
         // Separate date and time fields
@@ -2261,6 +2402,55 @@ function formatTime(dateString) {
         hour: '2-digit',
         minute: '2-digit'
     });
+}
+
+function cleanObject(obj) {
+    if (Array.isArray(obj)) {
+        return obj
+            .map(item => (typeof item === 'string' ? item.trim() : item))
+            .filter(item => item !== undefined && item !== null && !(typeof item === 'string' && item === ''));
+    }
+
+    if (!obj || typeof obj !== 'object') {
+        return obj;
+    }
+
+    const cleaned = {};
+    Object.keys(obj).forEach(key => {
+        const value = obj[key];
+
+        if (value === undefined || value === null) {
+            return;
+        }
+
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            if (trimmed !== '') {
+                cleaned[key] = trimmed;
+            }
+            return;
+        }
+
+        if (Array.isArray(value)) {
+            const arrayValue = cleanObject(value);
+            if (arrayValue.length > 0) {
+                cleaned[key] = arrayValue;
+            }
+            return;
+        }
+
+        if (typeof value === 'object') {
+            const nested = cleanObject(value);
+            if (nested && Object.keys(nested).length > 0) {
+                cleaned[key] = nested;
+            }
+            return;
+        }
+
+        cleaned[key] = value;
+    });
+
+    return cleaned;
 }
 
 function getStatusColor(status) {
@@ -2328,6 +2518,7 @@ let selectedPostImage = null;
 let selectedRewardImage = null;
 let selectedEmployeeImage = null;
 let selectedProductImage = null;
+let selectedCompletionImage = null;
 
 function previewServiceImage(event) {
     const file = event.target.files[0];
@@ -2475,6 +2666,45 @@ function removeProductImage() {
     document.getElementById('productImagePreview').style.display = 'none';
 }
 
+function previewCompletionImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        showToast('الرجاء اختيار صورة فقط', 'error');
+        return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+        return;
+    }
+
+    selectedCompletionImage = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const previewImg = document.getElementById('completionPreviewImg');
+        const previewContainer = document.getElementById('completionImagePreview');
+        if (previewImg && previewContainer) {
+            previewImg.src = e.target.result;
+            previewContainer.style.display = 'block';
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeCompletionImage() {
+    selectedCompletionImage = null;
+    const fileInput = document.getElementById('completionImageFile');
+    if (fileInput) {
+        fileInput.value = '';
+    }
+    const previewContainer = document.getElementById('completionImagePreview');
+    if (previewContainer) {
+        previewContainer.style.display = 'none';
+    }
+}
+
 // Upload image to server
 async function uploadImage(file) {
     const formData = new FormData();
@@ -2558,4 +2788,892 @@ async function cleanupOldImages() {
         console.error('Cleanup error:', error);
         showToast('حدث خطأ في التنظيف', 'error');
     }
+}
+
+// ==================== Timeline View ====================
+function normalizeTimeValue(value) {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'number') {
+        return `${value.toString().padStart(2, '0')}:00`;
+    }
+    const parts = value.toString().split(':');
+    const hours = (parts[0] || '0').padStart(2, '0');
+    const minutes = (parts[1] || '0').padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+function generateTimelineSlots(selectedDate, startHour = 9, endHour = 21, stepMinutes = 30) {
+    const baseDate = new Date(selectedDate || new Date());
+    baseDate.setSeconds(0, 0);
+    const slots = [];
+
+    for (let hour = startHour; hour <= endHour; hour++) {
+        for (let minute = 0; minute < 60; minute += stepMinutes) {
+            if (hour === endHour && minute > 0) {
+                break;
+            }
+            const slotDate = new Date(baseDate);
+            slotDate.setHours(hour, minute, 0, 0);
+            const label = slotDate.toLocaleTimeString('ar-DZ', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const value = normalizeTimeValue(`${hour}:${minute}`);
+            slots.push({ value, label, date: slotDate });
+        }
+    }
+
+    return slots;
+}
+
+function getAppointmentDateTime(appointment) {
+    if (!appointment) return null;
+
+    if (appointment.dateTime) {
+        const explicitDate = new Date(appointment.dateTime);
+        if (!Number.isNaN(explicitDate.getTime())) {
+            return explicitDate;
+        }
+    }
+
+    const base = appointment.date ? new Date(appointment.date) : new Date();
+    if (Number.isNaN(base.getTime())) {
+        return null;
+    }
+
+    const timeValue = normalizeTimeValue(appointment.time);
+    if (timeValue) {
+        const [hours, minutes] = timeValue.split(':').map(num => parseInt(num, 10));
+        base.setHours(hours, minutes, 0, 0);
+    }
+
+    return base;
+}
+
+function isSameDayDate(dateA, dateB) {
+    if (!dateA || !dateB) return false;
+    return dateA.getFullYear() === dateB.getFullYear() &&
+        dateA.getMonth() === dateB.getMonth() &&
+        dateA.getDate() === dateB.getDate();
+}
+
+function formatTimeDisplay(dateObj) {
+    if (!dateObj) return '';
+    return dateObj.toLocaleTimeString('ar-DZ', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function renderTimelineAppointmentCard(appointment) {
+    const dateTime = getAppointmentDateTime(appointment);
+    const customerName = appointment.customerId?.name || appointment.customerName || 'عميل';
+    const serviceName = appointment.serviceId?.name || appointment.service || 'خدمة';
+    const employeeName = appointment.employee?.name || appointment.employeeName || appointment.barber || 'غير محدد';
+    const phone = appointment.customerId?.phone || appointment.customerPhone || '';
+    const status = appointment.status || 'pending';
+    const statusText = getStatusText(status);
+
+    return `
+        <div class="timeline-appointment">
+            <div class="appointment-header">
+                <span class="appointment-service">${serviceName}</span>
+                <span class="timeline-status ${status}">${statusText}</span>
+            </div>
+            <div class="appointment-meta">
+                <span>👤 ${customerName}</span>
+                ${phone ? `<span>📞 ${phone}</span>` : ''}
+                <span>✂️ ${employeeName}</span>
+                ${dateTime ? `<span>🕒 ${formatTimeDisplay(dateTime)}</span>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function renderTimelineSlots(appointments, selectedDate) {
+    const grid = document.getElementById('timelineGrid');
+    if (!grid) return;
+
+    const slots = generateTimelineSlots(selectedDate);
+    const slotMap = new Map();
+    slots.forEach(slot => slotMap.set(slot.value, []));
+    const overflow = [];
+
+    appointments.forEach(appointment => {
+        const key = normalizeTimeValue(appointment.time);
+        if (slotMap.has(key)) {
+            slotMap.get(key).push(appointment);
+        } else {
+            overflow.push(appointment);
+        }
+    });
+
+    const slotHtml = slots.map(slot => {
+        const slotAppointments = slotMap.get(slot.value) || [];
+        let slotClass = 'available';
+
+        if (slotAppointments.length > 0) {
+            if (slotAppointments.some(apt => apt.status === 'completed')) {
+                slotClass = 'completed';
+            } else if (slotAppointments.some(apt => apt.status === 'pending')) {
+                slotClass = 'pending';
+            } else if (slotAppointments.some(apt => apt.status === 'cancelled')) {
+                slotClass = 'cancelled';
+            } else {
+                slotClass = 'booked';
+            }
+        }
+
+        const details = slotAppointments.length > 0
+            ? slotAppointments.map(renderTimelineAppointmentCard).join('')
+            : '<div class="timeline-empty">الوقت متاح للحجز</div>';
+
+        return `
+            <div class="timeline-slot ${slotClass}">
+                <div class="timeline-time">${slot.label}</div>
+                <div class="timeline-details">${details}</div>
+            </div>
+        `;
+    }).join('');
+
+    let overflowHtml = '';
+    if (overflow.length > 0) {
+        overflowHtml = `
+            <div class="timeline-slot booked">
+                <div class="timeline-time">أخرى</div>
+                <div class="timeline-details">
+                    ${overflow.map(renderTimelineAppointmentCard).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    grid.innerHTML = slotHtml + overflowHtml;
+}
+
+function renderTimelineSummary(appointments, selectedDate) {
+    const container = document.getElementById('timelineSummary');
+    if (!container) return;
+
+    const slots = generateTimelineSlots(selectedDate);
+    const uniqueSlots = new Set();
+    let pendingCount = 0;
+    let completedCount = 0;
+
+    appointments.forEach(appointment => {
+        const normalizedTime = normalizeTimeValue(appointment.time);
+        if (normalizedTime) {
+            uniqueSlots.add(normalizedTime);
+        }
+        if (appointment.status === 'pending') {
+            pendingCount += 1;
+        }
+        if (appointment.status === 'completed') {
+            completedCount += 1;
+        }
+    });
+
+    const bookedCount = uniqueSlots.size;
+    const totalSlots = slots.length;
+    const availableSlots = Math.max(totalSlots - bookedCount, 0);
+
+    const upcoming = appointments
+        .map(apt => ({ data: apt, date: getAppointmentDateTime(apt) }))
+        .filter(item => item.date && item.date >= new Date())
+        .sort((a, b) => a.date - b.date)[0];
+
+    const nextText = upcoming
+        ? `${upcoming.data.customerName || upcoming.data.customerId?.name || 'عميل'} - ${formatTimeDisplay(upcoming.date)}`
+        : 'لا يوجد';
+
+    container.innerHTML = `
+        <div class="summary-item">
+            <span>إجمالي المواعيد اليوم</span>
+            <strong>${appointments.length}</strong>
+        </div>
+        <div class="summary-item">
+            <span>أوقات متاحة</span>
+            <strong>${availableSlots}</strong>
+        </div>
+        <div class="summary-item">
+            <span>بانتظار التأكيد</span>
+            <strong>${pendingCount}</strong>
+        </div>
+        <div class="summary-item">
+            <span>الحلاقات المنجزة</span>
+            <strong>${completedCount}</strong>
+        </div>
+        <div class="summary-item">
+            <span>أقرب موعد</span>
+            <strong>${nextText}</strong>
+        </div>
+    `;
+}
+
+async function loadTimelineView(targetDate = timelineSelectedDate, options = {}) {
+    const { force = false } = options;
+    const date = targetDate ? new Date(targetDate) : new Date();
+
+    if (Number.isNaN(date.getTime())) {
+        return;
+    }
+
+    timelineSelectedDate = date;
+
+    const dateInput = document.getElementById('timelineDate');
+    if (dateInput) {
+        const formatted = formatDateForInput(date);
+        if (formatted && dateInput.value !== formatted) {
+            dateInput.value = formatted;
+        }
+    }
+
+    try {
+        const appointments = await fetchBusinessAppointments({ useCache: !force });
+        const dayAppointments = appointments.filter(appointment => {
+            const appointmentDate = getAppointmentDateTime(appointment);
+            return appointmentDate ? isSameDayDate(appointmentDate, date) : false;
+        });
+
+        renderTimelineSummary(dayAppointments, date);
+        renderTimelineSlots(dayAppointments, date);
+        updateQuickBookingMeta(dayAppointments, date);
+        renderQuickBookingHints(dayAppointments, date);
+    } catch (error) {
+        console.error('Timeline load error:', error);
+        showToast('تعذر تحميل الجدول الزمني', 'error');
+    }
+}
+
+function refreshTimeline() {
+    invalidateAppointmentsCache();
+    loadTimelineView(timelineSelectedDate, { force: true });
+}
+
+// ==================== Quick Booking ====================
+function populateTimeSelect(selectElement, selectedValue, date = timelineSelectedDate) {
+    if (!selectElement) return;
+    const slots = generateTimelineSlots(date);
+    const currentValue = selectedValue || selectElement.value;
+    const options = ['<option value="">اختر الوقت</option>'];
+
+    slots.forEach(slot => {
+        const isSelected = slot.value === currentValue;
+        options.push(`<option value="${slot.value}"${isSelected ? ' selected' : ''}>${slot.label}</option>`);
+    });
+
+    selectElement.innerHTML = options.join('');
+}
+
+async function prepareQuickBookingForm() {
+    const serviceSelect = document.getElementById('quickBookingService');
+    const employeeSelect = document.getElementById('quickBookingEmployee');
+    const dateInput = document.getElementById('quickBookingDate');
+    const timeSelect = document.getElementById('quickBookingTime');
+
+    try {
+        const [services, employees, appointments] = await Promise.all([
+            fetchServicesData(),
+            fetchEmployeesData(),
+            fetchBusinessAppointments()
+        ]);
+
+        if (serviceSelect) {
+            serviceSelect.innerHTML = '<option value="">اختر خدمة</option>' + services.map(service => `
+                <option value="${service._id || ''}" data-name="${service.name || ''}" data-price="${service.price || ''}">
+                    ${service.name || 'خدمة'}${service.price ? ` - ${service.price} دج` : ''}
+                </option>
+            `).join('');
+        }
+
+        if (employeeSelect) {
+            employeeSelect.innerHTML = '<option value="">بدون تحديد</option>' + employees.map(employee => `
+                <option value="${employee._id || ''}" data-name="${employee.name || ''}">
+                    ${employee.name || 'موظف'}${employee.isAvailable === false ? ' (مشغول)' : ''}
+                </option>
+            `).join('');
+        }
+
+        let selectedDate = new Date();
+        if (dateInput) {
+            if (!dateInput.value) {
+                dateInput.value = formatDateForInput(selectedDate);
+            } else {
+                selectedDate = new Date(dateInput.value);
+            }
+        }
+
+        if (timeSelect) {
+            populateTimeSelect(timeSelect, timeSelect.value || null, selectedDate);
+        }
+
+        const dayAppointments = appointments.filter(appointment => {
+            const appointmentDate = getAppointmentDateTime(appointment);
+            return appointmentDate ? isSameDayDate(appointmentDate, selectedDate) : false;
+        });
+
+        updateQuickBookingMeta(dayAppointments, selectedDate);
+        renderQuickBookingHints(dayAppointments, selectedDate);
+    } catch (error) {
+        console.error('Quick booking preparation error:', error);
+    }
+}
+
+function updateQuickBookingMeta(appointments, selectedDate) {
+    const metaElement = document.getElementById('quickBookingMeta');
+    if (!metaElement) return;
+
+    const dateLabel = selectedDate.toLocaleDateString('ar-DZ', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+    });
+
+    const confirmedStatuses = ['confirmed', 'appointment_confirmed', 'employee_confirmed', 'fully_confirmed', 'completed'];
+    const confirmed = appointments.filter(apt => confirmedStatuses.includes(apt.status)).length;
+    const pending = appointments.filter(apt => apt.status === 'pending').length;
+
+    metaElement.innerHTML = `
+        <span>📅 ${dateLabel}</span>
+        <span>✅ مؤكد: ${confirmed}</span>
+        <span>⏳ قيد التأكيد: ${pending}</span>
+        <span>💈 إجمالي: ${appointments.length}</span>
+    `;
+}
+
+function renderQuickBookingHints(appointments, selectedDate) {
+    const container = document.getElementById('quickBookingHints');
+    if (!container) return;
+
+    const slots = generateTimelineSlots(selectedDate);
+    const slotMap = new Map();
+    slots.forEach(slot => slotMap.set(slot.value, []));
+
+    appointments.forEach(appointment => {
+        const key = normalizeTimeValue(appointment.time);
+        if (slotMap.has(key)) {
+            slotMap.get(key).push(appointment);
+        }
+    });
+
+    const now = new Date();
+    const nextAvailable = slots.find(slot => {
+        const slotAppointments = slotMap.get(slot.value) || [];
+        if (slotAppointments.length > 0) {
+            return false;
+        }
+        return slot.date > now;
+    });
+
+    const serviceCounts = {};
+    const employeeCounts = {};
+    appointments.forEach(appointment => {
+        const serviceName = appointment.serviceId?.name || appointment.service || 'خدمة';
+        serviceCounts[serviceName] = (serviceCounts[serviceName] || 0) + 1;
+
+        const employeeName = appointment.employee?.name || appointment.employeeName || appointment.barber || 'غير محدد';
+        employeeCounts[employeeName] = (employeeCounts[employeeName] || 0) + 1;
+    });
+
+    const topService = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1])[0];
+    const topEmployee = Object.entries(employeeCounts).sort((a, b) => b[1] - a[1])[0];
+
+    const hints = [];
+
+    if (nextAvailable) {
+        hints.push({
+            icon: '🕒',
+            title: 'أقرب وقت متاح',
+            description: `الساعة ${nextAvailable.label} متاحة للحجز.`
+        });
+    }
+
+    if (topService) {
+        hints.push({
+            icon: '⭐',
+            title: 'الخدمة الأكثر طلباً',
+            description: `${topService[0]} (عدد ${topService[1]} حجوزات).`
+        });
+    }
+
+    if (topEmployee && topEmployee[0] !== 'غير محدد') {
+        hints.push({
+            icon: '💈',
+            title: 'أكثر حلاق نشاطاً',
+            description: `${topEmployee[0]} مع ${topEmployee[1]} حجز/حجوزات.`
+        });
+    }
+
+    if (hints.length === 0) {
+        hints.push({
+            icon: '✨',
+            title: 'لا توجد حجوزات بعد',
+            description: 'ابدأ بحجز جديد لتخطيط يومك.'
+        });
+    }
+
+    container.innerHTML = hints.map(hint => `
+        <div class="hint-card">
+            <strong>${hint.icon} ${hint.title}</strong>
+            <span>${hint.description}</span>
+        </div>
+    `).join('');
+}
+
+async function handleQuickBookingSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    if (!form) return;
+
+    const serviceSelect = document.getElementById('quickBookingService');
+    const employeeSelect = document.getElementById('quickBookingEmployee');
+    const dateInput = document.getElementById('quickBookingDate');
+    const timeSelect = document.getElementById('quickBookingTime');
+
+    const formData = new FormData(form);
+    const customerName = (formData.get('customerName') || '').trim();
+    const customerPhone = (formData.get('customerPhone') || '').trim();
+    const dateValue = formData.get('date');
+    const timeValue = formData.get('time');
+    const notes = (formData.get('notes') || '').trim();
+
+    const serviceOption = serviceSelect?.selectedOptions?.[0];
+    const serviceId = serviceOption?.value || formData.get('service');
+    const serviceName = serviceOption?.dataset?.name || serviceOption?.textContent?.trim() || '';
+
+    if (!customerName || !customerPhone || !dateValue || !timeValue || !serviceName) {
+        showToast('يرجى تعبئة جميع الحقول الإجبارية', 'error');
+        return;
+    }
+
+    const employeeOption = employeeSelect?.selectedOptions?.[0];
+    const employeeId = employeeOption?.value || '';
+    const employeeName = employeeOption?.dataset?.name || employeeOption?.textContent?.trim() || '';
+
+    const payload = cleanObject({
+        customerName,
+        customerPhone,
+        service: serviceName,
+        serviceId,
+        serviceName,
+        date: dateValue,
+        time: timeValue,
+        barber: employeeName || undefined,
+        employeeId: employeeId || undefined,
+        employeeName: employeeName || undefined,
+        notes: notes || undefined
+    });
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/appointments`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || result.success === false) {
+            throw new Error(result.message || 'فشل إنشاء الموعد');
+        }
+
+        showToast('تم إنشاء الموعد بنجاح', 'success');
+        form.reset();
+
+        if (dateInput) {
+            dateInput.value = formatDateForInput(timelineSelectedDate);
+        }
+
+        if (timeSelect) {
+            populateTimeSelect(timeSelect, null, timelineSelectedDate);
+        }
+
+        invalidateAppointmentsCache();
+        await Promise.all([
+            loadTimelineView(timelineSelectedDate, { force: true }),
+            loadAppointments(window.currentAppointmentFilter || 'all')
+        ]);
+
+        prepareQuickBookingForm();
+    } catch (error) {
+        console.error('Quick booking error:', error);
+        showToast(error.message || 'حدث خطأ أثناء إنشاء الموعد', 'error');
+    }
+}
+
+// ==================== Service Completion ====================
+async function prepareCompletionForm() {
+    const appointmentSelect = document.getElementById('completionAppointmentSelect');
+    const employeeSelect = document.getElementById('completionEmployeeSelect');
+
+    if (!appointmentSelect && !employeeSelect) {
+        return;
+    }
+
+    try {
+        const [appointments, employees] = await Promise.all([
+            fetchBusinessAppointments(),
+            fetchEmployeesData()
+        ]);
+
+        if (employeeSelect) {
+            employeeSelect.innerHTML = '<option value="">اختر الموظف</option>' + employees.map(employee => `
+                <option value="${employee._id || ''}" data-name="${employee.name || ''}">
+                    ${employee.name || 'موظف'}${employee.isAvailable === false ? ' (مشغول)' : ''}
+                </option>
+            `).join('');
+        }
+
+        if (appointmentSelect) {
+            const upcoming = appointments.filter(appointment => {
+                if (appointment.status === 'cancelled' || appointment.status === 'completed') {
+                    return false;
+                }
+                const appointmentDate = getAppointmentDateTime(appointment);
+                if (!appointmentDate) return false;
+                const startOfDay = new Date();
+                startOfDay.setHours(0, 0, 0, 0);
+                return appointmentDate >= startOfDay;
+            }).sort((a, b) => {
+                const aDate = getAppointmentDateTime(a) || 0;
+                const bDate = getAppointmentDateTime(b) || 0;
+                return aDate - bDate;
+            });
+
+            appointmentSelect.innerHTML = '<option value="">اختر موعداً</option>' + upcoming.map(appointment => {
+                const appointmentDate = getAppointmentDateTime(appointment);
+                const label = appointmentDate
+                    ? `${appointment.customerName || appointment.customerId?.name || 'عميل'} - ${appointmentDate.toLocaleDateString('ar-DZ', { month: 'long', day: 'numeric' })} ${formatTimeDisplay(appointmentDate)}`
+                    : `${appointment.customerName || appointment.customerId?.name || 'عميل'}`;
+                const employeeId = appointment.employee?._id || appointment.employee || '';
+                const employeeName = appointment.employee?.name || appointment.employeeName || appointment.barber || '';
+                return `<option value="${appointment._id}" data-employee-id="${employeeId}" data-employee-name="${employeeName}">${label}</option>`;
+            }).join('');
+        }
+
+        renderCompletionHistory(appointments);
+        updateCompletionMetaView(null);
+    } catch (error) {
+        console.error('Completion form preparation error:', error);
+    }
+}
+
+function updateCompletionMetaView(appointment) {
+    const metaElement = document.getElementById('completionMeta');
+    if (!metaElement) return;
+
+    if (!appointment) {
+        metaElement.innerHTML = '<span>اختر موعداً لعرض تفاصيله.</span>';
+        return;
+    }
+
+    const appointmentDate = getAppointmentDateTime(appointment);
+    metaElement.innerHTML = `
+        <span>👤 ${appointment.customerName || appointment.customerId?.name || 'عميل'}</span>
+        <span>✂️ ${appointment.employee?.name || appointment.employeeName || appointment.barber || 'غير محدد'}</span>
+        <span>🕒 ${appointmentDate ? formatTimeDisplay(appointmentDate) : '-'}</span>
+        <span>💈 الخدمة: ${appointment.serviceId?.name || appointment.service || '-'}</span>
+    `;
+}
+
+function handleCompletionAppointmentChange(event) {
+    const select = event.target;
+    const selectedOption = select?.selectedOptions?.[0];
+    const employeeSelect = document.getElementById('completionEmployeeSelect');
+
+    if (selectedOption && employeeSelect) {
+        const employeeId = selectedOption.dataset.employeeId;
+        if (employeeId) {
+            const match = Array.from(employeeSelect.options).find(option => option.value === employeeId);
+            if (match) {
+                employeeSelect.value = employeeId;
+            }
+        }
+    }
+
+    const appointment = appointmentsCache?.find?.(apt => apt._id === selectedOption?.value) || null;
+    updateCompletionMetaView(appointment);
+}
+
+function splitCommaValues(value) {
+    if (!value) return [];
+    return value
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
+}
+
+async function handleCompletionSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const appointmentId = formData.get('appointmentId');
+    if (!appointmentId) {
+        showToast('يرجى اختيار الموعد', 'error');
+        return;
+    }
+
+    const appointment = appointmentsCache?.find?.(apt => apt._id === appointmentId) || null;
+    if (!appointment) {
+        showToast('الموعد غير موجود في السجل الحالي', 'error');
+        return;
+    }
+
+    if (appointment.status === 'cancelled') {
+        showToast('لا يمكن إنهاء موعد ملغي', 'error');
+        return;
+    }
+
+    const ratingValue = formData.get('rating');
+    const rating = ratingValue ? parseInt(ratingValue, 10) : null;
+
+    const warnings = Array.from(form.querySelectorAll('input[name="warnings"]:checked')).map(input => input.value);
+    const customWarning = document.getElementById('completionCustomWarning')?.value.trim();
+    if (customWarning) {
+        warnings.push(customWarning);
+    }
+
+    const productsUsed = splitCommaValues(formData.get('products'));
+    const employeeSelect = document.getElementById('completionEmployeeSelect');
+    const employeeOption = employeeSelect?.selectedOptions?.[0];
+
+    let photoUrl;
+    if (selectedCompletionImage) {
+        showToast('جاري رفع صورة الحلاقة...', 'info');
+        try {
+            photoUrl = await uploadImage(selectedCompletionImage);
+        } catch (error) {
+            console.error('Completion photo upload error:', error);
+            showToast('تعذر رفع الصورة', 'error');
+            return;
+        }
+    }
+
+    const payload = cleanObject({
+        status: 'completed',
+        completion: {
+            performedBy: employeeOption?.value || undefined,
+            performedByName: employeeOption?.dataset?.name || employeeOption?.textContent?.trim() || undefined,
+            finishedAt: new Date().toISOString(),
+            notes: formData.get('notes')?.trim() || undefined,
+            rating: rating || undefined,
+            warnings: warnings.length ? warnings : undefined,
+            productsUsed: productsUsed.length ? productsUsed : undefined,
+            aftercareAdvice: formData.get('aftercare')?.trim() || undefined,
+            photo: photoUrl || undefined
+        }
+    });
+
+    try {
+        if (appointment.status !== 'completed') {
+            payload.status = 'completed';
+        }
+
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/appointments/${appointmentId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || result.success === false) {
+            throw new Error(result.message || 'فشل حفظ التقرير');
+        }
+
+        showToast('تم حفظ تقرير الحلاقة بنجاح', 'success');
+        form.reset();
+        removeCompletionImage();
+        const customWarningInput = document.getElementById('completionCustomWarning');
+        if (customWarningInput) {
+            customWarningInput.value = '';
+        }
+
+        invalidateAppointmentsCache();
+        await Promise.all([
+            loadTimelineView(timelineSelectedDate, { force: true }),
+            loadAppointments(window.currentAppointmentFilter || 'all')
+        ]);
+
+        prepareCompletionForm();
+        prepareCustomerFeedbackForm();
+    } catch (error) {
+        console.error('Completion submit error:', error);
+        showToast(error.message || 'حدث خطأ أثناء حفظ التقرير', 'error');
+    }
+}
+
+function renderCompletionHistory(appointments) {
+    const container = document.getElementById('completionHistory');
+    if (!container) return;
+
+    const completed = appointments
+        .filter(appointment => appointment.status === 'completed' && appointment.completion?.finishedAt)
+        .sort((a, b) => new Date(b.completion.finishedAt) - new Date(a.completion.finishedAt))
+        .slice(0, 5);
+
+    if (completed.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    container.innerHTML = completed.map(appointment => {
+        const finishedAt = appointment.completion.finishedAt
+            ? new Date(appointment.completion.finishedAt).toLocaleString('ar-DZ')
+            : '-';
+        const rating = appointment.completion.rating
+            ? '⭐'.repeat(appointment.completion.rating)
+            : 'بدون تقييم';
+        const warnings = appointment.completion.warnings?.length
+            ? appointment.completion.warnings.join('، ')
+            : 'لا توجد';
+
+        return `
+            <div class="history-card">
+                <div class="feedback-header">
+                    <strong>${appointment.customerName || appointment.customerId?.name || 'عميل'}</strong>
+                    <span>${finishedAt}</span>
+                </div>
+                <span>التقييم الداخلي: ${rating}</span>
+                <span>الموظف: ${appointment.completion.performedByName || appointment.employee?.name || appointment.employeeName || '-'}</span>
+                <span>ملاحظات: ${appointment.completion.notes || 'لا يوجد'}</span>
+                <span>تحذيرات: ${warnings}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+// ==================== Customer Feedback ====================
+async function prepareCustomerFeedbackForm() {
+    const selectElement = document.getElementById('feedbackAppointmentSelect');
+
+    try {
+        const appointments = await fetchBusinessAppointments();
+        const completed = appointments.filter(appointment => appointment.status === 'completed');
+
+        if (selectElement) {
+            selectElement.innerHTML = '<option value="">اختر الموعد</option>' + completed.map(appointment => {
+                const appointmentDate = getAppointmentDateTime(appointment);
+                const label = appointmentDate
+                    ? `${appointment.customerName || appointment.customerId?.name || 'عميل'} - ${appointmentDate.toLocaleDateString('ar-DZ', { month: 'long', day: 'numeric' })} ${formatTimeDisplay(appointmentDate)}`
+                    : `${appointment.customerName || appointment.customerId?.name || 'عميل'}`;
+                return `<option value="${appointment._id}">${label}</option>`;
+            }).join('');
+        }
+
+        renderCustomerFeedbackList(completed);
+    } catch (error) {
+        console.error('Feedback form preparation error:', error);
+    }
+}
+
+async function handleCustomerFeedbackSubmit(event) {
+    event.preventDefault();
+    const form = event.target;
+    if (!form) return;
+
+    const formData = new FormData(form);
+    const appointmentId = formData.get('appointmentId');
+    if (!appointmentId) {
+        showToast('يرجى اختيار الموعد', 'error');
+        return;
+    }
+
+    const rating = parseInt(formData.get('rating'), 10) || 0;
+    const comment = formData.get('comment')?.trim();
+    const punctuality = formData.get('punctuality') === 'on';
+    const photoConsent = formData.get('photoConsent') === 'on';
+    const behaviourNotes = formData.get('behaviourNotes')?.trim();
+
+    const payload = cleanObject({
+        customerFeedback: {
+            rating,
+            comment,
+            punctuality,
+            photoConsent,
+            behaviourNotes,
+            submittedAt: new Date().toISOString()
+        }
+    });
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/appointments/${appointmentId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || result.success === false) {
+            throw new Error(result.message || 'فشل حفظ التقييم');
+        }
+
+        showToast('تم حفظ تقييم العميل', 'success');
+        form.reset();
+        const punctualityCheckbox = document.getElementById('feedbackPunctuality');
+        if (punctualityCheckbox) {
+            punctualityCheckbox.checked = true;
+        }
+
+        invalidateAppointmentsCache();
+        await loadTimelineView(timelineSelectedDate, { force: true });
+        prepareCustomerFeedbackForm();
+    } catch (error) {
+        console.error('Feedback submit error:', error);
+        showToast(error.message || 'حدث خطأ أثناء حفظ التقييم', 'error');
+    }
+}
+
+function renderCustomerFeedbackList(appointments) {
+    const container = document.getElementById('customerFeedbackList');
+    if (!container) return;
+
+    const withFeedback = appointments
+        .filter(appointment => appointment.customerFeedback && appointment.customerFeedback.rating)
+        .sort((a, b) => {
+            const aDate = a.customerFeedback.submittedAt ? new Date(a.customerFeedback.submittedAt) : 0;
+            const bDate = b.customerFeedback.submittedAt ? new Date(b.customerFeedback.submittedAt) : 0;
+            return bDate - aDate;
+        })
+        .slice(0, 5);
+
+    if (withFeedback.length === 0) {
+        container.innerHTML = '<div class="hint-card">لم يتم تسجيل تقييمات بعد.</div>';
+        return;
+    }
+
+    container.innerHTML = withFeedback.map(appointment => {
+        const feedback = appointment.customerFeedback;
+        const feedbackDate = feedback.submittedAt ? new Date(feedback.submittedAt).toLocaleString('ar-DZ') : '-';
+        const ratingStars = feedback.rating ? '⭐'.repeat(feedback.rating) : 'بدون تقييم';
+        const punctualityText = feedback.punctuality ? 'حضر في الوقت' : 'تأخر عن الموعد';
+
+        return `
+            <div class="feedback-card">
+                <div class="feedback-header">
+                    <strong>${appointment.customerName || appointment.customerId?.name || 'عميل'}</strong>
+                    <span>${feedbackDate}</span>
+                </div>
+                <span class="rating-stars">${ratingStars}</span>
+                <span>${feedback.comment || 'لا توجد ملاحظات'}</span>
+                <span>الالتزام بالوقت: ${punctualityText}</span>
+                ${feedback.behaviourNotes ? `<span>ملاحظات إضافية: ${feedback.behaviourNotes}</span>` : ''}
+            </div>
+        `;
+    }).join('');
 }

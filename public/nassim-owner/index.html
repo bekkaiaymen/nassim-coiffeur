@@ -68,6 +68,30 @@
                 </svg>
                 <span>المواعيد</span>
             </a>
+            <a href="#" class="nav-item" data-page="timeline" onclick="showPage('timeline')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>الجدول الزمني</span>
+            </a>
+            <a href="#" class="nav-item" data-page="quickBooking" onclick="showPage('quickBooking')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                </svg>
+                <span>الحجز السريع</span>
+            </a>
+            <a href="#" class="nav-item" data-page="serviceCompletion" onclick="showPage('serviceCompletion')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>إنهاء الحلاقة</span>
+            </a>
+            <a href="#" class="nav-item" data-page="customerFeedback" onclick="showPage('customerFeedback')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L4.08 9.101c-.783-.57-.38-1.81.588-1.81h4.915a1 1 0 00.95-.69l1.516-4.674z"/>
+                </svg>
+                <span>تقييم العملاء</span>
+            </a>
             <a href="#" class="nav-item" data-page="employees" onclick="showPage('employees')">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -222,6 +246,243 @@
             <div class="card">
                 <div class="card-body">
                     <div id="appointmentsList"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Page -->
+        <div id="timelinePage" class="page">
+            <div class="page-header timeline-header">
+                <div>
+                    <h2 class="page-title">الجدول الزمني اليومي</h2>
+                    <p class="page-subtitle">تابع سير العمل ساعة بساعة وتأكد من عدم وجود تعارضات.</p>
+                </div>
+                <div class="timeline-controls">
+                    <label for="timelineDate" class="form-label">اختيار اليوم</label>
+                    <input type="date" id="timelineDate" class="form-input">
+                    <button type="button" class="btn-secondary" onclick="refreshTimeline()">تحديث</button>
+                </div>
+            </div>
+            <div class="timeline-summary-card" id="timelineSummary"></div>
+            <div class="timeline-wrapper">
+                <div class="timeline-legend">
+                    <span class="legend-item"><span class="legend-dot booked"></span>موعد مؤكد</span>
+                    <span class="legend-item"><span class="legend-dot pending"></span>قيد التأكيد</span>
+                    <span class="legend-item"><span class="legend-dot completed"></span>تم التنفيذ</span>
+                    <span class="legend-item"><span class="legend-dot available"></span>متاح</span>
+                </div>
+                <div class="timeline-grid" id="timelineGrid"></div>
+            </div>
+        </div>
+
+        <!-- Quick Booking Page -->
+        <div id="quickBookingPage" class="page">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">الحجز السريع</h2>
+                    <p class="page-subtitle">أنشئ موعداً جديداً في ثوانٍ مع اختيار الخدمة والحلاق المثالي.</p>
+                </div>
+                <div class="quick-booking-meta" id="quickBookingMeta"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">تفاصيل الموعد</h3>
+                </div>
+                <div class="card-body">
+                    <form id="quickBookingForm" class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">اسم العميل *</label>
+                            <input type="text" class="form-input" id="quickBookingCustomerName" name="customerName" required placeholder="مثال: أحمد بن علي">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">رقم الهاتف *</label>
+                            <input type="tel" class="form-input" id="quickBookingCustomerPhone" name="customerPhone" required placeholder="05xxxxxxxxx">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الخدمة *</label>
+                            <select class="form-input" id="quickBookingService" name="service" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الموظف</label>
+                            <select class="form-input" id="quickBookingEmployee" name="employee"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">التاريخ *</label>
+                            <input type="date" class="form-input" id="quickBookingDate" name="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الوقت *</label>
+                            <select class="form-input" id="quickBookingTime" name="time" required></select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">ملاحظات</label>
+                            <textarea class="form-input" id="quickBookingNotes" name="notes" rows="3" placeholder="مثال: يفضل حلاقة كاملة مع تدليك"></textarea>
+                        </div>
+                        <div class="form-actions full-width">
+                            <button type="submit" class="btn-primary">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                </svg>
+                                إنشاء الموعد الآن
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="quick-booking-hints" id="quickBookingHints"></div>
+        </div>
+
+        <!-- Service Completion Page -->
+        <div id="serviceCompletionPage" class="page">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">إنهاء الحلاقة</h2>
+                    <p class="page-subtitle">سجل تفاصيل الجلسة، حمّل صورة اختيارية، وقدّم تنبيهات للفريق.</p>
+                </div>
+                <div class="completion-meta" id="completionMeta"></div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">تقرير الجلسة</h3>
+                </div>
+                <div class="card-body">
+                    <form id="completionForm" class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">الموعد *</label>
+                            <select class="form-input" id="completionAppointmentSelect" name="appointmentId" required></select>
+                            <small class="form-hint">يتم تحميل مواعيد اليوم والحجوزات المؤكدة فقط.</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الموظف المنفذ</label>
+                            <select class="form-input" id="completionEmployeeSelect" name="performedBy"></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">التقييم الداخلي</label>
+                            <select class="form-input" id="completionRating" name="rating">
+                                <option value="">بدون</option>
+                                <option value="5">ممتاز</option>
+                                <option value="4">جيد جداً</option>
+                                <option value="3">جيد</option>
+                                <option value="2">متوسط</option>
+                                <option value="1">ضعيف</option>
+                            </select>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">وصف الحلاقة</label>
+                            <textarea class="form-input" id="completionNotes" name="notes" rows="3" placeholder="ماذا تم إنجازه في الجلسة؟"></textarea>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">المنتجات المستخدمة</label>
+                            <input type="text" class="form-input" id="completionProducts" name="products" placeholder="اكتب المنتجات مفصولة بفواصل">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">تحذيرات</label>
+                            <div class="chips-group">
+                                <label class="chip-option">
+                                    <input type="checkbox" name="warnings" value="تأخر العميل">
+                                    <span>تأخر العميل</span>
+                                </label>
+                                <label class="chip-option">
+                                    <input type="checkbox" name="warnings" value="مشكلة في الدفع">
+                                    <span>مشكلة في الدفع</span>
+                                </label>
+                                <label class="chip-option">
+                                    <input type="checkbox" name="warnings" value="حساسية جلد">
+                                    <span>حساسية جلد</span>
+                                </label>
+                                <label class="chip-option">
+                                    <input type="checkbox" name="warnings" value="طلب متابعة خاصة">
+                                    <span>طلب متابعة خاصة</span>
+                                </label>
+                            </div>
+                            <input type="text" class="form-input" id="completionCustomWarning" placeholder="تحذير إضافي (اختياري)">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">صورة نهائية (اختياري)</label>
+                            <div class="image-upload-container">
+                                <input type="file" id="completionImageFile" class="file-input" accept="image/*" onchange="previewCompletionImage(event)">
+                                <label for="completionImageFile" class="file-upload-btn">📷 إضافة صورة</label>
+                                <div id="completionImagePreview" class="image-preview" style="display: none;">
+                                    <img id="completionPreviewImg" src="" alt="After haircut preview">
+                                    <button type="button" class="remove-image-btn" onclick="removeCompletionImage()">✕</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">إرشادات ما بعد الحلاقة</label>
+                            <textarea class="form-input" id="completionAftercare" name="aftercare" rows="2" placeholder="مثال: استخدم زيت اللحية مرتين يومياً"></textarea>
+                        </div>
+                        <div class="form-actions full-width">
+                            <button type="submit" class="btn-primary">حفظ التقرير</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="completion-history" id="completionHistory"></div>
+        </div>
+
+        <!-- Customer Feedback Page -->
+        <div id="customerFeedbackPage" class="page">
+            <div class="page-header">
+                <div>
+                    <h2 class="page-title">تقييم العملاء</h2>
+                    <p class="page-subtitle">وثّق ملاحظات العملاء ودرجة رضاهم بعد كل جلسة.</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">استقبال تقييم جديد</h3>
+                </div>
+                <div class="card-body">
+                    <form id="customerFeedbackForm" class="form-grid">
+                        <div class="form-group full-width">
+                            <label class="form-label">الموعد *</label>
+                            <select class="form-input" id="feedbackAppointmentSelect" name="appointmentId" required></select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">تقييم العميل</label>
+                            <select class="form-input" id="feedbackRating" name="rating" required>
+                                <option value="5">5 - ممتاز</option>
+                                <option value="4">4 - جيد جداً</option>
+                                <option value="3">3 - جيد</option>
+                                <option value="2">2 - متوسط</option>
+                                <option value="1">1 - ضعيف</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">الالتزام بالوقت</label>
+                            <label class="form-check">
+                                <input type="checkbox" id="feedbackPunctuality" name="punctuality" checked>
+                                <span>حضر العميل في الوقت المحدد</span>
+                            </label>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">ملاحظات العميل</label>
+                            <textarea class="form-input" id="feedbackComment" name="comment" rows="3" placeholder="أي انطباعات أو اقتراحات؟"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">سماح باستخدام الصورة</label>
+                            <label class="form-check">
+                                <input type="checkbox" id="feedbackPhotoConsent" name="photoConsent">
+                                <span>وافق العميل على مشاركة صورة الحلاقة</span>
+                            </label>
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">ملاحظات حول السلوك</label>
+                            <textarea class="form-input" id="feedbackBehaviour" name="behaviourNotes" rows="2" placeholder="مثال: يحتاج إلى تذكير بالحضور مبكراً"></textarea>
+                        </div>
+                        <div class="form-actions full-width">
+                            <button type="submit" class="btn-primary">تسجيل التقييم</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">آخر التقييمات</h3>
+                </div>
+                <div class="card-body">
+                    <div id="customerFeedbackList"></div>
                 </div>
             </div>
         </div>

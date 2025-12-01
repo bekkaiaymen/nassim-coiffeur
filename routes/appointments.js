@@ -370,9 +370,14 @@ router.use(ensureTenant);
 // Get all appointments
 router.get('/', protect, ensureTenant, async (req, res) => {
     try {
-        const { date, status, barber, filter } = req.query;
+        const { date, status, barber, filter, phone } = req.query;
         const tenantId = req.tenantId;
         let query = { tenant: tenantId };
+
+        // Handle phone search
+        if (phone) {
+            query.customerPhone = phone;
+        }
 
         // Handle filter=today
         if (filter === 'today') {
@@ -425,7 +430,20 @@ router.get('/:id', protect, ensureTenant, async (req, res) => {
 // Create new appointment
 router.post('/', protect, ensureTenant, checkLimit('appointments'), async (req, res) => {
     try {
-        const { customerName, customerPhone, service, date, time, barber, notes } = req.body;
+        const {
+            customerName,
+            customerPhone,
+            service,
+            serviceId,
+            serviceName,
+            date,
+            time,
+            barber,
+            employee,
+            employeeId,
+            employeeName,
+            notes
+        } = req.body;
         
         const tenantId = req.tenantId || req.user.tenant || req.user.business;
         
@@ -436,14 +454,42 @@ router.post('/', protect, ensureTenant, checkLimit('appointments'), async (req, 
             });
         }
 
+        const resolvedEmployeeId = employeeId || employee;
+        const resolvedEmployeeName = employeeName || req.body.employeeName;
+        const resolvedBarberName = barber || req.body.barberName || resolvedEmployeeName;
+        const appointmentDate = new Date(date);
+
+        if (Number.isNaN(appointmentDate.getTime())) {
+            return res.status(400).json({
+                success: false,
+                message: 'صيغة التاريخ غير صحيحة'
+            });
+        }
+
+        const serviceLabel = serviceName || (typeof service === 'string' ? service : service?.name);
+        const serviceObjectId = serviceId || service?._id || req.body.serviceId;
+
+        if (!customerName || !customerPhone || !serviceLabel || !date || !time) {
+            return res.status(400).json({
+                success: false,
+                message: 'يرجى تعبئة جميع الحقول المطلوبة للموعد'
+            });
+        }
+
         // Check for conflicts within tenant
         const query = {
             tenant: tenantId,
-            date: new Date(date),
+            date: appointmentDate,
             time: time,
-            barber: barber,
             status: { $ne: 'cancelled' }
         };
+
+        if (resolvedEmployeeId) {
+            query.employee = resolvedEmployeeId;
+        } else if (resolvedBarberName) {
+            query.barber = resolvedBarberName;
+        }
+
         const conflict = await Appointment.findOne(query);
 
         if (conflict) {
@@ -468,17 +514,24 @@ router.post('/', protect, ensureTenant, checkLimit('appointments'), async (req, 
             customerName,
             customerPhone,
             customerId: customer._id,
-            service,
-            date: new Date(date),
+            service: serviceLabel,
+            serviceId: serviceObjectId,
+            date: appointmentDate,
             time,
-            barber,
+            barber: resolvedBarberName,
+            employee: resolvedEmployeeId,
+            employeeName: resolvedEmployeeName,
             notes,
             status: 'confirmed'
+            completion: {
+                performedBy: resolvedEmployeeId || undefined,
+                performedByName: resolvedEmployeeName || undefined
+            }
         });
 
         // Update customer stats
-        customer.totalVisits += 1;
-        customer.lastVisit = new Date();
+        customer.totalVisits = (customer.totalVisits || 0) + 1;
+        customer.lastVisit = appointmentDate;
         await customer.save();
 
         // ✨ تحديث إحصائيات استخدام صاحب المحل
@@ -818,6 +871,88 @@ router.delete('/:id', async (req, res) => {
 
         res.json({ success: true, message: 'تم حذف الموعد بنجاح' });
     } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Submit customer rating
+router.post('/:id/customer-rating', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { rating, comment } = req.body;
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'التقييم يجب أن يكون بين 1 و 5' 
+            });
+        }
+
+        const appointment = await Appointment.findById(id);
+        
+        if (!appointment) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'الموعد غير موجود' 
+            });
+        }
+
+        appointment.customerRating = {
+            rating,
+            comment: comment || '',
+            createdAt: new Date()
+        };
+
+        await appointment.save();
+
+        res.json({ 
+            success: true, 
+            message: 'تم إرسال التقييم بنجاح',
+            data: appointment 
+        });
+    } catch (error) {
+        console.error('Customer rating error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
+// Submit employee rating
+router.post('/:id/employee-rating', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { rating, comment } = req.body;
+
+        if (!rating || rating < 1 || rating > 5) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'التقييم يجب أن يكون بين 1 و 5' 
+            });
+        }
+
+        const appointment = await Appointment.findById(id);
+        
+        if (!appointment) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'الموعد غير موجود' 
+            });
+        }
+
+        appointment.employeeRating = {
+            rating,
+            comment: comment || '',
+            createdAt: new Date()
+        };
+
+        await appointment.save();
+
+        res.json({ 
+            success: true, 
+            message: 'تم إرسال التقييم بنجاح',
+            data: appointment 
+        });
+    } catch (error) {
+        console.error('Employee rating error:', error);
         res.status(500).json({ success: false, message: error.message });
     }
 });
