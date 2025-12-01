@@ -1174,7 +1174,6 @@ function showReturningCustomerOfferNotification() {
     // This function is disabled. Notifications only appear when owner confirms appointments.
     console.log('ℹ️ showReturningCustomerOfferNotification: Disabled - Offers only shown on owner confirmation');
     return;
-    }, 30000);
 }
 
 // Show Pending Reward Notification
