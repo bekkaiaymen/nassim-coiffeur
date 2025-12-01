@@ -235,8 +235,8 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
-    padding-top: 0; /* Removed fixed padding, handled by main-content margin */
-    padding-bottom: 80px; /* Account for bottom nav */
+    padding-top: 130px; /* Header height (90px approx) + search box */
+    padding-bottom: 90px; /* Bottom nav height */
     min-height: 100vh;
 }
 
@@ -583,10 +583,9 @@ body::after {
 
 /* 📱 Main Content */
 .main-content {
-    padding: 12px 20px;
+    padding: 0 20px 20px;
     position: relative;
     z-index: 1;
-    margin-top: 82px; /* Exact height of header */
     min-height: calc(100vh - 162px); /* 100vh - header(82px) - bottom_nav(80px) */
 }
 
