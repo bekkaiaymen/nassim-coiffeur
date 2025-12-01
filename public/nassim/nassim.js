@@ -2838,9 +2838,20 @@ function renderTimelineGrid(date, appointments) {
         const timeFromStart = (hours - startHour) * 60 + minutes;
         const leftPos = startOffset + (timeFromStart / 60) * pixelsPerHour;
         
+        // Calculate end time
+        const duration = (apt.serviceId && apt.serviceId.duration) ? apt.serviceId.duration : 30; // Default 30 mins
+        const endTotalMinutes = hours * 60 + minutes + duration;
+        const endHours = Math.floor(endTotalMinutes / 60);
+        const endMinutes = endTotalMinutes % 60;
+        const endTimeStr = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+        const startTimeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
         const aptEl = document.createElement('div');
         aptEl.className = `timeline-appointment ${index % 2 === 0 ? 'top' : 'bottom'}`;
         aptEl.style.left = `${leftPos}px`;
+        // Adjust width based on duration (approx)
+        const width = (duration / 60) * pixelsPerHour;
+        aptEl.style.width = `${Math.max(width, 80)}px`; // Min width 80px for text
         
         // Determine status text
         let statusText = 'محجوز';
@@ -2848,7 +2859,7 @@ function renderTimelineGrid(date, appointments) {
         if (apt.status === 'completed') statusText = 'مكتمل';
         
         aptEl.innerHTML = `
-            <div class="timeline-appointment-time">${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}</div>
+            <div class="timeline-appointment-time" style="font-size: 10px;">من ${startTimeStr} إلى ${endTimeStr}</div>
             <div class="timeline-appointment-status">${statusText}</div>
         `;
         
@@ -2860,15 +2871,33 @@ function renderTimelineGrid(date, appointments) {
 }
 
 function showAppointmentDetails(apt) {
-    // Simple alert for now, or a modal
-    const date = new Date(apt.appointmentDate || apt.date).toLocaleDateString('ar-SA');
-    const time = apt.time || '00:00';
-    const barber = apt.barber || apt.employeeName || 'غير محدد';
-    const service = apt.service || apt.serviceName || 'حلاقة';
+    const date = new Date(apt.appointmentDate || apt.date);
+    const timeStr = apt.time || `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
     
-    // If we had a modal, we would show it here.
-    // For now, let's just log it or maybe populate the rating form if the user wants to rate THIS appointment?
-    // But the user asked for the rating form to HAVE these fields.
+    // Automatically open rating page if completed
+    if (apt.status === 'completed') {
+        showRating();
+        // Pre-fill form
+        document.getElementById('ratingTime').value = timeStr;
+        
+        if (apt.barber || apt.employeeName) {
+            document.getElementById('ratingBarber').value = apt.barber || apt.employeeName;
+        }
+        
+        // Handle service name from populated object or string
+        let serviceName = 'حلاقة';
+        if (apt.serviceId && apt.serviceId.name) {
+            serviceName = apt.serviceId.name;
+        } else if (apt.service || apt.serviceName) {
+            serviceName = apt.service || apt.serviceName;
+        }
+        document.getElementById('ratingService').value = serviceName;
+        
+        showToast('يمكنك تقييم هذا الموعد الآن', 'success');
+    } else {
+        // Just show info toast for non-completed
+        showToast(`موعد محجوز: ${timeStr}`, 'info');
+    }
 }
 
 function renderTimelineSummary(appointments) {
