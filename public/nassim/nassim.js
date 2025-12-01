@@ -1252,9 +1252,30 @@ async function loadNotifications() {
         }
         
         const data = await response.json();
-        if (data.success && data.data) {
+        if (data.success && Array.isArray(data.data)) {
             displayNotifications(data.data);
-            const unreadCount = data.data.filter(n => !n.read).length;
+
+            const remoteNotifications = data.data.map(remoteNotif => ({
+                id: remoteNotif._id,
+                backendId: remoteNotif._id,
+                title: remoteNotif.title || 'إشعار',
+                message: remoteNotif.message || '',
+                type: remoteNotif.type || 'notification',
+                timestamp: remoteNotif.createdAt || remoteNotif.updatedAt || new Date().toISOString(),
+                read: Boolean(remoteNotif.read),
+                appointmentId: remoteNotif.appointmentId || null,
+                persistent: true
+            }));
+
+            const localOnlyNotifications = notificationHistory.filter(n => !n.backendId);
+
+            notificationHistory = [...remoteNotifications, ...localOnlyNotifications]
+                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            saveNotificationHistory();
+            displayNotificationHistory();
+
+            const unreadCount = notificationHistory.filter(n => !n.read).length;
             updateNotificationBadge(unreadCount);
             
             // Show toast only for NEW unread notifications (not shown before)
@@ -1430,6 +1451,7 @@ function showNotifications() {
     overlay.classList.add('open');
     
     displayNotificationHistory();
+    loadNotifications();
 }
 
 // Close Notification Panel
@@ -1554,13 +1576,19 @@ function saveNotificationHistory() {
 }
 
 // Add Notification to History
-function addNotificationToHistory(title, message, type = 'notification', appointmentId = null) {
+function addNotificationToHistory(title, message, type = 'notification', appointmentId = null, backendId = null, timestamp = null) {
+    // Check for duplicates if backendId is provided
+    if (backendId && notificationHistory.some(n => n.backendId === backendId)) {
+        return;
+    }
+
     const notification = {
-        id: Date.now().toString(),
+        id: Date.now().toString() + Math.random().toString().slice(2, 5),
+        backendId,
         title,
         message,
         type,
-        timestamp: new Date().toISOString(),
+        timestamp: timestamp || new Date().toISOString(),
         read: false,
         appointmentId, // Track related appointment
         persistent: type === 'confirmation' // Confirmation notifications are persistent
@@ -1569,6 +1597,12 @@ function addNotificationToHistory(title, message, type = 'notification', appoint
     notificationHistory.unshift(notification);
     saveNotificationHistory();
     updateNotificationBadge(notificationHistory.filter(n => !n.read).length);
+    
+    // Update panel if open
+    const panel = document.getElementById('notificationPanel');
+    if (panel && panel.classList.contains('open')) {
+        displayNotificationHistory();
+    }
 }
 
 // Auto-remove completed appointment notifications
@@ -1704,7 +1738,7 @@ function showBookingHistory() {
     loadAppointments();
 }
 
-function showNotifications() {
+function showNotificationsPage() {
     if (!token) {
         showNotification('سجل دخول لعرض الإشعارات', 'error');
         return;
