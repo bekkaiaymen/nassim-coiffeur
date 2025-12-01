@@ -12,6 +12,12 @@
   "dir": "rtl",
   "icons": [
     {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
       "src": "/public/nassim/logo.jpg",
       "sizes": "72x72",
       "type": "image/jpeg",

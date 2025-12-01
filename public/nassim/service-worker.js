@@ -12,26 +12,20 @@ const urlsToCache = [
 
 // Install Service Worker
 self.addEventListener('install', event => {
-    console.log('🔧 Service Worker: Installing...');
     event.waitUntil(
         caches.open(CACHE_NAME)
-            .then(cache => {
-                console.log('📦 Service Worker: Caching files');
-                return cache.addAll(urlsToCache);
-            })
+            .then(cache => cache.addAll(urlsToCache))
             .then(() => self.skipWaiting())
     );
 });
 
 // Activate Service Worker
 self.addEventListener('activate', event => {
-    console.log('✅ Service Worker: Activated');
     event.waitUntil(
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames.map(cacheName => {
                     if (cacheName !== CACHE_NAME) {
-                        console.log('🗑️ Service Worker: Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
@@ -259,5 +253,3 @@ self.addEventListener('periodicsync', event => {
         event.waitUntil(checkForNewNotifications());
     }
 });
-
-console.log('🚀 Nassim Service Worker Loaded - v2.0');

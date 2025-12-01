@@ -1885,11 +1885,14 @@ if ('serviceWorker' in navigator) {
         try {
             swRegistration = await navigator.serviceWorker.register('/nassim/service-worker.js');
             
+            // Wait for Service Worker to be ready
+            await navigator.serviceWorker.ready;
+            
             // Request notification permission
             requestNotificationPermission();
             
-            // Setup background sync
-            setupBackgroundSync();
+            // Setup background sync after SW is ready
+            await setupBackgroundSync();
             
             // Check for updates
             swRegistration.addEventListener('updatefound', () => {
@@ -2006,35 +2009,23 @@ async function subscribeToPushNotifications() {
     if (!swRegistration) return;
     
     try {
-        // Check if already subscribed
-        let subscription = await swRegistration.pushManager.getSubscription();
-        
-        if (!subscription) {
-            // Create new subscription
-            subscription = await swRegistration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(
-                    'YOUR_VAPID_PUBLIC_KEY' // Replace with your VAPID public key
-                )
-            });
-            
-            console.log('✅ Push subscription created');
-            
-            // Send subscription to server
-            if (token && customerData) {
-                await fetch(`${API_URL}/notifications/subscribe`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        subscription,
-                        customerId: customerData._id
-                    })
-                });
-            }
+        // Check if push notifications are supported
+        if (!('PushManager' in window)) {
+            console.log('ℹ️ Push notifications not supported');
+            return;
         }
+        
+        // Skip subscription if no VAPID key configured
+        // Backend needs to provide VAPID public key
+        console.log('ℹ️ Push subscription: Waiting for VAPID configuration from backend');
+        
+        // TODO: Implement when backend provides VAPID keys:
+        // const response = await fetch(`${API_URL}/notifications/vapid-public-key`);
+        // const { publicKey } = await response.json();
+        // subscription = await swRegistration.pushManager.subscribe({
+        //     userVisibleOnly: true,
+        //     applicationServerKey: urlBase64ToUint8Array(publicKey)
+        // });
     } catch (error) {
         console.error('❌ Push subscription failed:', error);
     }
@@ -2056,12 +2047,17 @@ function urlBase64ToUint8Array(base64String) {
 
 // Setup Background Sync
 async function setupBackgroundSync() {
+    if (!swRegistration) {
+        console.log('⚠️ Background sync: Service Worker not registered');
+        return;
+    }
+    
     if ('sync' in swRegistration) {
         try {
             await swRegistration.sync.register('check-notifications');
             console.log('✅ Background sync registered');
         } catch (error) {
-            console.log('⚠️ Background sync not available:', error);
+            console.log('ℹ️ Background sync not available');
         }
     }
     
@@ -2073,7 +2069,7 @@ async function setupBackgroundSync() {
             });
             console.log('✅ Periodic background sync registered');
         } catch (error) {
-            console.log('⚠️ Periodic sync not available:', error);
+            console.log('ℹ️ Periodic sync not available');
         }
     }
 }
