@@ -41,7 +41,8 @@
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    margin-right: 60px; /* Space between hours */
+    min-width: 100px; /* Fixed width for accurate calculation */
+    margin-right: 0;
     z-index: 2;
 }
 

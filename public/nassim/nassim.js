@@ -2815,8 +2815,9 @@ function renderTimelineGrid(date, appointments) {
         track.appendChild(hourEl);
     }
     
-    const pixelsPerHour = 100; // 60px margin + width of hour marker approx
-    const startOffset = 20; // Initial padding
+    const pixelsPerHour = 100; // Matches CSS min-width: 100px
+    const startOffset = 20; // Padding of container
+    const hourCenterOffset = 50; // Center of 100px hour element
     
     appointments.forEach((apt, index) => {
         // Parse time string "HH:MM"
@@ -2835,8 +2836,11 @@ function renderTimelineGrid(date, appointments) {
         
         if (hours < startHour || hours > endHour) return;
         
+        // Calculate position:
+        // 9:00 is at startOffset + hourCenterOffset (center of first hour)
+        // Each hour adds pixelsPerHour
         const timeFromStart = (hours - startHour) * 60 + minutes;
-        const leftPos = startOffset + (timeFromStart / 60) * pixelsPerHour;
+        const leftPos = startOffset + hourCenterOffset + (timeFromStart / 60) * pixelsPerHour;
         
         // Calculate end time
         const duration = (apt.serviceId && apt.serviceId.duration) ? apt.serviceId.duration : 30; // Default 30 mins
@@ -2851,7 +2855,7 @@ function renderTimelineGrid(date, appointments) {
         aptEl.style.left = `${leftPos}px`;
         // Adjust width based on duration (approx)
         const width = (duration / 60) * pixelsPerHour;
-        aptEl.style.width = `${Math.max(width, 80)}px`; // Min width 80px for text
+        aptEl.style.width = `${Math.max(width, 100)}px`; // Min width 100px for text readability
         
         // Determine status text
         let statusText = 'محجوز';
@@ -2859,7 +2863,7 @@ function renderTimelineGrid(date, appointments) {
         if (apt.status === 'completed') statusText = 'مكتمل';
         
         aptEl.innerHTML = `
-            <div class="timeline-appointment-time" style="font-size: 10px;">من ${startTimeStr} إلى ${endTimeStr}</div>
+            <div class="timeline-appointment-time" style="font-size: 11px; white-space: nowrap;">${startTimeStr} - ${endTimeStr}</div>
             <div class="timeline-appointment-status">${statusText}</div>
         `;
         
@@ -2877,21 +2881,26 @@ function showAppointmentDetails(apt) {
     // Automatically open rating page if completed
     if (apt.status === 'completed') {
         showRating();
-        // Pre-fill form
-        document.getElementById('ratingTime').value = timeStr;
+        // Pre-fill form and make readonly
+        const timeInput = document.getElementById('ratingTime');
+        timeInput.value = timeStr;
+        timeInput.readOnly = true;
         
+        const barberInput = document.getElementById('ratingBarber');
         if (apt.barber || apt.employeeName) {
-            document.getElementById('ratingBarber').value = apt.barber || apt.employeeName;
+            barberInput.value = apt.barber || apt.employeeName;
+            barberInput.readOnly = true;
         }
         
-        // Handle service name from populated object or string
+        const serviceInput = document.getElementById('ratingService');
         let serviceName = 'حلاقة';
         if (apt.serviceId && apt.serviceId.name) {
             serviceName = apt.serviceId.name;
         } else if (apt.service || apt.serviceName) {
             serviceName = apt.service || apt.serviceName;
         }
-        document.getElementById('ratingService').value = serviceName;
+        serviceInput.value = serviceName;
+        serviceInput.readOnly = true;
         
         showToast('يمكنك تقييم هذا الموعد الآن', 'success');
     } else {
