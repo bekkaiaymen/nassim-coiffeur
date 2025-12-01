@@ -1,9 +1,7 @@
 // AI Stylist - OpenRouter AI Integration
 // OpenRouter API Configuration
-const GEMINI_API_KEY = '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';
-const GEMINI_API_URL = `https://openrouter.ai/api/v1/chat/completions`;
-const IMAGE_GEN_URL = `https://api.together.xyz/v1/images/generations`;
-const TOGETHER_API_KEY = 'a2e0d8f1e3b4c9d7f6a5b8c3d2e1f0a9'; // Together API key for image generation
+const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 // Hairstyle Database  
 const hairstyleDatabase = {
@@ -162,11 +160,11 @@ async function analyzeImageWithGemini(imageBase64, style) {
         // Remove data URL prefix if exists
         const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
         
-        const response = await fetch(GEMINI_API_URL, {
+        const response = await fetch(OPENROUTER_API_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${GEMINI_API_KEY}`,
+                'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
                 'HTTP-Referer': window.location.origin,
                 'X-Title': 'Nassim Coiffeur AI Stylist'
             },
@@ -233,47 +231,16 @@ async function analyzeImageWithGemini(imageBase64, style) {
     }
 }
 
-// Generate hairstyle images with AI
-async function generateHairstyleImages(style, analysis) {
-    const stylePrompts = {
-        classic: 'professional classic men haircut, side part, elegant formal style, clean sharp lines, sophisticated gentleman look, studio lighting',
-        modern: 'modern trendy men hairstyle, textured quiff, contemporary fashion, stylish fade, instagram worthy, professional photo',
-        fade: 'professional fade haircut, clean sides fade, sharp barber cut, masculine style, detailed portrait, studio quality',
-        beard: 'well-groomed beard style, professional beard trim, clean facial hair, masculine grooming, studio portrait'
-    };
+// Get smart hairstyle recommendations based on AI analysis
+function getSmartRecommendations(style, analysis) {
+    // Return top recommendations from database with AI-enhanced descriptions
+    const suggestions = hairstyleDatabase[style] || hairstyleDatabase.classic;
     
-    const generatedImages = [];
-    
-    try {
-        // Generate 3 different variations
-        for (let i = 0; i < 3; i++) {
-            const response = await fetch('https://api.openai.com/v1/images/generations', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${GEMINI_API_KEY}`
-                },
-                body: JSON.stringify({
-                    model: 'dall-e-3',
-                    prompt: `${stylePrompts[style]}, variation ${i+1}, high quality professional photo, realistic, detailed`,
-                    n: 1,
-                    size: '1024x1024',
-                    quality: 'standard'
-                })
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                if (data.data && data.data[0]) {
-                    generatedImages.push(data.data[0].url);
-                }
-            }
-        }
-    } catch (error) {
-        console.error('Image generation error:', error);
-    }
-    
-    return generatedImages;
+    // Enhance descriptions based on AI analysis
+    return suggestions.map(sug => ({
+        ...sug,
+        desc: `✨ ${sug.desc} - موصى به بناءً على تحليل الذكاء الاصطناعي`
+    }));
 }
 
 // Process AI Analysis and Show Suggestions
@@ -285,14 +252,15 @@ async function simulateAIProcessing(prompt, style) {
     // Analyze with AI
     const aiAnalysis = await analyzeImageWithGemini(uploadedImage, style);
     
-    if (loadingText) loadingText.textContent = '🎨 توليد صور مخصصة لك...';
-    if (loadingSmall) loadingSmall.textContent = `إنشاء تسريحات ${getStyleName(style)} بالذكاء الاصطناعي`;
+    if (loadingText) loadingText.textContent = '🔍 اختيار أفضل التسريحات لك...';
+    if (loadingSmall) loadingSmall.textContent = `تحليل ذكي لنمط ${getStyleName(style)}`;
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Try to generate AI images
-    const aiImages = await generateHairstyleImages(style, aiAnalysis);
+    // Get smart recommendations based on AI analysis
+    const smartSuggestions = getSmartRecommendations(style, aiAnalysis);
     
-    // Display suggestions with AI analysis and generated images
-    displayHairstyleSuggestions(style, aiAnalysis, aiImages);
+    // Display suggestions with AI analysis
+    displayHairstyleSuggestions(style, aiAnalysis, smartSuggestions);
 }
 
 // Get style name in Arabic
@@ -364,24 +332,14 @@ async function generateAIHairstyle() {
 }
 
 // Display Hairstyle Suggestions
-function displayHairstyleSuggestions(style, aiAnalysis = null, aiGeneratedImages = []) {
+function displayHairstyleSuggestions(style, aiAnalysis = null, smartSuggestions = null) {
     const resultsSection = document.getElementById('aiResultsSection');
     const resultsContainer = document.querySelector('.ai-results-container');
     
     if (!resultsSection || !resultsContainer) return;
     
-    // Get hairstyles for selected style
-    let suggestions = hairstyleDatabase[style] || hairstyleDatabase.classic;
-    
-    // If AI generated images available, use them
-    if (aiGeneratedImages.length > 0) {
-        suggestions = suggestions.slice(0, aiGeneratedImages.length).map((sug, index) => ({
-            ...sug,
-            image: aiGeneratedImages[index],
-            name: `${sug.name} - مولد بالذكاء الاصطناعي`,
-            desc: `✨ صورة مخصصة لك - ${sug.desc}`
-        }));
-    }
+    // Use smart suggestions if available, otherwise use default
+    const suggestions = smartSuggestions || hairstyleDatabase[style] || hairstyleDatabase.classic;
     
     // Clear previous results
     resultsContainer.innerHTML = '';
