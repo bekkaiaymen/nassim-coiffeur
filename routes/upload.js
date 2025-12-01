@@ -86,27 +86,41 @@ router.post('/image', auth, upload.single('image'), async (req, res) => {
         let imageUrl;
 
         if (useCloudinary) {
-            // Upload to Cloudinary
-            const uploadStream = cloudinary.uploader.upload_stream(
-                {
-                    folder: 'nassim-products',
-                    resource_type: 'image',
-                    transformation: [{ width: 800, height: 800, crop: 'limit', quality: 'auto' }]
-                },
-                (error, result) => {
-                    if (error) {
-                        console.error('❌ Cloudinary upload error:', error);
-                        return res.status(500).json({ message: 'فشل رفع الصورة إلى السحابة' });
-                    }
-                    imageUrl = result.secure_url;
-                    console.log('✅ Image uploaded to Cloudinary:', imageUrl);
-                    res.json({
-                        message: 'تم رفع الصورة بنجاح',
-                        imageUrl: imageUrl
-                    });
-                }
-            );
-            uploadStream.end(req.file.buffer);
+            // Upload to Cloudinary using Promise wrapper
+            try {
+                const result = await new Promise((resolve, reject) => {
+                    const uploadStream = cloudinary.uploader.upload_stream(
+                        {
+                            folder: 'nassim-products',
+                            resource_type: 'image',
+                            transformation: [{ width: 800, height: 800, crop: 'limit', quality: 'auto' }]
+                        },
+                        (error, result) => {
+                            if (error) {
+                                console.error('❌ Cloudinary upload error:', error);
+                                reject(error);
+                            } else {
+                                resolve(result);
+                            }
+                        }
+                    );
+                    uploadStream.end(req.file.buffer);
+                });
+
+                imageUrl = result.secure_url;
+                console.log('✅ Image uploaded to Cloudinary:', imageUrl);
+                
+                res.json({
+                    message: 'تم رفع الصورة بنجاح',
+                    imageUrl: imageUrl
+                });
+            } catch (cloudError) {
+                console.error('❌ Cloudinary error:', cloudError);
+                return res.status(500).json({ 
+                    message: 'فشل رفع الصورة إلى السحابة',
+                    error: cloudError.message 
+                });
+            }
         } else {
             // Local storage fallback
             imageUrl = `/uploads/${req.file.filename}`;
