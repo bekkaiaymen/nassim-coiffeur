@@ -85,7 +85,6 @@ function setupEventListeners() {
 
 // Guest Mode
 function showGuestMode() {
-    console.log('👤 Guest mode activated');
     // Load public content
     loadPosts();
     loadRewards();
@@ -108,7 +107,6 @@ async function loadCustomerProfile() {
                 return;
             }
         } else if (response.status === 401) {
-            console.log('❌ Token expired, redirecting to login...');
             localStorage.removeItem('customerToken');
             localStorage.removeItem('customerData');
             showGuestMode();
@@ -387,8 +385,6 @@ async function loadPosts() {
         const response = await fetch(`${API_URL}/posts/public/by-business/${NASSIM_BUSINESS_ID}`);
         const data = await response.json();
         
-        console.log('✅ Loaded posts for nassim:', data);
-        
         if (data.success && data.data) {
             displayPosts(data.data.slice(0, 3)); // Show only 3 on home
             displayAllPosts(data.data); // Show all on posts page
@@ -509,8 +505,6 @@ async function loadRewards() {
     try {
         const response = await fetch(`${API_URL}/rewards/public/by-business/${NASSIM_BUSINESS_ID}`);
         const data = await response.json();
-        
-        console.log('✅ Loaded rewards for nassim:', data);
         
         if (data.success && data.data) {
             const activeRewards = data.data.filter(r => r.isActive);
@@ -695,7 +689,6 @@ async function loadAppointments() {
             
             // Appointment confirmed
             if (previousStatus === 'pending' && apt.status === 'confirmed') {
-                console.log('✅ Appointment confirmed:', apt._id);
                 const timeFormatted = formatTimeArabic(apt.time);
                 const dateFormatted = formatDate(apt.date);
                 createToast(
@@ -712,7 +705,6 @@ async function loadAppointments() {
             
             // Appointment cancelled by owner
             if (previousStatus === 'confirmed' && apt.status === 'cancelled') {
-                console.log('❌ Appointment cancelled:', apt._id);
                 createToast(
                     '⚠️ تم إلغاء موعدك',
                     `عذراً، تم إلغاء موعد ${apt.service?.name || 'الحلاقة'}. يرجى التواصل معنا.`,
@@ -838,8 +830,6 @@ async function loadAvailableSlots() {
         const response = await fetch(`${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&employee=${employeeId}&date=${date}&service=${serviceId}`);
         const data = await response.json();
         
-        console.log('Available slots response:', data);
-        
         if (data.success && data.data) {
             // تحويل objects إلى strings إذا لزم الأمر
             const slots = Array.isArray(data.data) ? data.data.map(slot => {
@@ -848,8 +838,6 @@ async function loadAvailableSlots() {
                 if (slot.slot) return slot.slot;
                 return String(slot);
             }) : [];
-            
-            console.log('Processed slots:', slots);
             displayTimeSlots(slots);
         } else {
             // إنشاء أوقات افتراضية إذا لم يكن هناك استجابة
@@ -935,7 +923,6 @@ function displayTimeSlots(slots) {
             btn.addEventListener('click', function(e) {
                 e.preventDefault();
                 const timeValue = this.getAttribute('data-time');
-                console.log('Button clicked, time:', timeValue);
                 selectTimeSlot(timeValue);
             });
         });
@@ -944,7 +931,6 @@ function displayTimeSlots(slots) {
 
 // Select Time Slot
 function selectTimeSlot(time) {
-    console.log('Selecting time slot:', time);
     
     // Check VIP restriction
     const isVIP = customerData && customerData.loyaltyPoints >= 500;
@@ -1107,18 +1093,15 @@ async function submitBooking(e) {
 // Check First Booking Offer - DISABLED (Offers only shown when owner confirms)
 async function checkFirstBookingOffer() {
     // This function is disabled. Notifications only appear when owner confirms appointments.
-    console.log('ℹ️ checkFirstBookingOffer: Disabled - Offers only shown on owner confirmation');
     return;
 }
 
 // Show First Booking Offer Notification
 function showFirstBookingOfferNotification() {
-    console.log('🎁 Showing first booking offer notification');
     
     // Check if notification already exists
     const existing = document.querySelector('.first-booking-offer');
     if (existing) {
-        console.log('ℹ️ Notification already exists');
         return;
     }
     
@@ -1139,13 +1122,11 @@ function showFirstBookingOfferNotification() {
     `;
     
     document.body.appendChild(notification);
-    console.log('✅ First booking offer notification added to DOM');
     
     // Mark as seen
     if (customerData) {
         customerData.hasSeenFirstBookingOffer = true;
         localStorage.setItem('customerData', JSON.stringify(customerData));
-        console.log('✅ Marked offer as seen');
     }
     
     // Auto remove after 30 seconds
@@ -1159,13 +1140,11 @@ function showFirstBookingOfferNotification() {
 // Check Returning Customer Offer (50 points)
 async function checkReturningCustomerOffer() {
     if (!customerData) {
-        console.log('⚠️ checkReturningCustomerOffer: No customerData');
         return;
     }
     
     // Check if customer has already seen the returning customer offer
     if (customerData.hasSeenReturningCustomerOffer) {
-        console.log('ℹ️ Customer has already seen the returning customer offer');
         return;
     }
     
@@ -1185,9 +1164,7 @@ async function checkReturningCustomerOffer() {
                 
                 if (pendingAppointments.length === 0) {
                     // DISABLED: No automatic offers
-                    console.log('ℹ️ Automatic offers disabled - notifications only on owner confirmation');
                 } else {
-                    console.log('ℹ️ Customer has pending appointments');
                 }
             }
         }
@@ -1199,7 +1176,6 @@ async function checkReturningCustomerOffer() {
 // Show Returning Customer Offer Notification - DISABLED
 function showReturningCustomerOfferNotification() {
     // This function is disabled. Notifications only appear when owner confirms appointments.
-    console.log('ℹ️ showReturningCustomerOfferNotification: Disabled - Offers only shown on owner confirmation');
     return;
 }
 
@@ -1233,7 +1209,6 @@ let shownNotificationIds = new Set();
 // Clear old notification IDs every 10 minutes to prevent memory leak
 setInterval(() => {
     if (shownNotificationIds.size > 100) {
-        console.log('🧹 Clearing old notification IDs');
         shownNotificationIds.clear();
     }
 }, 600000); // 10 minutes
@@ -1285,7 +1260,6 @@ async function loadNotifications() {
                 const latestNotif = unreadNotifications[0];
                 // Only show if not already shown
                 if (!shownNotificationIds.has(latestNotif._id)) {
-                    console.log('🔔 New notification:', latestNotif.title);
                     showNotificationToast(latestNotif.title, latestNotif.message);
                     shownNotificationIds.add(latestNotif._id);
                 }
@@ -1626,7 +1600,6 @@ function cleanupCompletedNotifications(appointments) {
         if (beforeCount !== notificationHistory.length) {
             saveNotificationHistory();
             updateNotificationBadge(notificationHistory.filter(n => !n.read).length);
-            console.log('🧹 Cleaned up completed appointment notifications');
         }
     }
 }
@@ -1639,7 +1612,6 @@ function playNotificationSound() {
         audio.volume = 0.25;
         audio.play().catch(() => {});
     } catch (e) {
-        console.log('Notification sound disabled');
     }
 }
 
@@ -1908,7 +1880,6 @@ function closeImageLightbox() {
 }
 
 function searchContent(query) {
-    console.log('Searching for:', query);
     // Implement search logic
 }
 
@@ -1960,18 +1931,15 @@ if ('serviceWorker' in navigator) {
 // Request Notification Permission
 async function requestNotificationPermission() {
     if (!('Notification' in window)) {
-        console.log('⚠️ Notifications not supported in this browser');
         return;
     }
     
     if (Notification.permission === 'granted') {
-        console.log('✅ Notification permission already granted');
         subscribeToPushNotifications();
         return;
     }
     
     if (Notification.permission === 'denied') {
-        console.log('❌ Notification permission denied');
         // Show message to user
         showNotification('يرجى السماح بالإشعارات من إعدادات المتصفح للحصول على تحديثات فورية', 'warning');
         return;
@@ -1981,14 +1949,12 @@ async function requestNotificationPermission() {
     try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
-            console.log('✅ PWA: Notification permission granted');
             showNotification('تم تفعيل الإشعارات! ستصلك تحديثات فورية 🔔', 'success');
             subscribeToPushNotifications();
             
             // Test notification
             testNotification();
         } else {
-            console.log('⚠️ PWA: Notification permission denied');
             showNotification('لن تتلقى إشعارات عند تأكيد المواعيد', 'warning');
         }
     } catch (error) {
@@ -2045,14 +2011,10 @@ async function subscribeToPushNotifications() {
     
     try {
         // Check if push notifications are supported
-        if (!('PushManager' in window)) {
-            console.log('ℹ️ Push notifications not supported');
-            return;
-        }
-        
-        // Skip subscription if no VAPID key configured
+    if (!('PushManager' in window)) {
+        return;
+    }        // Skip subscription if no VAPID key configured
         // Backend needs to provide VAPID public key
-        console.log('ℹ️ Push subscription: Waiting for VAPID configuration from backend');
         
         // TODO: Implement when backend provides VAPID keys:
         // const response = await fetch(`${API_URL}/notifications/vapid-public-key`);
@@ -2083,16 +2045,13 @@ function urlBase64ToUint8Array(base64String) {
 // Setup Background Sync
 async function setupBackgroundSync() {
     if (!swRegistration) {
-        console.log('⚠️ Background sync: Service Worker not registered');
         return;
     }
     
     if ('sync' in swRegistration) {
         try {
             await swRegistration.sync.register('check-notifications');
-            console.log('✅ Background sync registered');
         } catch (error) {
-            console.log('ℹ️ Background sync not available');
         }
     }
     
@@ -2102,9 +2061,7 @@ async function setupBackgroundSync() {
             await swRegistration.periodicSync.register('check-notifications-periodic', {
                 minInterval: 15 * 60 * 1000 // 15 minutes
             });
-            console.log('✅ Periodic background sync registered');
         } catch (error) {
-            console.log('ℹ️ Periodic sync not available');
         }
     }
 }
@@ -2236,7 +2193,6 @@ function loadWassimImage() {
     };
     img.onerror = function() {
         // Image doesn't exist, keep default (W initial)
-        console.log('⚠️ wassim-logo.jpg not found, using default avatar');
         avatarCircle.style.backgroundImage = '';
         avatarCircle.classList.remove('has-image');
         const initial = document.getElementById('wassimInitial');
@@ -2283,7 +2239,6 @@ function handleWassimImageUpload(event) {
             if (window.showNotification) {
                 showNotification('✅ تم تحديث صورة wassim بنجاح!', 'success');
             } else {
-                console.log('✅ تم تحديث صورة wassim بنجاح!');
             }
         };
         reader.onerror = function() {
