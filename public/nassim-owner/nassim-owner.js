@@ -801,7 +801,7 @@ async function deleteEmployee(employeeId) {
     }
 }
 
-// ==================== Products ====================
+// ==================== Services ====================
 async function loadServices() {
     try {
         const token = localStorage.getItem('token');
@@ -811,7 +811,7 @@ async function loadServices() {
 
         const result = await response.json();
         const services = Array.isArray(result) ? result : (result.data || []);
-        const products = rewards.filter(item => isProductItem(item));
+        displayServices(services);
 
     } catch (error) {
         console.error('Error loading services:', error);
