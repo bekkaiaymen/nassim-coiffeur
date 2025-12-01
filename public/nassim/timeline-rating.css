@@ -1,0 +1,169 @@
+/* Timeline Horizontal View */
+.timeline-container {
+    width: 100%;
+    overflow-x: auto;
+    padding: 20px 0;
+    background: var(--surface);
+    border-radius: var(--radius);
+    margin-top: 20px;
+    white-space: nowrap;
+    position: relative;
+    /* Hide scrollbar for clean look */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.timeline-container::-webkit-scrollbar {
+    display: none;
+}
+
+.timeline-track {
+    position: relative;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    min-width: max-content;
+}
+
+.timeline-line {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--text-muted);
+    z-index: 1;
+}
+
+.timeline-hour {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    margin-right: 60px; /* Space between hours */
+    z-index: 2;
+}
+
+.timeline-hour::after {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background: var(--primary);
+    border-radius: 50%;
+    margin-top: -6px; /* Center on line */
+    border: 2px solid var(--surface);
+}
+
+.timeline-time-label {
+    margin-top: 15px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.timeline-appointment {
+    position: absolute;
+    height: 60px;
+    background: var(--surface-light);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-sm);
+    padding: 5px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: var(--text-primary);
+    font-size: 12px;
+    z-index: 3;
+    top: 50%;
+    transform: translateY(-50%); /* Center vertically initially */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease;
+    cursor: pointer;
+    overflow: hidden;
+    white-space: normal;
+    width: 100px; /* Default width, will be dynamic */
+}
+
+/* Alternate positions to avoid overlap */
+.timeline-appointment.top {
+    transform: translateY(-140%);
+    border-bottom: 2px solid var(--primary);
+}
+
+.timeline-appointment.bottom {
+    transform: translateY(40%);
+    border-top: 2px solid var(--primary);
+}
+
+.timeline-appointment:hover {
+    z-index: 10;
+    transform: scale(1.05) translateY(var(--translate-y, -50%));
+    background: var(--primary);
+    color: var(--dark);
+}
+
+.timeline-appointment.top:hover {
+    --translate-y: -140%;
+}
+
+.timeline-appointment.bottom:hover {
+    --translate-y: 40%;
+}
+
+.timeline-appointment-time {
+    font-weight: bold;
+    margin-bottom: 2px;
+}
+
+.timeline-appointment-status {
+    font-size: 10px;
+    opacity: 0.8;
+}
+
+/* Rating Page Redesign */
+.rating-page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+    height: 100%;
+}
+
+.rating-stars-large {
+    display: flex;
+    gap: 10px;
+    margin: 30px 0;
+}
+
+.rating-star-large {
+    font-size: 40px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.rating-star-large.active {
+    color: var(--primary);
+    transform: scale(1.1);
+}
+
+.rating-comment-box {
+    width: 100%;
+    background: var(--surface-light);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+    padding: 15px;
+    color: var(--text-primary);
+    font-family: inherit;
+    resize: none;
+    min-height: 120px;
+    margin-bottom: 20px;
+}
+
+.rating-comment-box:focus {
+    outline: none;
+    border-color: var(--primary);
+}

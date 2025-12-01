@@ -24,6 +24,7 @@
     
     <title>✂️ Nassim Coiffeur - صالون الحلاقة الأول</title>
     <link rel="stylesheet" href="/nassim/nassim.css">
+    <link rel="stylesheet" href="/nassim/timeline-rating.css">
     <link rel="stylesheet" href="/nassim/ai-wassim.css">
     <link rel="stylesheet" href="/nassim/ai-stylist.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -780,12 +781,16 @@
                 <div class="timeline-summary" id="timelineSummaryCards"></div>
 
                 <div class="timeline-legend">
-                    <span class="legend-item"><span class="legend-dot available"></span>متاح للحجز</span>
+                    <span class="legend-item"><span class="legend-dot available"></span>متاح</span>
                     <span class="legend-item"><span class="legend-dot booked"></span>محجوز</span>
-                    <span class="legend-item"><span class="legend-dot partially"></span>متاح جزئياً</span>
                 </div>
 
-                <div class="timeline-grid" id="timelineGridView"></div>
+                <!-- New Horizontal Timeline View -->
+                <div class="timeline-container" id="timelineContainer">
+                    <div class="timeline-track" id="timelineTrack">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -803,50 +808,39 @@
                 <div></div>
             </div>
             
-            <div class="page-content">
-                <!-- Step 1: Phone Lookup -->
-                <div id="ratingLookupSection" class="rating-section">
-                    <div class="rating-intro">
-                        <h3 class="section-subtitle">كيف كانت تجربتك معنا؟</h3>
-                        <p class="section-description">نقدر رأيك ويهمنا تحسين خدماتنا باستمرار</p>
-                    </div>
-                    
-                    <form id="ratingLookupForm" class="lookup-form" onsubmit="handleRatingPhoneLookup(event)">
-                        <div class="form-group">
-                            <label for="ratingPhoneNumber" class="form-label">رقم الهاتف</label>
-                            <input 
-                                type="tel" 
-                                id="ratingPhoneNumber" 
-                                class="form-input" 
-                                placeholder="05XXXXXXXX"
-                                pattern="[0-9]{10}"
-                                required
-                            >
+            <div class="page-content rating-page-container">
+                <div class="rating-intro">
+                    <h3 class="section-subtitle">رأيك يهمنا</h3>
+                    <p class="section-description">ساعدنا في تحسين خدماتنا بتقييم تجربتك</p>
+                </div>
+                
+                <form id="customerRatingForm" class="rating-form" onsubmit="handleCustomerRatingSubmit(event)" style="width: 100%; max-width: 500px;">
+                    <div class="form-group">
+                        <div class="rating-stars-large" id="ratingStarsContainer">
+                            <span class="rating-star-large" data-rating="1" onclick="selectRatingStar(1)">★</span>
+                            <span class="rating-star-large" data-rating="2" onclick="selectRatingStar(2)">★</span>
+                            <span class="rating-star-large" data-rating="3" onclick="selectRatingStar(3)">★</span>
+                            <span class="rating-star-large" data-rating="4" onclick="selectRatingStar(4)">★</span>
+                            <span class="rating-star-large" data-rating="5" onclick="selectRatingStar(5)">★</span>
                         </div>
-                        <button type="submit" class="btn-primary-large">البحث عن المواعيد</button>
-                    </form>
-                </div>
+                    </div>
 
-                <!-- Step 2: Appointments List -->
-                <div id="ratingAppointmentsSection" class="rating-section" style="display: none;">
-                    <h3 class="section-subtitle">مواعيدك المكتملة</h3>
-                    <p class="section-description">اختر الموعد الذي تريد تقييمه</p>
-                    <div id="ratingAppointmentsList" class="appointments-list"></div>
-                    <button type="button" class="btn-secondary" onclick="backToRatingLookup()">← رجوع</button>
-                </div>
+                    <div class="form-group">
+                        <textarea 
+                            id="ratingComment" 
+                            class="rating-comment-box" 
+                            placeholder="اكتب تعليقك هنا..."
+                        ></textarea>
+                    </div>
 
-                <!-- Step 3: Rating Form -->
-                <div id="ratingFormSection" class="rating-section" style="display: none;">
-                    <div id="ratingSelectedAppointmentDetails" class="appointment-details-card"></div>
+                    <!-- Hidden phone input if needed for backend, but user asked to remove input. 
+                         We will try to submit anonymously or handle it in JS. -->
                     
-                    <form id="customerRatingForm" class="rating-form" onsubmit="handleCustomerRatingSubmit(event)">
-                        <input type="hidden" id="ratingAppointmentId">
-                        
-                        <div class="form-group">
-                            <label class="form-label">تقييمك للخدمة</label>
-                            <div class="stars-container" id="ratingStarsContainer">
-                                <span class="star" data-rating="1" onclick="selectRatingStar(1)">★</span>
-                                <span class="star" data-rating="2" onclick="selectRatingStar(2)">★</span>
+                    <button type="submit" class="btn-primary-large">إرسال التقييم</button>
+                </form>
+            </div>
+        </div>
+    </div>
                                 <span class="star" data-rating="3" onclick="selectRatingStar(3)">★</span>
                                 <span class="star" data-rating="4" onclick="selectRatingStar(4)">★</span>
                                 <span class="star" data-rating="5" onclick="selectRatingStar(5)">★</span>
