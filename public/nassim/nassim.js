@@ -3066,52 +3066,5 @@ async function handleCustomerRatingSubmit(event) {
         showToast('حدث خطأ أثناء إرسال التقييم', 'error');
     }
 }
-        showToast('الرجاء اختيار التقييم', 'error');
-        return;
-    }
-    
-    const comment = document.getElementById('ratingComment').value.trim();
-    
-    try {
-        const response = await fetch(`/api/appointments/${selectedRatingAppointment._id}/customer-rating`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                rating: selectedRatingValue,
-                comment: comment || ''
-            })
-        });
-        
-        if (!response.ok) throw new Error('فشل إرسال التقييم');
-        
-        document.getElementById('ratingFormSection').style.display = 'none';
-        document.getElementById('ratingSuccessSection').style.display = 'block';
-    } catch (error) {
-        console.error('Error submitting rating:', error);
-        showToast('حدث خطأ أثناء إرسال التقييم', 'error');
-    }
-}
 
-function backToRatingLookup() {
-    document.getElementById('ratingAppointmentsSection').style.display = 'none';
-    document.getElementById('ratingLookupSection').style.display = 'block';
-}
 
-function backToRatingAppointments() {
-    document.getElementById('ratingFormSection').style.display = 'none';
-    document.getElementById('ratingAppointmentsSection').style.display = 'block';
-}
-
-function resetRatingForm() {
-    document.getElementById('ratingLookupSection').style.display = 'block';
-    document.getElementById('ratingAppointmentsSection').style.display = 'none';
-    document.getElementById('ratingFormSection').style.display = 'none';
-    document.getElementById('ratingSuccessSection').style.display = 'none';
-    
-    document.getElementById('ratingPhoneNumber').value = '';
-    currentRatingAppointments = [];
-    selectedRatingAppointment = null;
-    selectedRatingValue = 0;
-}
