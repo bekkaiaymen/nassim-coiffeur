@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/:path*", "destination": "https://nassim-coiffeur.onrender.com/api/:path*" },
     { "source": "/home", "destination": "/public/landing.html" },
     { "source": "/nassim", "destination": "/public/nassim/index.html" },
     { "source": "/nassim-owner", "destination": "/public/nassim-owner/index.html" },
