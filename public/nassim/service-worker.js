@@ -7,6 +7,7 @@ const urlsToCache = [
     '/nassim/index.html',
     '/nassim/nassim.css',
     '/nassim/nassim.js',
+    '/favicon.svg',
     '/nassim/logo.jpg'
 ];
 
@@ -36,26 +37,50 @@ self.addEventListener('activate', event => {
 
 // Fetch from cache or network
 self.addEventListener('fetch', event => {
+    const { request } = event;
+
+    // Allow non-GET requests (POST, PUT, etc.) to pass through untouched
+    if (request.method !== 'GET') {
+        return;
+    }
+
+    // Serve favicon.ico from our SVG asset to avoid 404s
+    if (request.url.endsWith('/favicon.ico')) {
+        const svgRequest = new Request('/favicon.svg', { cache: 'reload' });
+
+        event.respondWith(
+            caches.match(svgRequest).then(cached => {
+                if (cached) {
+                    return cached;
+                }
+
+                return fetch(svgRequest).then(response => {
+                    if (response && response.status === 200) {
+                        const responseToCache = response.clone();
+                        caches.open(CACHE_NAME).then(cache => cache.put(svgRequest, responseToCache));
+                    }
+                    return response;
+                });
+            })
+        );
+        return;
+    }
+
     event.respondWith(
-        caches.match(event.request)
+        caches.match(request)
             .then(response => {
                 if (response) {
                     return response;
                 }
-                return fetch(event.request).then(response => {
-                    // Don't cache non-successful responses
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
+                return fetch(request).then(networkResponse => {
+                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+                        return networkResponse;
                     }
-                    
-                    // Clone the response
-                    const responseToCache = response.clone();
-                    
-                    caches.open(CACHE_NAME).then(cache => {
-                        cache.put(event.request, responseToCache);
-                    });
-                    
-                    return response;
+
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => cache.put(request, responseToCache));
+
+                    return networkResponse;
                 });
             })
     );

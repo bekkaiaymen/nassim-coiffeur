@@ -24,7 +24,7 @@ const hairstyleDatabase = {
         { name: 'Taper Fade', image: 'https://images.unsplash.com/photo-1605497788044-5a32c7078486?w=400', desc: 'تيبر فيد متدرج' }
     ],
     beard: [
-        { name: 'Full Beard Style', image: 'https://images.unsplash.com/photo-1560307310-67832a61353f?w=400', desc: 'لحية كاملة أنيقة' },
+        { name: 'Full Beard Style', image: 'https://images.unsplash.com/photo-1560307310-67832a61353f?auto=format&fit=crop&w=400&q=80', desc: 'لحية كاملة أنيقة' },
         { name: 'Goatee Modern', image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400', desc: 'لحية جوتي عصرية' },
         { name: 'Stubble Look', image: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=400', desc: 'مظهر الشعر الخفيف' },
         { name: 'Shaped Beard', image: 'https://images.unsplash.com/photo-1552374196-c4e7ffc6e126?w=400', desc: 'لحية مشكلة احترافية' }
