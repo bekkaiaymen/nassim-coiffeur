@@ -35,11 +35,17 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 // Configure multer storage (use memory for Cloudinary)
-const useCloudinary = process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY;
+const useCloudinary = Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+);
 
 console.log('📸 Cloudinary status:', useCloudinary ? '✅ Enabled' : '❌ Disabled (using local storage)');
 if (useCloudinary) {
     console.log('☁️  Cloud Name:', process.env.CLOUDINARY_CLOUD_NAME);
+} else {
+    console.warn('⚠️  Cloudinary disabled - check that CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET are all set');
 }
 
 const storage = useCloudinary 
