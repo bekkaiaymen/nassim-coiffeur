@@ -23,12 +23,19 @@ function formatProductCategory(category) {
 }
 
 // ==================== Initialize ====================
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
+    initOwnerDashboard().catch(error => {
+        console.error('Initialization error:', error);
+        showToast('حدث خطأ أثناء تحميل الصفحة', 'error');
+    });
+});
+
+async function initOwnerDashboard() {
     await checkAuth();
     await loadDashboardData();
     setupEventListeners(); // Initialize event listeners
     loadServices(); // Load services on page load
-});
+}
 
 // ==================== Authentication ====================
 async function checkAuth() {
@@ -938,8 +945,7 @@ function openAddServiceModal() {
     ]);
     
     showModal(modal);
-        const servicesResult = await response.json();
-        const services = Array.isArray(servicesResult) ? servicesResult : (servicesResult.data || []);
+}
 
 async function submitAddService() {
     const form = document.getElementById('addServiceForm');
