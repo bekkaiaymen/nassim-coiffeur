@@ -248,7 +248,7 @@ body::before {
     height: 100%;
     background-image: 
         linear-gradient(rgba(18, 18, 18, 0.92), rgba(14, 14, 15, 0.95)),
-        url('/public/nassim/background.jpg');
+        url('/nassim/background.jpg');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
