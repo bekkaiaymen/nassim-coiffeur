@@ -29,10 +29,10 @@
 .timeline-line {
     position: absolute;
     top: 50%;
-    left: 0;
-    right: 0;
+    left: 20px;
+    right: 20px;
     height: 2px;
-    background: var(--text-muted);
+    background: rgba(255, 255, 255, 0.1);
     z-index: 1;
 }
 
@@ -41,19 +41,21 @@
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    min-width: 100px; /* Fixed width for accurate calculation */
+    width: 100px; /* Strictly fixed width */
+    flex-shrink: 0;
     margin-right: 0;
     z-index: 2;
 }
 
 .timeline-hour::after {
     content: '';
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     background: var(--primary);
     border-radius: 50%;
     margin-top: -6px; /* Center on line */
-    border: 2px solid var(--surface);
+    border: 3px solid var(--surface);
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
 }
 
 .timeline-time-label {
@@ -65,36 +67,33 @@
 
 .timeline-appointment {
     position: absolute;
-    height: 60px;
+    height: 50px;
     background: var(--surface-light);
-    border: 1px solid var(--primary);
-    border-radius: var(--radius-sm);
-    padding: 5px 10px;
+    border: 1px solid rgba(203, 163, 92, 0.3);
+    border-left: 3px solid var(--primary);
+    border-radius: 6px;
+    padding: 4px 8px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     color: var(--text-primary);
-    font-size: 12px;
+    font-size: 11px;
     z-index: 3;
     top: 50%;
-    transform: translateY(-50%); /* Center vertically initially */
-    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    transition: transform 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    transition: all 0.2s ease;
     cursor: pointer;
     overflow: hidden;
-    white-space: normal;
-    width: 100px; /* Default width, will be dynamic */
+    white-space: nowrap;
 }
 
 /* Alternate positions to avoid overlap */
 .timeline-appointment.top {
-    transform: translateY(-140%);
-    border-bottom: 2px solid var(--primary);
+    transform: translateY(-130%);
 }
 
 .timeline-appointment.bottom {
-    transform: translateY(40%);
-    border-top: 2px solid var(--primary);
+    transform: translateY(30%);
 }
 
 .timeline-appointment:hover {
