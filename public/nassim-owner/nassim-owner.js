@@ -2513,3 +2513,34 @@ function showNotifications() {
     // TODO: Implement notifications panel
     showToast('جاري العمل على نظام الإشعارات', 'info');
 }
+
+// ==================== Cleanup ====================
+async function cleanupOldImages() {
+    if (!confirm('هل تريد حذف جميع روابط الصور القديمة من قاعدة البيانات؟\n\nملاحظة: سيتم حذف الروابط فقط، يمكنك إعادة رفع الصور لاحقاً.')) {
+        return;
+    }
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/cleanup/old-images`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            showToast(`✅ ${data.message}`, 'success');
+            // Reload current page data
+            if (currentPage === 'services') loadServices();
+            if (currentPage === 'products') loadProducts();
+            if (currentPage === 'employees') loadEmployees();
+            if (currentPage === 'rewards') loadRewards();
+        } else {
+            showToast(data.message || 'فشل التنظيف', 'error');
+        }
+    } catch (error) {
+        console.error('Cleanup error:', error);
+        showToast('حدث خطأ في التنظيف', 'error');
+    }
+}
