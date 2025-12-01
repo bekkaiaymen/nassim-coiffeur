@@ -2,6 +2,8 @@
 // OpenRouter API Configuration
 const GEMINI_API_KEY = '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';
 const GEMINI_API_URL = `https://openrouter.ai/api/v1/chat/completions`;
+const IMAGE_GEN_URL = `https://api.together.xyz/v1/images/generations`;
+const TOGETHER_API_KEY = 'a2e0d8f1e3b4c9d7f6a5b8c3d2e1f0a9'; // Together API key for image generation
 
 // Hairstyle Database  
 const hairstyleDatabase = {
@@ -231,21 +233,66 @@ async function analyzeImageWithGemini(imageBase64, style) {
     }
 }
 
+// Generate hairstyle images with AI
+async function generateHairstyleImages(style, analysis) {
+    const stylePrompts = {
+        classic: 'professional classic men haircut, side part, elegant formal style, clean sharp lines, sophisticated gentleman look, studio lighting',
+        modern: 'modern trendy men hairstyle, textured quiff, contemporary fashion, stylish fade, instagram worthy, professional photo',
+        fade: 'professional fade haircut, clean sides fade, sharp barber cut, masculine style, detailed portrait, studio quality',
+        beard: 'well-groomed beard style, professional beard trim, clean facial hair, masculine grooming, studio portrait'
+    };
+    
+    const generatedImages = [];
+    
+    try {
+        // Generate 3 different variations
+        for (let i = 0; i < 3; i++) {
+            const response = await fetch('https://api.openai.com/v1/images/generations', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${GEMINI_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: 'dall-e-3',
+                    prompt: `${stylePrompts[style]}, variation ${i+1}, high quality professional photo, realistic, detailed`,
+                    n: 1,
+                    size: '1024x1024',
+                    quality: 'standard'
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                if (data.data && data.data[0]) {
+                    generatedImages.push(data.data[0].url);
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Image generation error:', error);
+    }
+    
+    return generatedImages;
+}
+
 // Process AI Analysis and Show Suggestions
 async function simulateAIProcessing(prompt, style) {
     const loadingState = document.getElementById('aiLoadingState');
     const loadingText = loadingState?.querySelector('p');
     const loadingSmall = loadingState?.querySelector('small');
     
-    // Analyze with Gemini AI
+    // Analyze with AI
     const aiAnalysis = await analyzeImageWithGemini(uploadedImage, style);
     
-    if (loadingText) loadingText.textContent = '🔍 البحث في قاعدة بيانات التسريحات...';
-    if (loadingSmall) loadingSmall.textContent = `اختيار أفضل تسريحات ${getStyleName(style)}`;
-    await new Promise(resolve => setTimeout(resolve, 800));
+    if (loadingText) loadingText.textContent = '🎨 توليد صور مخصصة لك...';
+    if (loadingSmall) loadingSmall.textContent = `إنشاء تسريحات ${getStyleName(style)} بالذكاء الاصطناعي`;
     
-    // Display suggestions with AI analysis
-    displayHairstyleSuggestions(style, aiAnalysis);
+    // Try to generate AI images
+    const aiImages = await generateHairstyleImages(style, aiAnalysis);
+    
+    // Display suggestions with AI analysis and generated images
+    displayHairstyleSuggestions(style, aiAnalysis, aiImages);
 }
 
 // Get style name in Arabic
@@ -317,14 +364,24 @@ async function generateAIHairstyle() {
 }
 
 // Display Hairstyle Suggestions
-function displayHairstyleSuggestions(style, aiAnalysis = null) {
+function displayHairstyleSuggestions(style, aiAnalysis = null, aiGeneratedImages = []) {
     const resultsSection = document.getElementById('aiResultsSection');
     const resultsContainer = document.querySelector('.ai-results-container');
     
     if (!resultsSection || !resultsContainer) return;
     
     // Get hairstyles for selected style
-    const suggestions = hairstyleDatabase[style] || hairstyleDatabase.classic;
+    let suggestions = hairstyleDatabase[style] || hairstyleDatabase.classic;
+    
+    // If AI generated images available, use them
+    if (aiGeneratedImages.length > 0) {
+        suggestions = suggestions.slice(0, aiGeneratedImages.length).map((sug, index) => ({
+            ...sug,
+            image: aiGeneratedImages[index],
+            name: `${sug.name} - مولد بالذكاء الاصطناعي`,
+            desc: `✨ صورة مخصصة لك - ${sug.desc}`
+        }));
+    }
     
     // Clear previous results
     resultsContainer.innerHTML = '';
