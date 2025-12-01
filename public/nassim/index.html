@@ -143,6 +143,21 @@ onclick @ nassim:50
                     <span class="quick-action-label">AI مصمم</span>
                 </div>
             </div>
+            
+            <!-- Enable Notifications Banner -->
+            <div id="enableNotificationsBanner" class="notifications-banner" style="display: none;">
+                <div class="banner-content">
+                    <div class="banner-icon">🔔</div>
+                    <div class="banner-text">
+                        <h4>فعّل الإشعارات</h4>
+                        <p>احصل على تحديثات فورية عند تأكيد مواعيدك</p>
+                    </div>
+                </div>
+                <div class="banner-actions">
+                    <button class="banner-btn primary" onclick="requestNotificationPermission()">تفعيل</button>
+                    <button class="banner-btn secondary" onclick="dismissNotificationBanner()">لاحقاً</button>
+                </div>
+            </div>
 
             <!-- Loyalty Points Card -->
             <div class="loyalty-card">

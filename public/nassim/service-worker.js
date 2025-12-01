@@ -76,9 +76,10 @@ self.addEventListener('push', event => {
         body: 'لديك إشعار جديد',
         icon: '/nassim/logo.jpg',
         badge: '/nassim/logo.jpg',
-        vibrate: [200, 100, 200],
-        tag: 'nassim-notification',
-        requireInteraction: false
+        vibrate: [200, 100, 200, 100, 200],
+        tag: 'nassim-notification-' + Date.now(), // Unique tag for each notification
+        requireInteraction: true, // Keep notification visible
+        silent: false
     };
     
     if (event.data) {
@@ -103,19 +104,24 @@ self.addEventListener('push', event => {
             vibrate: notificationData.vibrate,
             tag: notificationData.tag,
             requireInteraction: notificationData.requireInteraction,
+            silent: notificationData.silent,
+            renotify: true, // Renotify even if tag is same
+            timestamp: Date.now(),
             data: notificationData.data,
             actions: [
                 {
                     action: 'open',
-                    title: 'فتح التطبيق',
-                    icon: '/nassim/logo.jpg'
+                    title: 'فتح التطبيق'
                 },
                 {
                     action: 'close',
-                    title: 'إغلاق',
-                    icon: '/nassim/logo.jpg'
+                    title: 'إغلاق'
                 }
-            ]
+            ],
+            // For Android/Chrome specific
+            image: notificationData.icon,
+            dir: 'rtl',
+            lang: 'ar'
         })
     );
 });
@@ -158,38 +164,61 @@ self.addEventListener('sync', event => {
 async function checkForNewNotifications() {
     try {
         const token = await getTokenFromStorage();
-        if (!token) return;
+        if (!token) {
+            console.log('⚠️ No token available for background sync');
+            return;
+        }
         
         const API_URL = 'https://nassim-coiffeur.onrender.com/api';
         const customerId = await getCustomerIdFromStorage();
         
-        if (!customerId) return;
+        if (!customerId) {
+            console.log('⚠️ No customer ID available for background sync');
+            return;
+        }
+        
+        console.log('🔄 Checking for new notifications...');
         
         const response = await fetch(`${API_URL}/notifications/customer/${customerId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
-        if (!response.ok) return;
+        if (!response.ok) {
+            console.log('⚠️ Notifications API returned:', response.status);
+            return;
+        }
         
         const data = await response.json();
         if (data.success && data.data) {
             const unreadNotifications = data.data.filter(n => !n.read);
             
-            // Show notification for latest unread
-            if (unreadNotifications.length > 0) {
-                const latest = unreadNotifications[0];
-                await self.registration.showNotification(latest.title, {
-                    body: latest.message,
+            console.log('📬 Found', unreadNotifications.length, 'unread notifications');
+            
+            // Show notification for each unread (up to 3)
+            const toShow = unreadNotifications.slice(0, 3);
+            for (const notif of toShow) {
+                await self.registration.showNotification(notif.title, {
+                    body: notif.message,
                     icon: '/nassim/logo.jpg',
                     badge: '/nassim/logo.jpg',
-                    vibrate: [200, 100, 200],
-                    tag: 'nassim-notification',
-                    data: latest
+                    vibrate: [200, 100, 200, 100, 200],
+                    tag: 'nassim-' + notif._id,
+                    requireInteraction: true, // Keep visible
+                    renotify: true,
+                    timestamp: new Date(notif.createdAt).getTime(),
+                    data: notif,
+                    dir: 'rtl',
+                    lang: 'ar',
+                    actions: [
+                        { action: 'open', title: 'فتح التطبيق' },
+                        { action: 'close', title: 'إغلاق' }
+                    ]
                 });
+                console.log('✅ Showed notification:', notif.title);
             }
         }
     } catch (error) {
-        console.error('Error checking notifications:', error);
+        console.error('❌ Error checking notifications:', error);
     }
 }
 

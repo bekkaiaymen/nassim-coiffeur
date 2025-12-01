@@ -235,7 +235,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
-    padding-top: 90px; /* Account for fixed header */
+    padding-top: 82px; /* Account for fixed header */
 }
 
 /* Background Pattern with Image - Luxury Dark */
@@ -468,11 +468,123 @@ body::after {
     transform: translateY(-50%) scale(0.95);
 }
 
+/* 🔔 Notification Permission Banner */
+.notifications-banner {
+    background: linear-gradient(135deg, rgba(203, 163, 92, 0.1) 0%, rgba(203, 163, 92, 0.05) 100%);
+    border: 1px solid rgba(203, 163, 92, 0.3);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    animation: slideInDown 0.5s ease-out;
+}
+
+@keyframes slideInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.banner-icon {
+    font-size: 32px;
+    animation: shake 2s ease-in-out infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: rotate(0deg); }
+    10%, 30%, 50%, 70%, 90% { transform: rotate(-10deg); }
+    20%, 40%, 60%, 80% { transform: rotate(10deg); }
+}
+
+.banner-text h4 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.banner-text p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.banner-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.banner-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.banner-btn.primary {
+    background: var(--primary);
+    color: var(--dark);
+}
+
+.banner-btn.primary:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(203, 163, 92, 0.4);
+}
+
+.banner-btn.secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid rgba(203, 163, 92, 0.2);
+}
+
+.banner-btn.secondary:hover {
+    background: rgba(203, 163, 92, 0.1);
+    color: var(--primary);
+}
+
+@media (max-width: 768px) {
+    .notifications-banner {
+        flex-direction: column;
+        align-items: stretch;
+        margin: 12px 16px;
+    }
+    
+    .banner-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+    
+    .banner-btn {
+        flex: 1;
+    }
+}
+
 /* 📱 Main Content */
 .main-content {
-    padding: 24px 20px 100px;
+    padding: 12px 20px 100px;
     position: relative;
     z-index: 1;
+    min-height: calc(100vh - 82px - 100px);
 }
 
 .section-header {
@@ -2407,7 +2519,7 @@ textarea {
 /* Notification Toast */
 .notification-toast {
     position: fixed;
-    top: 100px;
+    top: 92px;
     right: 20px;
     background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
     border-radius: 12px;
@@ -2532,10 +2644,14 @@ textarea {
 }
 
 @media (max-width: 768px) {
+    body {
+        padding-top: 75px;
+    }
+    
     .notification-toast {
-        top: 100px;
-        right: 12px;
-        left: 12px;
+        top: 85px;
+        right: 10px;
+        left: 10px;
         max-width: none;
         min-width: auto;
         padding: 14px 16px;
@@ -2551,6 +2667,10 @@ textarea {
     
     .toast-icon {
         font-size: 28px;
+    }
+    
+    .main-content {
+        padding: 8px 16px 100px;
     }
 }
 

@@ -47,6 +47,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadNotifications();
     setupEventListeners();
     
+    // Check and show notification permission banner
+    checkNotificationPermissionBanner();
+    
     // Don't show automatic booking offers
     // checkFirstBookingOffer(); // Disabled
     // checkReturningCustomerOffer(); // Disabled
@@ -708,7 +711,8 @@ async function loadAppointments() {
                 createToast(
                     '✨ تم تأكيد موعدك!',
                     `موعد ${apt.service?.name || 'الحلاقة'} - ${timeFormatted} في ${dateFormatted}`,
-                    'confirmation'
+                    'confirmation',
+                    apt._id // Link notification to appointment
                 );
                 // Vibrate if supported
                 if (navigator.vibrate) {
@@ -722,11 +726,16 @@ async function loadAppointments() {
                 createToast(
                     '⚠️ تم إلغاء موعدك',
                     `عذراً، تم إلغاء موعد ${apt.service?.name || 'الحلاقة'}. يرجى التواصل معنا.`,
-                    'cancellation'
+                    'cancellation',
+                    apt._id
                 );
             }
             
             lastAppointmentStatuses[apt._id] = apt.status;
+        });
+        
+        // Clean up notifications for completed appointments
+        cleanupCompletedNotifications(appointments);
         });
         
         displayAppointments(appointments);
@@ -1369,9 +1378,9 @@ function showNotificationToast(title, message) {
 }
 
 // Create Toast Element
-function createToast(title, message, type = 'notification') {
-    // Add to history
-    addNotificationToHistory(title, message, type);
+function createToast(title, message, type = 'notification', appointmentId = null) {
+    // Add to history with appointment ID
+    addNotificationToHistory(title, message, type, appointmentId);
     
     const toast = document.createElement('div');
     toast.className = 'notification-toast';
@@ -1398,12 +1407,12 @@ function createToast(title, message, type = 'notification') {
     
     // Start progress bar animation
     const progressBar = toast.querySelector('.toast-progress');
-    progressBar.style.animation = 'toast-progress 5s linear forwards';
+    progressBar.style.animation = 'toast-progress 15s linear forwards';
     
-    // Auto dismiss after 5 seconds
+    // Auto dismiss after 15 seconds
     const dismissTimeout = setTimeout(() => {
         dismissToast(toast);
-    }, 5000);
+    }, 15000);
     
     // Cancel auto-dismiss on hover
     toast.addEventListener('mouseenter', () => {
@@ -1414,7 +1423,7 @@ function createToast(title, message, type = 'notification') {
     // Resume auto-dismiss on mouse leave
     toast.addEventListener('mouseleave', () => {
         progressBar.style.animationPlayState = 'running';
-        setTimeout(() => dismissToast(toast), 1000);
+        setTimeout(() => dismissToast(toast), 3000);
     });
 }
 
@@ -1566,19 +1575,46 @@ function saveNotificationHistory() {
 }
 
 // Add Notification to History
-function addNotificationToHistory(title, message, type = 'notification') {
+function addNotificationToHistory(title, message, type = 'notification', appointmentId = null) {
     const notification = {
         id: Date.now().toString(),
         title,
         message,
         type,
         timestamp: new Date().toISOString(),
-        read: false
+        read: false,
+        appointmentId, // Track related appointment
+        persistent: type === 'confirmation' // Confirmation notifications are persistent
     };
     
     notificationHistory.unshift(notification);
     saveNotificationHistory();
     updateNotificationBadge(notificationHistory.filter(n => !n.read).length);
+}
+
+// Auto-remove completed appointment notifications
+function cleanupCompletedNotifications(appointments) {
+    const completedAptIds = appointments
+        .filter(apt => apt.status === 'completed' || apt.status === 'cancelled')
+        .map(apt => apt._id);
+    
+    if (completedAptIds.length > 0) {
+        const beforeCount = notificationHistory.length;
+        notificationHistory = notificationHistory.filter(notif => {
+            // Keep non-appointment notifications
+            if (!notif.appointmentId) return true;
+            // Keep if appointment not completed
+            if (!completedAptIds.includes(notif.appointmentId)) return true;
+            // Remove if appointment is completed
+            return false;
+        });
+        
+        if (beforeCount !== notificationHistory.length) {
+            saveNotificationHistory();
+            updateNotificationBadge(notificationHistory.filter(n => !n.read).length);
+            console.log('🧹 Cleaned up completed appointment notifications');
+        }
+    }
 }
 
 // Play Notification Sound
@@ -1907,14 +1943,83 @@ if ('serviceWorker' in navigator) {
 
 // Request Notification Permission
 async function requestNotificationPermission() {
-    if ('Notification' in window && Notification.permission === 'default') {
+    if (!('Notification' in window)) {
+        console.log('⚠️ Notifications not supported in this browser');
+        return;
+    }
+    
+    if (Notification.permission === 'granted') {
+        console.log('✅ Notification permission already granted');
+        subscribeToPushNotifications();
+        return;
+    }
+    
+    if (Notification.permission === 'denied') {
+        console.log('❌ Notification permission denied');
+        // Show message to user
+        showNotification('يرجى السماح بالإشعارات من إعدادات المتصفح للحصول على تحديثات فورية', 'warning');
+        return;
+    }
+    
+    // Request permission with user-friendly prompt
+    try {
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
             console.log('✅ PWA: Notification permission granted');
+            showNotification('تم تفعيل الإشعارات! ستصلك تحديثات فورية 🔔', 'success');
             subscribeToPushNotifications();
+            
+            // Test notification
+            testNotification();
         } else {
             console.log('⚠️ PWA: Notification permission denied');
+            showNotification('لن تتلقى إشعارات عند تأكيد المواعيد', 'warning');
         }
+    } catch (error) {
+        console.error('Error requesting notification permission:', error);
+    }
+}
+
+// Test Notification
+function testNotification() {
+    if (Notification.permission === 'granted' && swRegistration) {
+        swRegistration.showNotification('Nassim Coiffeur', {
+            body: 'تم تفعيل الإشعارات بنجاح! ستصلك تحديثات فورية عند تأكيد مواعيدك 🎉',
+            icon: '/nassim/logo.jpg',
+            badge: '/nassim/logo.jpg',
+            vibrate: [200, 100, 200],
+            tag: 'test-notification',
+            requireInteraction: false,
+            dir: 'rtl',
+            lang: 'ar'
+        });
+    }
+}
+
+// Check and show notification permission banner
+function checkNotificationPermissionBanner() {
+    if (!('Notification' in window)) return;
+    
+    const dismissed = localStorage.getItem('notificationBannerDismissed');
+    if (dismissed === 'true') return;
+    
+    if (Notification.permission === 'default') {
+        // Show banner after 3 seconds
+        setTimeout(() => {
+            const banner = document.getElementById('enableNotificationsBanner');
+            if (banner) {
+                banner.style.display = 'flex';
+            }
+        }, 3000);
+    }
+}
+
+// Dismiss notification banner
+function dismissNotificationBanner() {
+    const banner = document.getElementById('enableNotificationsBanner');
+    if (banner) {
+        banner.style.display = 'none';
+        localStorage.setItem('notificationBannerDismissed', 'true');
     }
 }
 
