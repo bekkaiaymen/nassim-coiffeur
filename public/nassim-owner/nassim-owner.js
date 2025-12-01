@@ -26,7 +26,8 @@ function formatProductCategory(category) {
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
     await loadDashboardData();
-    setupEventListeners();
+    setupEventListeners(); // Initialize event listeners
+    loadServices(); // Load services on page load
 });
 
 // ==================== Authentication ====================
@@ -502,7 +503,7 @@ function displayEmployees(employees) {
     const html = employees.map(employee => `
         <div class="employee-card">
             <div class="employee-header">
-                <img src="${employee.photo || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(employee.name) + '&background=FDB714&color=2C3E50&size=64'}" alt="${employee.name}" class="employee-avatar">
+                <img src="${employee.avatar || employee.photo || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(employee.name) + '&background=FDB714&color=2C3E50&size=64'}" alt="${employee.name}" class="employee-avatar">
                 <div class="employee-info">
                     <h3>${employee.name}</h3>
                     <div class="employee-role">${employee.role || 'حلاق'}</div>
@@ -630,7 +631,7 @@ async function submitAddEmployee() {
             name: formData.get('name'),
             phone: formData.get('phone'),
             email: formData.get('email'),
-            photo: photoUrl || null,
+            avatar: photoUrl || null,
             isAvailable: formData.get('isAvailable') === 'on',
             business: NASSIM_BUSINESS_ID
         };
@@ -645,7 +646,11 @@ async function submitAddEmployee() {
             body: JSON.stringify(employeeData)
         });
 
-        if (!response.ok) throw new Error('Failed to add employee');
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to add employee');
+        }
 
         showToast('تمت إضافة الموظف بنجاح', 'success');
         closeModal();
@@ -653,7 +658,7 @@ async function submitAddEmployee() {
 
     } catch (error) {
         console.error('Error adding employee:', error);
-        showToast('حدث خطأ في إضافة الموظف', 'error');
+        showToast(error.message || 'حدث خطأ في إضافة الموظف', 'error');
     }
 }
 
@@ -676,7 +681,8 @@ async function editEmployee(employeeId) {
         const servicesResponse = await fetch(`${API_URL}/services?business=${NASSIM_BUSINESS_ID}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
-        const services = await servicesResponse.json();
+        const servicesData = await servicesResponse.json();
+        const services = Array.isArray(servicesData) ? servicesData : (servicesData.data || []);
         
         const servicesCheckboxes = services.map(service => `
             <label style="display: block; margin-bottom: 8px;">
@@ -707,7 +713,7 @@ async function editEmployee(employeeId) {
                 
                 <div class="form-group">
                     <label class="form-label">الصورة (URL)</label>
-                    <input type="url" class="form-input" name="photo" value="${employee.photo || ''}">
+                    <input type="url" class="form-input" name="photo" value="${employee.avatar || employee.photo || ''}">
                 </div>
                 
                 <div class="form-group">
@@ -752,7 +758,7 @@ async function submitEditEmployee() {
         name: formData.get('name'),
         phone: formData.get('phone'),
         email: formData.get('email'),
-        photo: formData.get('photo'),
+        avatar: formData.get('photo'),
         services: selectedServices,
         isAvailable: formData.get('isAvailable') === 'on'
     };
@@ -768,7 +774,9 @@ async function submitEditEmployee() {
             body: JSON.stringify(employeeData)
         });
 
-        if (!response.ok) throw new Error('Failed to update employee');
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.message || 'Failed to update employee');
 
         showToast('تم تحديث الموظف بنجاح', 'success');
         closeModal();
@@ -776,7 +784,7 @@ async function submitEditEmployee() {
 
     } catch (error) {
         console.error('Error updating employee:', error);
-        showToast('حدث خطأ في تحديث الموظف', 'error');
+        showToast(error.message || 'حدث خطأ في تحديث الموظف', 'error');
     }
 }
 
@@ -930,7 +938,8 @@ function openAddServiceModal() {
     ]);
     
     showModal(modal);
-}
+        const servicesResult = await response.json();
+        const services = Array.isArray(servicesResult) ? servicesResult : (servicesResult.data || []);
 
 async function submitAddService() {
     const form = document.getElementById('addServiceForm');

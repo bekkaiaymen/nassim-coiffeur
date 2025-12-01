@@ -373,9 +373,10 @@ function displayEmployees(employees) {
     
     container.innerHTML = employees.map((emp, index) => {
         // Only use photo if actually uploaded by owner
-        const hasPhoto = emp.photo && !emp.photo.includes('unsplash.com');
+        const primaryPhoto = emp.avatar || emp.photo;
+        const hasPhoto = primaryPhoto && !primaryPhoto.includes('unsplash.com');
         const employeeImage = hasPhoto 
-            ? emp.photo 
+            ? primaryPhoto 
             : `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=FDB714&color=1A1A1A&size=200&bold=true`;
         
         return `
