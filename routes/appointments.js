@@ -387,6 +387,7 @@ router.get('/public', async (req, res) => {
 
         const appointments = await Appointment.find(query)
             .select('-__v')
+            .populate('serviceId', 'name duration')
             .sort({ date: 1, time: 1 });
 
         res.json({ success: true, count: appointments.length, data: appointments });
