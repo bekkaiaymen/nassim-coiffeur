@@ -359,12 +359,12 @@ function displayEmployees(employees) {
     }
     
     container.innerHTML = employees.map((emp, index) => {
-        const defaultImages = [
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop',
-            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop'
-        ];
-        const employeeImage = emp.photo || defaultImages[index % defaultImages.length];
+        // Only use photo if actually uploaded by owner
+        const hasPhoto = emp.photo && !emp.photo.includes('unsplash.com');
+        const employeeImage = hasPhoto 
+            ? emp.photo 
+            : `https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=FDB714&color=1A1A1A&size=200&bold=true`;
+        
         return `
         <div class="specialist-card" onclick="selectEmployee('${emp._id}')">
             <img src="${employeeImage}" alt="${emp.name}" class="specialist-image" onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(emp.name)}&background=FDB714&color=1A1A1A&size=200'">
