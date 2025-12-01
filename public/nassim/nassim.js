@@ -41,7 +41,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadEmployees();
     await loadPosts();
     await loadRewards();
-    await loadNotifications();
+    // Load notifications silently without blocking UI
+    if (token && customerData) {
+        loadNotifications().catch(() => {}); // Silent fail
+    }
     setupEventListeners();
     
     // Check and show notification permission banner
@@ -1245,9 +1248,7 @@ async function loadNotifications() {
         });
         
         if (!response.ok) {
-            if (response.status !== 404) {
-                console.log('⚠️ Notifications endpoint not available yet');
-            }
+            // Silently fail if endpoint not available
             return;
         }
         
