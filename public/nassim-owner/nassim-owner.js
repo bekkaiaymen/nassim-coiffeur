@@ -790,7 +790,12 @@ async function deleteEmployee(employeeId) {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!response.ok) throw new Error('Failed to delete');
+        const data = await response.json();
+
+        if (!response.ok) {
+            showToast(data.message || 'فشل حذف الموظف', 'error');
+            return;
+        }
 
         showToast('تم حذف الموظف بنجاح', 'success');
         loadEmployees();

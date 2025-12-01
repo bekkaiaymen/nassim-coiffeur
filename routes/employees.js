@@ -287,14 +287,15 @@ router.delete('/:id', protect, ensureTenant, async (req, res) => {
         // التحقق من وجود حجوزات قادمة
         const upcomingAppointments = await Appointment.countDocuments({
             employee: employee._id,
-            date: { $gte: new Date() },
+            dateTime: { $gte: new Date() },
             status: { $in: ['pending', 'confirmed'] }
         });
 
         if (upcomingAppointments > 0) {
+            console.log(`Cannot delete employee: ${upcomingAppointments} upcoming appointments found`);
             return res.status(400).json({
                 success: false,
-                message: `لا يمكن حذف الموظف لوجود ${upcomingAppointments} حجز قادم. يرجى إلغاء الحجوزات أولاً`
+                message: `لا يمكن حذف الموظف لوجود ${upcomingAppointments} حجز قادم. يرجى إلغاء الحجوزات أولاً أو إخفاء الموظف`
             });
         }
 
