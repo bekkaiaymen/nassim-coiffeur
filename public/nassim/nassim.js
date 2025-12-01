@@ -2815,24 +2815,23 @@ function renderTimelineGrid(date, appointments) {
         track.appendChild(hourEl);
     }
     
-    // Render appointments as blocks
-    // We need to calculate position based on time
-    // Assuming 60px per hour + spacing (approx 100px per hour total width)
-    // Let's say each hour block is 100px wide.
-    // 9 AM is at 20px (padding).
-    
-    // Better approach: Use absolute positioning relative to the track width?
-    // No, track width is dynamic.
-    // Let's place them relative to the hour elements.
-    // Actually, simpler: Calculate left offset based on minutes from start time.
-    
     const pixelsPerHour = 100; // 60px margin + width of hour marker approx
     const startOffset = 20; // Initial padding
     
     appointments.forEach((apt, index) => {
-        const aptDate = new Date(apt.appointmentDate || apt.date);
-        const hours = aptDate.getHours();
-        const minutes = aptDate.getMinutes();
+        // Parse time string "HH:MM"
+        let hours, minutes;
+        
+        if (apt.time) {
+            const [h, m] = apt.time.split(':').map(Number);
+            hours = h;
+            minutes = m;
+        } else {
+            // Fallback to date object if time string missing
+            const aptDate = new Date(apt.appointmentDate || apt.date);
+            hours = aptDate.getHours();
+            minutes = aptDate.getMinutes();
+        }
         
         if (hours < startHour || hours > endHour) return;
         
@@ -2849,12 +2848,27 @@ function renderTimelineGrid(date, appointments) {
         if (apt.status === 'completed') statusText = 'مكتمل';
         
         aptEl.innerHTML = `
-            <div class="timeline-appointment-time">${hours}:${String(minutes).padStart(2, '0')}</div>
+            <div class="timeline-appointment-time">${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}</div>
             <div class="timeline-appointment-status">${statusText}</div>
         `;
         
+        // Add click handler to show details
+        aptEl.onclick = () => showAppointmentDetails(apt);
+        
         track.appendChild(aptEl);
     });
+}
+
+function showAppointmentDetails(apt) {
+    // Simple alert for now, or a modal
+    const date = new Date(apt.appointmentDate || apt.date).toLocaleDateString('ar-SA');
+    const time = apt.time || '00:00';
+    const barber = apt.barber || apt.employeeName || 'غير محدد';
+    const service = apt.service || apt.serviceName || 'حلاقة';
+    
+    // If we had a modal, we would show it here.
+    // For now, let's just log it or maybe populate the rating form if the user wants to rate THIS appointment?
+    // But the user asked for the rating form to HAVE these fields.
 }
 
 function renderTimelineSummary(appointments) {
@@ -3042,20 +3056,20 @@ async function handleCustomerRatingSubmit(event) {
         return;
     }
     
+    const time = document.getElementById('ratingTime').value;
+    const barber = document.getElementById('ratingBarber').value;
+    const service = document.getElementById('ratingService').value;
     const comment = document.getElementById('ratingComment').value;
     
-    // Since we removed the phone lookup, we can't link to a specific appointment easily.
-    // We will try to submit a general review if the API supports it, or mock success for now
-    // as the user requested a UI change primarily.
-    
-    // Ideally, we would have a public review endpoint.
-    // Let's try to send to a generic endpoint or just show success.
+    if (!time) {
+        showToast('الرجاء تحديد وقت الحلاقة', 'error');
+        return;
+    }
     
     try {
-        // Simulate API call or call a real one if available
-        // const response = await fetch('/api/reviews/public', { ... });
+        // Simulate API call
+        console.log('Submitting rating:', { time, barber, service, rating: selectedRatingValue, comment });
         
-        // For now, just show success message as requested by the UI overhaul
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         showToast('شكراً لك! تم استلام تقييمك بنجاح', 'success');
@@ -3064,6 +3078,31 @@ async function handleCustomerRatingSubmit(event) {
     } catch (error) {
         console.error('Error submitting rating:', error);
         showToast('حدث خطأ أثناء إرسال التقييم', 'error');
+    }
+}
+
+function showAppointmentDetails(apt) {
+    // When clicking an appointment on timeline, open rating page pre-filled?
+    // Or just show details?
+    // Let's show a toast with details for now, or maybe open rating if it's completed?
+    
+    const date = new Date(apt.appointmentDate || apt.date);
+    const timeStr = apt.time || `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+    
+    if (apt.status === 'completed') {
+        if (confirm('هل تريد تقييم هذا الموعد؟')) {
+            showRating();
+            // Pre-fill
+            document.getElementById('ratingTime').value = timeStr;
+            if (apt.barber || apt.employeeName) {
+                document.getElementById('ratingBarber').value = apt.barber || apt.employeeName;
+            }
+            if (apt.service || apt.serviceName) {
+                document.getElementById('ratingService').value = apt.service || apt.serviceName;
+            }
+        }
+    } else {
+        showToast(`موعد: ${timeStr} - ${apt.status === 'confirmed' ? 'مؤكد' : 'محجوز'}`, 'info');
     }
 }
 

@@ -815,7 +815,25 @@
                 </div>
                 
                 <form id="customerRatingForm" class="rating-form" onsubmit="handleCustomerRatingSubmit(event)" style="width: 100%; max-width: 500px;">
+                    
+                    <!-- New Fields: Time, Barber, Service -->
                     <div class="form-group">
+                        <label class="form-label">وقت الحلاقة</label>
+                        <input type="time" id="ratingTime" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">الحلاق</label>
+                        <input type="text" id="ratingBarber" class="form-input" placeholder="اسم الحلاق (اختياري)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">نوع الحلاقة</label>
+                        <input type="text" id="ratingService" class="form-input" placeholder="مثال: حلاقة شعر، ذقن...">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">تقييمك</label>
                         <div class="rating-stars-large" id="ratingStarsContainer">
                             <span class="rating-star-large" data-rating="1" onclick="selectRatingStar(1)">★</span>
                             <span class="rating-star-large" data-rating="2" onclick="selectRatingStar(2)">★</span>
@@ -832,9 +850,6 @@
                             placeholder="اكتب تعليقك هنا..."
                         ></textarea>
                     </div>
-
-                    <!-- Hidden phone input if needed for backend, but user asked to remove input. 
-                         We will try to submit anonymously or handle it in JS. -->
                     
                     <button type="submit" class="btn-primary-large">إرسال التقييم</button>
                 </form>
