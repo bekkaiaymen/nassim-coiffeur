@@ -91,13 +91,13 @@
                     </div>
                     <span class="quick-action-label">حجوزاتي</span>
                 </div>
-                <div class="quick-action" onclick="showRewards()">
+                <div class="quick-action" onclick="showShop()">
                     <div class="quick-action-icon">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
                         </svg>
                     </div>
-                    <span class="quick-action-label">المكافآت</span>
+                    <span class="quick-action-label">المتجر</span>
                 </div>
                 <div class="quick-action" onclick="showPosts()">
                     <div class="quick-action-icon">
@@ -227,20 +227,46 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
             </button>
-            <h1 class="page-title">🎁 المكافآت</h1>
+            <h1 class="page-title">🛍️ المتجر</h1>
         </div>
 
-        <!-- User Points -->
-        <div class="user-points-card">
-            <div class="points-info">
-                <div class="points-value" id="userPoints">0</div>
-                <div class="points-label">نقاطك الحالية</div>
+        <!-- Shop Tabs -->
+        <div class="shop-tabs">
+            <button class="shop-tab active" onclick="switchShopTab('products')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+                المنتجات
+            </button>
+            <button class="shop-tab" onclick="switchShopTab('rewards')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                المكافآت
+            </button>
+        </div>
+
+        <!-- Products Tab Content -->
+        <div id="productsTabContent" class="shop-tab-content active">
+            <div id="allProductsList" class="products-container">
+                <!-- All products will be loaded here -->
             </div>
-            <div class="points-icon">⭐</div>
         </div>
 
-        <div id="allRewardsList" class="rewards-container">
-            <!-- All rewards will be loaded here -->
+        <!-- Rewards Tab Content -->
+        <div id="rewardsTabContent" class="shop-tab-content">
+            <!-- User Points -->
+            <div class="user-points-card">
+                <div class="points-info">
+                    <div class="points-value" id="userPoints">0</div>
+                    <div class="points-label">نقاطك الحالية</div>
+                </div>
+                <div class="points-icon">⭐</div>
+            </div>
+
+            <div id="allRewardsList" class="rewards-container">
+                <!-- All rewards will be loaded here -->
+            </div>
         </div>
     </div>
 

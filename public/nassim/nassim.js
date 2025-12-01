@@ -516,6 +516,63 @@ async function loadRewards() {
     }
 }
 
+// Load Products
+async function loadProducts() {
+    try {
+        const response = await fetch(`${API_URL}/products/public/by-business/${NASSIM_BUSINESS_ID}`);
+        const data = await response.json();
+        
+        if (data.success && data.data) {
+            const availableProducts = data.data.filter(p => p.isAvailable);
+            displayAllProducts(availableProducts);
+        }
+    } catch (error) {
+        console.error('Error loading products:', error);
+    }
+}
+
+// Display All Products
+function displayAllProducts(products) {
+    const container = document.getElementById('allProductsList');
+    if (!container) return;
+    
+    if (!products || products.length === 0) {
+        container.innerHTML = '<div class="empty-state">لا توجد منتجات متاحة حالياً</div>';
+        return;
+    }
+    
+    container.innerHTML = products.map(product => {
+        const imageHtml = product.image 
+            ? `<img src="${product.image}" alt="${product.name}" class="product-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
+            : `<div class="product-image-placeholder">📦</div>`;
+        
+        const stockText = product.stock !== undefined ? `<div class="product-stock">${product.stock > 0 ? `المخزون: ${product.stock}` : 'نفذ من المخزون'}</div>` : '';
+        const isAvailable = product.stock === undefined || product.stock > 0;
+        
+        return `
+        <div class="product-card">
+            ${imageHtml}
+            ${!product.image ? '<div class="product-image-placeholder" style="display: none;">📦</div>' : ''}
+            <div class="product-info">
+                <div class="product-name">${product.name}</div>
+                <div class="product-price">${product.price} دج</div>
+                ${stockText}
+                <div class="product-actions">
+                    <button class="btn-buy" onclick="buyProduct('${product._id}')" ${!isAvailable ? 'disabled' : ''}>
+                        ${isAvailable ? '🛒 شراء' : 'غير متوفر'}
+                    </button>
+                </div>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+function buyProduct(productId) {
+    // يمكن إضافة وظيفة الشراء لاحقاً
+    showNotification('قريباً: سيتم إضافة نظام الشراء', 'info');
+}
+
 // Display Rewards
 function displayRewards(rewards) {
     const container = document.getElementById('rewardsList');
@@ -1669,9 +1726,36 @@ function showPosts() {
 }
 
 function showRewards() {
+    showShop();
+}
+
+function showShop() {
     hideAllPages();
     document.getElementById('rewardsPage').classList.remove('hidden');
+    loadProducts();
+    switchShopTab('products');
     updateActiveNav(3);
+}
+
+function switchShopTab(tab) {
+    // Update tab buttons
+    document.querySelectorAll('.shop-tab').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event?.target.closest('.shop-tab')?.classList.add('active');
+    
+    // Update tab content
+    document.querySelectorAll('.shop-tab-content').forEach(content => {
+        content.classList.remove('active');
+    });
+    
+    if (tab === 'products') {
+        document.getElementById('productsTabContent').classList.add('active');
+        loadProducts();
+    } else if (tab === 'rewards') {
+        document.getElementById('rewardsTabContent').classList.add('active');
+        loadRewards();
+    }
 }
 
 function showCoins() {

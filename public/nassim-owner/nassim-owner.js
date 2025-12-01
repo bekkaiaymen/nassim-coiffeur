@@ -111,6 +111,9 @@ function showPage(pageName) {
         case 'rewards':
             loadRewards();
             break;
+        case 'products':
+            loadProducts();
+            break;
         case 'customers':
             loadCustomers();
             break;
@@ -1707,6 +1710,317 @@ async function deleteReward(rewardId) {
     }
 }
 
+// ==================== Products ====================
+async function loadProducts() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/products/business/${NASSIM_BUSINESS_ID}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const result = await response.json();
+        const products = result.data || [];
+        displayProducts(products);
+
+    } catch (error) {
+        console.error('Error loading products:', error);
+        document.getElementById('productsList').innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">فشل تحميل المنتجات</div></div>';
+    }
+}
+
+function displayProducts(products) {
+    const container = document.getElementById('productsList');
+
+    if (!products || products.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><div class="empty-title">لا توجد منتجات</div><button class="btn-primary" onclick="openAddProductModal()">إضافة منتج</button></div>';
+        return;
+    }
+
+    container.innerHTML = products.map(product => `
+        <div class="reward-card">
+            ${product.image ? `<img src="${product.image}" alt="${product.name}" class="reward-image">` : '<div class="reward-image-placeholder">📦</div>'}
+            <div class="reward-content">
+                <h3 class="reward-title">${product.name}</h3>
+                <p class="reward-description">${product.description || ''}</p>
+                <div class="reward-price">${product.price} دج</div>
+                ${product.stock !== undefined ? `<div class="product-stock">المخزون: ${product.stock}</div>` : ''}
+            </div>
+            <div class="reward-actions">
+                <button class="btn-icon" onclick="openEditProductModal('${product._id}')" title="تعديل">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </button>
+                <button class="btn-icon btn-danger" onclick="deleteProduct('${product._id}')" title="حذف">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="18" height="18">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openAddProductModal() {
+    const modal = createModal('إضافة منتج جديد', `
+        <form id="addProductForm">
+            <div class="form-group">
+                <label class="form-label">اسم المنتج *</label>
+                <input type="text" class="form-input" name="name" required placeholder="مثال: شامبو للشعر">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">الوصف</label>
+                <textarea class="form-input" name="description" rows="3" placeholder="وصف المنتج"></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">السعر (دج) *</label>
+                <input type="number" class="form-input" name="price" required min="0" placeholder="1000">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">المخزون</label>
+                <input type="number" class="form-input" name="stock" min="0" value="0" placeholder="10">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">الفئة</label>
+                <select class="form-input" name="category">
+                    <option value="hair-care">عناية بالشعر</option>
+                    <option value="beard-care">عناية باللحية</option>
+                    <option value="styling">تصفيف</option>
+                    <option value="tools">أدوات</option>
+                    <option value="other">أخرى</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">صورة المنتج</label>
+                <div class="image-upload-container">
+                    <input type="file" id="productImageFile" class="file-input" accept="image/*" onchange="previewProductImage(event)">
+                    <label for="productImageFile" class="file-upload-btn">
+                        📷 اختر صورة من الجهاز
+                    </label>
+                    <div id="productImagePreview" class="image-preview" style="display: none;">
+                        <img id="productPreviewImg" src="" alt="Preview">
+                        <button type="button" class="remove-image-btn" onclick="removeProductImage()">✕</button>
+                    </div>
+                    <small style="color: #666; display: block; margin-top: 8px;">أو أدخل رابط صورة:</small>
+                    <input type="url" class="form-input" name="image" placeholder="https://..." style="margin-top: 8px;">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">
+                    <input type="checkbox" name="isAvailable" checked>
+                    <span>متاح للبيع</span>
+                </label>
+            </div>
+        </form>
+    `, [
+        { text: 'إلغاء', class: 'btn-secondary', onclick: 'closeModal()' },
+        { text: 'إضافة', class: 'btn-primary', onclick: 'submitAddProduct()' }
+    ]);
+
+    showModal(modal);
+}
+
+async function submitAddProduct() {
+    const form = document.getElementById('addProductForm');
+    const formData = new FormData(form);
+
+    try {
+        // Upload image if selected
+        let image = formData.get('image');
+        if (selectedProductImage) {
+            showToast('جاري رفع الصورة...', 'info');
+            image = await uploadImage(selectedProductImage);
+        }
+
+        const productData = {
+            tenant: NASSIM_BUSINESS_ID,
+            name: formData.get('name'),
+            description: formData.get('description'),
+            price: parseFloat(formData.get('price')),
+            stock: parseInt(formData.get('stock')) || 0,
+            category: formData.get('category'),
+            image: image,
+            isAvailable: formData.get('isAvailable') === 'on'
+        };
+
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/products`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(productData)
+        });
+
+        if (!response.ok) throw new Error('Failed to add product');
+
+        showToast('تم إضافة المنتج بنجاح', 'success');
+        selectedProductImage = null;
+        closeModal();
+        loadProducts();
+
+    } catch (error) {
+        console.error('Error adding product:', error);
+        showToast('حدث خطأ في إضافة المنتج', 'error');
+    }
+}
+
+async function openEditProductModal(productId) {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/products/${productId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const result = await response.json();
+        const product = result.data || result;
+
+        const modal = createModal('تعديل المنتج', `
+            <form id="editProductForm">
+                <input type="hidden" name="productId" value="${product._id}">
+                
+                <div class="form-group">
+                    <label class="form-label">اسم المنتج *</label>
+                    <input type="text" class="form-input" name="name" value="${product.name}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">الوصف</label>
+                    <textarea class="form-input" name="description" rows="3">${product.description || ''}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">السعر (دج) *</label>
+                    <input type="number" class="form-input" name="price" value="${product.price}" required min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">المخزون</label>
+                    <input type="number" class="form-input" name="stock" value="${product.stock || 0}" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">الفئة</label>
+                    <select class="form-input" name="category">
+                        <option value="hair-care" ${product.category === 'hair-care' ? 'selected' : ''}>عناية بالشعر</option>
+                        <option value="beard-care" ${product.category === 'beard-care' ? 'selected' : ''}>عناية باللحية</option>
+                        <option value="styling" ${product.category === 'styling' ? 'selected' : ''}>تصفيف</option>
+                        <option value="tools" ${product.category === 'tools' ? 'selected' : ''}>أدوات</option>
+                        <option value="other" ${product.category === 'other' ? 'selected' : ''}>أخرى</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">صورة المنتج</label>
+                    <div class="image-upload-container">
+                        ${product.image ? `<div class="current-image"><img src="${product.image}" alt="Current" style="max-width: 200px; border-radius: 8px;"></div>` : ''}
+                        <input type="file" id="editProductImageFile" class="file-input" accept="image/*" onchange="previewProductImage(event)">
+                        <label for="editProductImageFile" class="file-upload-btn">
+                            📷 ${product.image ? 'تغيير الصورة' : 'اختر صورة'}
+                        </label>
+                        <div id="productImagePreview" class="image-preview" style="display: none;">
+                            <img id="productPreviewImg" src="" alt="Preview">
+                            <button type="button" class="remove-image-btn" onclick="removeProductImage()">✕</button>
+                        </div>
+                        <small style="color: #666; display: block; margin-top: 8px;">أو أدخل رابط صورة:</small>
+                        <input type="url" class="form-input" name="image" value="${product.image || ''}" placeholder="https://..." style="margin-top: 8px;">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="isAvailable" ${product.isAvailable ? 'checked' : ''}>
+                        <span>متاح للبيع</span>
+                    </label>
+                </div>
+            </form>
+        `, [
+            { text: 'إلغاء', class: 'btn-secondary', onclick: 'closeModal()' },
+            { text: 'حفظ التغييرات', class: 'btn-primary', onclick: 'submitEditProduct()' }
+        ]);
+
+        showModal(modal);
+
+    } catch (error) {
+        console.error('Error loading product:', error);
+        showToast('حدث خطأ في تحميل بيانات المنتج', 'error');
+    }
+}
+
+async function submitEditProduct() {
+    const form = document.getElementById('editProductForm');
+    const formData = new FormData(form);
+    const productId = formData.get('productId');
+
+    try {
+        // Upload image if selected
+        let image = formData.get('image');
+        if (selectedProductImage) {
+            showToast('جاري رفع الصورة...', 'info');
+            image = await uploadImage(selectedProductImage);
+        }
+
+        const productData = {
+            name: formData.get('name'),
+            description: formData.get('description'),
+            price: parseFloat(formData.get('price')),
+            stock: parseInt(formData.get('stock')) || 0,
+            category: formData.get('category'),
+            image: image,
+            isAvailable: formData.get('isAvailable') === 'on'
+        };
+
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/products/${productId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(productData)
+        });
+
+        if (!response.ok) throw new Error('Failed to update product');
+
+        showToast('تم تحديث المنتج بنجاح', 'success');
+        selectedProductImage = null;
+        closeModal();
+        loadProducts();
+
+    } catch (error) {
+        console.error('Error updating product:', error);
+        showToast('حدث خطأ في تحديث المنتج', 'error');
+    }
+}
+
+async function deleteProduct(productId) {
+    if (!confirm('هل أنت متأكد من حذف هذا المنتج؟')) return;
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/products/${productId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!response.ok) throw new Error('Failed to delete');
+
+        showToast('تم حذف المنتج بنجاح', 'success');
+        loadProducts();
+
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        showToast('حدث خطأ في حذف المنتج', 'error');
+    }
+}
+
 // ==================== Customers ====================
 async function loadCustomers() {
     try {
@@ -1926,6 +2240,7 @@ let selectedServiceImage = null;
 let selectedPostImage = null;
 let selectedRewardImage = null;
 let selectedEmployeeImage = null;
+let selectedProductImage = null;
 
 function previewServiceImage(event) {
     const file = event.target.files[0];
@@ -2041,6 +2356,36 @@ function removeEmployeeImage() {
     selectedEmployeeImage = null;
     document.getElementById('employeeImageFile').value = '';
     document.getElementById('employeeImagePreview').style.display = 'none';
+}
+
+function previewProductImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('image/')) {
+        showToast('الرجاء اختيار صورة فقط', 'error');
+        return;
+    }
+    
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('حجم الصورة يجب أن يكون أقل من 5 ميجابايت', 'error');
+        return;
+    }
+    
+    selectedProductImage = file;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('productPreviewImg').src = e.target.result;
+        document.getElementById('productImagePreview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+}
+
+function removeProductImage() {
+    selectedProductImage = null;
+    const fileInput = document.getElementById('productImageFile') || document.getElementById('editProductImageFile');
+    if (fileInput) fileInput.value = '';
+    document.getElementById('productImagePreview').style.display = 'none';
 }
 
 // Upload image to server

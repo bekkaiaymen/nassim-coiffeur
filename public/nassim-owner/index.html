@@ -86,6 +86,12 @@
                 </svg>
                 <span>الأخبار</span>
             </a>
+            <a href="#" class="nav-item" data-page="products" onclick="showPage('products')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                </svg>
+                <span>المنتجات</span>
+            </a>
             <a href="#" class="nav-item" data-page="rewards" onclick="showPage('rewards')">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
@@ -278,6 +284,21 @@
             </div>
 
             <div class="rewards-grid" id="rewardsList"></div>
+        </div>
+
+        <!-- Products Page -->
+        <div id="productsPage" class="page">
+            <div class="page-header">
+                <h2 class="page-title">إدارة المنتجات</h2>
+                <button class="btn-primary" onclick="openAddProductModal()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    منتج جديد
+                </button>
+            </div>
+
+            <div class="products-grid" id="productsList"></div>
         </div>
 
         <!-- Customers Page -->
