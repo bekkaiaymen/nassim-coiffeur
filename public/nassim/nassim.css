@@ -235,7 +235,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     position: relative;
-    padding-top: 82px; /* Account for fixed header */
+    padding-top: 0; /* Removed fixed padding, handled by main-content margin */
     padding-bottom: 80px; /* Account for bottom nav */
     min-height: 100vh;
 }
@@ -586,6 +586,7 @@ body::after {
     padding: 12px 20px;
     position: relative;
     z-index: 1;
+    margin-top: 82px; /* Exact height of header */
     min-height: calc(100vh - 162px); /* 100vh - header(82px) - bottom_nav(80px) */
 }
 
