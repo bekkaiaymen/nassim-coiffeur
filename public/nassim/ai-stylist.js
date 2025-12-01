@@ -1,7 +1,7 @@
-// AI Stylist - Gemini AI Integration
-// Google Gemini API Configuration
-const GEMINI_API_KEY = 'AIzaSyAr8dqYS4X-hDxOA-MV68QbU-rZUw2hEH4';
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+// AI Stylist - OpenRouter AI Integration
+// OpenRouter API Configuration
+const GEMINI_API_KEY = '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';
+const GEMINI_API_URL = `https://openrouter.ai/api/v1/chat/completions`;
 
 // Hairstyle Database  
 const hairstyleDatabase = {
@@ -138,7 +138,7 @@ async function analyzeImageWithGemini(imageBase64, style) {
     const loadingSmall = loadingState?.querySelector('small');
     
     try {
-        if (loadingText) loadingText.textContent = '🤖 تحليل الصورة بواسطة Gemini AI...';
+        if (loadingText) loadingText.textContent = '🤖 تحليل الصورة بالذكاء الاصطناعي...';
         if (loadingSmall) loadingSmall.textContent = 'تحديد شكل الوجه ونوع الشعر';
         
         // Prepare prompt for Gemini
@@ -163,33 +163,41 @@ async function analyzeImageWithGemini(imageBase64, style) {
         const response = await fetch(GEMINI_API_URL, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${GEMINI_API_KEY}`,
+                'HTTP-Referer': window.location.origin,
+                'X-Title': 'Nassim Coiffeur AI Stylist'
             },
             body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: prompt },
-                        {
-                            inlineData: {
-                                mimeType: "image/jpeg",
-                                data: base64Data
+                model: 'google/gemini-2.0-flash-exp:free',
+                messages: [
+                    {
+                        role: 'user',
+                        content: [
+                            {
+                                type: 'text',
+                                text: prompt
+                            },
+                            {
+                                type: 'image_url',
+                                image_url: {
+                                    url: `data:image/jpeg;base64,${base64Data}`
+                                }
                             }
-                        }
-                    ]
-                }],
-                generationConfig: {
-                    temperature: 0.7,
-                    maxOutputTokens: 500
-                }
+                        ]
+                    }
+                ],
+                temperature: 0.7,
+                max_tokens: 500
             })
         });
         
         if (!response.ok) {
-            throw new Error(`Gemini API Error: ${response.status}`);
+            throw new Error(`AI API Error: ${response.status}`);
         }
         
         const result = await response.json();
-        const aiAnalysis = result.candidates?.[0]?.content?.parts?.[0]?.text || 'تحليل غير متوفر';
+        const aiAnalysis = result.choices?.[0]?.message?.content || 'تحليل غير متوفر';
         
         if (loadingText) loadingText.textContent = '✨ تم التحليل بنجاح!';
         if (loadingSmall) loadingSmall.textContent = 'اختيار التسريحات الأنسب لك';
@@ -197,7 +205,7 @@ async function analyzeImageWithGemini(imageBase64, style) {
         return aiAnalysis;
         
     } catch (error) {
-        console.error('Gemini AI Error:', error);
+        console.error('AI Analysis Error:', error);
         console.log('Using local AI analysis instead');
         
         if (loadingText) loadingText.textContent = '✨ تحليل ذكي محلي...';
