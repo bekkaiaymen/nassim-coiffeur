@@ -192,9 +192,12 @@ app.use((req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
-    console.log(`🌐 افتح المتصفح على: http://localhost:${PORT}`);
-});
+
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`🚀 الخادم يعمل على المنفذ ${PORT}`);
+        console.log(`🌐 افتح المتصفح على: http://localhost:${PORT}`);
+    });
+}
 
 module.exports = app;
