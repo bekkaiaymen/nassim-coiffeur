@@ -1281,11 +1281,11 @@ async function submitBooking(e) {
             
             showNotification(confirmationMessage, 'success', 10000);
             
-            // Show pending reward notification
-            const points = data.pendingPoints || 100;
-            setTimeout(() => {
-                showPendingRewardNotification(points);
-            }, 2000);
+            // Pending reward notification disabled per user request
+            // const points = data.pendingPoints || 100;
+            // setTimeout(() => {
+            //     showPendingRewardNotification(points);
+            // }, 2000);
             
             // Reset payment flag after successful booking
             window.paidForVIPSlot = false;
