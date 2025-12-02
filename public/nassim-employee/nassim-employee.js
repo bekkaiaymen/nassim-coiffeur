@@ -828,12 +828,17 @@ function renderTimeline(appointments, employees) {
 
     const headerRow = document.createElement('div');
     headerRow.className = 'timeline-header-row';
-    headerRow.style.width = `${150 + (totalHours * pixelsPerHour)}px`;
+    headerRow.style.width = `${180 + (totalHours * pixelsPerHour)}px`;
     
     // Empty corner
     const corner = document.createElement('div');
-    corner.style.width = '150px';
+    corner.style.width = '180px';
     corner.style.flexShrink = '0';
+    corner.style.position = 'sticky';
+    corner.style.left = '0';
+    corner.style.background = '#222';
+    corner.style.zIndex = '30';
+    corner.style.boxShadow = '2px 0 8px rgba(0,0,0,0.3)';
     headerRow.appendChild(corner);
 
     for (let h = startHour; h <= endHour; h++) {
@@ -849,11 +854,46 @@ function renderTimeline(appointments, employees) {
     employees.forEach(emp => {
         const row = document.createElement('div');
         row.className = 'timeline-row';
-        row.style.width = `${150 + (totalHours * pixelsPerHour)}px`;
+        row.style.width = `${180 + (totalHours * pixelsPerHour)}px`;
 
         const nameCol = document.createElement('div');
         nameCol.className = 'barber-name';
-        nameCol.textContent = emp.name;
+        nameCol.style.width = '180px';
+        nameCol.style.display = 'flex';
+        nameCol.style.flexDirection = 'column';
+        nameCol.style.alignItems = 'center';
+        nameCol.style.justifyContent = 'center';
+        nameCol.style.gap = '8px';
+        nameCol.style.position = 'sticky';
+        nameCol.style.left = '0';
+        nameCol.style.background = '#2d2d2d';
+        nameCol.style.zIndex = '30';
+        nameCol.style.boxShadow = '2px 0 8px rgba(0,0,0,0.3)';
+        
+        // Avatar
+        if (employeeData && employeeData.avatar) {
+            const avatar = document.createElement('img');
+            avatar.src = employeeData.avatar || '/images/default-avatar.png';
+            avatar.alt = emp.name;
+            avatar.style.width = '50px';
+            avatar.style.height = '50px';
+            avatar.style.borderRadius = '50%';
+            avatar.style.objectFit = 'cover';
+            avatar.style.border = '2px solid #cba35c';
+            avatar.style.boxShadow = '0 2px 8px rgba(203, 163, 92, 0.3)';
+            avatar.onerror = function() {
+                this.src = '/images/default-avatar.png';
+            };
+            nameCol.appendChild(avatar);
+        }
+        
+        // Name text
+        const nameText = document.createElement('div');
+        nameText.textContent = emp.name;
+        nameText.style.fontSize = '14px';
+        nameText.style.textAlign = 'center';
+        nameCol.appendChild(nameText);
+        
         row.appendChild(nameCol);
 
         const track = document.createElement('div');

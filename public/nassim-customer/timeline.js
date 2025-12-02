@@ -117,16 +117,17 @@ function renderTimeline(date, appointments, availableEmployees = []) {
     // Calculate total width
     const totalMinutes = (END_HOUR - START_HOUR) * 60;
     const totalWidth = totalMinutes * PIXELS_PER_MINUTE;
-    strip.style.width = `${totalWidth + 150}px`; // Add space for barber names
+    strip.style.width = `${totalWidth + 180}px`; // Add space for barber names
     
     // Header Row (Time Markers)
     const headerRow = document.createElement('div');
     headerRow.className = 'timeline-header-row';
-    headerRow.style.width = `${totalWidth + 150}px`;
+    headerRow.style.width = `${totalWidth + 180}px`;
     
     // Empty corner
     const corner = document.createElement('div');
     corner.className = 'timeline-corner';
+    corner.style.width = '180px';
     headerRow.appendChild(corner);
 
     // Render Time Markers (every 30 mins)
@@ -134,7 +135,7 @@ function renderTimeline(date, appointments, availableEmployees = []) {
         const marker = document.createElement('div');
         const isHour = i % 60 === 0;
         marker.className = `time-marker ${isHour ? 'hour' : ''}`;
-        marker.style.left = `${150 + (i * PIXELS_PER_MINUTE)}px`; // Offset by 150px
+        marker.style.left = `${180 + (i * PIXELS_PER_MINUTE)}px`; // Offset by 180px
         
         // Calculate time label
         const totalMin = (START_HOUR * 60) + i;
@@ -168,6 +169,7 @@ function renderTimeline(date, appointments, availableEmployees = []) {
         employees = availableEmployees.map(emp => ({
             name: emp.name,
             id: emp._id,
+            avatar: emp.avatar || '/images/default-avatar.png',
             checkInTime: emp.todayAttendance?.checkInTime || '09:00',
             checkOutTime: emp.todayAttendance?.checkOutTime || '21:00',
             isAvailable: true
@@ -184,12 +186,28 @@ function renderTimeline(date, appointments, availableEmployees = []) {
     employees.forEach(emp => {
         const row = document.createElement('div');
         row.className = 'timeline-row';
-        row.style.width = `${totalWidth + 150}px`;
+        row.style.width = `${totalWidth + 180}px`;
 
-        // Barber Name
+        // Barber Name Column with Avatar
         const nameCol = document.createElement('div');
         nameCol.className = 'barber-name-col';
-        nameCol.textContent = emp.name;
+        
+        // Avatar
+        const avatar = document.createElement('img');
+        avatar.src = emp.avatar || '/images/default-avatar.png';
+        avatar.alt = emp.name;
+        avatar.className = 'barber-avatar';
+        avatar.onerror = function() {
+            this.src = '/images/default-avatar.png';
+        };
+        
+        // Name
+        const nameText = document.createElement('div');
+        nameText.className = 'barber-name-text';
+        nameText.textContent = emp.name;
+        
+        nameCol.appendChild(avatar);
+        nameCol.appendChild(nameText);
         row.appendChild(nameCol);
 
         // Track
