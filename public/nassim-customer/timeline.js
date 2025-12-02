@@ -138,9 +138,17 @@ function renderTimeline(date, appointments) {
     
     // Render Appointments
     appointments.forEach(apt => {
-        const aptDate = new Date(apt.date);
-        const h = aptDate.getHours();
-        const m = aptDate.getMinutes();
+        let h, m;
+        
+        // Try to parse time from 'time' string field first (format "HH:MM")
+        if (apt.time && typeof apt.time === 'string' && apt.time.includes(':')) {
+            [h, m] = apt.time.split(':').map(Number);
+        } else {
+            // Fallback to date object
+            const aptDate = new Date(apt.date);
+            h = aptDate.getHours();
+            m = aptDate.getMinutes();
+        }
         
         // Skip if out of range
         if (h < START_HOUR || h >= END_HOUR) return;
