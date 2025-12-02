@@ -64,69 +64,47 @@
             </section>
 
             <!-- Rate Customer Section -->
-            <section class="employee-section">
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2 class="section-title">⭐ تقييم العميل</h2>
-                        <p class="section-subtitle">قيّم أداء العميل وسلوكه</p>
+            <section class="employee-section" style="max-width: 500px; margin: 20px auto;">
+                <div class="section-card" style="background: #1e1e1e; border: 1px solid rgba(203, 163, 92, 0.2); border-radius: 16px; padding: 20px;">
+                    <div class="section-header" style="text-align: center; margin-bottom: 20px;">
+                        <h2 class="section-title" style="color: #cba35c; font-size: 20px;">⭐ تقييم الزبائن</h2>
+                        <p class="section-subtitle" style="color: #888; font-size: 14px;">قيم الزبائن بعد اكتمال الموعد</p>
                     </div>
 
-                    <!-- Search Customer -->
-                    <div class="search-section">
-                        <div class="form-group">
-                            <label for="searchPhone" class="form-label">البحث برقم الهاتف</label>
-                            <div class="search-input-group">
-                                <input 
-                                    type="tel" 
-                                    id="searchPhone" 
-                                    class="form-input" 
-                                    placeholder="05XXXXXXXX"
-                                    pattern="[0-9]{10}"
-                                >
-                                <button type="button" class="btn-search" onclick="searchCustomer()">بحث</button>
-                            </div>
-                        </div>
+                    <!-- Completed Appointments List -->
+                    <div id="completedAppointmentsList" class="appointments-list" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- Items will be injected here -->
+                        <div style="text-align: center; color: #666; padding: 20px;">جاري تحميل المواعيد المكتملة...</div>
                     </div>
 
-                    <!-- Customer Appointments List -->
-                    <div id="customerAppointments" class="appointments-list" style="display: none;">
-                        <h3 class="subsection-title">مواعيد العميل</h3>
-                        <div id="appointmentsList"></div>
-                    </div>
-
-                    <!-- Rating Form -->
-                    <div id="ratingFormSection" class="rating-form-section" style="display: none;">
+                    <!-- Rating Form (Hidden initially) -->
+                    <div id="ratingFormSection" class="rating-form-section" style="display: none; margin-top: 20px; border-top: 1px solid #333; padding-top: 20px;">
                         <form id="employeeRatingForm" class="employee-form">
                             <input type="hidden" id="ratingAppointmentId">
+                            
+                            <div id="selectedAppointmentDisplay" style="background: #2d2d2d; padding: 10px; border-radius: 8px; margin-bottom: 15px; color: #eee; font-size: 14px;">
+                                <!-- Selected appointment details -->
+                            </div>
 
-                            <div class="selected-appointment-info" id="selectedAppointmentInfo"></div>
-
-                            <div class="form-group">
-                                <label class="form-label">تقييم العميل</label>
-                                <div class="stars-container" id="starsContainer">
-                                    <span class="star" data-rating="1">★</span>
-                                    <span class="star" data-rating="2">★</span>
-                                    <span class="star" data-rating="3">★</span>
-                                    <span class="star" data-rating="4">★</span>
-                                    <span class="star" data-rating="5">★</span>
+                            <div class="form-group" style="text-align: center; margin-bottom: 20px;">
+                                <label class="form-label" style="color: #eee; display: block; margin-bottom: 10px;">تقييم العميل</label>
+                                <div class="stars-container" id="starsContainer" style="display: flex; justify-content: center; gap: 10px; font-size: 30px; cursor: pointer;">
+                                    <span class="star" data-rating="1" style="color: #444;">★</span>
+                                    <span class="star" data-rating="2" style="color: #444;">★</span>
+                                    <span class="star" data-rating="3" style="color: #444;">★</span>
+                                    <span class="star" data-rating="4" style="color: #444;">★</span>
+                                    <span class="star" data-rating="5" style="color: #444;">★</span>
                                 </div>
                                 <input type="hidden" id="ratingValue" required>
-                                <p class="rating-text" id="ratingText">اختر التقييم</p>
                             </div>
 
-                            <div class="form-group">
-                                <label for="ratingComment" class="form-label">ملاحظات حول العميل</label>
-                                <textarea 
-                                    id="ratingComment" 
-                                    class="form-textarea" 
-                                    rows="3"
-                                    placeholder="ملاحظات حول سلوك العميل، الالتزام بالموعد، إلخ..."
-                                ></textarea>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <textarea id="ratingComment" class="form-textarea" rows="3" placeholder="ملاحظات (اختياري)" style="width: 100%; background: #2d2d2d; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px;"></textarea>
                             </div>
 
-                            <div class="form-actions">
-                                <button type="button" class="btn-secondary" onclick="cancelRating()">إلغاء</button>
-                                <button type="submit" class="btn-primary">إرسال التقييم</button>
+                            <div class="form-actions" style="display: flex; gap: 10px;">
+                                <button type="button" class="btn-secondary" onclick="cancelRating()" style="flex: 1; padding: 10px; background: #444; border: none; color: white; border-radius: 6px; cursor: pointer;">إلغاء</button>
+                                <button type="submit" class="btn-primary" style="flex: 1; padding: 10px; background: #cba35c; border: none; color: black; font-weight: bold; border-radius: 6px; cursor: pointer;">إرسال</button>
                             </div>
                         </form>
                     </div>
@@ -135,9 +113,30 @@
         </div>
     </main>
 
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center;">
+        <div class="modal-content" style="background: #1e1e1e; padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; border: 1px solid #cba35c;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <div style="font-size: 40px; margin-bottom: 10px;">✂️</div>
+                <h2 style="color: #cba35c; margin: 0;">تسجيل دخول الموظف</h2>
+            </div>
+            <form id="loginForm">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="color: #eee; display: block; margin-bottom: 8px;">البريد الإلكتروني</label>
+                    <input type="email" id="loginEmail" required style="width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px;">
+                </div>
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="color: #eee; display: block; margin-bottom: 8px;">كلمة المرور</label>
+                    <input type="password" id="loginPassword" required style="width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px;">
+                </div>
+                <button type="submit" style="width: 100%; padding: 14px; background: #cba35c; border: none; border-radius: 8px; color: #000; font-weight: bold; font-size: 16px; cursor: pointer;">دخول</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>
 
-    <script src="/nassim-employee/employee.js"></script>
+    <script src="/nassim-employee/nassim-employee.js"></script>
 </body>
 </html>

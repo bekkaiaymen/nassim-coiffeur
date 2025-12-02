@@ -428,6 +428,7 @@ router.get('/', protect, ensureTenant, async (req, res) => {
         }
         if (status) query.status = status;
         if (barber) query.barber = barber;
+        if (req.query.employee) query.employee = req.query.employee;
 
         const appointments = await Appointment.find(query)
             .populate('customerId', 'name phone')
@@ -551,7 +552,7 @@ router.post('/', protect, ensureTenant, checkLimit('appointments'), async (req, 
             employee: resolvedEmployeeId,
             employeeName: resolvedEmployeeName,
             notes,
-            status: 'confirmed',
+            status: req.body.status || 'confirmed',
             completion: {
                 performedBy: resolvedEmployeeId || undefined,
                 performedByName: resolvedEmployeeName || undefined
