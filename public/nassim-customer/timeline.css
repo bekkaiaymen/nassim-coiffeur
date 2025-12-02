@@ -180,9 +180,13 @@ body {
 }
 
 .apt-time {
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     font-weight: 800;
     margin-bottom: 0.5rem;
+    background: rgba(0,0,0,0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
 }
 
 .apt-name {

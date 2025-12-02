@@ -160,13 +160,22 @@ function renderTimeline(date, appointments) {
         const duration = apt.serviceId?.duration || 30;
         const width = duration * PIXELS_PER_MINUTE;
         
+        // Calculate end time
+        const totalStartMinutes = h * 60 + m;
+        const totalEndMinutes = totalStartMinutes + duration;
+        const endH = Math.floor(totalEndMinutes / 60);
+        const endM = totalEndMinutes % 60;
+        
+        const startTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        const endTimeStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+        
         const el = document.createElement('div');
         el.className = 'timeline-appointment booked';
         el.style.left = `${leftPos}px`;
         el.style.width = `${width}px`;
         
         el.innerHTML = `
-            <div class="apt-time">${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}</div>
+            <div class="apt-time">${startTimeStr} - ${endTimeStr}</div>
             <div class="apt-name">${apt.customerName || 'محجوز'}</div>
             <div class="apt-service">${apt.serviceId?.name || 'خدمة'}</div>
         `;
