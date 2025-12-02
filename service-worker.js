@@ -2,11 +2,10 @@
 const CACHE_NAME = 'nassim-v1.0.0';
 const ASSETS_TO_CACHE = [
   '/nassim',
-  '/public/nassim/nassim.css',
-  '/public/nassim/nassim.js',
-  '/public/nassim/logo.jpg',
-  '/public/nassim/background.jpg',
-  '/public/manifest.json'
+  '/nassim/nassim.css',
+  '/nassim/nassim.js',
+  '/nassim/logo.jpg',
+  '/manifest.json'
 ];
 
 // Install Event - Cache assets
@@ -16,7 +15,12 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('✅ Service Worker: Caching assets');
-        return cache.addAll(ASSETS_TO_CACHE);
+        // Cache each asset individually to avoid failing on missing files
+        return Promise.allSettled(
+          ASSETS_TO_CACHE.map(url => 
+            cache.add(url).catch(err => console.warn(`⚠️ Failed to cache ${url}:`, err.message))
+          )
+        );
       })
       .then(() => self.skipWaiting())
   );
