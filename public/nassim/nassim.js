@@ -2962,15 +2962,20 @@ function showRating() {
     ratingPage.style.display = 'block';
     homePage.style.display = 'none';
     
-    // Reset to lookup section
-    document.getElementById('ratingLookupSection').style.display = 'block';
-    document.getElementById('ratingAppointmentsSection').style.display = 'none';
-    document.getElementById('ratingFormSection').style.display = 'none';
-    
     // Reset form
     document.getElementById('customerRatingForm').reset();
     document.querySelectorAll('.rating-star-large').forEach(s => s.classList.remove('active'));
     selectedRatingValue = 0;
+
+    // Check if user is logged in and has phone
+    if (customerData && customerData.phone) {
+        fetchRatingAppointments(customerData.phone);
+    } else {
+        // Show lookup section if not logged in
+        document.getElementById('ratingLookupSection').style.display = 'block';
+        document.getElementById('ratingAppointmentsSection').style.display = 'none';
+        document.getElementById('ratingFormSection').style.display = 'none';
+    }
 }
 
 function backToRatingLookup() {
@@ -2990,6 +2995,31 @@ function closeRating() {
     document.getElementById('homePage').style.display = 'block';
 }
 
+async function fetchRatingAppointments(phone) {
+    try {
+        const response = await fetch(`/api/appointments/public?phone=${phone}&status=completed`);
+        if (!response.ok) throw new Error('فشل البحث');
+        
+        const result = await response.json();
+        const appointments = result.data || result;
+        
+        if (appointments.length === 0) {
+            showToast('لا توجد مواعيد مكتملة لهذا الرقم', 'error');
+            // If auto-fetch failed, show lookup to try another number
+            document.getElementById('ratingLookupSection').style.display = 'block';
+            document.getElementById('ratingAppointmentsSection').style.display = 'none';
+            return;
+        }
+        
+        currentRatingAppointments = appointments;
+        showRatingAppointmentsList();
+    } catch (error) {
+        console.error('Error looking up appointments:', error);
+        showToast('حدث خطأ أثناء البحث', 'error');
+        document.getElementById('ratingLookupSection').style.display = 'block';
+    }
+}
+
 async function handleRatingPhoneLookup(event) {
     event.preventDefault();
     
@@ -3000,24 +3030,7 @@ async function handleRatingPhoneLookup(event) {
         return;
     }
     
-    try {
-        const response = await fetch(`/api/appointments/public?phone=${phone}&status=completed`);
-        if (!response.ok) throw new Error('فشل البحث');
-        
-        const result = await response.json();
-        const appointments = result.data || result;
-        
-        if (appointments.length === 0) {
-            showToast('لا توجد مواعيد مكتملة لهذا الرقم', 'error');
-            return;
-        }
-        
-        currentRatingAppointments = appointments;
-        showRatingAppointmentsList();
-    } catch (error) {
-        console.error('Error looking up appointments:', error);
-        showToast('حدث خطأ أثناء البحث', 'error');
-    }
+    await fetchRatingAppointments(phone);
 }
 
 function showRatingAppointmentsList() {
@@ -3032,24 +3045,26 @@ function showRatingAppointmentsList() {
         aptEl.className = 'appointment-item';
         
         const date = new Date(apt.appointmentDate || apt.date);
-        const dateStr = date.toLocaleDateString('ar-SA');
-        const timeStr = date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+        // Use en-GB to force Western numerals (0-9)
+        const dateStr = date.toLocaleDateString('en-GB');
+        const timeStr = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
         
         const hasRating = apt.customerRating && apt.customerRating.rating;
+        const barberName = apt.employee ? apt.employee.name : (apt.employeeName || 'غير محدد');
         
         aptEl.innerHTML = `
             <div class="appointment-info">
                 <div>
                     <div class="info-label">التاريخ</div>
-                    <div class="info-value">${dateStr}</div>
+                    <div class="info-value" style="font-family: 'Segoe UI', sans-serif;">${dateStr}</div>
                 </div>
                 <div>
                     <div class="info-label">الوقت</div>
-                    <div class="info-value">${timeStr}</div>
+                    <div class="info-value" style="font-family: 'Segoe UI', sans-serif;">${timeStr}</div>
                 </div>
                 <div>
-                    <div class="info-label">اسم العميل</div>
-                    <div class="info-value">${apt.customerName}</div>
+                    <div class="info-label">الحلاق</div>
+                    <div class="info-value">${barberName}</div>
                 </div>
                 <div>
                     <div class="info-label">الحالة</div>
@@ -3082,28 +3097,30 @@ function showRatingFormSection() {
     
     const detailsEl = document.getElementById('ratingSelectedAppointmentDetails');
     const date = new Date(selectedRatingAppointment.appointmentDate || selectedRatingAppointment.date);
-    const dateStr = date.toLocaleDateString('ar-SA');
-    const timeStr = date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
+    // Use en-GB to force Western numerals (0-9)
+    const dateStr = date.toLocaleDateString('en-GB');
+    const timeStr = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const barberName = selectedRatingAppointment.employee ? selectedRatingAppointment.employee.name : (selectedRatingAppointment.employeeName || 'غير محدد');
     
     // Populate hidden fields
     document.getElementById('ratingTime').value = selectedRatingAppointment.time || timeStr;
-    document.getElementById('ratingBarber').value = selectedRatingAppointment.barber || selectedRatingAppointment.employeeName || '';
+    document.getElementById('ratingBarber').value = barberName;
     document.getElementById('ratingService').value = selectedRatingAppointment.serviceType || selectedRatingAppointment.serviceName || '';
 
     detailsEl.innerHTML = `
         <h4 style="margin-bottom: 15px; color: var(--text-primary);">تفاصيل الموعد</h4>
         <div class="appointment-info">
             <div>
-                <div class="info-label">الاسم</div>
-                <div class="info-value">${selectedRatingAppointment.customerName}</div>
+                <div class="info-label">الحلاق</div>
+                <div class="info-value">${barberName}</div>
             </div>
             <div>
                 <div class="info-label">التاريخ</div>
-                <div class="info-value">${dateStr}</div>
+                <div class="info-value" style="font-family: 'Segoe UI', sans-serif;">${dateStr}</div>
             </div>
             <div>
                 <div class="info-label">الوقت</div>
-                <div class="info-value">${timeStr}</div>
+                <div class="info-value" style="font-family: 'Segoe UI', sans-serif;">${timeStr}</div>
             </div>
             <div>
                 <div class="info-label">الخدمة</div>
