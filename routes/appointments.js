@@ -161,9 +161,9 @@ router.get('/available-slots', async (req, res) => {
 // Public route to create appointment (for customers)
 router.post('/public/book', async (req, res) => {
     try {
-        const { business, service, serviceName, barber, customer, customerName, customerPhone, date, time, notes, extraCharge, isVIPSlot } = req.body;
+        const { business, service, services, serviceName, barber, customer, customerName, customerPhone, date, time, notes, extraCharge, isVIPSlot } = req.body;
 
-        if (!business || !service || !customerPhone || !date || !time) {
+        if (!business || (!service && (!services || services.length === 0)) || !customerPhone || !date || !time) {
             return res.status(400).json({ 
                 success: false, 
                 message: 'جميع الحقول مطلوبة' 
@@ -191,17 +191,72 @@ router.post('/public/book', async (req, res) => {
             customerDoc = await Customer.findById(customer);
         }
         if (!customerDoc) {
+            // Check if user exists for this phone
+            const User = require('../models/User');
+            let user = await User.findOne({ phone: customerPhone });
+            
+            if (!user) {
+                // Create new user for this customer
+                user = await User.create({
+                    name: customerName,
+                    phone: customerPhone,
+                    password: customerPhone, // Default password is phone number
+                    role: 'customer',
+                    business: business,
+                    tenant: business
+                });
+            }
+
             customerDoc = await Customer.create({
                 tenant: business,
                 business: business,
+                user: user._id,
                 name: customerName,
                 phone: customerPhone
             });
         }
 
+        // Ensure customer has a user account for login
+        if (!customerDoc.user) {
+            const User = require('../models/User');
+            let user = await User.findOne({ phone: customerPhone });
+            if (!user) {
+                user = await User.create({
+                    name: customerName || customerDoc.name,
+                    phone: customerPhone,
+                    password: customerPhone,
+                    role: 'customer',
+                    business: business,
+                    tenant: business
+                });
+            }
+            customerDoc.user = user._id;
+            await customerDoc.save();
+        }
+
+        // Generate token for auto-login
+        const jwt = require('jsonwebtoken');
+        const token = jwt.sign({ id: customerDoc.user }, process.env.JWT_SECRET || 'secret', {
+            expiresIn: process.env.JWT_EXPIRE || '30d'
+        });
+
         // Get service name if not provided
         let finalServiceName = serviceName;
-        if (!finalServiceName) {
+        let finalServiceId = service;
+        
+        // Handle multiple services
+        if (services && services.length > 0) {
+            finalServiceId = services[0]; // Primary service ID
+            if (!finalServiceName) {
+                try {
+                    const Service = require('../models/Service');
+                    const serviceDocs = await Service.find({ _id: { $in: services } });
+                    finalServiceName = serviceDocs.map(s => s.name).join(' + ');
+                } catch (err) {
+                    console.warn('Could not fetch service names:', err);
+                }
+            }
+        } else if (!finalServiceName) {
             try {
                 const Service = require('../models/Service');
                 const serviceDoc = await Service.findById(service);
@@ -218,7 +273,8 @@ router.post('/public/book', async (req, res) => {
             customerPhone: customerPhone,
             customerId: customerDoc._id,
             service: finalServiceName || 'خدمة عامة',
-            serviceId: service,
+            serviceId: finalServiceId,
+            services: services || [service], // Store all service IDs
             barber: barber || null,
             date: new Date(date),
             time,
@@ -313,7 +369,15 @@ router.post('/public/book', async (req, res) => {
             success: true, 
             message: 'تم حجز الموعد بنجاح',
             data: appointment,
-            pendingPoints: pendingPoints
+            pendingPoints: pendingPoints,
+            token: token,
+            customer: {
+                _id: customerDoc._id,
+                name: customerDoc.name,
+                phone: customerDoc.phone,
+                email: customerDoc.email,
+                loyaltyPoints: customerDoc.loyaltyPoints || 0
+            }
         });
     } catch (error) {
         console.error('Booking error:', error);

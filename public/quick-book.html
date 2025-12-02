@@ -482,6 +482,8 @@
             }
         }
 
+        let selectedServices = new Set();
+
         async function loadServices() {
             try {
                 const response = await fetch(`${API_BASE}/services/public/by-business/${BUSINESS_ID}`);
@@ -497,6 +499,7 @@
                     const card = document.createElement('div');
                     card.className = 'service-card';
                     card.dataset.id = service._id;
+                    card.dataset.price = service.price;
                     card.dataset.duration = service.duration || 30;
                     
                     card.innerHTML = `
@@ -507,7 +510,7 @@
                         <div class="service-price">${service.price} دج</div>
                     `;
 
-                    card.addEventListener('click', () => selectService(card, service._id));
+                    card.addEventListener('click', () => toggleService(card, service._id));
                     grid.appendChild(card);
                 });
 
@@ -517,10 +520,14 @@
             }
         }
 
-        function selectService(card, serviceId) {
-            document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
-            card.classList.add('selected');
-            selectedServiceId = serviceId;
+        function toggleService(card, serviceId) {
+            if (selectedServices.has(serviceId)) {
+                selectedServices.delete(serviceId);
+                card.classList.remove('selected');
+            } else {
+                selectedServices.add(serviceId);
+                card.classList.add('selected');
+            }
         }
 
         function generateTimeInputs() {
@@ -578,8 +585,8 @@
                 return;
             }
 
-            if (!selectedServiceId) {
-                showToast('الرجاء اختيار الخدمة', 'error');
+            if (selectedServices.size === 0) {
+                showToast('الرجاء اختيار خدمة واحدة على الأقل', 'error');
                 return;
             }
 
@@ -608,8 +615,9 @@
                 }
             }
 
-            const selectedCard = document.querySelector('.service-card.selected');
-            const serviceName = selectedCard.querySelector('.service-name').textContent;
+            const selectedCards = Array.from(document.querySelectorAll('.service-card.selected'));
+            const serviceNames = selectedCards.map(card => card.querySelector('.service-name').textContent).join(' + ');
+            const serviceIds = Array.from(selectedServices);
 
             const submitBtn = document.getElementById('submitBtn');
             const loading = document.getElementById('loading');
@@ -625,8 +633,8 @@
                     business: BUSINESS_ID,
                     customerName: name,
                     customerPhone: phone,
-                    service: selectedServiceId,
-                    serviceName: serviceName,
+                    services: serviceIds,
+                    serviceName: serviceNames,
                     date: date,
                     time: time,
                     appointmentDate: `${date}T${time}:00`,
@@ -655,9 +663,22 @@
                 
                 showToast(successMsg, 'success');
 
-                setTimeout(() => {
-                    window.location.href = '/nassim';
-                }, 3000);
+                // Auto-login and redirect
+                if (result.token) {
+                    localStorage.setItem('customerToken', result.token);
+                    if (result.customer) {
+                        localStorage.setItem('customerData', JSON.stringify(result.customer));
+                    }
+                    
+                    showToast('جاري تحويلك لصفحتك الشخصية...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/nassim';
+                    }, 2000);
+                } else {
+                    setTimeout(() => {
+                        window.location.href = '/nassim';
+                    }, 3000);
+                }
 
             } catch (error) {
                 console.error('Booking error:', error);
