@@ -13,7 +13,25 @@ const API_BASE = '/api';
 // DOM Ready
 document.addEventListener('DOMContentLoaded', function() {
     initEmployeeApp();
+    registerServiceWorker();
 });
+
+// Register Service Worker
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('Service Worker registered with scope:', registration.scope);
+                // Request notification permission
+                if (Notification.permission !== 'granted') {
+                    Notification.requestPermission();
+                }
+            })
+            .catch(error => {
+                console.error('Service Worker registration failed:', error);
+            });
+    }
+}
 
 // Initialize App
 async function initEmployeeApp() {
@@ -21,7 +39,7 @@ async function initEmployeeApp() {
 
     setupForms();
     await loadServices();
-    // await loadRecentCustomers(); // Removed as per new design
+    await loadPendingAppointments(); // NEW: Load pending appointments
     await loadCompletedAppointments();
     generateTimeSlots();
     setDefaultDate();
@@ -33,6 +51,9 @@ async function initEmployeeApp() {
         dateInput.addEventListener('change', loadTimeline);
     }
     loadTimeline();
+    
+    // Auto-refresh pending appointments every 30 seconds
+    setInterval(loadPendingAppointments, 30000);
 }
 
 function checkAuth() {
@@ -417,6 +438,144 @@ function resetStars(containerId) {
     });
 }
 
+// Load Pending Appointments (NEW)
+async function loadPendingAppointments() {
+    const listContainer = document.getElementById('pendingAppointmentsList');
+    if (!listContainer) return;
+
+    try {
+        const empId = employeeData ? employeeData._id : null;
+        if (!empId) return;
+
+        const response = await fetch(`${API_BASE}/appointments?status=pending&employee=${empId}`, {
+            headers: {
+                'Authorization': `Bearer ${employeeToken}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('فشل في تحميل المواعيد');
+        
+        const result = await response.json();
+        const appointments = result.data || [];
+        
+        if (!appointments || appointments.length === 0) {
+            listContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">لا توجد مواعيد في انتظار التأكيد</div>';
+            return;
+        }
+
+        listContainer.innerHTML = '';
+        appointments.forEach(apt => {
+            const item = document.createElement('div');
+            item.className = 'pending-appointment-item';
+            item.style.cssText = 'background: #2d2d2d; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #444;';
+
+            const date = new Date(apt.date);
+            const dateStr = date.toLocaleDateString('ar-DZ');
+            
+            item.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div>
+                        <div style="color: #cba35c; font-weight: bold; font-size: 16px;">${apt.customerName}</div>
+                        <div style="color: #aaa; font-size: 13px; margin-top: 3px;">${dateStr} | ${apt.time}</div>
+                        <div style="color: #ccc; font-size: 14px; margin-top: 3px;">${apt.service || 'خدمة'} | ${apt.price || 50} دج</div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="confirmAppointment('${apt._id}')" style="flex: 1; background: #27ae60; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        ✅ تأكيد
+                    </button>
+                    <button onclick="completeAppointment('${apt._id}')" style="flex: 1; background: #3498db; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        ✔️ مكتمل
+                    </button>
+                    <button onclick="rejectAppointment('${apt._id}')" style="flex: 0.5; background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        ❌
+                    </button>
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+
+    } catch (error) {
+        console.error('Error loading pending appointments:', error);
+        listContainer.innerHTML = '<div style="text-align: center; color: #e74c3c; padding: 20px;">حدث خطأ في تحميل المواعيد</div>';
+    }
+}
+
+// Confirm Appointment (NEW)
+async function confirmAppointment(appointmentId) {
+    try {
+        const response = await fetch(`${API_BASE}/appointments/${appointmentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${employeeToken}`
+            },
+            body: JSON.stringify({ status: 'confirmed' })
+        });
+        
+        if (!response.ok) throw new Error('فشل في تأكيد الموعد');
+        
+        showToast('✅ تم تأكيد الموعد بنجاح', 'success');
+        await loadPendingAppointments();
+        await loadTimeline();
+        
+    } catch (error) {
+        console.error('Confirm error:', error);
+        showToast('حدث خطأ أثناء التأكيد', 'error');
+    }
+}
+
+// Complete Appointment (NEW)
+async function completeAppointment(appointmentId) {
+    try {
+        const response = await fetch(`${API_BASE}/appointments/${appointmentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${employeeToken}`
+            },
+            body: JSON.stringify({ status: 'completed' })
+        });
+        
+        if (!response.ok) throw new Error('فشل في تحديث الموعد');
+        
+        showToast('✔️ تم وضع علامة الاكتمال على الموعد', 'success');
+        await loadPendingAppointments();
+        await loadCompletedAppointments();
+        await loadTimeline();
+        
+    } catch (error) {
+        console.error('Complete error:', error);
+        showToast('حدث خطأ أثناء التحديث', 'error');
+    }
+}
+
+// Reject Appointment (NEW)
+async function rejectAppointment(appointmentId) {
+    if (!confirm('هل أنت متأكد من رفض هذا الموعد؟')) return;
+    
+    try {
+        const response = await fetch(`${API_BASE}/appointments/${appointmentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${employeeToken}`
+            },
+            body: JSON.stringify({ status: 'cancelled' })
+        });
+        
+        if (!response.ok) throw new Error('فشل في إلغاء الموعد');
+        
+        showToast('❌ تم إلغاء الموعد', 'success');
+        await loadPendingAppointments();
+        await loadTimeline();
+        
+    } catch (error) {
+        console.error('Reject error:', error);
+        showToast('حدث خطأ أثناء الإلغاء', 'error');
+    }
+}
+
 // Utility Functions
 function formatDateForInput(date) {
     const year = date.getFullYear();
@@ -456,11 +615,21 @@ async function loadTimeline() {
         const appointments = data.data || [];
 
         // Hardcoded employees for now as per requirement
-        const employees = [
+        let employees = [
             { name: 'نسيم', id: 'nassim' },
             { name: 'وسيم', id: 'wassim' },
             { name: 'محمد', id: 'mohamed' }
         ];
+
+        // Filter employees if logged in
+        if (employeeData && employeeData.name) {
+            // Find the employee object that matches the logged-in user's name
+            // Note: This relies on the name matching exactly. Ideally use IDs.
+            const myEmployee = employees.find(e => e.name === employeeData.name);
+            if (myEmployee) {
+                employees = [myEmployee];
+            }
+        }
 
         renderTimeline(appointments, employees);
 

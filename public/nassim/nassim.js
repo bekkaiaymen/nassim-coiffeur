@@ -282,7 +282,7 @@ function populateBookingServices(services) {
             <div class="service-name" onclick="toggleServiceSelection('${service._id}')">${service.name}</div>
             <div class="service-meta" onclick="toggleServiceSelection('${service._id}')">
                 <span class="service-duration">⏱ ${service.duration} دقيقة</span>
-                <span class="service-price">${service.price} دج</span>
+                <span class="service-price">${service.priceMin && service.priceMax ? `${service.priceMin} - ${service.priceMax} دج` : `${service.price} دج`}</span>
             </div>
         </div>
         `;

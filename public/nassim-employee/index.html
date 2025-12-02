@@ -7,6 +7,7 @@
     <title>✂️ Nassim - لوحة الموظفين</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/nassim-employee/manifest.json">
     <link rel="stylesheet" href="/nassim-employee/employee.css">
 </head>
 <body>
@@ -22,6 +23,20 @@
 
     <!-- Main Content -->
     <main class="main-content">
+        <!-- Pending Appointments Section (NEW) -->
+        <section class="employee-section" style="margin-bottom: 30px;">
+            <div class="section-card">
+                <div class="section-header">
+                    <h2 class="section-title">⏳ مواعيد في انتظار التأكيد</h2>
+                    <p class="section-subtitle">مواعيد مخصصة لك تحتاج إلى تأكيد</p>
+                </div>
+                <div id="pendingAppointmentsList" class="pending-appointments-list">
+                    <!-- Pending appointments will be rendered here -->
+                    <div style="text-align: center; color: #888; padding: 20px;">جاري تحميل المواعيد...</div>
+                </div>
+            </div>
+        </section>
+
         <!-- Timeline Section -->
         <section class="employee-section" style="margin-bottom: 30px;">
             <div class="section-card">

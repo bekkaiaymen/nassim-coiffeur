@@ -32,6 +32,14 @@ const serviceSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'السعر مطلوب']
     },
+    priceMin: {
+        type: Number,
+        default: 0
+    },
+    priceMax: {
+        type: Number,
+        default: 0
+    },
     duration: {
         type: Number, // in minutes
         required: [true, 'المدة مطلوبة'],
