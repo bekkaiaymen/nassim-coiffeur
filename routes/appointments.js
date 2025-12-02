@@ -161,7 +161,7 @@ router.get('/available-slots', async (req, res) => {
 // Public route to create appointment (for customers)
 router.post('/public/book', async (req, res) => {
     try {
-        const { business, service, barber, customer, customerName, customerPhone, date, time, notes } = req.body;
+        const { business, service, serviceName, barber, customer, customerName, customerPhone, date, time, notes } = req.body;
 
         if (!business || !service || !customerPhone || !date || !time) {
             return res.status(400).json({ 
@@ -199,13 +199,26 @@ router.post('/public/book', async (req, res) => {
             });
         }
 
+        // Get service name if not provided
+        let finalServiceName = serviceName;
+        if (!finalServiceName) {
+            try {
+                const Service = require('../models/Service');
+                const serviceDoc = await Service.findById(service);
+                if (serviceDoc) finalServiceName = serviceDoc.name;
+            } catch (err) {
+                console.warn('Could not fetch service name:', err);
+            }
+        }
+
         const appointment = await Appointment.create({
             tenant: business,
             business: business,
             customerName: customerName || customerDoc.name,
             customerPhone: customerPhone,
             customerId: customerDoc._id,
-            service,
+            service: finalServiceName || 'خدمة عامة',
+            serviceId: service,
             barber: barber || null,
             date: new Date(date),
             time,
