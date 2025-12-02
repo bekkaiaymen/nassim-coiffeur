@@ -208,6 +208,11 @@ exports.checkLimit = (limitType) => {
             }).populate('plan');
 
             if (!subscription || !subscription.plan) {
+                // If tenant is active but has no subscription, allow access (legacy/dev support)
+                if (req.tenant.status === 'active') {
+                    return next();
+                }
+
                 return res.status(403).json({ 
                     success: false, 
                     message: 'لا يوجد اشتراك نشط' 
