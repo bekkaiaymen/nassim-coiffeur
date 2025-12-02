@@ -2860,7 +2860,7 @@ function renderTimelineGrid(date, appointments) {
         // Adjust width based on duration (approx)
         const width = (duration / 60) * pixelsPerHour;
         aptEl.style.width = `${width}px`; 
-        aptEl.style.overflow = 'visible'; // Allow text to spill out if box is small
+        aptEl.style.overflow = 'hidden'; // Keep content inside
         
         // Determine status text
         let statusText = 'محجوز';
@@ -2874,10 +2874,23 @@ function renderTimelineGrid(date, appointments) {
         aptEl.style.alignItems = 'center';
         aptEl.style.textAlign = 'center';
         
-        aptEl.innerHTML = `
-            <div class="timeline-appointment-time" style="font-size: 11px; white-space: nowrap; font-weight: bold;">${startTimeStr} - ${endTimeStr}</div>
-            <div class="timeline-appointment-status" style="font-size: 10px;">${statusText}</div>
-        `;
+        // Adaptive content based on width
+        if (duration < 50) {
+            // Stacked layout for narrow slots (e.g. 30 mins)
+            aptEl.innerHTML = `
+                <div class="timeline-appointment-time" style="font-size: 10px; font-weight: bold; display: flex; flex-direction: column; line-height: 1.1;">
+                    <span>${startTimeStr}</span>
+                    <span>${endTimeStr}</span>
+                </div>
+                <div class="timeline-appointment-status" style="font-size: 9px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${statusText}</div>
+            `;
+        } else {
+            // Standard layout for wider slots
+            aptEl.innerHTML = `
+                <div class="timeline-appointment-time" style="font-size: 11px; white-space: nowrap; font-weight: bold;">${startTimeStr} - ${endTimeStr}</div>
+                <div class="timeline-appointment-status" style="font-size: 10px;">${statusText}</div>
+            `;
+        }
         
         // Add click handler to show details
         aptEl.onclick = () => showAppointmentDetails(apt);
