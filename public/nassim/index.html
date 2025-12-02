@@ -809,92 +809,74 @@
             </div>
             
             <div class="page-content rating-page-container">
-                <div class="rating-intro">
-                    <h3 class="section-subtitle">رأيك يهمنا</h3>
-                    <p class="section-description">ساعدنا في تحسين خدماتنا بتقييم تجربتك</p>
-                </div>
                 
-                <form id="customerRatingForm" class="rating-form" onsubmit="handleCustomerRatingSubmit(event)" style="width: 100%; max-width: 500px;">
-                    
-                    <!-- New Fields: Time, Barber, Service -->
-                    <div class="form-group">
-                        <label class="form-label">وقت الحلاقة</label>
-                        <input type="time" id="ratingTime" class="form-input" required>
+                <!-- Step 1: Phone Lookup -->
+                <div id="ratingLookupSection">
+                    <div class="rating-intro">
+                        <h3 class="section-subtitle">مرحباً بك</h3>
+                        <p class="section-description">الرجاء إدخال رقم هاتفك لعرض مواعيدك المكتملة</p>
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">الحلاق</label>
-                        <input type="text" id="ratingBarber" class="form-input" placeholder="اسم الحلاق (اختياري)">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">نوع الحلاقة</label>
-                        <input type="text" id="ratingService" class="form-input" placeholder="مثال: حلاقة شعر، ذقن...">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">تقييمك</label>
-                        <div class="rating-stars-large" id="ratingStarsContainer">
-                            <span class="rating-star-large" data-rating="1" onclick="selectRatingStar(1)">★</span>
-                            <span class="rating-star-large" data-rating="2" onclick="selectRatingStar(2)">★</span>
-                            <span class="rating-star-large" data-rating="3" onclick="selectRatingStar(3)">★</span>
-                            <span class="rating-star-large" data-rating="4" onclick="selectRatingStar(4)">★</span>
-                            <span class="rating-star-large" data-rating="5" onclick="selectRatingStar(5)">★</span>
+                    <form onsubmit="handleRatingPhoneLookup(event)" class="rating-lookup-form">
+                        <div class="form-group">
+                            <label class="form-label">رقم الهاتف</label>
+                            <input type="tel" id="ratingPhoneNumber" class="form-input" placeholder="05XXXXXXXX" required pattern="[0-9]{10}" maxlength="10">
                         </div>
-                    </div>
+                        <button type="submit" class="btn-primary-large">بحث عن مواعيد</button>
+                    </form>
+                </div>
 
-                    <div class="form-group">
-                        <textarea 
-                            id="ratingComment" 
-                            class="rating-comment-box" 
-                            placeholder="اكتب تعليقك هنا..."
-                        ></textarea>
+                <!-- Step 2: Select Appointment -->
+                <div id="ratingAppointmentsSection" style="display: none;">
+                    <div class="section-header-row">
+                        <h3 class="section-subtitle">اختر الموعد للتقييم</h3>
+                        <button type="button" class="btn-text" onclick="backToRatingLookup()">تغيير الرقم</button>
+                    </div>
+                    <div id="ratingAppointmentsList" class="appointments-list">
+                        <!-- Items will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Step 3: Rating Form -->
+                <div id="ratingFormSection" style="display: none;">
+                    <div id="ratingSelectedAppointmentDetails" class="selected-appointment-card">
+                        <!-- Details injected here -->
                     </div>
                     
-                    <button type="submit" class="btn-primary-large">إرسال التقييم</button>
-                </form>
+                    <form id="customerRatingForm" class="rating-form" onsubmit="handleCustomerRatingSubmit(event)">
+                        <div class="form-group">
+                            <label class="form-label">تقييمك</label>
+                            <div class="rating-stars-large" id="ratingStarsContainer">
+                                <span class="rating-star-large" data-rating="1" onclick="selectRatingStar(1)">★</span>
+                                <span class="rating-star-large" data-rating="2" onclick="selectRatingStar(2)">★</span>
+                                <span class="rating-star-large" data-rating="3" onclick="selectRatingStar(3)">★</span>
+                                <span class="rating-star-large" data-rating="4" onclick="selectRatingStar(4)">★</span>
+                                <span class="rating-star-large" data-rating="5" onclick="selectRatingStar(5)">★</span>
+                            </div>
+                            <input type="hidden" id="ratingValueInput">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">ملاحظاتك (اختياري)</label>
+                            <textarea id="ratingComment" class="rating-comment-box" placeholder="اكتب تعليقك هنا..."></textarea>
+                        </div>
+                        
+                        <!-- Hidden fields for submission -->
+                        <input type="hidden" id="ratingTime">
+                        <input type="hidden" id="ratingBarber">
+                        <input type="hidden" id="ratingService">
+
+                        <div class="form-actions">
+                            <button type="button" class="btn-secondary" onclick="backToRatingAppointments()">رجوع</button>
+                            <button type="submit" class="btn-primary-large">إرسال التقييم</button>
+                        </div>
+                    </form>
+                </div>
+
             </div>
         </div>
     </div>
                                 <span class="star" data-rating="3" onclick="selectRatingStar(3)">★</span>
                                 <span class="star" data-rating="4" onclick="selectRatingStar(4)">★</span>
-                                <span class="star" data-rating="5" onclick="selectRatingStar(5)">★</span>
-                            </div>
-                            <input type="hidden" id="ratingValueInput" required>
-                            <p class="rating-text" id="ratingTextDisplay">اختر التقييم</p>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="ratingComment" class="form-label">ملاحظاتك (اختياري)</label>
-                            <textarea 
-                                id="ratingComment" 
-                                class="form-textarea" 
-                                rows="4"
-                                placeholder="شاركنا رأيك وملاحظاتك حول الخدمة..."
-                            ></textarea>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="button" class="btn-secondary" onclick="backToRatingAppointments()">← رجوع</button>
-                            <button type="submit" class="btn-primary">إرسال التقييم</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Step 4: Success Message -->
-                <div id="ratingSuccessSection" class="rating-section success-section" style="display: none;">
-                    <div class="success-icon">✓</div>
-                    <h3 class="success-title">شكراً لتقييمك!</h3>
-                    <p class="success-message">تم إرسال تقييمك بنجاح. نقدر وقتك وملاحظاتك القيمة.</p>
-                    <div class="success-actions">
-                        <button type="button" class="btn-primary" onclick="closeRating()">← العودة للرئيسية</button>
-                        <button type="button" class="btn-secondary" onclick="resetRatingForm()">تقييم موعد آخر</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Notification Side Panel -->
     <div id="notificationPanel" class="notification-panel">
         <div class="panel-header">

@@ -2962,10 +2962,27 @@ function showRating() {
     ratingPage.style.display = 'block';
     homePage.style.display = 'none';
     
+    // Reset to lookup section
+    document.getElementById('ratingLookupSection').style.display = 'block';
+    document.getElementById('ratingAppointmentsSection').style.display = 'none';
+    document.getElementById('ratingFormSection').style.display = 'none';
+    
     // Reset form
     document.getElementById('customerRatingForm').reset();
     document.querySelectorAll('.rating-star-large').forEach(s => s.classList.remove('active'));
     selectedRatingValue = 0;
+}
+
+function backToRatingLookup() {
+    document.getElementById('ratingLookupSection').style.display = 'block';
+    document.getElementById('ratingAppointmentsSection').style.display = 'none';
+    document.getElementById('ratingFormSection').style.display = 'none';
+}
+
+function backToRatingAppointments() {
+    document.getElementById('ratingLookupSection').style.display = 'none';
+    document.getElementById('ratingAppointmentsSection').style.display = 'block';
+    document.getElementById('ratingFormSection').style.display = 'none';
 }
 
 function closeRating() {
@@ -3068,6 +3085,11 @@ function showRatingFormSection() {
     const dateStr = date.toLocaleDateString('ar-SA');
     const timeStr = date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
     
+    // Populate hidden fields
+    document.getElementById('ratingTime').value = selectedRatingAppointment.time || timeStr;
+    document.getElementById('ratingBarber').value = selectedRatingAppointment.barber || selectedRatingAppointment.employeeName || '';
+    document.getElementById('ratingService').value = selectedRatingAppointment.serviceType || selectedRatingAppointment.serviceName || '';
+
     detailsEl.innerHTML = `
         <h4 style="margin-bottom: 15px; color: var(--text-primary);">تفاصيل الموعد</h4>
         <div class="appointment-info">
@@ -3094,8 +3116,7 @@ function showRatingFormSection() {
     selectedRatingValue = 0;
     document.getElementById('ratingValueInput').value = '';
     document.getElementById('ratingComment').value = '';
-    document.querySelectorAll('#ratingStarsContainer .star').forEach(s => s.classList.remove('active'));
-    document.getElementById('ratingTextDisplay').textContent = 'اختر التقييم';
+    document.querySelectorAll('.rating-star-large').forEach(s => s.classList.remove('active'));
 }
 
 function selectRatingStar(rating) {
