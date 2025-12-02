@@ -87,7 +87,11 @@ function setupForms() {
 // Load Services
 async function loadServices() {
     try {
-        const response = await fetch(`${API_BASE}/services`);
+        const response = await fetch(`${API_BASE}/services`, {
+            headers: {
+                'Authorization': `Bearer ${employeeToken}`
+            }
+        });
         
         if (!response.ok) {
             throw new Error('فشل في تحميل الخدمات');
@@ -236,7 +240,10 @@ async function loadCompletedAppointments() {
 
     try {
         // Fetch completed appointments for this employee
-        const response = await fetch(`${API_BASE}/appointments?status=completed&limit=20&employee=${employeeId}`, {
+        const empId = employeeData ? employeeData.id : null;
+        if (!empId) return;
+
+        const response = await fetch(`${API_BASE}/appointments?status=completed&limit=20&employee=${empId}`, {
             headers: {
                 'Authorization': `Bearer ${employeeToken}`
             }

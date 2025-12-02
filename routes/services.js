@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const Service = require('../models/Service');
 const { protect, ensureTenant, addTenantFilter } = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const Employee = require('../models/Employee');
 
 // Public endpoint - Get services by business (for customers)
 router.get('/public/by-business/:businessId', async (req, res) => {
@@ -24,14 +27,49 @@ router.get('/public/by-business/:businessId', async (req, res) => {
 });
 
 // Apply middleware to all other routes
-router.use(protect);
-router.use(ensureTenant);
+// router.use(protect); // Removed global protect to allow public access if needed, or handle per route
+// router.use(ensureTenant);
 
 // Get all services
 router.get('/', async (req, res) => {
     try {
         const { category, available, business } = req.query;
-        let query = business ? { business } : addTenantFilter(req, {});
+        let query = {};
+        let userOrEmployee = null;
+
+        // Check for token manually since we support both User and Employee here
+        let token;
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, process.env.JWT_SECRET || 'smartbiz-secret-2025');
+                
+                if (decoded.role === 'employee') {
+                    userOrEmployee = await Employee.findById(decoded.id);
+                } else {
+                    userOrEmployee = await User.findById(decoded.id);
+                }
+            } catch (err) {
+                console.log('Token verification failed in services GET:', err.message);
+            }
+        }
+
+        // Build query
+        if (business) {
+            query.business = business;
+        } else if (userOrEmployee) {
+            // If authenticated, filter by tenant/business
+            if (userOrEmployee.tenant) {
+                query.tenant = userOrEmployee.tenant;
+            } else if (userOrEmployee.business) {
+                 query.business = userOrEmployee.business;
+            }
+        } else {
+             return res.status(401).json({ success: false, message: 'غير مصرح. يرجى تسجيل الدخول أو تحديد المتجر' });
+        }
 
         if (category) query.category = category;
         if (available !== undefined) query.available = available === 'true';
@@ -47,8 +85,7 @@ router.get('/', async (req, res) => {
 // Get service by ID
 router.get('/:id', async (req, res) => {
     try {
-        const query = addTenantFilter(req, { _id: req.params.id });
-        const service = await Service.findOne(query);
+        const service = await Service.findById(req.params.id);
 
         if (!service) {
             return res.status(404).json({ success: false, message: 'الخدمة غير موجودة' });
@@ -61,7 +98,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new service
-router.post('/', async (req, res) => {
+router.post('/', protect, ensureTenant, async (req, res) => {
     try {
         const service = await Service.create({
             ...req.body,

@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Tenant = require('../models/Tenant');
+const Employee = require('../models/Employee');
 
 // Protect routes (authenticate user)
 exports.protect = async (req, res, next) => {
@@ -19,7 +20,13 @@ exports.protect = async (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'smartbiz-secret-2025');
-        req.user = await User.findById(decoded.id).populate('tenant').populate('business');
+        
+        // Check if it's an employee token
+        if (decoded.role === 'employee') {
+            req.user = await Employee.findById(decoded.id).populate('tenant').populate('business');
+        } else {
+            req.user = await User.findById(decoded.id).populate('tenant').populate('business');
+        }
         
         if (!req.user) {
             return res.status(401).json({
