@@ -963,17 +963,20 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
         }
 
         // 2. Check for Referrer's points (Referral Bonus)
-        // We need to find if any OTHER customer has a pending reward linked to THIS appointment ID
-        // This is a bit expensive (scan all customers?), but since we don't store referrerId on appointment, we have to.
-        // Optimization: We can search specifically in pendingRewards.appointmentId
+        console.log(`🔍 Checking for referral rewards for appointment: ${appointment._id}`);
         
         const referrers = await Customer.find({
             'pendingRewards.appointmentId': appointment._id
         });
+        
+        console.log(`Found ${referrers.length} potential referrers`);
 
         for (const referrer of referrers) {
             // Skip if it's the customer themselves (already handled above)
-            if (referrer._id.toString() === appointment.customerId.toString()) continue;
+            if (appointment.customerId && referrer._id.toString() === appointment.customerId.toString()) {
+                console.log('Skipping referrer as it is the customer themselves');
+                continue;
+            }
 
             const pendingReward = referrer.pendingRewards.find(
                 r => r.appointmentId && r.appointmentId.toString() === appointment._id.toString()
@@ -1005,20 +1008,24 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
                 try {
                     const Notification = require('../models/Notification');
                     const User = require('../models/User');
-                    const user = await User.findById(referrer.user);
-                    if (user) {
-                        await Notification.create({
-                            user: user._id,
-                            type: 'reward',
-                            title: '🎉 مكافأة إحالة صديق!',
-                            message: `تم تفعيل ${pointsToActivate} نقطة لأن صديقك أكمل موعده`,
-                            icon: '🎁',
-                            data: { points: pointsToActivate, appointmentId: appointment._id }
-                        });
+                    if (referrer.user) {
+                        const user = await User.findById(referrer.user);
+                        if (user) {
+                            await Notification.create({
+                                user: user._id,
+                                type: 'reward',
+                                title: '🎉 مكافأة إحالة صديق!',
+                                message: `تم تفعيل ${pointsToActivate} نقطة لأن صديقك أكمل موعده`,
+                                icon: '🎁',
+                                data: { points: pointsToActivate, appointmentId: appointment._id }
+                            });
+                        }
                     }
                 } catch (notifError) {
                     console.error('Error creating referral notification:', notifError);
                 }
+            } else {
+                console.log(`⚠️ Referrer found but no matching pending reward in array for ${referrer.name}`);
             }
         }
 
