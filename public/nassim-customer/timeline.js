@@ -4,6 +4,11 @@ const API_BASE = '/api';
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     initializeTimeline();
+    
+    // Auto-refresh every 5 minutes
+    setInterval(() => {
+        refreshTimeline();
+    }, 5 * 60 * 1000);
 });
 
 // Initialize timeline with today's date
@@ -29,10 +34,13 @@ async function loadTimeline(date) {
     try {
         showToast('جاري تحميل البيانات...', 'info');
         
-        const response = await fetch(`${API_BASE}/appointments?date=${date}`);
+        // Use public endpoint
+        const response = await fetch(`${API_BASE}/appointments/public?date=${date}`);
         if (!response.ok) throw new Error('فشل تحميل البيانات');
         
-        const appointments = await response.json();
+        const result = await response.json();
+        const appointments = result.data || [];
+        
         renderTimeline(date, appointments);
         renderSummary(appointments);
         

@@ -210,17 +210,36 @@ body {
 
 .timeline-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
 }
 
 .timeline-slot {
-    padding: 1.5rem;
-    border-radius: 12px;
+    padding: 2rem;
+    border-radius: 16px;
     text-align: center;
     transition: all 0.3s;
     cursor: pointer;
-    border: 2px solid transparent;
+    border: 3px solid transparent;
+}
+
+.slot-time {
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.slot-status {
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.slot-details {
+    font-size: 1rem;
+    opacity: 0.9;
 }
 
 .timeline-slot.available {

@@ -55,7 +55,7 @@ self.addEventListener('fetch', event => {
                 }
 
                 return fetch(svgRequest).then(response => {
-                    if (response && response.status === 200) {
+                    if (response && response.status === 200 && svgRequest.method === 'GET' && svgRequest.url.startsWith('http')) {
                         const responseToCache = response.clone();
                         caches.open(CACHE_NAME).then(cache => cache.put(svgRequest, responseToCache));
                     }
@@ -67,22 +67,18 @@ self.addEventListener('fetch', event => {
     }
 
     event.respondWith(
-        caches.match(request)
-            .then(response => {
-                if (response) {
-                    return response;
-                }
-                return fetch(request).then(networkResponse => {
-                    if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-                        return networkResponse;
-                    }
-
-                    const responseToCache = networkResponse.clone();
+        caches.match(request).then(cached => {
+            if (cached) return cached;
+            
+            return fetch(request).then(response => {
+                // Only cache valid GET requests
+                if (response && response.status === 200 && request.method === 'GET' && request.url.startsWith('http')) {
+                    const responseToCache = response.clone();
                     caches.open(CACHE_NAME).then(cache => cache.put(request, responseToCache));
-
-                    return networkResponse;
-                });
-            })
+                }
+                return response;
+            });
+        })
     );
 });
 
