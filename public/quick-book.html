@@ -406,6 +406,17 @@
             </div>
 
             <div class="section-title">
+                <span>💈</span>
+                <span>اختر الحلاق (اختياري)</span>
+            </div>
+
+            <div class="form-group">
+                <select id="barberSelect" class="form-select">
+                    <option value="">أي حلاق متاح</option>
+                </select>
+            </div>
+
+            <div class="section-title">
                 <span>✂️</span>
                 <span>اختر الخدمة</span>
             </div>
@@ -468,6 +479,7 @@
         async function initQuickBook() {
             loadReferrerInfo();
             await loadServices();
+            await loadEmployees();
             generateTimeInputs();
             setMinDate();
         }
@@ -483,6 +495,30 @@
         }
 
         let selectedServices = new Set();
+
+        async function loadEmployees() {
+            try {
+                const response = await fetch(`${API_BASE}/employees/public/by-business/${BUSINESS_ID}`);
+                if (!response.ok) throw new Error('فشل في تحميل الحلاقين');
+
+                const result = await response.json();
+                const employees = result.data || [];
+                
+                const select = document.getElementById('barberSelect');
+                // Keep the first option (Any barber)
+                select.innerHTML = '<option value="">أي حلاق متاح</option>';
+                
+                employees.forEach(emp => {
+                    const option = document.createElement('option');
+                    option.value = emp._id;
+                    option.textContent = emp.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Load employees error:', error);
+                // Don't show toast for this, just keep "Any barber"
+            }
+        }
 
         async function loadServices() {
             try {
@@ -576,6 +612,7 @@
 
             const name = document.getElementById('customerName').value.trim();
             const phone = document.getElementById('customerPhone').value.trim();
+            const barberId = document.getElementById('barberSelect').value;
             const date = document.getElementById('appointmentDate').value;
             const hour = document.getElementById('hourSelect').value;
             const minute = document.getElementById('minuteSelect').value;
@@ -633,6 +670,7 @@
                     business: BUSINESS_ID,
                     customerName: name,
                     customerPhone: phone,
+                    barber: barberId || null,
                     services: serviceIds,
                     serviceName: serviceNames,
                     date: date,

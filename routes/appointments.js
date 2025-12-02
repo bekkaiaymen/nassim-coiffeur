@@ -200,6 +200,7 @@ router.post('/public/book', async (req, res) => {
                 user = await User.create({
                     name: customerName,
                     phone: customerPhone,
+                    email: `${customerPhone}@nassim.local`, // Dummy email
                     password: customerPhone, // Default password is phone number
                     role: 'customer',
                     business: business,
@@ -224,6 +225,7 @@ router.post('/public/book', async (req, res) => {
                 user = await User.create({
                     name: customerName || customerDoc.name,
                     phone: customerPhone,
+                    email: `${customerPhone}@nassim.local`, // Dummy email
                     password: customerPhone,
                     role: 'customer',
                     business: business,
