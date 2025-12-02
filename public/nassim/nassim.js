@@ -3251,10 +3251,8 @@ async function handleReferFriend() {
 
 // Open Location in Google Maps
 function openLocation() {
-    // Search for "Nassim Coiffeur" or use specific coordinates if available
-    // For now, we use the name which usually works if the business is listed
-    const query = encodeURIComponent('Nassim Coiffeur');
-    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${query}`;
+    // Use the specific location URL provided
+    const mapsUrl = 'https://maps.app.goo.gl/PPKh13qQoVrLJ2RC7?g_st=aw';
     window.open(mapsUrl, '_blank');
 }
 
