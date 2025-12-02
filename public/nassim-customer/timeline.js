@@ -10,10 +10,10 @@ document.addEventListener('DOMContentLoaded', () => {
     startClock();
     startAutoScroll();
     
-    // Auto-refresh every 5 minutes
+    // Auto-refresh every 10 seconds
     setInterval(() => {
         refreshTimeline();
-    }, 5 * 60 * 1000);
+    }, 10 * 1000);
 });
 
 function startClock() {
