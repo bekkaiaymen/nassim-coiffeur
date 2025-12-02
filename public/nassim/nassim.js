@@ -2807,6 +2807,11 @@ function renderTimelineGrid(date, appointments) {
         const hourEl = document.createElement('div');
         hourEl.className = 'timeline-hour';
         
+        // Explicit dot element for better control
+        const dot = document.createElement('div');
+        dot.className = 'timeline-dot';
+        hourEl.appendChild(dot);
+
         const timeLabel = document.createElement('div');
         timeLabel.className = 'timeline-time-label';
         timeLabel.textContent = `${hour > 12 ? hour - 12 : hour} ${hour >= 12 ? 'PM' : 'AM'}`;
@@ -2815,7 +2820,7 @@ function renderTimelineGrid(date, appointments) {
         track.appendChild(hourEl);
     }
     
-    const pixelsPerHour = 100; // Matches CSS min-width: 100px
+    const pixelsPerHour = 100; // Matches CSS width: 100px
     const startOffset = 20; // Padding of container
     const hourCenterOffset = 50; // Center of 100px hour element
     
@@ -2862,9 +2867,16 @@ function renderTimelineGrid(date, appointments) {
         if (apt.status === 'confirmed') statusText = 'مؤكد';
         if (apt.status === 'completed') statusText = 'مكتمل';
         
+        // Center content
+        aptEl.style.display = 'flex';
+        aptEl.style.flexDirection = 'column';
+        aptEl.style.justifyContent = 'center';
+        aptEl.style.alignItems = 'center';
+        aptEl.style.textAlign = 'center';
+        
         aptEl.innerHTML = `
-            <div class="timeline-appointment-time" style="font-size: 11px; white-space: nowrap;">${startTimeStr} - ${endTimeStr}</div>
-            <div class="timeline-appointment-status">${statusText}</div>
+            <div class="timeline-appointment-time" style="font-size: 11px; white-space: nowrap; font-weight: bold;">${startTimeStr}</div>
+            <div class="timeline-appointment-status" style="font-size: 10px;">${statusText}</div>
         `;
         
         // Add click handler to show details
