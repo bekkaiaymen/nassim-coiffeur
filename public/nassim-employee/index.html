@@ -16,8 +16,7 @@
             <h1 class="app-title">✂️ Nassim Barber - لوحة الموظفين</h1>
         </div>
         <div class="top-bar-right">
-            <a href="/nassim-owner" class="btn-link">لوحة التحكم</a>
-            <a href="/nassim" class="btn-link">الصفحة الرئيسية</a>
+            <!-- Buttons removed for cleaner interface -->
         </div>
     </header>
 
@@ -25,61 +24,22 @@
     <main class="main-content">
         <div class="employee-grid">
             <!-- Quick Add Customer Section -->
-            <section class="employee-section">
-                <div class="section-card">
-                    <div class="section-header">
-                        <h2 class="section-title">➕ إضافة عميل سريع</h2>
-                        <p class="section-subtitle">أضف عميل جديد بسرعة وسهولة</p>
+            <section class="employee-section" style="max-width: 500px; margin: 0 auto;">
+                <div class="section-card" style="background: #1e1e1e; border: 1px solid rgba(203, 163, 92, 0.2); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+                    <div class="section-header" style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <h2 class="section-title" style="color: #cba35c; font-size: 24px;">⚡ إضافة زبون بسرعة</h2>
+                        <p class="section-subtitle" style="color: #888;">حجز فوري للموعد الحالي</p>
                     </div>
 
-                    <form id="quickAddForm" class="employee-form">
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="customerName" class="form-label">اسم العميل *</label>
-                                <input 
-                                    type="text" 
-                                    id="customerName" 
-                                    class="form-input" 
-                                    placeholder="أدخل اسم العميل"
-                                    required
-                                >
-                            </div>
+                    <form id="quickAddForm" class="employee-form" style="padding-top: 20px;">
+                        <!-- Hidden fields for defaults -->
+                        <input type="hidden" id="customerName" value="زبون سريع">
+                        <input type="hidden" id="customerPhone" value="0000000000">
+                        <input type="hidden" id="appointmentDate">
 
-                            <div class="form-group">
-                                <label for="customerPhone" class="form-label">رقم الهاتف *</label>
-                                <input 
-                                    type="tel" 
-                                    id="customerPhone" 
-                                    class="form-input" 
-                                    placeholder="05XXXXXXXX"
-                                    pattern="[0-9]{10}"
-                                    required
-                                >
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="appointmentDate" class="form-label">التاريخ *</label>
-                                <input 
-                                    type="date" 
-                                    id="appointmentDate" 
-                                    class="form-input"
-                                    required
-                                >
-                            </div>
-
-                            <div class="form-group">
-                                <label for="appointmentTime" class="form-label">الوقت *</label>
-                                <select id="appointmentTime" class="form-input" required>
-                                    <option value="">اختر الوقت</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="serviceType" class="form-label">نوع الخدمة *</label>
-                            <select id="serviceType" class="form-input" required>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label for="serviceType" class="form-label" style="color: #eee; margin-bottom: 10px; display: block;">نوع الخدمة</label>
+                            <select id="serviceType" class="form-input" required style="width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px;">
                                 <option value="">اختر الخدمة</option>
                                 <option value="حلاقة">حلاقة</option>
                                 <option value="حلاقة وتشذيب لحية">حلاقة وتشذيب لحية</option>
@@ -91,17 +51,14 @@
                             </select>
                         </div>
 
-                        <div class="form-group">
-                            <label for="notes" class="form-label">ملاحظات</label>
-                            <textarea 
-                                id="notes" 
-                                class="form-textarea" 
-                                rows="3"
-                                placeholder="أي ملاحظات إضافية..."
-                            ></textarea>
+                        <div class="form-group" style="margin-bottom: 25px;">
+                            <label for="appointmentTime" class="form-label" style="color: #eee; margin-bottom: 10px; display: block;">وقت الحجز</label>
+                            <input type="time" id="appointmentTime" class="form-input" required style="width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px; font-family: 'Segoe UI', sans-serif;">
                         </div>
 
-                        <button type="submit" class="btn-primary-large">➕ إضافة الموعد</button>
+                        <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; background: linear-gradient(45deg, #cba35c, #e0c179); border: none; border-radius: 8px; color: #000; font-weight: bold; font-size: 18px; cursor: pointer; transition: transform 0.2s;">
+                            تأكيد الحجز الفوري
+                        </button>
                     </form>
                 </div>
             </section>
