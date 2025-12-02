@@ -36,17 +36,31 @@ app.use('/nassim', express.static(path.join(__dirname, 'public/nassim')));
 app.use('/nassim-owner', express.static(path.join(__dirname, 'public/nassim-owner')));
 
 // MongoDB Connection (optional - server will still run without it)
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smartbiz')
-.then(async () => {
-    console.log('✅ MongoDB متصل بنجاح');
-    
-    // Server startup - database ready
-    console.log('📊 قاعدة البيانات جاهزة للاستخدام');
-})
-.catch(err => {
-    console.warn('⚠️ تحذير: لم يتم الاتصال بـ MongoDB - سيعمل الخادم بدون قاعدة بيانات');
-    console.warn('   السبب:', err.message);
-});
+const mongoUri = process.env.MONGODB_URI;
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (mongoUri) {
+    mongoose.connect(mongoUri)
+    .then(async () => {
+        console.log('✅ MongoDB متصل بنجاح');
+        console.log('📊 قاعدة البيانات جاهزة للاستخدام');
+    })
+    .catch(err => {
+        console.warn('⚠️ تحذير: لم يتم الاتصال بـ MongoDB - سيعمل الخادم بدون قاعدة بيانات');
+        console.warn('   السبب:', err.message);
+    });
+} else if (!isProduction) {
+    // Only attempt localhost connection in development
+    mongoose.connect('mongodb://localhost:27017/smartbiz')
+    .then(async () => {
+        console.log('✅ MongoDB (Local) متصل بنجاح');
+    })
+    .catch(err => {
+        console.warn('⚠️ تحذير: لم يتم الاتصال بـ MongoDB المحلي');
+    });
+} else {
+    console.log('ℹ️ تخطي الاتصال بقاعدة البيانات (بيئة الإنتاج بدون MONGODB_URI)');
+}
 
 // Routes
 const appointmentRoutes = require('./routes/appointments');
