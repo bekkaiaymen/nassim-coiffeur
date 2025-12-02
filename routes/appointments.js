@@ -695,14 +695,151 @@ router.post('/', protect, ensureTenant, checkLimit('appointments'), async (req, 
 router.put('/:id', protect, ensureTenant, async (req, res) => {
     try {
         const query = { tenant: req.tenantId, _id: req.params.id };
-        const appointment = await Appointment.findOneAndUpdate(
-            query,
-            req.body,
-            { new: true, runValidators: true }
-        );
+        const appointment = await Appointment.findOne(query);
 
         if (!appointment) {
             return res.status(404).json({ success: false, message: 'الموعد غير موجود' });
+        }
+
+        const oldStatus = appointment.status;
+        const newStatus = req.body.status;
+
+        // Update fields
+        appointment.set(req.body);
+        await appointment.save();
+
+        // Check if status changed to completed
+        if (newStatus === 'completed' && oldStatus !== 'completed') {
+            console.log(`✅ Appointment ${appointment._id} completed via PUT. Activating points...`);
+            
+            // 1. Check for Customer's own points (New Customer Bonus)
+            if (appointment.customerId) {
+                const customer = await Customer.findById(appointment.customerId);
+                if (customer && customer.pendingRewards && customer.pendingRewards.length > 0) {
+                    // Find pending reward for this appointment (Self Reward)
+                    const pendingReward = customer.pendingRewards.find(
+                        r => r.appointmentId && r.appointmentId.toString() === appointment._id.toString()
+                    );
+
+                    if (pendingReward) {
+                        // Activate points
+                        const pointsToActivate = pendingReward.points;
+                        customer.loyaltyPoints = (customer.loyaltyPoints || 0) + pointsToActivate;
+                        customer.pendingPoints = Math.max(0, (customer.pendingPoints || 0) - pointsToActivate);
+
+                        // Update points history
+                        const historyEntry = customer.pointsHistory.find(
+                            h => h.appointmentId && h.appointmentId.toString() === appointment._id.toString() && h.status === 'pending'
+                        );
+                        if (historyEntry) {
+                            historyEntry.status = 'confirmed';
+                            historyEntry.type = 'earned';
+                        }
+
+                        // Remove from pending rewards
+                        customer.pendingRewards = customer.pendingRewards.filter(
+                            r => !(r.appointmentId && r.appointmentId.toString() === appointment._id.toString())
+                        );
+
+                        // Update loyalty tier
+                        if (customer.loyaltyPoints >= 500) {
+                            customer.loyaltyTier = 'ذهبي';
+                        } else if (customer.loyaltyPoints >= 200) {
+                            customer.loyaltyTier = 'فضي';
+                        } else {
+                            customer.loyaltyTier = 'برونزي';
+                        }
+
+                        await customer.save();
+
+                        // Create notification for customer
+                        try {
+                            const Notification = require('../models/Notification');
+                            const User = require('../models/User');
+                            const user = await User.findById(customer.user);
+                            if (user) {
+                                await Notification.create({
+                                    user: user._id,
+                                    type: 'reward',
+                                    title: '🎉 تم تفعيل مكافأتك!',
+                                    message: `تم تفعيل ${pointsToActivate} نقطة (ما يعادل ${pointsToActivate} دينار جزائري)`,
+                                    icon: '🎁',
+                                    data: { points: pointsToActivate, appointmentId: appointment._id }
+                                });
+                            }
+                        } catch (notifError) {
+                            console.error('Error creating notification:', notifError);
+                        }
+                    }
+                }
+            }
+
+            // 2. Check for Referrer's points (Referral Bonus)
+            console.log(`🔍 Checking for referral rewards for appointment: ${appointment._id}`);
+            
+            const referrers = await Customer.find({
+                'pendingRewards.appointmentId': appointment._id
+            });
+            
+            console.log(`Found ${referrers.length} potential referrers`);
+
+            for (const referrer of referrers) {
+                // Skip if it's the customer themselves (already handled above)
+                if (appointment.customerId && referrer._id.toString() === appointment.customerId.toString()) {
+                    console.log('Skipping referrer as it is the customer themselves');
+                    continue;
+                }
+
+                const pendingReward = referrer.pendingRewards.find(
+                    r => r.appointmentId && r.appointmentId.toString() === appointment._id.toString()
+                );
+
+                if (pendingReward) {
+                    const pointsToActivate = pendingReward.points;
+                    referrer.loyaltyPoints = (referrer.loyaltyPoints || 0) + pointsToActivate;
+                    referrer.pendingPoints = Math.max(0, (referrer.pendingPoints || 0) - pointsToActivate);
+
+                    // Update history
+                    const historyEntry = referrer.pointsHistory.find(
+                        h => h.appointmentId && h.appointmentId.toString() === appointment._id.toString() && h.status === 'pending'
+                    );
+                    if (historyEntry) {
+                        historyEntry.status = 'confirmed';
+                        historyEntry.type = 'earned';
+                    }
+
+                    // Remove from pending
+                    referrer.pendingRewards = referrer.pendingRewards.filter(
+                        r => !(r.appointmentId && r.appointmentId.toString() === appointment._id.toString())
+                    );
+
+                    await referrer.save();
+                    console.log(`✅ Referral reward activated for ${referrer.name}: ${pointsToActivate} points`);
+
+                    // Create notification for referrer
+                    try {
+                        const Notification = require('../models/Notification');
+                        const User = require('../models/User');
+                        if (referrer.user) {
+                            const user = await User.findById(referrer.user);
+                            if (user) {
+                                await Notification.create({
+                                    user: user._id,
+                                    type: 'reward',
+                                    title: '🎉 مكافأة إحالة صديق!',
+                                    message: `تم تفعيل ${pointsToActivate} نقطة لأن صديقك أكمل موعده`,
+                                    icon: '🎁',
+                                    data: { points: pointsToActivate, appointmentId: appointment._id }
+                                });
+                            }
+                        }
+                    } catch (notifError) {
+                        console.error('Error creating referral notification:', notifError);
+                    }
+                } else {
+                    console.log(`⚠️ Referrer found but no matching pending reward in array for ${referrer.name}`);
+                }
+            }
         }
 
         res.json({ 
