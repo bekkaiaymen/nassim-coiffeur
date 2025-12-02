@@ -191,6 +191,10 @@ exports.addTenantFilter = (req, filter = {}) => {
 // Check subscription limits
 exports.checkLimit = (limitType) => {
     return async (req, res, next) => {
+        // TEMPORARY: Bypass all subscription checks
+        return next();
+        
+        /*
         try {
             if (!req.tenant || req.user.role === 'super_admin') {
                 return next(); // Super admins bypass limits
@@ -280,5 +284,6 @@ exports.checkLimit = (limitType) => {
                 message: error.message 
             });
         }
+        */
     };
 };
