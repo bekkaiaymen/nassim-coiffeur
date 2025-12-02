@@ -587,11 +587,20 @@ function resetStars(containerId) {
 // Load Pending Appointments (NEW)
 async function loadPendingAppointments() {
     const listContainer = document.getElementById('pendingAppointmentsList');
-    if (!listContainer) return;
+    if (!listContainer) {
+        console.warn('pendingAppointmentsList container not found');
+        return;
+    }
 
     try {
         const empId = employeeData ? employeeData._id : null;
-        if (!empId) return;
+        if (!empId) {
+            console.warn('No employee ID found');
+            listContainer.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">يرجى تسجيل الدخول</div>';
+            return;
+        }
+
+        console.log('Loading pending appointments for employee:', empId);
 
         // Load appointments assigned to this employee
         const response = await fetch(`${API_BASE}/appointments?status=pending&employee=${empId}`, {
@@ -609,13 +618,9 @@ async function loadPendingAppointments() {
         
         const result = await response.json();
         const appointments = result.data || [];
+        console.log('Direct appointments:', appointments.length);
         
-        if (!appointments || appointments.length === 0) {
-            listContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">لا توجد مواعيد في انتظار التأكيد</div>';
-            return;
-        }
-
-        // Load flexible appointments (any barber)
+        // Load flexible appointments (any barber) - always check this
         const flexResponse = await fetch(`${API_BASE}/appointments?status=pending&isFlexibleEmployee=true`, {
             headers: {
                 'Authorization': `Bearer ${employeeToken}`
@@ -626,10 +631,12 @@ async function loadPendingAppointments() {
         if (flexResponse.ok) {
             const flexResult = await flexResponse.json();
             flexAppointments = flexResult.data || [];
+            console.log('Flexible appointments:', flexAppointments.length);
         }
 
         // Combine both lists
         const allAppointments = [...appointments, ...flexAppointments];
+        console.log('Total appointments:', allAppointments.length);
 
         if (allAppointments.length === 0) {
             listContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">لا توجد مواعيد في انتظار التأكيد</div>';
