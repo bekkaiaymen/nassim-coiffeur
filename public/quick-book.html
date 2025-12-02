@@ -677,6 +677,7 @@
                     time: time,
                     appointmentDate: `${date}T${time}:00`,
                     notes: referrerName ? `حجز سريع عبر إحالة من: ${referrerName}` : 'حجز سريع',
+                    referrer: referrerName, // Send referrer explicitly
                     extraCharge: extraCharge,
                     isVIPSlot: isVIPSlot
                 };

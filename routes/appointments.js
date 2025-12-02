@@ -290,33 +290,91 @@ router.post('/public/book', async (req, res) => {
         customerDoc.totalVisits += 1;
         customerDoc.lastVisit = new Date();
         
-        // Determine points based on customer type (new vs returning)
-        // Check if customer has any completed appointments
+        // New Points System Logic
+        // 1. Check if customer is new (no completed appointments)
         const completedAppointments = await Appointment.find({
-            customerId: customer,
+            customerId: customerDoc._id,
             status: 'completed'
         }).countDocuments();
+
+        // 2. Check for Referrer
+        let referrerDoc = null;
+        let isReferred = false;
         
-        // New customer (no completed appointments): 100 points
-        // Returning customer (has completed appointments): 50 points
-        const pendingPoints = completedAppointments === 0 ? 100 : 50;
-        customerDoc.pendingPoints = (customerDoc.pendingPoints || 0) + pendingPoints;
-        customerDoc.pointsHistory = customerDoc.pointsHistory || [];
-        customerDoc.pointsHistory.push({
-            points: pendingPoints,
-            type: 'pending',
-            description: `مكافأة حجز موعد - ${customerName || customerDoc.name}`,
-            date: new Date(),
-            appointmentId: appointment._id,
-            status: 'pending'
-        });
-        customerDoc.pendingRewards = customerDoc.pendingRewards || [];
-        customerDoc.pendingRewards.push({
-            appointmentId: appointment._id,
-            points: pendingPoints,
-            description: `مكافأة حجز موعد - ${customerName || customerDoc.name}`,
-            createdAt: new Date()
-        });
+        // Try to find referrer from notes or body
+        // Note: Frontend sends referrer name in notes or we can add a field
+        // For now, we'll check if 'referrer' field exists in body (we will add it to frontend)
+        // or parse from notes if needed.
+        const referrerName = req.body.referrer;
+        
+        if (referrerName) {
+            // Find referrer by name (approximate) - In a real app, use ID or Code
+            // We search for a customer with this name in the same business
+            referrerDoc = await Customer.findOne({ 
+                name: referrerName,
+                business: business
+            });
+            
+            if (referrerDoc && referrerDoc._id.toString() !== customerDoc._id.toString()) {
+                isReferred = true;
+                
+                // Add pending points to REFERRER (100 points)
+                // These points are pending until THIS appointment is completed
+                referrerDoc.pendingPoints = (referrerDoc.pendingPoints || 0) + 100;
+                referrerDoc.pointsHistory = referrerDoc.pointsHistory || [];
+                referrerDoc.pointsHistory.push({
+                    points: 100,
+                    type: 'pending',
+                    description: `مكافأة إحالة صديق (${customerName || customerDoc.name})`,
+                    date: new Date(),
+                    appointmentId: appointment._id, // Link to this appointment
+                    status: 'pending'
+                });
+                
+                // We also need to track this in pendingRewards for the referrer to easily find it later
+                referrerDoc.pendingRewards = referrerDoc.pendingRewards || [];
+                referrerDoc.pendingRewards.push({
+                    appointmentId: appointment._id,
+                    points: 100,
+                    description: `مكافأة إحالة صديق (${customerName || customerDoc.name})`,
+                    createdAt: new Date()
+                });
+                
+                await referrerDoc.save();
+                console.log(`✅ Referral tracked: ${referrerName} referred ${customerName}`);
+            }
+        }
+
+        // 3. Points for the Customer (Referee)
+        // Rule: New Customer = 100 points. Referred Customer = 0 points.
+        // If customer is new AND NOT referred -> 100 points
+        // If customer is new AND referred -> 0 points (as per user request)
+        
+        let pendingPoints = 0;
+        
+        if (completedAppointments === 0 && !isReferred) {
+            pendingPoints = 100;
+        }
+        
+        if (pendingPoints > 0) {
+            customerDoc.pendingPoints = (customerDoc.pendingPoints || 0) + pendingPoints;
+            customerDoc.pointsHistory = customerDoc.pointsHistory || [];
+            customerDoc.pointsHistory.push({
+                points: pendingPoints,
+                type: 'pending',
+                description: `مكافأة عميل جديد`,
+                date: new Date(),
+                appointmentId: appointment._id,
+                status: 'pending'
+            });
+            customerDoc.pendingRewards = customerDoc.pendingRewards || [];
+            customerDoc.pendingRewards.push({
+                appointmentId: appointment._id,
+                points: pendingPoints,
+                description: `مكافأة عميل جديد`,
+                createdAt: new Date()
+            });
+        }
         
         await customerDoc.save();
 
@@ -842,10 +900,11 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
         await appointment.save();
 
         // Activate pending points for this appointment
+        // 1. Check for Customer's own points (New Customer Bonus)
         if (appointment.customerId) {
             const customer = await Customer.findById(appointment.customerId);
             if (customer && customer.pendingRewards && customer.pendingRewards.length > 0) {
-                // Find pending reward for this appointment
+                // Find pending reward for this appointment (Self Reward)
                 const pendingReward = customer.pendingRewards.find(
                     r => r.appointmentId && r.appointmentId.toString() === appointment._id.toString()
                 );
@@ -882,6 +941,8 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
                     await customer.save();
 
                     // Create notification for customer
+                    // DISABLED as per request: "Remove notifications related to points"
+                    /*
                     try {
                         const Notification = require('../models/Notification');
                         const User = require('../models/User');
@@ -899,7 +960,49 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
                     } catch (notifError) {
                         console.error('Error creating notification:', notifError);
                     }
+                    */
                 }
+            }
+        }
+
+        // 2. Check for Referrer's points (Referral Bonus)
+        // We need to find if any OTHER customer has a pending reward linked to THIS appointment ID
+        // This is a bit expensive (scan all customers?), but since we don't store referrerId on appointment, we have to.
+        // Optimization: We can search specifically in pendingRewards.appointmentId
+        
+        const referrers = await Customer.find({
+            'pendingRewards.appointmentId': appointment._id
+        });
+
+        for (const referrer of referrers) {
+            // Skip if it's the customer themselves (already handled above)
+            if (referrer._id.toString() === appointment.customerId.toString()) continue;
+
+            const pendingReward = referrer.pendingRewards.find(
+                r => r.appointmentId && r.appointmentId.toString() === appointment._id.toString()
+            );
+
+            if (pendingReward) {
+                const pointsToActivate = pendingReward.points;
+                referrer.loyaltyPoints = (referrer.loyaltyPoints || 0) + pointsToActivate;
+                referrer.pendingPoints = Math.max(0, (referrer.pendingPoints || 0) - pointsToActivate);
+
+                // Update history
+                const historyEntry = referrer.pointsHistory.find(
+                    h => h.appointmentId && h.appointmentId.toString() === appointment._id.toString() && h.status === 'pending'
+                );
+                if (historyEntry) {
+                    historyEntry.status = 'confirmed';
+                    historyEntry.type = 'earned';
+                }
+
+                // Remove from pending
+                referrer.pendingRewards = referrer.pendingRewards.filter(
+                    r => !(r.appointmentId && r.appointmentId.toString() === appointment._id.toString())
+                );
+
+                await referrer.save();
+                console.log(`✅ Referral reward activated for ${referrer.name}: ${pointsToActivate} points`);
             }
         }
 
