@@ -3207,4 +3207,46 @@ function showAppointmentDetails(apt) {
     }
 }
 
+// Refer Friend Function
+async function handleReferFriend() {
+    try {
+        // Get customer name from localStorage or customerData
+        const customerName = customerData?.name || localStorage.getItem('customerName') || 'زبون';
+        
+        // Create the referral link with customer name
+        const referralUrl = `${window.location.origin}/quick-book.html?referrer=${encodeURIComponent(customerName)}`;
+        
+        // Create message for sharing
+        const shareMessage = `مرحباً! أدعوك لزيارة صالون Nassim Coiffeur وحجز موعدك بسهولة:\n${referralUrl}`;
+        
+        // Try to use native share if available
+        if (navigator.share) {
+            await navigator.share({
+                title: 'احجز موعدك في صالون Nassim Coiffeur',
+                text: shareMessage,
+                url: referralUrl
+            });
+            showToast('تم مشاركة الرابط بنجاح', 'success');
+        } else if (navigator.clipboard) {
+            // Fallback to clipboard
+            await navigator.clipboard.writeText(referralUrl);
+            showToast('تم نسخ الرابط! شاركه مع أصدقائك', 'success');
+        } else {
+            // Final fallback - show the link
+            prompt('انسخ هذا الرابط وشاركه مع أصدقائك:', referralUrl);
+        }
+    } catch (error) {
+        console.error('Error sharing referral:', error);
+        // If share was cancelled or failed, try clipboard as backup
+        try {
+            const customerName = customerData?.name || localStorage.getItem('customerName') || 'زبون';
+            const referralUrl = `${window.location.origin}/quick-book.html?referrer=${encodeURIComponent(customerName)}`;
+            await navigator.clipboard.writeText(referralUrl);
+            showToast('تم نسخ الرابط! شاركه مع أصدقائك', 'success');
+        } catch (clipError) {
+            showToast('حدث خطأ في المشاركة', 'error');
+        }
+    }
+}
+
 
