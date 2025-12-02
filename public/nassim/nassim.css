@@ -1087,97 +1087,368 @@ body::after {
     margin-bottom: 36px;
 }
 
+/* ============================================
+   BARBERS/SPECIALISTS GRID - Professional Design
+   ============================================ */
 .specialists-grid {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 20px;
-    overflow-x: auto;
-    scrollbar-width: none;
-    padding: 8px 0;
-}
-
-.specialists-grid::-webkit-scrollbar {
-    display: none;
+    padding: 20px;
+    max-height: none;
 }
 
 .specialist-card {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
+    border-radius: var(--radius-lg);
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 2px solid transparent;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 90px;
-    cursor: pointer;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.specialist-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-primary);
+    transform: scaleX(0);
     transition: transform 0.3s ease;
 }
 
-.specialist-card:hover {
-    transform: translateY(-6px);
+.specialist-card:hover::before {
+    transform: scaleX(1);
 }
 
-.specialist-avatar {
-    width: 72px;
-    height: 72px;
+.specialist-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-glow);
+}
+
+.specialist-image {
+    width: 90px;
+    height: 90px;
     border-radius: 50%;
     object-fit: cover;
-    border: 3px solid var(--primary);
+    border: 4px solid var(--primary);
+    margin-bottom: 14px;
+    box-shadow: 0 8px 24px rgba(203, 163, 92, 0.3);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.specialist-card:hover .specialist-image {
+    border-color: var(--primary-light);
+    box-shadow: var(--shadow-glow), 0 12px 32px rgba(203, 163, 92, 0.5);
+    transform: scale(1.08);
+}
+
+/* Verified Badge */
+.specialist-image::after {
+    content: '✓';
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 26px;
+    height: 26px;
+    background: var(--success);
+    border-radius: 50%;
+    border: 3px solid var(--bg-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.specialist-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    line-height: 1.3;
+}
+
+.specialist-title {
+    font-size: 12px;
+    color: var(--text-secondary);
     margin-bottom: 10px;
-    box-shadow: 0 6px 20px rgba(203, 163, 92, 0.3);
+    font-weight: 500;
+}
+
+.specialist-rating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 14px;
+    margin-top: 6px;
+}
+
+.specialist-rating .stars {
+    color: var(--primary);
+    letter-spacing: 2px;
+}
+
+/* Legacy support for old class names */
+.specialist-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--primary);
+    margin-bottom: 14px;
+    box-shadow: 0 8px 24px rgba(203, 163, 92, 0.3);
     transition: all 0.3s ease;
     position: relative;
 }
 
 .specialist-card:hover .specialist-avatar {
     border-color: var(--primary-light);
-    box-shadow: var(--shadow-glow), 0 8px 30px rgba(203, 163, 92, 0.5);
-    transform: scale(1.05);
+    box-shadow: var(--shadow-glow), 0 12px 32px rgba(203, 163, 92, 0.5);
+    transform: scale(1.08);
 }
 
 .specialist-avatar::after {
     content: '✓';
     position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 22px;
-    height: 22px;
+    bottom: 2px;
+    right: 2px;
+    width: 26px;
+    height: 26px;
     background: var(--success);
     border-radius: 50%;
-    border: 2px solid var(--bg-dark);
+    border: 3px solid var(--bg-dark);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: 12px;
     font-weight: bold;
     color: white;
-}
-
-.specialist-name {
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-    color: var(--text-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .specialist-role {
-    font-size: 11px;
+    font-size: 12px;
     color: var(--text-secondary);
-    text-align: center;
-    margin-top: 2px;
+    margin-bottom: 10px;
+    font-weight: 500;
 }
 
-.specialist-rating {
+/* Responsive Grid */
+@media (max-width: 768px) {
+    .specialists-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 16px;
+        padding: 16px;
+    }
+    
+    .specialist-image,
+    .specialist-avatar {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* ============================================
+   SERVICES LIST - Professional Design
+   ============================================ */
+.services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+}
+
+.service-card {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    border: 2px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 4px;
-    margin-top: 6px;
-    font-size: 11px;
-    color: var(--primary);
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
 }
 
-.specialist-rating .rating-stars {
-    font-size: 12px;
+.service-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--gradient-primary);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
 }
 
-.specialist-rating .rating-count {
+.service-card:hover::before {
+    transform: scaleY(1);
+}
+
+.service-card:hover {
+    transform: translateX(4px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-lg);
+}
+
+.service-icon {
+    font-size: 42px;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(203, 163, 92, 0.15), rgba(203, 163, 92, 0.08));
+    border-radius: var(--radius);
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.service-card:hover .service-icon {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.service-image {
+    width: 80px;
+    height: 100px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(to bottom, #1a1a1a, #2d2d2d);
+    cursor: zoom-in;
+    position: relative;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.service-card:hover .service-image {
+    transform: scale(1.05);
+}
+
+.service-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.zoom-icon {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    background: rgba(203, 163, 92, 0.95);
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.service-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.service-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    line-height: 1.3;
+}
+
+.service-description {
+    font-size: 13px;
     color: var(--text-secondary);
-    font-size: 10px;
+    margin-bottom: 10px;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.service-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.service-duration {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.service-price {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--primary);
+    background: linear-gradient(135deg, rgba(203, 163, 92, 0.15), rgba(203, 163, 92, 0.08));
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+}
+
+/* Responsive Services */
+@media (max-width: 768px) {
+    .services-list {
+        gap: 14px;
+        padding: 16px;
+    }
+    
+    .service-card {
+        padding: 14px;
+        gap: 12px;
+    }
+    
+    .service-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 36px;
+    }
+    
+    .service-image {
+        width: 70px;
+        height: 90px;
+    }
+    
+    .service-name {
+        font-size: 15px;
+    }
+    
+    .service-description {
+        font-size: 12px;
+    }
 }
 
 .specialist-specialties {
@@ -4337,12 +4608,12 @@ html {
 }
 
 /* ============================================
-   REWARDS CARDS - Enhanced Design
+   REWARDS CARDS - Professional Design
    ============================================ */
 .rewards-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
     padding: 20px;
 }
 
@@ -4355,16 +4626,34 @@ html {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     border: 2px solid transparent;
     position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.reward-card::after {
+    content: '🎁';
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 24px;
+    opacity: 0;
+    transform: rotate(-15deg) scale(0.5);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.reward-card:hover::after {
+    opacity: 1;
+    transform: rotate(0) scale(1);
 }
 
 .reward-card:hover {
-    transform: translateY(-8px);
+    transform: translateY(-10px) rotate(1deg);
     box-shadow: var(--shadow-glow);
     border-color: var(--primary);
 }
 
 .reward-card.disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
@@ -4373,10 +4662,16 @@ html {
     box-shadow: none;
 }
 
+.reward-card.disabled::after {
+    content: '🔒';
+    opacity: 1;
+    transform: none;
+}
+
 .reward-image-container {
     width: 100%;
-    height: 140px;
-    background: linear-gradient(135deg, rgba(203, 163, 92, 0.1) 0%, rgba(203, 163, 92, 0.05) 100%);
+    height: 160px;
+    background: linear-gradient(135deg, rgba(203, 163, 92, 0.15) 0%, rgba(203, 163, 92, 0.08) 100%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4388,21 +4683,21 @@ html {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.3s ease;
+    transition: transform 0.4s ease;
 }
 
 .reward-card:hover .reward-img {
-    transform: scale(1.1);
+    transform: scale(1.12);
 }
 
 .reward-icon-large {
-    font-size: 48px;
+    font-size: 56px;
     animation: float 3s ease-in-out infinite;
 }
 
 @keyframes float {
     0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+    50% { transform: translateY(-12px); }
 }
 
 .reward-overlay {
@@ -4411,30 +4706,39 @@ html {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.75);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 32px;
+    font-size: 40px;
 }
 
 .reward-info {
-    padding: 16px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
 }
 
 .reward-name {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text-primary);
     margin-bottom: 8px;
     line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 42px;
 }
 
 .reward-description {
-    font-size: 12px;
+    font-size: 13px;
     color: var(--text-secondary);
-    margin-bottom: 12px;
-    line-height: 1.4;
+    margin-bottom: 14px;
+    line-height: 1.5;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -4445,37 +4749,48 @@ html {
 .reward-footer {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     margin-top: auto;
 }
 
 .reward-cost {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
+    gap: 8px;
     background: var(--gradient-primary);
     color: var(--text-dark);
-    padding: 8px 14px;
+    padding: 10px 16px;
     border-radius: var(--radius-sm);
-    font-weight: 700;
-    font-size: 13px;
-    width: fit-content;
+    font-weight: 800;
+    font-size: 15px;
+    box-shadow: 0 4px 12px rgba(203, 163, 92, 0.3);
 }
 
 .redeem-btn {
     background: var(--gradient-primary);
     color: var(--text-dark);
     border: none;
-    padding: 10px 16px;
+    padding: 12px 18px;
     border-radius: var(--radius-sm);
     font-weight: 700;
-    font-size: 13px;
+    font-size: 14px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
+}
+
+.redeem-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(203, 163, 92, 0.4);
+}
+
+.redeem-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .redeem-btn:hover {
@@ -4644,13 +4959,20 @@ html {
 }
 
 /* ============================================
-   POST CARDS - Enhanced Design
+   POST CARDS - Professional Design
    ============================================ */
 .posts-list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 20px;
     padding: 20px;
+}
+
+.posts-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 20px 16px 90px;
 }
 
 .post-card {
@@ -4659,19 +4981,26 @@ html {
     overflow: hidden;
     border: 2px solid transparent;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+}
+
+.post-card.full {
+    grid-column: 1 / -1;
 }
 
 .post-card:hover {
     border-color: var(--primary);
-    box-shadow: var(--shadow-lg);
-    transform: translateY(-4px);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-6px);
 }
 
 .post-image-wrapper {
     width: 100%;
-    height: 220px;
+    height: 200px;
     overflow: hidden;
     background: linear-gradient(135deg, rgba(203, 163, 92, 0.1) 0%, rgba(203, 163, 92, 0.05) 100%);
+    position: relative;
 }
 
 .post-img {
@@ -4682,7 +5011,7 @@ html {
 }
 
 .post-card:hover .post-img {
-    transform: scale(1.05);
+    transform: scale(1.08);
 }
 
 .post-body {
@@ -4798,27 +5127,43 @@ html {
     50% { transform: scale(1.1); }
 }
 
-/* Responsive */
+/* Responsive Rewards */
 @media (max-width: 768px) {
     .rewards-list {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 16px;
         padding: 16px;
     }
     
     .reward-image-container {
-        height: 120px;
+        height: 140px;
+    }
+    
+    .reward-icon-large {
+        font-size: 48px;
+    }
+    
+    .reward-info {
+        padding: 14px;
     }
     
     .reward-name {
-        font-size: 13px;
+        font-size: 14px;
     }
     
     .reward-description {
-        font-size: 11px;
+        font-size: 12px;
     }
     
-    .posts-list {
+    .reward-cost {
+        font-size: 14px;
+        padding: 8px 12px;
+    }
+    
+    .posts-list,
+    .posts-container {
+        grid-template-columns: 1fr;
+        gap: 16px;
         padding: 16px;
     }
     
@@ -5476,110 +5821,161 @@ body.offline::before {
     display: block;
 }
 
-/* ==================== Products Grid ==================== */
+/* ============================================
+   PRODUCTS GRID - Professional Design
+   ============================================ */
 .products-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 16px;
-    padding: 0 16px 90px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    padding: 20px 16px 90px;
 }
 
 .product-card {
-    background: var(--surface);
-    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-light) 100%);
+    border-radius: var(--radius-lg);
     overflow: hidden;
-    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
+    display: flex;
+    flex-direction: column;
 }
 
 .product-card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-8px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-glow);
 }
 
 .product-image {
     width: 100%;
-    height: 160px;
+    height: 180px;
     object-fit: cover;
-    background: var(--surface-light);
+    background: linear-gradient(135deg, rgba(203, 163, 92, 0.1) 0%, rgba(203, 163, 92, 0.05) 100%);
+    transition: transform 0.3s ease;
+}
+
+.product-card:hover .product-image {
+    transform: scale(1.05);
 }
 
 .product-image-placeholder {
     width: 100%;
-    height: 160px;
+    height: 180px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 48px;
-    background: var(--surface-light);
+    font-size: 56px;
+    background: linear-gradient(135deg, rgba(203, 163, 92, 0.1) 0%, rgba(203, 163, 92, 0.05) 100%);
+    animation: float 3s ease-in-out infinite;
 }
 
 .product-info {
-    padding: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
 }
 
 .product-name {
-    font-size: 14px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 4px;
+    line-height: 1.3;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    min-height: 40px;
 }
 
 .product-price {
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 18px;
+    font-weight: 800;
     color: var(--primary);
-    margin-bottom: 8px;
+    background: linear-gradient(135deg, rgba(203, 163, 92, 0.15), rgba(203, 163, 92, 0.08));
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    width: fit-content;
 }
 
 .product-stock {
     font-size: 12px;
     color: var(--text-secondary);
-    margin-bottom: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.product-stock::before {
+    content: '📦';
+    font-size: 14px;
 }
 
 .product-actions {
     display: flex;
     gap: 8px;
+    margin-top: auto;
+    padding-top: 8px;
 }
 
 .btn-buy {
     flex: 1;
-    padding: 8px 16px;
+    padding: 12px 18px;
     background: var(--gradient-primary);
     color: var(--text-dark);
     border: none;
     border-radius: var(--radius-sm);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 700;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 }
 
-.btn-buy:hover {
+.btn-buy:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: var(--shadow);
+    box-shadow: 0 6px 20px rgba(203, 163, 92, 0.4);
+}
+
+.btn-buy:active:not(:disabled) {
+    transform: translateY(0);
 }
 
 .btn-buy:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background: var(--surface-light);
+    color: var(--text-secondary);
 }
 
+/* Responsive Products */
 @media (max-width: 768px) {
     .products-container {
-        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 16px;
+        padding: 16px;
     }
     
     .product-image,
     .product-image-placeholder {
-        height: 140px;
+        height: 150px;
+        font-size: 48px;
+    }
+    
+    .product-name {
+        font-size: 14px;
+    }
+    
+    .product-price {
+        font-size: 16px;
     }
 }
 
