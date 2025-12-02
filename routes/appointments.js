@@ -1021,13 +1021,6 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
                 }
             }
         }
-                    r => !(r.appointmentId && r.appointmentId.toString() === appointment._id.toString())
-                );
-
-                await referrer.save();
-                console.log(`✅ Referral reward activated for ${referrer.name}: ${pointsToActivate} points`);
-            }
-        }
 
         res.json({ 
             success: true, 
