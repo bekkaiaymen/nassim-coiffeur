@@ -1,10 +1,14 @@
 // Configuration
 const API_BASE = '/api';
+const START_HOUR = 9;
+const END_HOUR = 22; // Extended to 10 PM
+const PIXELS_PER_MINUTE = 6; // Width of 1 minute in pixels
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     initializeTimeline();
     startClock();
+    startAutoScroll();
     
     // Auto-refresh every 5 minutes
     setInterval(() => {
@@ -20,6 +24,43 @@ function startClock() {
         const now = new Date();
         clockEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
     }, 1000);
+}
+
+function startAutoScroll() {
+    // Update position every 10 seconds
+    setInterval(() => {
+        updateCurrentTimeLine();
+    }, 10000);
+    
+    // Initial update
+    setTimeout(updateCurrentTimeLine, 500);
+}
+
+function updateCurrentTimeLine() {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Only scroll if within working hours
+    if (currentHour < START_HOUR || currentHour >= END_HOUR) return;
+    
+    const minutesSinceStart = (currentHour - START_HOUR) * 60 + currentMinute;
+    const position = minutesSinceStart * PIXELS_PER_MINUTE;
+    
+    const line = document.getElementById('currentTimeLine');
+    if (line) {
+        line.style.left = `${position}px`;
+    }
+    
+    // Scroll container to center the line
+    const container = document.querySelector('.timeline-strip-container');
+    if (container) {
+        const centerOffset = container.clientWidth / 2;
+        container.scrollTo({
+            left: position - centerOffset,
+            behavior: 'smooth'
+        });
+    }
 }
 
 // Initialize timeline with today's date
@@ -47,8 +88,6 @@ function refreshTimeline() {
 // Load timeline for specific date
 async function loadTimeline(date) {
     try {
-        // showToast('جاري تحميل البيانات...', 'info'); // Removed toast for cleaner display
-        
         // Use public endpoint
         const response = await fetch(`${API_BASE}/appointments/public?date=${date}`);
         if (!response.ok) throw new Error('فشل تحميل البيانات');
@@ -57,7 +96,6 @@ async function loadTimeline(date) {
         const appointments = result.data || [];
         
         renderTimeline(date, appointments);
-        // renderSummary(appointments); // Removed summary for cleaner display
         
     } catch (error) {
         console.error('Error loading timeline:', error);
@@ -65,123 +103,75 @@ async function loadTimeline(date) {
     }
 }
 
-// Render timeline grid
+// Render timeline strip
 function renderTimeline(date, appointments) {
     const strip = document.getElementById('timelineStrip');
     strip.innerHTML = '';
     
-    // Define working hours (9 AM to 9 PM)
-    const startHour = 9;
-    const endHour = 21;
-    const slotDuration = 30; // minutes
+    // Calculate total width
+    const totalMinutes = (END_HOUR - START_HOUR) * 60;
+    const totalWidth = totalMinutes * PIXELS_PER_MINUTE;
+    strip.style.width = `${totalWidth}px`;
     
-    // Generate time slots
-    const slots = [];
-    for (let hour = startHour; hour < endHour; hour++) {
-        for (let minute = 0; minute < 60; minute += slotDuration) {
-            const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-            slots.push({ time, appointments: [] });
-        }
+    // Render Time Markers (every 30 mins)
+    for (let i = 0; i <= totalMinutes; i += 30) {
+        const marker = document.createElement('div');
+        const isHour = i % 60 === 0;
+        marker.className = `time-marker ${isHour ? 'hour' : ''}`;
+        marker.style.left = `${i * PIXELS_PER_MINUTE}px`;
+        
+        // Calculate time label
+        const totalMin = (START_HOUR * 60) + i;
+        const h = Math.floor(totalMin / 60);
+        const m = totalMin % 60;
+        const timeLabel = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+        
+        marker.textContent = timeLabel;
+        strip.appendChild(marker);
     }
     
-    // Map appointments to slots
-    appointments.forEach(apt => {
-        const aptTime = new Date(apt.date).toLocaleTimeString('en-GB', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
-        
-        // Also check string time if date object time is 00:00 (legacy data)
-        const timeToCheck = (aptTime === '00:00' && apt.time) ? apt.time : aptTime;
-        
-        const slot = slots.find(s => s.time === timeToCheck);
-        if (slot) {
-            slot.appointments.push(apt);
-        }
-    });
+    // Render "Now" Line
+    const nowLine = document.createElement('div');
+    nowLine.id = 'currentTimeLine';
+    nowLine.className = 'current-time-line';
+    strip.appendChild(nowLine);
     
-    // Render slots
-    slots.forEach(slot => {
-        const slotEl = document.createElement('div');
+    // Render Appointments
+    appointments.forEach(apt => {
+        const aptDate = new Date(apt.date);
+        const h = aptDate.getHours();
+        const m = aptDate.getMinutes();
         
-        let statusClass = 'available';
-        let statusText = 'متاح';
-        let details = '';
+        // Skip if out of range
+        if (h < START_HOUR || h >= END_HOUR) return;
         
-        if (slot.appointments.length > 0) {
-            const bookedCount = slot.appointments.length;
-            const confirmedCount = slot.appointments.filter(a => a.status === 'confirmed').length;
-            
-            // Assuming 3 chairs/barbers
-            const maxCapacity = 3;
-            
-            if (confirmedCount >= maxCapacity) {
-                statusClass = 'booked';
-                statusText = 'محجوز';
-                details = 'جميع الكراسي مشغولة';
-            } else if (bookedCount > 0) {
-                statusClass = 'partially';
-                statusText = 'متاح جزئياً';
-                const availableChairs = maxCapacity - confirmedCount;
-                details = `${availableChairs} كرسي متاح`;
-            }
-            
-            // If we have employee names, show them
-            const employees = slot.appointments
-                .map(a => a.employee ? a.employee.name : null)
-                .filter(Boolean);
-                
-            if (employees.length > 0) {
-                // details += `<br><small>${employees.join(', ')}</small>`;
-            }
-        }
+        const minutesFromStart = (h - START_HOUR) * 60 + m;
+        const leftPos = minutesFromStart * PIXELS_PER_MINUTE;
         
-        slotEl.className = `timeline-slot ${statusClass}`;
-        slotEl.innerHTML = `
-            <div class="slot-time">${slot.time}</div>
-            <div class="slot-status">${statusText}</div>
-            <div class="slot-details">${details}</div>
+        // Duration (default 30 mins if not set)
+        const duration = apt.serviceId?.duration || 30;
+        const width = duration * PIXELS_PER_MINUTE;
+        
+        const el = document.createElement('div');
+        el.className = 'timeline-appointment booked';
+        el.style.left = `${leftPos}px`;
+        el.style.width = `${width}px`;
+        
+        el.innerHTML = `
+            <div class="apt-time">${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}</div>
+            <div class="apt-name">${apt.customerName || 'محجوز'}</div>
+            <div class="apt-service">${apt.serviceId?.name || 'خدمة'}</div>
         `;
         
-        strip.appendChild(slotEl);
+        strip.appendChild(el);
     });
     
-    // Auto-scroll to current time
-    scrollToCurrentTime(slots);
+    // Initial positioning
+    updateCurrentTimeLine();
 }
 
-function scrollToCurrentTime(slots) {
-    const now = new Date();
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    
-    // Find closest slot
-    const currentTimeVal = currentHour * 60 + currentMinute;
-    
-    let closestSlotIndex = -1;
-    let minDiff = Infinity;
-    
-    slots.forEach((slot, index) => {
-        const [h, m] = slot.time.split(':').map(Number);
-        const slotTimeVal = h * 60 + m;
-        const diff = Math.abs(slotTimeVal - currentTimeVal);
-        if (diff < minDiff) {
-            minDiff = diff;
-            closestSlotIndex = index;
-        }
-    });
-    
-    if (closestSlotIndex !== -1) {
-        const strip = document.getElementById('timelineStrip');
-        const slotWidth = 220 + 24; // Width + Gap
-        const scrollPos = (closestSlotIndex * slotWidth) - (strip.clientWidth / 2) + (slotWidth / 2);
-        
-        strip.scrollTo({
-            left: scrollPos,
-            behavior: 'smooth'
-        });
-    }
-}
+// Removed old renderTimeline and scrollToCurrentTime functions
+
 
 // Render summary cards
 function renderSummary(appointments) {

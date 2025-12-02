@@ -87,96 +87,115 @@ body {
     overflow-y: hidden;
     background: #222;
     border-radius: 16px;
-    padding: 2rem;
+    position: relative;
     border: 1px solid #444;
-    display: flex;
-    align-items: center;
-    /* Hide scrollbar but allow scroll */
+    /* Hide scrollbar */
     scrollbar-width: none; 
 }
 
-.timeline-strip-container::-webkit-scrollbar {
-    display: none;
-}
-
 .timeline-strip {
-    display: flex;
-    gap: 1.5rem;
-    padding: 0 1rem;
-    min-width: min-content;
+    position: relative;
+    height: 100%;
+    background: repeating-linear-gradient(
+        to right,
+        #2d2d2d,
+        #2d2d2d 1px,
+        #222 1px,
+        #222 150px /* 30 mins * 5px/min = 150px */
+    );
 }
 
-.timeline-slot {
-    min-width: 220px;
-    height: 300px;
-    background: #2d2d2d;
-    border-radius: 16px;
+.time-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-left: 1px solid #555;
+    color: #888;
+    font-size: 1rem;
+    padding-left: 5px;
+    pointer-events: none;
+}
+
+.time-marker.hour {
+    border-left: 2px solid #777;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+.timeline-appointment {
+    position: absolute;
+    top: 60px; /* Space for header/ruler */
+    height: calc(100% - 80px);
+    background: linear-gradient(145deg, #2d2d2d, #1e3a2a);
+    border: 2px solid var(--success-color);
+    border-radius: 12px;
+    padding: 1rem;
+    color: #fff;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.3s;
+    z-index: 2;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
-    position: relative;
-    transition: all 0.3s ease;
-    border: 2px solid #444;
+    min-width: 100px; /* Minimum width for visibility */
 }
 
-.timeline-slot.available {
-    border-color: var(--success-color);
-    background: linear-gradient(145deg, #2d2d2d, #1e3a2a);
-}
-
-.timeline-slot.booked {
-    border-color: var(--danger-color);
-    background: linear-gradient(145deg, #2d2d2d, #3a1e1e);
-    opacity: 0.8;
-}
-
-.timeline-slot.partially {
-    border-color: var(--warning-color);
-    background: linear-gradient(145deg, #2d2d2d, #3a301e);
-}
-
-.timeline-slot:hover {
+.timeline-appointment:hover {
     transform: scale(1.05);
     z-index: 10;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
 }
 
-.slot-time {
-    font-size: 3rem;
-    font-weight: 800;
-    color: #fff;
-    margin-bottom: 1rem;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+.timeline-appointment.booked {
+    background: linear-gradient(145deg, #3a1e1e, #2d2d2d);
+    border-color: var(--danger-color);
+    opacity: 0.9;
 }
 
-.slot-status {
+.current-time-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--primary-color);
+    z-index: 20;
+    box-shadow: 0 0 15px var(--primary-color);
+    pointer-events: none;
+}
+
+.current-time-line::after {
+    content: 'الآن';
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary-color);
+    color: #000;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.apt-time {
     font-size: 1.5rem;
-    font-weight: 700;
-    padding: 0.5rem 1.5rem;
-    border-radius: 50px;
-    margin-bottom: 1rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
 }
 
-.available .slot-status {
-    background: rgba(39, 174, 96, 0.2);
-    color: var(--success-color);
+.apt-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.booked .slot-status {
-    background: rgba(231, 76, 60, 0.2);
-    color: var(--danger-color);
-}
-
-.partially .slot-status {
-    background: rgba(243, 156, 18, 0.2);
-    color: var(--warning-color);
-}
-
-.slot-details {
-    font-size: 1.1rem;
+.apt-service {
+    font-size: 0.9rem;
     color: #aaa;
-    text-align: center;
 }
 
 .timeline-legend {
