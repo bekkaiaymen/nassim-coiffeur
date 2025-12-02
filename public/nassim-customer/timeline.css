@@ -494,3 +494,79 @@ body {
         gap: 0.5rem;
     }
 }
+
+/* Multi-Barber Timeline Styles */
+.timeline-header-row {
+    display: flex;
+    height: 40px;
+    position: relative;
+    border-bottom: 1px solid #444;
+    background: #2d2d2d;
+}
+
+.timeline-corner {
+    width: 150px;
+    flex-shrink: 0;
+    border-right: 1px solid #444;
+    background: #222;
+    position: sticky;
+    left: 0;
+    z-index: 30;
+}
+
+.timeline-row {
+    display: flex;
+    height: 80px;
+    border-bottom: 1px solid #444;
+    position: relative;
+}
+
+.barber-name-col {
+    width: 150px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--primary-color);
+    background: #2d2d2d;
+    border-right: 1px solid #444;
+    position: sticky;
+    left: 0;
+    z-index: 30;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+}
+
+.timeline-track {
+    flex: 1;
+    position: relative;
+    background: repeating-linear-gradient(
+        to right,
+        transparent,
+        transparent 1px,
+        rgba(255, 255, 255, 0.05) 1px,
+        rgba(255, 255, 255, 0.05) 180px /* 30 mins * 6px/min = 180px */
+    );
+}
+
+.timeline-appointment {
+    top: 10px !important; /* Override old style */
+    height: 60px !important; /* Override old style */
+    font-size: 0.8rem;
+    padding: 5px;
+}
+
+.timeline-appointment.critical {
+    border-color: #FF5252;
+    background: linear-gradient(145deg, #5a1e1e, #2d2d2d);
+}
+
+.apt-time {
+    font-size: 0.9rem;
+    padding: 1px 4px;
+}
+
+.apt-name {
+    font-size: 0.9rem;
+}
+

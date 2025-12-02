@@ -132,8 +132,7 @@ router.get('/available-slots', async (req, res) => {
             query.barber = barber;
         }
         
-        const appointments = await Appointment.find(query).select('time');
-        const bookedTimes = appointments.map(apt => apt.time);
+        const appointments = await Appointment.find(query).select('time duration');
         
         // Generate all time slots (9 AM to 9 PM, every 30 mins)
         const allSlots = [];
@@ -145,9 +144,23 @@ router.get('/available-slots', async (req, res) => {
             }
         }
 
-        // Mark booked slots as unavailable
+        // Mark booked slots as unavailable based on duration overlap
         allSlots.forEach(slot => {
-            if (bookedTimes.includes(slot.time)) {
+            const [slotH, slotM] = slot.time.split(':').map(Number);
+            const slotStart = slotH * 60 + slotM;
+            const slotEnd = slotStart + 30; // Assuming 30 min slots
+
+            const isBlocked = appointments.some(apt => {
+                const [aptH, aptM] = apt.time.split(':').map(Number);
+                const aptStart = aptH * 60 + aptM;
+                const aptDuration = apt.duration || 30;
+                const aptEnd = aptStart + aptDuration;
+
+                // Check overlap: (StartA < EndB) and (EndA > StartB)
+                return (slotStart < aptEnd) && (slotEnd > aptStart);
+            });
+
+            if (isBlocked) {
                 slot.available = false;
             }
         });

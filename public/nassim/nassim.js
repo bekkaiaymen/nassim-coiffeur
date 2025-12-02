@@ -342,13 +342,23 @@ function updateBookingSummary() {
     container.style.display = 'block';
     
     // Calculate totals
-    const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+    let totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
     const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
     
+    // Check Surge Pricing
+    const date = document.getElementById('appointmentDate').value;
+    const time = selectedTimeSlot;
+    
+    let priceLabel = totalPrice + ' دج';
+    if (isCriticalTime(date, time)) {
+        totalPrice = 100;
+        priceLabel = `<span style="color:red; font-weight:bold;">100 دج (وقت ذروة)</span>`;
+    }
+
     // Update summary
     document.getElementById('servicesCount').textContent = selectedServices.length;
     document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
-    document.getElementById('totalPrice').textContent = totalPrice + ' دج';
+    document.getElementById('totalPrice').innerHTML = priceLabel;
 }
 
 // Update Service Info (legacy support)
@@ -1006,6 +1016,24 @@ function isTimeVIPOnly(timeString) {
     return timeInMinutes >= vipStartTime && timeInMinutes <= vipEndTime;
 }
 
+// Check if Critical Time (Surge Pricing)
+function isCriticalTime(dateStr, timeStr) {
+    if (!dateStr || !timeStr) return false;
+    const dateObj = new Date(dateStr);
+    const day = dateObj.getDay(); // 0=Sun, 4=Thu, 5=Fri
+    const [h, m] = timeStr.split(':').map(Number);
+    const mins = h * 60 + m;
+    
+    // Thursday Evening (17:00 - 23:00)
+    if (day === 4 && mins >= 1020 && mins <= 1380) return true;
+    // Friday (09:00 - 23:00)
+    if (day === 5 && mins >= 540 && mins <= 1380) return true;
+    // Daily Peak (18:00 - 22:00)
+    if (mins >= 1080 && mins <= 1320) return true;
+    
+    return false;
+}
+
 // Display Time Slots
 function displayTimeSlots(slots) {
     const container = document.getElementById('timeSlots');
@@ -1070,6 +1098,9 @@ function selectTimeSlot(time) {
             btn.classList.add('selected');
         }
     });
+    
+    // Update summary with new price if needed
+    updateBookingSummary();
 }
 
 // Submit Booking
