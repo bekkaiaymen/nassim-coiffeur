@@ -23,32 +23,27 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="page-header">
-            <div>
+            <div class="header-info">
                 <h2 class="page-title">الجدول الزمني اليومي</h2>
-                <p class="page-subtitle">تصفح المواعيد المتاحة واختر الوقت المناسب لك</p>
+                <div class="clock-display" id="clockDisplay">00:00</div>
             </div>
             <div class="timeline-controls">
-                <label for="timelineDate" class="form-label">اختيار اليوم</label>
                 <input type="date" id="timelineDate" class="form-input">
-                <button type="button" class="btn-primary" onclick="refreshTimeline()">تحديث</button>
             </div>
         </div>
 
-        <!-- Summary Cards -->
-        <div class="timeline-summary-card" id="timelineSummary"></div>
-
-        <!-- Timeline View -->
-        <div class="timeline-wrapper">
-            <div class="timeline-legend">
-                <span class="legend-item"><span class="legend-dot available"></span>متاح للحجز</span>
-                <span class="legend-item"><span class="legend-dot booked"></span>محجوز</span>
-                <span class="legend-item"><span class="legend-dot partially"></span>متاح جزئياً</span>
+        <!-- Timeline Strip Container -->
+        <div class="timeline-strip-container">
+            <div class="timeline-strip" id="timelineStrip">
+                <!-- Slots will be injected here -->
             </div>
-            <div class="timeline-grid" id="timelineGrid"></div>
         </div>
 
-        <div class="action-footer">
-            <a href="/book-now" class="btn-primary-large">احجز موعدك الآن</a>
+        <!-- Legend -->
+        <div class="timeline-legend">
+            <span class="legend-item"><span class="legend-dot available"></span>متاح</span>
+            <span class="legend-item"><span class="legend-dot booked"></span>محجوز</span>
+            <span class="legend-item"><span class="legend-dot partially"></span>متاح جزئياً</span>
         </div>
     </main>
 

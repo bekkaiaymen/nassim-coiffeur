@@ -4,6 +4,7 @@ const API_BASE = '/api';
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     initializeTimeline();
+    startClock();
     
     // Auto-refresh every 5 minutes
     setInterval(() => {
@@ -11,12 +12,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 5 * 60 * 1000);
 });
 
+function startClock() {
+    const clockEl = document.getElementById('clockDisplay');
+    if (!clockEl) return;
+    
+    setInterval(() => {
+        const now = new Date();
+        clockEl.textContent = now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    }, 1000);
+}
+
 // Initialize timeline with today's date
 function initializeTimeline() {
     const dateInput = document.getElementById('timelineDate');
     const today = new Date().toISOString().split('T')[0];
     dateInput.value = today;
     dateInput.max = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // +60 days
+    
+    // Add change listener
+    dateInput.addEventListener('change', () => refreshTimeline());
+    
     loadTimeline(today);
 }
 
@@ -32,7 +47,7 @@ function refreshTimeline() {
 // Load timeline for specific date
 async function loadTimeline(date) {
     try {
-        showToast('جاري تحميل البيانات...', 'info');
+        // showToast('جاري تحميل البيانات...', 'info'); // Removed toast for cleaner display
         
         // Use public endpoint
         const response = await fetch(`${API_BASE}/appointments/public?date=${date}`);
@@ -42,7 +57,7 @@ async function loadTimeline(date) {
         const appointments = result.data || [];
         
         renderTimeline(date, appointments);
-        renderSummary(appointments);
+        // renderSummary(appointments); // Removed summary for cleaner display
         
     } catch (error) {
         console.error('Error loading timeline:', error);
@@ -52,8 +67,8 @@ async function loadTimeline(date) {
 
 // Render timeline grid
 function renderTimeline(date, appointments) {
-    const grid = document.getElementById('timelineGrid');
-    grid.innerHTML = '';
+    const strip = document.getElementById('timelineStrip');
+    strip.innerHTML = '';
     
     // Define working hours (9 AM to 9 PM)
     const startHour = 9;
@@ -71,12 +86,15 @@ function renderTimeline(date, appointments) {
     
     // Map appointments to slots
     appointments.forEach(apt => {
-        const aptTime = new Date(apt.appointmentDate).toLocaleTimeString('en-GB', { 
+        const aptTime = new Date(apt.date).toLocaleTimeString('en-GB', { 
             hour: '2-digit', 
             minute: '2-digit' 
         });
         
-        const slot = slots.find(s => s.time === aptTime);
+        // Also check string time if date object time is 00:00 (legacy data)
+        const timeToCheck = (aptTime === '00:00' && apt.time) ? apt.time : aptTime;
+        
+        const slot = slots.find(s => s.time === timeToCheck);
         if (slot) {
             slot.appointments.push(apt);
         }
@@ -87,21 +105,34 @@ function renderTimeline(date, appointments) {
         const slotEl = document.createElement('div');
         
         let statusClass = 'available';
-        let statusText = 'متاح للحجز';
+        let statusText = 'متاح';
         let details = '';
         
         if (slot.appointments.length > 0) {
             const bookedCount = slot.appointments.length;
             const confirmedCount = slot.appointments.filter(a => a.status === 'confirmed').length;
             
-            if (confirmedCount >= 3) {
+            // Assuming 3 chairs/barbers
+            const maxCapacity = 3;
+            
+            if (confirmedCount >= maxCapacity) {
                 statusClass = 'booked';
-                statusText = 'محجوز بالكامل';
-                details = `${bookedCount} موعد`;
+                statusText = 'محجوز';
+                details = 'جميع الكراسي مشغولة';
             } else if (bookedCount > 0) {
                 statusClass = 'partially';
                 statusText = 'متاح جزئياً';
-                details = `${bookedCount} موعد، ${3 - confirmedCount} متاح`;
+                const availableChairs = maxCapacity - confirmedCount;
+                details = `${availableChairs} كرسي متاح`;
+            }
+            
+            // If we have employee names, show them
+            const employees = slot.appointments
+                .map(a => a.employee ? a.employee.name : null)
+                .filter(Boolean);
+                
+            if (employees.length > 0) {
+                // details += `<br><small>${employees.join(', ')}</small>`;
             }
         }
         
@@ -109,18 +140,47 @@ function renderTimeline(date, appointments) {
         slotEl.innerHTML = `
             <div class="slot-time">${slot.time}</div>
             <div class="slot-status">${statusText}</div>
-            ${details ? `<div class="slot-details">${details}</div>` : ''}
+            <div class="slot-details">${details}</div>
         `;
         
-        // Add click handler for available/partially slots
-        if (statusClass !== 'booked') {
-            slotEl.addEventListener('click', () => {
-                window.location.href = `/book-now?date=${date}&time=${slot.time}`;
-            });
-        }
-        
-        grid.appendChild(slotEl);
+        strip.appendChild(slotEl);
     });
+    
+    // Auto-scroll to current time
+    scrollToCurrentTime(slots);
+}
+
+function scrollToCurrentTime(slots) {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Find closest slot
+    const currentTimeVal = currentHour * 60 + currentMinute;
+    
+    let closestSlotIndex = -1;
+    let minDiff = Infinity;
+    
+    slots.forEach((slot, index) => {
+        const [h, m] = slot.time.split(':').map(Number);
+        const slotTimeVal = h * 60 + m;
+        const diff = Math.abs(slotTimeVal - currentTimeVal);
+        if (diff < minDiff) {
+            minDiff = diff;
+            closestSlotIndex = index;
+        }
+    });
+    
+    if (closestSlotIndex !== -1) {
+        const strip = document.getElementById('timelineStrip');
+        const slotWidth = 220 + 24; // Width + Gap
+        const scrollPos = (closestSlotIndex * slotWidth) - (strip.clientWidth / 2) + (slotWidth / 2);
+        
+        strip.scrollTo({
+            left: scrollPos,
+            behavior: 'smooth'
+        });
+    }
 }
 
 // Render summary cards
