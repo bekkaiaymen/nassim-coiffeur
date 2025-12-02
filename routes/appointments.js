@@ -174,12 +174,12 @@ router.get('/available-slots', async (req, res) => {
 // Public route to create appointment (for customers)
 router.post('/public/book', async (req, res) => {
     try {
-        const { business, service, services, serviceName, barber, customer, customerName, customerPhone, date, time, notes, extraCharge, isVIPSlot } = req.body;
+        const { business, service, services, serviceName, barber, employee, isFlexibleEmployee, customer, customerName, customerPhone, date, time, notes, extraCharge, isVIPSlot, totalDuration, totalPrice } = req.body;
 
         if (!business || (!service && (!services || services.length === 0)) || !customerPhone || !date || !time) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'جميع الحقول مطلوبة' 
+                message: 'جميع الحقول مطلوبة (business, service/services, customerPhone, date, time)' 
             });
         }
 
@@ -522,7 +522,12 @@ router.post('/public/book', async (req, res) => {
         });
     } catch (error) {
         console.error('Booking error:', error);
-        res.status(400).json({ success: false, message: error.message });
+        console.error('Request body:', req.body);
+        res.status(400).json({ 
+            success: false, 
+            message: error.message || 'حدث خطأ أثناء الحجز',
+            error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        });
     }
 });
 

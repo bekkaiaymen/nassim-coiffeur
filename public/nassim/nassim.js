@@ -944,17 +944,48 @@ async function cancelBooking(appointmentId) {
 
 // Load Available Slots
 async function loadAvailableSlots() {
-    const date = document.getElementById('appointmentDate').value;
-    const employeeId = document.getElementById('employeeSelect').value;
-    const serviceId = document.getElementById('serviceSelect').value;
+    const dateInput = document.getElementById('appointmentDate');
+    const employeeSelect = document.getElementById('employeeSelect');
     
-    if (!date || !employeeId || !serviceId) {
-        document.getElementById('timeSlots').innerHTML = '<div class="empty-state">اختر التاريخ والحلاق والخدمة أولاً</div>';
+    if (!dateInput || !employeeSelect) {
+        console.error('Required elements not found');
+        return;
+    }
+    
+    const date = dateInput.value;
+    const employeeId = employeeSelect.value;
+    
+    // Get selected services (multiple selection)
+    const selectedServices = Array.from(document.querySelectorAll('.service-card.selected')).map(card => {
+        return {
+            id: card.dataset.serviceId,
+            name: card.dataset.serviceName,
+            duration: parseInt(card.dataset.serviceDuration) || 30
+        };
+    });
+    
+    if (!date || !employeeId) {
+        const timeSlotsContainer = document.getElementById('timeSlots');
+        if (timeSlotsContainer) {
+            timeSlotsContainer.innerHTML = '<div class="empty-state">اختر التاريخ والحلاق أولاً</div>';
+        }
+        return;
+    }
+    
+    if (selectedServices.length === 0) {
+        const timeSlotsContainer = document.getElementById('timeSlots');
+        if (timeSlotsContainer) {
+            timeSlotsContainer.innerHTML = '<div class="empty-state">اختر خدمة واحدة على الأقل</div>';
+        }
         return;
     }
     
     try {
-        const response = await fetch(`${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&employee=${employeeId}&date=${date}&service=${serviceId}`);
+        // Use first service for slot checking
+        const primaryService = selectedServices[0];
+        const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
+        
+        const response = await fetch(`${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&employee=${employeeId}&date=${date}&service=${primaryService.id}&duration=${totalDuration}`);
         const data = await response.json();
         
         if (data.success && data.data) {
@@ -1155,8 +1186,15 @@ async function submitBooking(e) {
     }
     
     // Validate that at least one service is selected
-    if (selectedServices.length === 0) {
+    if (!selectedServices || selectedServices.length === 0) {
         showNotification('الرجاء اختيار خدمة واحدة على الأقل', 'error');
+        return;
+    }
+    
+    // Validate employee selection
+    const employeeSelect = document.getElementById('employeeSelect');
+    if (!employeeSelect || !employeeSelect.value) {
+        showNotification('الرجاء اختيار الحلاق', 'error');
         return;
     }
     
@@ -1195,15 +1233,18 @@ async function submitBooking(e) {
         extraCharge: window.paidForVIPSlot ? 50 : 0,
         services: selectedServices.map(s => s.id), // Multiple services
         service: selectedServices[0].id, // First service for compatibility
+        serviceName: selectedServices.map(s => s.name).join(' + '),
         employee: selectedEmployee === 'any' ? null : selectedEmployee,
         isFlexibleEmployee: selectedEmployee === 'any', // Flag for any available barber
         date: selectedDate,
         time: selectedTime,
         dateTime: dateTime,
-        notes: document.getElementById('appointmentNotes').value || '',
+        notes: document.getElementById('appointmentNotes')?.value || '',
         totalPrice: selectedServices.reduce((sum, s) => sum + s.price, 0),
         totalDuration: selectedServices.reduce((sum, s) => sum + s.duration, 0)
     };
+    
+    console.log('Booking data:', bookingData);
     
     try {
         const response = await fetch(`${API_URL}/appointments/public/book`, {
@@ -1257,7 +1298,8 @@ async function submitBooking(e) {
             await loadAppointments();
             await loadCustomerProfile();
         } else {
-            showNotification(data.message || 'فشل حجز الموعد', 'error');
+            console.error('Booking failed:', data);
+            showNotification(data.message || 'فشل حجز الموعد', 'error', 5000);
         }
     } catch (error) {
         console.error('Error submitting booking:', error);
