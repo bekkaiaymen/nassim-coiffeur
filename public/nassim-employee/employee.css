@@ -302,3 +302,111 @@ body {
 .toast.show {
     opacity: 1;
 }
+
+/* Timeline Styles */
+.timeline-container {
+    position: relative;
+    overflow-x: auto;
+    padding: 20px 0;
+    background: var(--surface-light);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.timeline-header-row {
+    display: flex;
+    margin-bottom: 10px;
+    padding-left: 150px; /* Space for barber names */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.time-marker {
+    flex: 0 0 60px; /* 60px per hour? or per 30 mins */
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    border-left: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.timeline-row {
+    display: flex;
+    align-items: center;
+    height: 80px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    position: relative;
+}
+
+.barber-name {
+    width: 150px;
+    padding: 0 15px;
+    font-weight: 700;
+    color: var(--primary);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    position: sticky;
+    left: 0;
+    background: var(--surface-light);
+    z-index: 30;
+}
+
+.timeline-track {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 59px,
+        rgba(255, 255, 255, 0.02) 60px
+    );
+}
+
+.timeline-slot {
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    background: var(--primary);
+    border-radius: 4px;
+    padding: 5px;
+    color: #000;
+    font-size: 0.8rem;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.timeline-slot:hover {
+    transform: scale(1.02);
+    z-index: 5;
+}
+
+.timeline-slot.critical {
+    background: #FF5252; /* Red for critical/surge pricing */
+    color: white;
+}
+
+/* Current Time Indicator */
+.current-time-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #FF0000;
+    z-index: 20;
+    pointer-events: none;
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+}
+
+.current-time-head {
+    position: absolute;
+    top: 0;
+    left: -4px;
+    width: 10px;
+    height: 10px;
+    background-color: #FF0000;
+    border-radius: 50%;
+    z-index: 21;
+}
+

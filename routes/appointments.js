@@ -170,18 +170,73 @@ router.post('/public/book', async (req, res) => {
             });
         }
 
-        // Check for conflicts
-        const conflict = await Appointment.findOne({
+        // --- Dynamic Pricing & Duration Logic ---
+        const Service = require('../models/Service');
+        let serviceDuration = 30; // Default duration
+        let basePrice = 50; // Default price
+
+        // Fetch service details
+        if (service) {
+            try {
+                const serviceDoc = await Service.findById(service);
+                if (serviceDoc) {
+                    serviceDuration = serviceDoc.duration || 30;
+                    basePrice = serviceDoc.price || 50;
+                }
+            } catch (err) {
+                console.error('Error fetching service:', err);
+            }
+        }
+
+        // Calculate End Time
+        const [hours, minutes] = time.split(':').map(Number);
+        const startTimeInMinutes = hours * 60 + minutes;
+        const endTimeInMinutes = startTimeInMinutes + serviceDuration;
+        
+        // Critical Time Check (Surge Pricing)
+        const isCriticalTime = (d, t) => {
+            const dateObj = new Date(d);
+            const day = dateObj.getDay(); // 0=Sun, 4=Thu, 5=Fri
+            const [h, m] = t.split(':').map(Number);
+            const mins = h * 60 + m;
+            
+            // Thursday Evening (17:00 - 23:00)
+            if (day === 4 && mins >= 1020 && mins <= 1380) return true;
+            // Friday (09:00 - 23:00)
+            if (day === 5 && mins >= 540 && mins <= 1380) return true;
+            // Daily Peak (18:00 - 22:00)
+            if (mins >= 1080 && mins <= 1320) return true;
+            
+            return false;
+        };
+
+        let finalPrice = basePrice;
+        if (isCriticalTime(date, time)) {
+            finalPrice = 100; // Surge price as requested
+        }
+
+        // Advanced Conflict Check (Overlap)
+        const dayAppointments = await Appointment.find({
             business: business,
             date: new Date(date),
-            time: time,
-            status: { $nin: ['cancelled', 'no-show'] }
+            status: { $nin: ['cancelled', 'no-show'] },
+            ...(barber ? { barber: barber } : {}) // If barber selected, check their schedule
         });
 
-        if (conflict) {
+        const hasConflict = dayAppointments.some(appt => {
+            const [apptH, apptM] = appt.time.split(':').map(Number);
+            const apptStart = apptH * 60 + apptM;
+            const apptDuration = appt.duration || 30; // Use stored duration or default
+            const apptEnd = apptStart + apptDuration;
+
+            // Check overlap
+            return (startTimeInMinutes < apptEnd) && (endTimeInMinutes > apptStart);
+        });
+
+        if (hasConflict) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'هذا الموعد محجوز بالفعل. يرجى اختيار وقت آخر' 
+                message: 'هذا الموعد محجوز بالفعل (تعارض في الوقت). يرجى اختيار وقت آخر' 
             });
         }
 
@@ -280,6 +335,8 @@ router.post('/public/book', async (req, res) => {
             barber: barber || null,
             date: new Date(date),
             time,
+            duration: serviceDuration,
+            price: finalPrice,
             notes: notes || '',
             extraCharge: extraCharge || 0,
             isVIPSlot: isVIPSlot || false,

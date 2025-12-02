@@ -25,6 +25,14 @@ async function initEmployeeApp() {
     await loadCompletedAppointments();
     generateTimeSlots();
     setDefaultDate();
+    
+    // Initialize Timeline
+    const dateInput = document.getElementById('timelineDate');
+    if (dateInput) {
+        dateInput.value = new Date().toISOString().split('T')[0];
+        dateInput.addEventListener('change', loadTimeline);
+    }
+    loadTimeline();
 }
 
 function checkAuth() {
@@ -429,3 +437,158 @@ function showToast(message, type = 'info') {
         toast.classList.remove('show');
     }, 3500);
 }
+
+// Timeline Logic
+let timelineInterval;
+
+async function loadTimeline() {
+    const dateInput = document.getElementById('timelineDate');
+    const date = dateInput.value || new Date().toISOString().split('T')[0];
+    
+    const container = document.getElementById('timelineContainer');
+    container.innerHTML = '<div style="text-align: center; padding: 20px;">جاري تحميل الجدول...</div>';
+
+    try {
+        const response = await fetch(`${API_BASE}/appointments?date=${date}`, {
+            headers: { 'Authorization': `Bearer ${employeeToken}` }
+        });
+        const data = await response.json();
+        const appointments = data.data || [];
+
+        // Hardcoded employees for now as per requirement
+        const employees = [
+            { name: 'نسيم', id: 'nassim' },
+            { name: 'وسيم', id: 'wassim' },
+            { name: 'محمد', id: 'mohamed' }
+        ];
+
+        renderTimeline(appointments, employees);
+
+    } catch (error) {
+        console.error('Timeline error:', error);
+        container.innerHTML = `<div style="color: red; text-align: center;">فشل تحميل الجدول: ${error.message}</div>`;
+    }
+}
+
+function renderTimeline(appointments, employees) {
+    const container = document.getElementById('timelineContainer');
+    container.innerHTML = '';
+    
+    // Ensure container is relative
+    if (getComputedStyle(container).position === 'static') {
+        container.style.position = 'relative';
+    }
+
+    // Time Axis (09:00 to 23:00)
+    const startHour = 9;
+    const endHour = 23;
+    const totalHours = endHour - startHour;
+    const pixelsPerHour = 120; // Width of one hour
+
+    const headerRow = document.createElement('div');
+    headerRow.className = 'timeline-header-row';
+    headerRow.style.width = `${150 + (totalHours * pixelsPerHour)}px`;
+    
+    // Empty corner
+    const corner = document.createElement('div');
+    corner.style.width = '150px';
+    corner.style.flexShrink = '0';
+    headerRow.appendChild(corner);
+
+    for (let h = startHour; h <= endHour; h++) {
+        const marker = document.createElement('div');
+        marker.className = 'time-marker';
+        marker.style.width = `${pixelsPerHour}px`;
+        marker.textContent = `${h}:00`;
+        headerRow.appendChild(marker);
+    }
+    container.appendChild(headerRow);
+
+    // Rows for each barber
+    employees.forEach(emp => {
+        const row = document.createElement('div');
+        row.className = 'timeline-row';
+        row.style.width = `${150 + (totalHours * pixelsPerHour)}px`;
+
+        const nameCol = document.createElement('div');
+        nameCol.className = 'barber-name';
+        nameCol.textContent = emp.name;
+        row.appendChild(nameCol);
+
+        const track = document.createElement('div');
+        track.className = 'timeline-track';
+        track.style.width = `${totalHours * pixelsPerHour}px`;
+        
+        // Filter appointments for this barber
+        const empAppts = appointments.filter(a => {
+            return (a.barber === emp.name) || (a.employee && a.employee.name === emp.name);
+        });
+
+        empAppts.forEach(appt => {
+            if (!appt.time) return;
+            
+            const [h, m] = appt.time.split(':').map(Number);
+            const startMinutes = (h - startHour) * 60 + m;
+            const duration = appt.duration || 30; 
+            
+            if (startMinutes >= 0) {
+                const left = (startMinutes / 60) * pixelsPerHour;
+                const width = (duration / 60) * pixelsPerHour;
+
+                const slot = document.createElement('div');
+                slot.className = 'timeline-slot';
+                if (appt.price && appt.price >= 100) slot.classList.add('critical'); // Highlight surge pricing
+                
+                slot.style.left = `${left}px`;
+                slot.style.width = `${width}px`;
+                
+                // Content
+                const content = document.createElement('div');
+                content.textContent = `${appt.customerName || 'زبون'} (${appt.service})`;
+                slot.appendChild(content);
+                
+                // Tooltip
+                slot.title = `${appt.time} - ${appt.customerName} - ${appt.service} - ${appt.price}DA`;
+                
+                track.appendChild(slot);
+            }
+        });
+
+        row.appendChild(track);
+        container.appendChild(row);
+    });
+
+    // --- Current Time Indicator ---
+    const timeLine = document.createElement('div');
+    timeLine.className = 'current-time-line';
+    timeLine.id = 'currentTimeLine';
+    
+    const timeHead = document.createElement('div');
+    timeHead.className = 'current-time-head';
+    timeLine.appendChild(timeHead);
+    
+    container.appendChild(timeLine);
+
+    const updateLine = () => {
+        const now = new Date();
+        const currentH = now.getHours();
+        const currentM = now.getMinutes();
+        
+        // Calculate minutes from start (9:00)
+        const minutesFromStart = (currentH - startHour) * 60 + currentM;
+        
+        if (minutesFromStart >= 0 && minutesFromStart <= (totalHours * 60)) {
+            const left = 150 + (minutesFromStart / 60) * pixelsPerHour;
+            timeLine.style.left = `${left}px`;
+            timeLine.style.display = 'block';
+        } else {
+            timeLine.style.display = 'none';
+        }
+    };
+
+    updateLine();
+    
+    if (timelineInterval) clearInterval(timelineInterval);
+    timelineInterval = setInterval(updateLine, 60000); // Update every minute
+}
+

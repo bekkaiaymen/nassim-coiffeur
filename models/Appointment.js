@@ -41,6 +41,14 @@ const appointmentSchema = new mongoose.Schema({
         type: String,
         required: [true, 'الوقت مطلوب']
     },
+    duration: {
+        type: Number,
+        default: 30
+    },
+    price: {
+        type: Number,
+        default: 50
+    },
     barber: {
         type: String,
         required: false  // Optional - can be assigned later by business

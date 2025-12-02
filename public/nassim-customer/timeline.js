@@ -41,25 +41,23 @@ function updateCurrentTimeLine() {
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     
-    // Only scroll if within working hours
-    if (currentHour < START_HOUR || currentHour >= END_HOUR) return;
+    // Check if within working hours
+    if (currentHour < START_HOUR || currentHour >= END_HOUR) {
+        const line = document.getElementById('currentTimeLine');
+        if (line) line.style.display = 'none';
+        return;
+    }
     
     const minutesSinceStart = (currentHour - START_HOUR) * 60 + currentMinute;
     const position = minutesSinceStart * PIXELS_PER_MINUTE;
     
     const line = document.getElementById('currentTimeLine');
     if (line) {
+        line.style.display = 'block';
         line.style.left = `${position}px`;
-    }
-    
-    // Scroll container to center the line
-    const container = document.querySelector('.timeline-strip-container');
-    if (container) {
-        const centerOffset = container.clientWidth / 2;
-        container.scrollTo({
-            left: position - centerOffset,
-            behavior: 'smooth'
-        });
+        
+        // Scroll to center the line
+        line.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 }
 
