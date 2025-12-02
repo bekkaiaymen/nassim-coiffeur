@@ -1176,9 +1176,9 @@ async function submitBooking(e) {
     // Check VIP restriction for evening slots (17:40 - 21:00)
     const isVIP = customerData.loyaltyPoints >= 500;
     if (isTimeVIPOnly(selectedTime) && !isVIP && !window.paidForVIPSlot) {
-        if (confirm('⚠️ هذا الوقت يتطلب:\n\n🥇 عضوية VIP\n💰 أو دفع 50 دج\n\nهل تؤكد الحجز مع دفع 50 دج؟')) {
+        if (confirm('⚠️ هذا الوقت يتطلب:\n\n🥇 عضوية VIP\n💰 أو دفع 100 دج\n\nهل تؤكد الحجز مع دفع 100 دج؟')) {
             window.paidForVIPSlot = true;
-            showNotification('✅ تم التأكيد. ادفع 50 دج عند الحضور', 'success');
+            showNotification('✅ تم التأكيد. ادفع 100 دج عند الحضور', 'success');
             // Continue with booking
         } else {
             return;
@@ -1230,7 +1230,7 @@ async function submitBooking(e) {
         customerName: customerData.name,
         customerPhone: customerData.phone,
         paidVIPSlot: window.paidForVIPSlot || false,
-        extraCharge: window.paidForVIPSlot ? 50 : 0,
+        extraCharge: window.paidForVIPSlot ? 100 : 0,
         services: selectedServices.map(s => s.id), // Multiple services
         service: selectedServices[0].id, // First service for compatibility
         serviceName: selectedServices.map(s => s.name).join(' + '),
@@ -1276,7 +1276,7 @@ async function submitBooking(e) {
             });
             
             // Show professional confirmation message
-            const extraChargeNote = window.paidForVIPSlot ? '\n\n💰 رسوم إضافية: 50 دج (سيتم التحصيل عند الحضور)' : '';
+            const extraChargeNote = window.paidForVIPSlot ? '\n\n💰 رسوم إضافية: 100 دج (سيتم التحصيل عند الحضور)' : '';
             const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${servicesNames}\n💰 ${totalPrice} دج\n⏱ ${totalDuration} دقيقة${extraChargeNote}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
             
             showNotification(confirmationMessage, 'success', 10000);
