@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nassim Coiffeur - Mobile Promo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: #222;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* A4 Container - Modified Height */
+        .container {
+            position: relative;
+            width: 210mm;
+            height: 240mm; /* Reduced from 297mm */
+            background-color: #000;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 40px 30px;
+        }
+
+        /* Background Image with Overlay - Scoped to Container */
+        .bg-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            opacity: 0.5;
+            z-index: 0;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.9) 100%);
+            z-index: 1;
+        }
+
+        /* Content Wrapper */
+        .content-wrapper {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center; /* Center vertically */
+        }
+
+        /* Logo Section */
+        .logo-container {
+            margin-bottom: 20px; /* Reduced margin */
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .logo {
+            width: 100px; /* Reduced size */
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #CBA35C;
+            box-shadow: 0 0 30px rgba(203, 163, 92, 0.3);
+            object-fit: cover;
+        }
+
+        .brand-name {
+            font-size: 1.8rem; /* Reduced font size */
+            font-weight: 900;
+            color: #CBA35C;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 15px rgba(0,0,0,0.6);
+        }
+
+        /* QR Section - Prominent */
+        .qr-section {
+            background: #fff;
+            padding: 15px; /* Reduced padding */
+            border-radius: 25px;
+            margin-bottom: 25px; /* Reduced margin */
+            animation: zoomIn 0.8s ease-out 0.3s forwards;
+            opacity: 0;
+            transform: scale(0.8);
+            box-shadow: 0 0 50px rgba(203, 163, 92, 0.2);
+            position: relative;
+        }
+
+        .qr-section::after {
+            content: 'امسح للحجز';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #fff;
+            font-size: 1rem; /* Reduced font size */
+            opacity: 0.8;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+
+        .qr-code {
+            width: 200px; /* Reduced size */
+            height: 200px;
+            display: block;
+        }
+
+        /* Separator */
+        .separator {
+            width: 70%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #CBA35C, transparent);
+            margin: 20px 0; /* Reduced margin */
+            opacity: 0.6;
+        }
+
+        .conversion-note {
+            background: rgba(203, 163, 92, 0.15);
+            color: #CBA35C;
+            padding: 10px 30px; /* Reduced padding */
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.3rem; /* Reduced font size */
+            margin-bottom: 25px; /* Reduced margin */
+            border: 2px solid rgba(203, 163, 92, 0.3);
+            animation: zoomIn 0.8s ease-out 0.5s forwards;
+            opacity: 0;
+            transform: scale(0.9);
+            box-shadow: 0 0 25px rgba(203, 163, 92, 0.15);
+        }
+
+        /* Offers Text List */
+        .offers-list {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Reduced gap */
+            animation: slideUp 0.8s ease-out 0.6s forwards;
+            opacity: 0;
+            transform: translateY(40px);
+        }
+
+        .offer-item {
+            position: relative;
+            padding: 5px; /* Reduced padding */
+        }
+
+        .offer-title {
+            font-size: 1.4rem; /* Reduced font size */
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .offer-highlight {
+            color: #CBA35C;
+            font-weight: 900;
+            font-size: 1.6rem; /* Reduced font size */
+            text-shadow: 0 0 20px rgba(203, 163, 92, 0.4);
+        }
+
+        .offer-desc {
+            font-size: 1.1rem; /* Reduced font size */
+            color: #ddd;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes zoomIn {
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Background Image with Overlay (Inside Container) -->
+        <div class="bg-image"></div>
+        <div class="overlay"></div>
+
+        <!-- Content Wrapper -->
+        <div class="content-wrapper">
+            <!-- Logo -->
+            <div class="logo-container">
+                <img src="logo.jpg" alt="Nassim Coiffeur" class="logo">
+                <div class="brand-name">Nassim Coiffeur</div>
+            </div>
+
+            <!-- Large QR Code -->
+            <div class="qr-section">
+                <img src="qrcode.png" alt="Scan QR Code" class="qr-code">
+            </div>
+
+            <!-- Separator -->
+            <div class="separator"></div>
+
+            <!-- Conversion Note -->
+            <div class="conversion-note">
+                100 نقطة = 100 دج
+            </div>
+
+            <!-- Text Offers -->
+            <div class="offers-list">
+                
+                <!-- Welcome Offer -->
+                <div class="offer-item">
+                    <div class="offer-title">
+                        هدية الترحيب
+                    </div>
+                    <div class="offer-desc">
+                        احجز موعدك الأول مسبقاً واحصل فوراً على <span class="offer-highlight">100 نقطة</span>
+                    </div>
+                </div>
+
+                <!-- Referral Offer -->
+                <div class="offer-item">
+                    <div class="offer-title">
+                        برنامج الإحالة
+                    </div>
+                    <div class="offer-desc">
+                        ادعُ صديقاً واكسب <span class="offer-highlight">100 نقطة</span> لكل حجز
+                    </div>
+                </div>
+
+                <!-- Loyalty Offer (New) -->
+                <div class="offer-item">
+                    <div class="offer-title">
+                        مكافأة الولاء
+                    </div>
+                    <div class="offer-desc">
+                        تمتع بخدماتنا واكسب <span class="offer-highlight">50 نقطة</span> مع كل زيارة
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>

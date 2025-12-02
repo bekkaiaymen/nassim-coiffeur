@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#FDB714">
+    <meta name="theme-color" content="#CBA35C">
     <title>✂️ Nassim - لوحة الموظفين</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -24,22 +24,22 @@
     <main class="main-content">
         <div class="employee-grid">
             <!-- Quick Add Customer Section -->
-            <section class="employee-section" style="max-width: 500px; margin: 0 auto;">
-                <div class="section-card" style="background: #1e1e1e; border: 1px solid rgba(203, 163, 92, 0.2); border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
-                    <div class="section-header" style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                        <h2 class="section-title" style="color: #cba35c; font-size: 24px;">⚡ إضافة زبون بسرعة</h2>
-                        <p class="section-subtitle" style="color: #888;">حجز فوري للموعد الحالي</p>
+            <section class="employee-section">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">⚡ إضافة زبون بسرعة</h2>
+                        <p class="section-subtitle">حجز فوري للموعد الحالي</p>
                     </div>
 
-                    <form id="quickAddForm" class="employee-form" style="padding-top: 20px;">
+                    <form id="quickAddForm" class="employee-form">
                         <!-- Hidden fields for defaults -->
                         <input type="hidden" id="customerName" value="زبون سريع">
                         <input type="hidden" id="customerPhone" value="0000000000">
                         <input type="hidden" id="appointmentDate">
 
-                        <div class="form-group" style="margin-bottom: 20px;">
-                            <label for="serviceType" class="form-label" style="color: #eee; margin-bottom: 10px; display: block;">نوع الخدمة</label>
-                            <select id="serviceType" class="form-input" required style="width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px;">
+                        <div class="form-group">
+                            <label for="serviceType" class="form-label">نوع الخدمة</label>
+                            <select id="serviceType" class="form-input" required>
                                 <option value="">اختر الخدمة</option>
                                 <option value="حلاقة">حلاقة</option>
                                 <option value="حلاقة وتشذيب لحية">حلاقة وتشذيب لحية</option>
@@ -51,12 +51,12 @@
                             </select>
                         </div>
 
-                        <div class="form-group" style="margin-bottom: 25px;">
-                            <label for="appointmentTime" class="form-label" style="color: #eee; margin-bottom: 10px; display: block;">وقت الحجز</label>
-                            <input type="time" id="appointmentTime" class="form-input" required style="width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px; font-size: 16px; font-family: 'Segoe UI', sans-serif;">
+                        <div class="form-group">
+                            <label for="appointmentTime" class="form-label">وقت الحجز</label>
+                            <input type="time" id="appointmentTime" class="form-input" required>
                         </div>
 
-                        <button type="submit" class="btn-primary" style="width: 100%; padding: 14px; background: linear-gradient(45deg, #cba35c, #e0c179); border: none; border-radius: 8px; color: #000; font-weight: bold; font-size: 18px; cursor: pointer; transition: transform 0.2s;">
+                        <button type="submit" class="btn-primary">
                             تأكيد الحجز الفوري
                         </button>
                     </form>
@@ -64,47 +64,47 @@
             </section>
 
             <!-- Rate Customer Section -->
-            <section class="employee-section" style="max-width: 500px; margin: 20px auto;">
-                <div class="section-card" style="background: #1e1e1e; border: 1px solid rgba(203, 163, 92, 0.2); border-radius: 16px; padding: 20px;">
-                    <div class="section-header" style="text-align: center; margin-bottom: 20px;">
-                        <h2 class="section-title" style="color: #cba35c; font-size: 20px;">⭐ تقييم الزبائن</h2>
-                        <p class="section-subtitle" style="color: #888; font-size: 14px;">قيم الزبائن بعد اكتمال الموعد</p>
+            <section class="employee-section">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">⭐ تقييم الزبائن</h2>
+                        <p class="section-subtitle">قيم الزبائن بعد اكتمال الموعد</p>
                     </div>
 
                     <!-- Completed Appointments List -->
-                    <div id="completedAppointmentsList" class="appointments-list" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div id="completedAppointmentsList" class="appointments-list">
                         <!-- Items will be injected here -->
-                        <div style="text-align: center; color: #666; padding: 20px;">جاري تحميل المواعيد المكتملة...</div>
+                        <div style="text-align: center; color: var(--text-secondary); padding: 20px;">جاري تحميل المواعيد المكتملة...</div>
                     </div>
 
                     <!-- Rating Form (Hidden initially) -->
-                    <div id="ratingFormSection" class="rating-form-section" style="display: none; margin-top: 20px; border-top: 1px solid #333; padding-top: 20px;">
+                    <div id="ratingFormSection" class="rating-form-section" style="display: none; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
                         <form id="employeeRatingForm" class="employee-form">
                             <input type="hidden" id="ratingAppointmentId">
                             
-                            <div id="selectedAppointmentDisplay" style="background: #2d2d2d; padding: 10px; border-radius: 8px; margin-bottom: 15px; color: #eee; font-size: 14px;">
+                            <div id="selectedAppointmentDisplay">
                                 <!-- Selected appointment details -->
                             </div>
 
-                            <div class="form-group" style="text-align: center; margin-bottom: 20px;">
-                                <label class="form-label" style="color: #eee; display: block; margin-bottom: 10px;">تقييم العميل</label>
-                                <div class="stars-container" id="starsContainer" style="display: flex; justify-content: center; gap: 10px; font-size: 30px; cursor: pointer;">
-                                    <span class="star" data-rating="1" style="color: #444;">★</span>
-                                    <span class="star" data-rating="2" style="color: #444;">★</span>
-                                    <span class="star" data-rating="3" style="color: #444;">★</span>
-                                    <span class="star" data-rating="4" style="color: #444;">★</span>
-                                    <span class="star" data-rating="5" style="color: #444;">★</span>
+                            <div class="form-group" style="text-align: center;">
+                                <label class="form-label">تقييم العميل</label>
+                                <div class="stars-container" id="starsContainer">
+                                    <span class="star" data-rating="1">★</span>
+                                    <span class="star" data-rating="2">★</span>
+                                    <span class="star" data-rating="3">★</span>
+                                    <span class="star" data-rating="4">★</span>
+                                    <span class="star" data-rating="5">★</span>
                                 </div>
                                 <input type="hidden" id="ratingValue" required>
                             </div>
 
-                            <div class="form-group" style="margin-bottom: 15px;">
-                                <textarea id="ratingComment" class="form-textarea" rows="3" placeholder="ملاحظات (اختياري)" style="width: 100%; background: #2d2d2d; border: 1px solid #444; color: white; padding: 10px; border-radius: 8px;"></textarea>
+                            <div class="form-group">
+                                <textarea id="ratingComment" class="form-input" rows="3" placeholder="ملاحظات (اختياري)"></textarea>
                             </div>
 
                             <div class="form-actions" style="display: flex; gap: 10px;">
-                                <button type="button" class="btn-secondary" onclick="cancelRating()" style="flex: 1; padding: 10px; background: #444; border: none; color: white; border-radius: 6px; cursor: pointer;">إلغاء</button>
-                                <button type="submit" class="btn-primary" style="flex: 1; padding: 10px; background: #cba35c; border: none; color: black; font-weight: bold; border-radius: 6px; cursor: pointer;">إرسال</button>
+                                <button type="button" class="btn-secondary" onclick="cancelRating()">إلغاء</button>
+                                <button type="submit" class="btn-primary">إرسال</button>
                             </div>
                         </form>
                     </div>
@@ -115,21 +115,21 @@
 
     <!-- Login Modal -->
     <div id="loginModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center;">
-        <div class="modal-content" style="background: #1e1e1e; padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; border: 1px solid #cba35c;">
+        <div class="modal-content" style="background: var(--surface); padding: 30px; border-radius: 16px; width: 90%; max-width: 400px; border: 1px solid var(--primary); box-shadow: var(--shadow-lg);">
             <div style="text-align: center; margin-bottom: 20px;">
                 <div style="font-size: 40px; margin-bottom: 10px;">✂️</div>
-                <h2 style="color: #cba35c; margin: 0;">تسجيل دخول الموظف</h2>
+                <h2 style="color: var(--primary); margin: 0;">تسجيل دخول الموظف</h2>
             </div>
             <form id="loginForm">
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="color: #eee; display: block; margin-bottom: 8px;">البريد الإلكتروني</label>
-                    <input type="email" id="loginEmail" required style="width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px;">
+                <div class="form-group">
+                    <label class="form-label">البريد الإلكتروني</label>
+                    <input type="email" id="loginEmail" required class="form-input">
                 </div>
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="color: #eee; display: block; margin-bottom: 8px;">كلمة المرور</label>
-                    <input type="password" id="loginPassword" required style="width: 100%; padding: 12px; background: #2d2d2d; border: 1px solid #444; color: white; border-radius: 8px;">
+                <div class="form-group">
+                    <label class="form-label">كلمة المرور</label>
+                    <input type="password" id="loginPassword" required class="form-input">
                 </div>
-                <button type="submit" style="width: 100%; padding: 14px; background: #cba35c; border: none; border-radius: 8px; color: #000; font-weight: bold; font-size: 16px; cursor: pointer;">دخول</button>
+                <button type="submit" class="btn-primary">دخول</button>
             </form>
         </div>
     </div>
