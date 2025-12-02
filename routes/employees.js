@@ -50,6 +50,7 @@ router.post('/login', async (req, res) => {
             success: true,
             token,
             employee: {
+                _id: employee._id,
                 id: employee._id,
                 name: employee.name,
                 email: employee.email,

@@ -1,7 +1,7 @@
 // Global State
 let currentEmployeeId = null;
-let employeeToken = localStorage.getItem('employeeToken');
-let employeeData = JSON.parse(localStorage.getItem('employeeData') || 'null');
+let employeeToken = null;
+let employeeData = null;
 let selectedAppointmentId = null;
 let customerRatingValue = 0;
 let servicesCache = [];
@@ -57,12 +57,35 @@ async function initEmployeeApp() {
 }
 
 function checkAuth() {
-    if (!employeeToken) {
-        document.getElementById('loginModal').style.display = 'flex';
-        document.getElementById('loginForm').addEventListener('submit', handleLogin);
-        return false;
+    // Check if we have stored credentials
+    const storedToken = localStorage.getItem('employeeToken');
+    const storedData = localStorage.getItem('employeeData');
+    
+    if (storedToken && storedData) {
+        employeeToken = storedToken;
+        employeeData = JSON.parse(storedData);
+        return true;
     }
-    return true;
+    
+    // Show login modal if no valid credentials
+    document.getElementById('loginModal').style.display = 'flex';
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm && !loginForm.dataset.listenerAdded) {
+        loginForm.addEventListener('submit', handleLogin);
+        loginForm.dataset.listenerAdded = 'true';
+    }
+    return false;
+}
+
+function handleUnauthorized() {
+    localStorage.removeItem('employeeToken');
+    localStorage.removeItem('employeeData');
+    employeeToken = null;
+    employeeData = null;
+    showToast('انتهت صلاحية الجلسة. يرجى تسجيل الدخول مجدداً', 'error');
+    setTimeout(() => {
+        window.location.reload();
+    }, 1500);
 }
 
 async function handleLogin(e) {
@@ -121,6 +144,11 @@ async function loadServices() {
                 'Authorization': `Bearer ${employeeToken}`
             }
         });
+        
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
         
         if (!response.ok) {
             throw new Error('فشل في تحميل الخدمات');
@@ -270,7 +298,7 @@ async function loadCompletedAppointments() {
 
     try {
         // Fetch completed appointments for this employee
-        const empId = employeeData ? employeeData.id : null;
+        const empId = employeeData ? employeeData._id : null;
         if (!empId) return;
 
         const response = await fetch(`${API_BASE}/appointments?status=completed&limit=20&employee=${empId}`, {
@@ -278,6 +306,11 @@ async function loadCompletedAppointments() {
                 'Authorization': `Bearer ${employeeToken}`
             }
         });
+        
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
         
         if (!response.ok) throw new Error('فشل في تحميل المواعيد');
         
@@ -453,6 +486,11 @@ async function loadPendingAppointments() {
             }
         });
         
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+        
         if (!response.ok) throw new Error('فشل في تحميل المواعيد');
         
         const result = await response.json();
@@ -611,6 +649,12 @@ async function loadTimeline() {
         const response = await fetch(`${API_BASE}/appointments?date=${date}`, {
             headers: { 'Authorization': `Bearer ${employeeToken}` }
         });
+        
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+        
         const data = await response.json();
         const appointments = data.data || [];
 
