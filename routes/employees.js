@@ -3,6 +3,68 @@ const router = express.Router();
 const Employee = require('../models/Employee');
 const Appointment = require('../models/Appointment');
 const { protect, ensureTenant } = require('../middleware/auth');
+const jwt = require('jsonwebtoken');
+
+// @desc    Employee Login
+// @route   POST /api/employees/login
+// @access  Public
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'الرجاء إدخال البريد الإلكتروني وكلمة المرور'
+            });
+        }
+
+        // Check for employee
+        const employee = await Employee.findOne({ email }).select('+password');
+
+        if (!employee) {
+            return res.status(401).json({
+                success: false,
+                message: 'بيانات الدخول غير صحيحة'
+            });
+        }
+
+        // Check password
+        const isMatch = await employee.matchPassword(password);
+
+        if (!isMatch) {
+            return res.status(401).json({
+                success: false,
+                message: 'بيانات الدخول غير صحيحة'
+            });
+        }
+
+        // Create token
+        const token = jwt.sign(
+            { id: employee._id, role: 'employee' },
+            process.env.JWT_SECRET,
+            { expiresIn: '30d' }
+        );
+
+        res.json({
+            success: true,
+            token,
+            employee: {
+                id: employee._id,
+                name: employee.name,
+                email: employee.email,
+                avatar: employee.avatar,
+                role: 'employee'
+            }
+        });
+    } catch (error) {
+        console.error('Employee login error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في تسجيل الدخول'
+        });
+    }
+});
 
 // @desc    Get employees by business ID (Public)
 // @route   GET /api/employees/public/by-business/:businessId

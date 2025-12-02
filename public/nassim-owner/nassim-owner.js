@@ -724,6 +724,11 @@ function openAddEmployeeModal() {
                 <label class="form-label">البريد الإلكتروني</label>
                 <input type="email" class="form-input" name="email">
             </div>
+
+            <div class="form-group">
+                <label class="form-label">كلمة المرور</label>
+                <input type="password" class="form-input" name="password" placeholder="اتركها فارغة إذا لم ترد تعيين كلمة مرور">
+            </div>
             
             <div class="form-group">
                 <label class="form-label">صورة الموظف</label>
@@ -772,6 +777,7 @@ async function submitAddEmployee() {
             name: formData.get('name'),
             phone: formData.get('phone'),
             email: formData.get('email'),
+            password: formData.get('password'),
             avatar: photoUrl || null,
             isAvailable: formData.get('isAvailable') === 'on',
             business: NASSIM_BUSINESS_ID
@@ -851,6 +857,11 @@ async function editEmployee(employeeId) {
                     <label class="form-label">البريد الإلكتروني</label>
                     <input type="email" class="form-input" name="email" value="${employee.email || ''}">
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label">كلمة المرور الجديدة</label>
+                    <input type="password" class="form-input" name="password" placeholder="اتركها فارغة للاحتفاظ بكلمة المرور الحالية">
+                </div>
                 
                 <div class="form-group">
                     <label class="form-label">الصورة (URL)</label>
@@ -903,6 +914,11 @@ async function submitEditEmployee() {
         services: selectedServices,
         isAvailable: formData.get('isAvailable') === 'on'
     };
+
+    const password = formData.get('password');
+    if (password) {
+        employeeData.password = password;
+    }
 
     try {
         const token = localStorage.getItem('token');
