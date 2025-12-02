@@ -33,6 +33,12 @@ function setupNavigation() {
         item.addEventListener('click', function() {
             const targetPage = this.dataset.page;
             
+            // Special handling for refer friend button
+            if (this.id === 'referFriendBtn') {
+                handleReferFriend();
+                return;
+            }
+            
             // Update nav active state
             navItems.forEach(nav => nav.classList.remove('active'));
             this.classList.add('active');
@@ -43,6 +49,27 @@ function setupNavigation() {
             });
             document.getElementById(targetPage + 'Page').classList.add('active');
         });
+    });
+}
+
+// Handle Refer Friend
+function handleReferFriend() {
+    const quickBookUrl = `${window.location.origin}/quick-book.html`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(quickBookUrl).then(() => {
+        showToast('✅ تم نسخ رابط الحجز السريع!', 'success');
+        
+        // Show share options if available
+        if (navigator.share) {
+            navigator.share({
+                title: 'ناسيم كوافير - حجز سريع',
+                text: 'احجز موعدك في ناسيم كوافير بسهولة!',
+                url: quickBookUrl
+            }).catch(err => console.log('Share cancelled'));
+        }
+    }).catch(err => {
+        showToast('فشل في النسخ. الرابط: ' + quickBookUrl, 'error');
     });
 }
 
