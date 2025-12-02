@@ -2807,16 +2807,15 @@ function renderTimelineGrid(date, appointments) {
         const hourEl = document.createElement('div');
         hourEl.className = 'timeline-hour';
         
+        const timeLabel = document.createElement('div');
+        timeLabel.className = 'timeline-time-label';
+        timeLabel.textContent = `${hour > 12 ? hour - 12 : hour} ${hour >= 12 ? 'PM' : 'AM'}`;
+        hourEl.appendChild(timeLabel);
+        
         // Explicit dot element for better control
         const dot = document.createElement('div');
         dot.className = 'timeline-dot';
         hourEl.appendChild(dot);
-
-        const timeLabel = document.createElement('div');
-        timeLabel.className = 'timeline-time-label';
-        timeLabel.textContent = `${hour > 12 ? hour - 12 : hour} ${hour >= 12 ? 'PM' : 'AM'}`;
-        
-        hourEl.appendChild(timeLabel);
         track.appendChild(hourEl);
     }
     
@@ -2856,7 +2855,7 @@ function renderTimelineGrid(date, appointments) {
         const startTimeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 
         const aptEl = document.createElement('div');
-        aptEl.className = `timeline-appointment ${index % 2 === 0 ? 'top' : 'bottom'}`;
+        aptEl.className = `timeline-appointment bottom`;
         aptEl.style.left = `${leftPos}px`;
         // Adjust width based on duration (approx)
         const width = (duration / 60) * pixelsPerHour;
