@@ -54,7 +54,11 @@ function setupNavigation() {
 
 // Handle Refer Friend
 function handleReferFriend() {
-    const quickBookUrl = `${window.location.origin}/quick-book.html`;
+    // Get customer name from localStorage if available
+    const customerData = JSON.parse(localStorage.getItem('customerData') || '{}');
+    const referrerName = customerData.name || 'صديقك';
+    
+    const quickBookUrl = `${window.location.origin}/quick-book.html?ref=${encodeURIComponent(referrerName)}`;
     
     // Copy to clipboard
     navigator.clipboard.writeText(quickBookUrl).then(() => {
@@ -64,7 +68,7 @@ function handleReferFriend() {
         if (navigator.share) {
             navigator.share({
                 title: 'ناسيم كوافير - حجز سريع',
-                text: 'احجز موعدك في ناسيم كوافير بسهولة!',
+                text: `${referrerName} يدعوك لحجز موعد في ناسيم كوافير!`,
                 url: quickBookUrl
             }).catch(err => console.log('Share cancelled'));
         }

@@ -3,183 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#FDB714">
-    <title>✂️ ناسيم - حجز سريع</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✂️</text></svg>">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>ناسيم - حجز سريع</title>
+    <link rel="stylesheet" href="/nassim-customer/nassim-customer.css">
     <style>
         :root {
-            --primary-color: #FDB714;
-            --primary-dark: #e6a612;
-            --secondary-color: #2C3E50;
-            --text-dark: #2C3E50;
-            --text-light: #7F8C8D;
-            --bg-light: #F8F9FA;
-            --bg-white: #FFFFFF;
-            --border-color: #E0E0E0;
-            --success-color: #27AE60;
-            --danger-color: #E74C3C;
-            --shadow: 0 2px 8px rgba(0,0,0,0.08);
-            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --text-primary: #2c3e50;
+            --text-secondary: #7f8c8d;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --border-color: #dfe6e9;
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --radius-md: 12px;
+            --radius-lg: 16px;
         }
 
         body {
-            font-family: 'Cairo', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
+            padding: 20px;
         }
 
-        .booking-container {
-            max-width: 500px;
-            width: 100%;
-            background: var(--bg-white);
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            padding: 2rem;
-            animation: slideUp 0.5s ease;
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
         }
 
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .booking-card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            box-shadow: var(--shadow-md);
+            margin-top: 20px;
         }
 
-        .header {
+        .page-header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 30px;
         }
 
-        .logo {
+        .page-icon {
             font-size: 4rem;
-            margin-bottom: 1rem;
+            margin-bottom: 10px;
         }
 
-        .title {
-            font-size: 2rem;
-            font-weight: 800;
-            color: var(--secondary-color);
-            margin-bottom: 0.5rem;
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 8px;
         }
 
-        .subtitle {
-            color: var(--text-light);
-            font-size: 1rem;
+        .page-subtitle {
+            font-size: 15px;
+            color: var(--text-secondary);
+        }
+
+        .referrer-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: var(--radius-md);
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 600;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
 
         .form-label {
             display: block;
             font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-size: 14px;
         }
 
         .form-input,
         .form-select {
             width: 100%;
-            padding: 0.875rem 1rem;
+            padding: 12px 16px;
             border: 2px solid var(--border-color);
-            border-radius: 10px;
-            font-size: 1rem;
-            font-family: 'Cairo', sans-serif;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             transition: all 0.3s;
+            background: var(--bg-primary);
         }
 
         .form-input:focus,
         .form-select:focus {
             outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(253, 183, 20, 0.1);
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
         }
 
-        .btn-primary {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
-            color: var(--secondary-color);
-            border: none;
-            border-radius: 12px;
-            font-size: 1.125rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 4px 12px rgba(253, 183, 20, 0.3);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(253, 183, 20, 0.4);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
+        .form-input:disabled {
+            background: var(--bg-secondary);
             cursor: not-allowed;
         }
 
-        .info-box {
-            background: var(--bg-light);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-            text-align: center;
+        .time-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
 
-        .info-text {
-            color: var(--text-light);
-            font-size: 0.875rem;
+        .time-part {
+            flex: 1;
         }
 
-        .toast {
-            position: fixed;
-            bottom: 2rem;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
+        .time-separator {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-secondary);
+            padding: 0 5px;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 14px;
             background: var(--secondary-color);
             color: white;
-            padding: 1rem 2rem;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            opacity: 0;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
             transition: all 0.3s;
-            z-index: 1000;
+            margin-top: 10px;
         }
 
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
+        .btn-submit:hover:not(:disabled) {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(52, 152, 219, 0.3);
         }
 
-        .toast.success {
-            background: var(--success-color);
-        }
-
-        .toast.error {
-            background: var(--danger-color);
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .loading {
             display: none;
             text-align: center;
-            margin-top: 1rem;
+            margin-top: 15px;
         }
 
         .loading.show {
@@ -188,74 +162,120 @@
 
         .spinner {
             border: 3px solid var(--border-color);
-            border-top: 3px solid var(--primary-color);
+            border-top: 3px solid var(--secondary-color);
             border-radius: 50%;
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            margin: 0 auto 10px;
         }
 
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--primary-color);
+            color: white;
+            padding: 15px 25px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-md);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+            max-width: 90%;
+        }
+
+        #toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        #toast.success {
+            background: var(--success-color);
+        }
+
+        #toast.error {
+            background: var(--danger-color);
+        }
     </style>
 </head>
 <body>
-    <div class="booking-container">
-        <div class="header">
-            <div class="logo">✂️</div>
-            <h1 class="title">حجز سريع</h1>
-            <p class="subtitle">احجز موعدك في ثوانٍ</p>
-        </div>
-
-        <div class="info-box">
-            <p class="info-text">🎉 تم مشاركة هذا الرابط معك من قبل صديق</p>
-        </div>
-
-        <form id="quickBookForm">
-            <div class="form-group">
-                <label for="customerName" class="form-label">الاسم الكامل</label>
-                <input type="text" id="customerName" class="form-input" placeholder="أدخل اسمك" required>
+    <div class="app-container">
+        <div class="booking-card">
+            <div class="page-header">
+                <div class="page-icon">✂️</div>
+                <h1 class="page-title">حجز سريع</h1>
+                <p class="page-subtitle">احجز موعدك بسهولة وسرعة</p>
             </div>
 
-            <div class="form-group">
-                <label for="customerPhone" class="form-label">رقم الهاتف</label>
-                <input type="tel" id="customerPhone" class="form-input" placeholder="05XXXXXXXX" required pattern="[0-9]{10}">
+            <div class="referrer-info" id="referrerInfo">
+                🎉 تمت دعوتك من قبل: <span id="referrerName">جارٍ التحميل...</span>
             </div>
 
-            <div class="form-group">
-                <label for="serviceSelect" class="form-label">نوع الخدمة</label>
-                <select id="serviceSelect" class="form-select" required>
-                    <option value="">اختر الخدمة...</option>
-                </select>
-            </div>
+            <form id="quickBookForm">
+                <div class="form-group">
+                    <label for="referrerField" class="form-label">المُحيل</label>
+                    <input type="text" id="referrerField" class="form-input" readonly disabled>
+                </div>
 
-            <div class="form-group">
-                <label for="appointmentDate" class="form-label">التاريخ</label>
-                <input type="date" id="appointmentDate" class="form-input" required>
-            </div>
+                <div class="form-group">
+                    <label for="customerName" class="form-label">الاسم الكامل *</label>
+                    <input type="text" id="customerName" class="form-input" placeholder="أدخل اسمك الكامل" required>
+                </div>
 
-            <div class="form-group">
-                <label for="appointmentTime" class="form-label">الوقت</label>
-                <select id="appointmentTime" class="form-select" required>
-                    <option value="">اختر الوقت...</option>
-                </select>
-            </div>
+                <div class="form-group">
+                    <label for="customerPhone" class="form-label">رقم الهاتف *</label>
+                    <input type="tel" id="customerPhone" class="form-input" placeholder="05XXXXXXXX" required pattern="[0-9]{10}">
+                </div>
 
-            <button type="submit" class="btn-primary" id="submitBtn">
-                احجز الآن 🚀
-            </button>
-        </form>
+                <div class="form-group">
+                    <label for="serviceSelect" class="form-label">نوع الخدمة *</label>
+                    <select id="serviceSelect" class="form-select" required>
+                        <option value="">اختر الخدمة...</option>
+                    </select>
+                </div>
 
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p style="margin-top: 1rem; color: var(--text-light);">جاري الحجز...</p>
+                <div class="form-group">
+                    <label for="appointmentDate" class="form-label">التاريخ *</label>
+                    <input type="date" id="appointmentDate" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">الوقت *</label>
+                    <div class="time-input-group">
+                        <div class="time-part">
+                            <select id="hourSelect" class="form-select" required>
+                                <option value="">الساعة</option>
+                            </select>
+                        </div>
+                        <span class="time-separator">:</span>
+                        <div class="time-part">
+                            <select id="minuteSelect" class="form-select" required>
+                                <option value="">الدقيقة</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    احجز الآن 🚀
+                </button>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="color: var(--text-secondary);">جاري الحجز...</p>
+                </div>
+            </form>
         </div>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <div id="toast"></div>
 
     <script>
         const API_BASE = '/api';
@@ -266,9 +286,18 @@
         });
 
         async function initQuickBook() {
+            loadReferrerInfo();
             await loadServices();
-            generateTimeSlots();
+            generateTimeInputs();
             setMinDate();
+        }
+
+        function loadReferrerInfo() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const referrerName = urlParams.get('ref') || 'صديقك';
+            
+            document.getElementById('referrerName').textContent = referrerName;
+            document.getElementById('referrerField').value = referrerName;
         }
 
         async function loadServices() {
@@ -294,19 +323,24 @@
             }
         }
 
-        function generateTimeSlots() {
-            const select = document.getElementById('appointmentTime');
-            const startHour = 9;
-            const endHour = 21;
-
-            for (let hour = startHour; hour < endHour; hour++) {
-                for (let minute = 0; minute < 60; minute += 30) {
-                    const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-                    const option = document.createElement('option');
-                    option.value = time;
-                    option.textContent = time;
-                    select.appendChild(option);
-                }
+        function generateTimeInputs() {
+            const hourSelect = document.getElementById('hourSelect');
+            const minuteSelect = document.getElementById('minuteSelect');
+            
+            // Generate hours (9 AM to 9 PM)
+            for (let h = 9; h <= 21; h++) {
+                const option = document.createElement('option');
+                option.value = String(h).padStart(2, '0');
+                option.textContent = String(h).padStart(2, '0');
+                hourSelect.appendChild(option);
+            }
+            
+            // Generate minutes (0-59)
+            for (let m = 0; m < 60; m++) {
+                const option = document.createElement('option');
+                option.value = String(m).padStart(2, '0');
+                option.textContent = String(m).padStart(2, '0');
+                minuteSelect.appendChild(option);
             }
         }
 
@@ -326,12 +360,20 @@
             const serviceId = serviceSelect.value;
             const serviceName = serviceSelect.options[serviceSelect.selectedIndex].text.split(' - ')[0];
             const date = document.getElementById('appointmentDate').value;
-            const time = document.getElementById('appointmentTime').value;
+            const hour = document.getElementById('hourSelect').value;
+            const minute = document.getElementById('minuteSelect').value;
 
             if (!serviceId) {
                 showToast('الرجاء اختيار الخدمة', 'error');
                 return;
             }
+
+            if (!hour || !minute) {
+                showToast('الرجاء اختيار الوقت', 'error');
+                return;
+            }
+
+            const time = `${hour}:${minute}`;
 
             const submitBtn = document.getElementById('submitBtn');
             const loading = document.getElementById('loading');
@@ -348,14 +390,14 @@
                     },
                     body: JSON.stringify({
                         business: BUSINESS_ID,
-                        customer: null, // Will be created if new
+                        customer: null,
                         customerName: name,
                         customerPhone: phone,
                         service: serviceId,
                         date: date,
                         time: time,
                         dateTime: new Date(`${date}T${time}:00`).toISOString(),
-                        notes: 'حجز سريع عبر رابط الإحالة'
+                        notes: 'حجز سريع عبر رابط الإحالة - المُحيل: ' + document.getElementById('referrerField').value
                     })
                 });
 
@@ -369,8 +411,6 @@
 
                 // Reset form
                 setTimeout(() => {
-                    document.getElementById('quickBookForm').reset();
-                    setMinDate();
                     window.location.href = '/nassim-customer';
                 }, 2000);
 
@@ -386,7 +426,7 @@
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             toast.textContent = message;
-            toast.className = `toast show ${type}`;
+            toast.className = `show ${type}`;
 
             setTimeout(() => {
                 toast.classList.remove('show');
