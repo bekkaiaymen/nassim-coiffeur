@@ -196,6 +196,11 @@ exports.checkLimit = (limitType) => {
                 return next(); // Super admins bypass limits
             }
 
+            // Allow trial tenants to bypass subscription check
+            if (req.tenant.status === 'trial') {
+                return next();
+            }
+
             const Subscription = require('../models/Subscription');
             const subscription = await Subscription.findOne({ 
                 tenant: req.tenantId,

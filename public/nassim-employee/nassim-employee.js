@@ -218,7 +218,8 @@ async function handleAddCustomer(event) {
             body: JSON.stringify(payload)
         });
         
-        if (!response.ok) throw new Error('فشل في إضافة الموعد');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message || 'فشل في إضافة الموعد');
         
         showToast('تم إضافة الموعد بنجاح ✅', 'success');
         document.getElementById('quickAddForm').reset();
@@ -229,7 +230,7 @@ async function handleAddCustomer(event) {
         
     } catch (error) {
         console.error('Add error:', error);
-        showToast('حدث خطأ أثناء إضافة الموعد', 'error');
+        showToast(error.message || 'حدث خطأ أثناء إضافة الموعد', 'error');
     }
 }
 
@@ -251,7 +252,8 @@ async function loadCompletedAppointments() {
         
         if (!response.ok) throw new Error('فشل في تحميل المواعيد');
         
-        const appointments = await response.json();
+        const result = await response.json();
+        const appointments = result.data || [];
         
         if (!appointments || appointments.length === 0) {
             listContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">لا توجد مواعيد مكتملة للتقييم</div>';
