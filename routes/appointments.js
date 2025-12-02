@@ -58,63 +58,6 @@ router.get('/business/:businessId', protect, async (req, res) => {
     }
 });
 
-// Public route - Create appointment from customer portal
-router.post('/public/book', async (req, res) => {
-    try {
-        const { business, customer, customerName, customerPhone, service, employee, date, time, dateTime, notes } = req.body;
-        
-        console.log('📥 Booking request:', req.body);
-        
-        if (!business || !customer || !service || !date || !time) {
-            return res.status(400).json({
-                success: false,
-                message: 'بيانات الحجز غير كاملة'
-            });
-        }
-
-        // Check for conflicts
-        const conflict = await Appointment.findOne({
-            business,
-            employee,
-            dateTime: new Date(dateTime),
-            status: { $nin: ['cancelled', 'no-show'] }
-        });
-
-        if (conflict) {
-            return res.status(400).json({ 
-                success: false, 
-                message: 'هذا الموعد محجوز بالفعل. يرجى اختيار وقت آخر' 
-            });
-        }
-
-        const appointment = await Appointment.create({
-            tenant: business,
-            business,
-            customerId: customer,
-            customerName,
-            customerPhone,
-            serviceId: service,
-            service: customerName, // Service name for display
-            employee,
-            date: new Date(date),
-            time,
-            notes,
-            status: 'pending'
-        });
-
-        res.status(201).json({ 
-            success: true, 
-            message: 'تم حجز الموعد بنجاح',
-            data: appointment 
-        });
-    } catch (error) {
-        console.error('Error creating appointment:', error);
-        res.status(500).json({ 
-            success: false, 
-            message: 'حدث خطأ في حجز الموعد' 
-        });
-    }
-});
 
 // Helper function to create notification
 async function createNotification(customerId, type, title, message, icon, data = {}) {

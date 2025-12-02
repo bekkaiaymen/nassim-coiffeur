@@ -1,12 +1,11 @@
 // Service Worker for Nassim Coiffeur PWA
-const CACHE_NAME = 'nassim-v1.0.0';
+const CACHE_NAME = 'nassim-v1.0.1';
 const ASSETS_TO_CACHE = [
   '/nassim',
-  '/public/nassim/nassim.css',
-  '/public/nassim/nassim.js',
-  '/public/nassim/logo.jpg',
-  '/public/nassim/background.jpg',
-  '/public/manifest.json'
+  '/nassim/nassim.css',
+  '/nassim/nassim.js',
+  '/nassim/logo.jpg',
+  '/manifest.json'
 ];
 
 // Install Event - Cache assets
