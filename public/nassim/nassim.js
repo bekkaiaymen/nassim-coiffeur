@@ -1831,6 +1831,48 @@ function showCoins() {
     updateActiveNav(3);
 }
 
+async function loadCoins() {
+    if (!token || !customerData) return;
+    
+    try {
+        // Refresh customer data to get latest points
+        await loadCustomerProfile();
+        
+        // Update UI
+        document.getElementById('userCoins').textContent = customerData.loyaltyPoints || 0;
+        
+        // Load History
+        const historyContainer = document.getElementById('coinsHistoryList');
+        if (historyContainer) {
+            if (customerData.pointsHistory && customerData.pointsHistory.length > 0) {
+                historyContainer.innerHTML = customerData.pointsHistory
+                    .sort((a, b) => new Date(b.date) - new Date(a.date))
+                    .map(item => `
+                        <div class="coin-history-item">
+                            <div class="history-icon">${item.type === 'earned' ? '➕' : '➖'}</div>
+                            <div class="history-content">
+                                <div class="history-title">${item.description || 'عملية نقاط'}</div>
+                                <div class="history-date">${formatDate(item.date)}</div>
+                            </div>
+                            <div class="history-amount ${item.type === 'earned' ? 'positive' : 'negative'}">
+                                ${item.type === 'earned' ? '+' : '-'}${item.points}
+                            </div>
+                        </div>
+                    `).join('');
+            } else {
+                historyContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🪙</div>
+                        <p>لا يوجد سجل للنقاط بعد</p>
+                    </div>
+                `;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading coins:', error);
+    }
+}
+
 function showAccount() {
     if (!token) {
         showNotification('سجل دخول لعرض حسابك', 'error');

@@ -941,8 +941,6 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
                     await customer.save();
 
                     // Create notification for customer
-                    // DISABLED as per request: "Remove notifications related to points"
-                    /*
                     try {
                         const Notification = require('../models/Notification');
                         const User = require('../models/User');
@@ -960,7 +958,6 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
                     } catch (notifError) {
                         console.error('Error creating notification:', notifError);
                     }
-                    */
                 }
             }
         }
@@ -998,6 +995,32 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
 
                 // Remove from pending
                 referrer.pendingRewards = referrer.pendingRewards.filter(
+                    r => !(r.appointmentId && r.appointmentId.toString() === appointment._id.toString())
+                );
+
+                await referrer.save();
+                console.log(`✅ Referral reward activated for ${referrer.name}: ${pointsToActivate} points`);
+
+                // Create notification for referrer
+                try {
+                    const Notification = require('../models/Notification');
+                    const User = require('../models/User');
+                    const user = await User.findById(referrer.user);
+                    if (user) {
+                        await Notification.create({
+                            user: user._id,
+                            type: 'reward',
+                            title: '🎉 مكافأة إحالة صديق!',
+                            message: `تم تفعيل ${pointsToActivate} نقطة لأن صديقك أكمل موعده`,
+                            icon: '🎁',
+                            data: { points: pointsToActivate, appointmentId: appointment._id }
+                        });
+                    }
+                } catch (notifError) {
+                    console.error('Error creating referral notification:', notifError);
+                }
+            }
+        }
                     r => !(r.appointmentId && r.appointmentId.toString() === appointment._id.toString())
                 );
 
