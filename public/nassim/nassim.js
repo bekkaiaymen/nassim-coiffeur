@@ -1159,6 +1159,29 @@ async function submitBooking(e) {
         return;
     }
     
+    // Check if employee is available (present today)
+    const selectedEmployee = document.getElementById('employeeSelect').value;
+    const selectedEmployeeName = document.getElementById('employeeSelect').selectedOptions[0]?.text;
+    
+    // Check employee availability
+    try {
+        const availableResponse = await fetch(`${API_URL}/employees/available`);
+        if (availableResponse.ok) {
+            const availableData = await availableResponse.json();
+            const availableEmployees = availableData.data || [];
+            
+            // Check if selected employee is in available list
+            const isEmployeeAvailable = availableEmployees.some(emp => emp._id === selectedEmployee);
+            
+            if (!isEmployeeAvailable) {
+                showNotification(`⚠️ عذراً، الحلاق ${selectedEmployeeName} غير متاح اليوم\n\nيرجى اختيار حلاق آخر أو موعد آخر`, 'error', 5000);
+                return;
+            }
+        }
+    } catch (error) {
+        console.error('Error checking employee availability:', error);
+    }
+    
     const bookingData = {
         business: NASSIM_BUSINESS_ID,
         customer: customerData._id,

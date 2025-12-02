@@ -38,8 +38,9 @@ async function initEmployeeApp() {
     if (!checkAuth()) return;
 
     setupForms();
+    await loadAttendanceStatus(); // NEW: Load attendance status
     await loadServices();
-    await loadPendingAppointments(); // NEW: Load pending appointments
+    await loadPendingAppointments();
     await loadCompletedAppointments();
     generateTimeSlots();
     setDefaultDate();
@@ -114,6 +115,118 @@ async function handleLogin(e) {
 
     } catch (error) {
         showToast(error.message, 'error');
+    }
+}
+
+// Attendance Functions (NEW)
+async function loadAttendanceStatus() {
+    const statusDiv = document.getElementById('attendanceStatus');
+    if (!statusDiv) return;
+    
+    try {
+        if (!employeeData || !employeeData.todayAttendance) {
+            statusDiv.innerHTML = '<p style="margin: 0; color: #888;">لم يتم تسجيل الحضور اليوم</p>';
+            return;
+        }
+        
+        const attendance = employeeData.todayAttendance;
+        const today = new Date().toISOString().split('T')[0];
+        
+        if (attendance.isPresent && attendance.date === today) {
+            statusDiv.innerHTML = `
+                <p style="margin: 0; color: #27ae60; font-weight: bold; font-size: 18px;">✅ أنت حاضر اليوم</p>
+                <p style="margin: 5px 0 0 0; color: #ccc;">من ${attendance.checkInTime} إلى ${attendance.checkOutTime}</p>
+                <button onclick="handleCheckOut()" style="margin-top: 10px; background: #e74c3c; color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                    🚪 تسجيل انصراف
+                </button>
+            `;
+            
+            // Update check-in inputs
+            document.getElementById('checkInTime').value = attendance.checkInTime;
+            document.getElementById('checkOutTime').value = attendance.checkOutTime;
+            document.getElementById('checkInBtn').style.display = 'none';
+        } else {
+            statusDiv.innerHTML = '<p style="margin: 0; color: #888;">لم يتم تسجيل الحضور اليوم</p>';
+        }
+    } catch (error) {
+        console.error('Load attendance error:', error);
+    }
+}
+
+async function handleCheckIn() {
+    const checkInTime = document.getElementById('checkInTime').value;
+    const checkOutTime = document.getElementById('checkOutTime').value;
+    
+    if (!checkInTime || !checkOutTime) {
+        showToast('يرجى تحديد أوقات العمل', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/employees/check-in`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${employeeToken}`
+            },
+            body: JSON.stringify({ checkInTime, checkOutTime })
+        });
+        
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        // Update local storage
+        employeeData.todayAttendance = data.data;
+        localStorage.setItem('employeeData', JSON.stringify(employeeData));
+        
+        showToast('✅ تم تسجيل حضورك بنجاح! الآن يمكن للزبائن حجز مواعيد معك', 'success');
+        await loadAttendanceStatus();
+        await loadTimeline();
+        
+    } catch (error) {
+        console.error('Check-in error:', error);
+        showToast(error.message || 'فشل في تسجيل الحضور', 'error');
+    }
+}
+
+async function handleCheckOut() {
+    if (!confirm('هل أنت متأكد من تسجيل الانصراف؟ لن يتمكن الزبائن من حجز مواعيد معك بعد ذلك.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${API_BASE}/employees/check-out`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${employeeToken}`
+            }
+        });
+        
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+        
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+        
+        // Update local storage
+        employeeData.todayAttendance = data.data;
+        localStorage.setItem('employeeData', JSON.stringify(employeeData));
+        
+        showToast('تم تسجيل الانصراف', 'success');
+        await loadAttendanceStatus();
+        await loadTimeline();
+        
+    } catch (error) {
+        console.error('Check-out error:', error);
+        showToast(error.message || 'فشل في تسجيل الانصراف', 'error');
     }
 }
 
@@ -646,33 +759,48 @@ async function loadTimeline() {
     container.innerHTML = '<div style="text-align: center; padding: 20px;">جاري تحميل الجدول...</div>';
 
     try {
-        const response = await fetch(`${API_BASE}/appointments?date=${date}`, {
+        // Get appointments
+        const apptResponse = await fetch(`${API_BASE}/appointments?date=${date}`, {
             headers: { 'Authorization': `Bearer ${employeeToken}` }
         });
         
-        if (response.status === 401) {
+        if (apptResponse.status === 401) {
             handleUnauthorized();
             return;
         }
         
-        const data = await response.json();
-        const appointments = data.data || [];
+        const apptData = await apptResponse.json();
+        const appointments = apptData.data || [];
 
-        // Hardcoded employees for now as per requirement
-        let employees = [
-            { name: 'نسيم', id: 'nassim' },
-            { name: 'وسيم', id: 'wassim' },
-            { name: 'محمد', id: 'mohamed' }
-        ];
+        // Get available employees (those who checked in today)
+        const empResponse = await fetch(`${API_BASE}/employees/available`);
+        const empData = await empResponse.json();
+        let employees = empData.data || [];
+        
+        // Map to simpler format
+        employees = employees.map(emp => ({
+            name: emp.name,
+            id: emp._id,
+            checkInTime: emp.todayAttendance?.checkInTime || '09:00',
+            checkOutTime: emp.todayAttendance?.checkOutTime || '21:00'
+        }));
 
-        // Filter employees if logged in
+        // Filter employees if logged in (show only my timeline)
         if (employeeData && employeeData.name) {
-            // Find the employee object that matches the logged-in user's name
-            // Note: This relies on the name matching exactly. Ideally use IDs.
             const myEmployee = employees.find(e => e.name === employeeData.name);
             if (myEmployee) {
                 employees = [myEmployee];
+            } else {
+                // If logged-in employee is not present, show message
+                container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;"><p style="font-size: 18px; margin-bottom: 10px;">⚠️ لم تسجل حضورك اليوم</p><p style="color: #aaa;">يرجى تسجيل الحضور لعرض الجدول الزمني</p></div>';
+                return;
             }
+        }
+        
+        // If no employees are present today
+        if (employees.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;"><p style="font-size: 18px;">لا يوجد حلاقين حاضرين اليوم</p></div>';
+            return;
         }
 
         renderTimeline(appointments, employees);

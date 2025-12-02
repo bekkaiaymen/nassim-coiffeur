@@ -86,14 +86,22 @@ function refreshTimeline() {
 // Load timeline for specific date
 async function loadTimeline(date) {
     try {
-        // Use public endpoint
-        const response = await fetch(`${API_BASE}/appointments/public?date=${date}`);
-        if (!response.ok) throw new Error('فشل تحميل البيانات');
+        // Get appointments
+        const apptResponse = await fetch(`${API_BASE}/appointments/public?date=${date}`);
+        if (!apptResponse.ok) throw new Error('فشل تحميل البيانات');
         
-        const result = await response.json();
-        const appointments = result.data || [];
+        const apptResult = await apptResponse.json();
+        const appointments = apptResult.data || [];
         
-        renderTimeline(date, appointments);
+        // Get available employees for this date
+        const empResponse = await fetch(`${API_BASE}/employees/available`);
+        let availableEmployees = [];
+        if (empResponse.ok) {
+            const empResult = await empResponse.json();
+            availableEmployees = empResult.data || [];
+        }
+        
+        renderTimeline(date, appointments, availableEmployees);
         
     } catch (error) {
         console.error('Error loading timeline:', error);
@@ -102,7 +110,7 @@ async function loadTimeline(date) {
 }
 
 // Render timeline strip
-function renderTimeline(date, appointments) {
+function renderTimeline(date, appointments, availableEmployees = []) {
     const strip = document.getElementById('timelineStrip');
     strip.innerHTML = '';
     
@@ -139,12 +147,38 @@ function renderTimeline(date, appointments) {
     }
     strip.appendChild(headerRow);
 
-    // Employees
-    const employees = [
-        { name: 'نسيم', id: 'nassim' },
-        { name: 'وسيم', id: 'wassim' },
-        { name: 'محمد', id: 'mohamed' }
-    ];
+    // Map available employees by name
+    const availableMap = {};
+    availableEmployees.forEach(emp => {
+        availableMap[emp.name] = {
+            id: emp._id,
+            checkInTime: emp.todayAttendance?.checkInTime || '09:00',
+            checkOutTime: emp.todayAttendance?.checkOutTime || '21:00'
+        };
+    });
+
+    // Filter employees to show only those who are present
+    const today = new Date().toISOString().split('T')[0];
+    const selectedDate = document.getElementById('timelineDate').value;
+    
+    let employees = [];
+    
+    // Only show available employees for today
+    if (selectedDate === today && availableEmployees.length > 0) {
+        employees = availableEmployees.map(emp => ({
+            name: emp.name,
+            id: emp._id,
+            checkInTime: emp.todayAttendance?.checkInTime || '09:00',
+            checkOutTime: emp.todayAttendance?.checkOutTime || '21:00',
+            isAvailable: true
+        }));
+    }
+    
+    // Show message if no employees available
+    if (employees.length === 0) {
+        strip.innerHTML = '<div style="text-align: center; padding: 60px; color: #888; font-size: 18px;">لا يوجد حلاقين متاحين في هذا التاريخ 😔</div>';
+        return;
+    }
 
     // Render Rows
     employees.forEach(emp => {

@@ -67,6 +67,116 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// @desc    Check-in Employee (Set attendance)
+// @route   POST /api/employees/check-in
+// @access  Private (Employee)
+router.post('/check-in', protect, async (req, res) => {
+    try {
+        const { checkInTime, checkOutTime } = req.body;
+        const employeeId = req.user.id;
+        
+        const today = new Date().toISOString().split('T')[0];
+        
+        const employee = await Employee.findById(employeeId);
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: 'الموظف غير موجود'
+            });
+        }
+        
+        // Update attendance
+        employee.todayAttendance = {
+            isPresent: true,
+            checkInTime: checkInTime || '09:00',
+            checkOutTime: checkOutTime || '21:00',
+            date: today
+        };
+        
+        await employee.save();
+        
+        res.json({
+            success: true,
+            message: 'تم تسجيل الحضور بنجاح',
+            data: employee.todayAttendance
+        });
+    } catch (error) {
+        console.error('Check-in error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في تسجيل الحضور'
+        });
+    }
+});
+
+// @desc    Check-out Employee
+// @route   POST /api/employees/check-out
+// @access  Private (Employee)
+router.post('/check-out', protect, async (req, res) => {
+    try {
+        const employeeId = req.user.id;
+        
+        const employee = await Employee.findById(employeeId);
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: 'الموظف غير موجود'
+            });
+        }
+        
+        // Clear attendance
+        employee.todayAttendance = {
+            isPresent: false,
+            checkInTime: null,
+            checkOutTime: null,
+            date: null
+        };
+        
+        await employee.save();
+        
+        res.json({
+            success: true,
+            message: 'تم تسجيل الانصراف بنجاح',
+            data: employee.todayAttendance
+        });
+    } catch (error) {
+        console.error('Check-out error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في تسجيل الانصراف'
+        });
+    }
+});
+
+// @desc    Get Available Employees (for customer booking)
+// @route   GET /api/employees/available
+// @access  Public
+router.get('/available', async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        
+        const employees = await Employee.find({
+            status: 'active',
+            'todayAttendance.isPresent': true,
+            'todayAttendance.date': today
+        })
+        .select('name avatar todayAttendance stats')
+        .sort({ order: 1 });
+
+        res.json({
+            success: true,
+            count: employees.length,
+            data: employees
+        });
+    } catch (error) {
+        console.error('Get available employees error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في جلب الموظفين المتاحين'
+        });
+    }
+});
+
 // @desc    Get employees by business ID (Public)
 // @route   GET /api/employees/public/by-business/:businessId
 // @access  Public

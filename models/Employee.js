@@ -149,6 +149,14 @@ const employeeSchema = new mongoose.Schema({
     notes: {
         type: String,
         trim: true
+    },
+    
+    // حضور اليوم (NEW)
+    todayAttendance: {
+        isPresent: { type: Boolean, default: false },
+        checkInTime: { type: String, default: null },
+        checkOutTime: { type: String, default: null },
+        date: { type: String, default: null } // تاريخ بصيغة YYYY-MM-DD
     }
 }, {
     timestamps: true
