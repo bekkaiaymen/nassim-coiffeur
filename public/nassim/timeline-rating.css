@@ -8,6 +8,7 @@
     margin-top: 20px;
     white-space: nowrap;
     position: relative;
+    direction: rtl; /* Enforce RTL for timeline */
     /* Hide scrollbar for clean look */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none;  /* IE and Edge */

@@ -2856,7 +2856,7 @@ function renderTimelineGrid(date, appointments) {
 
         const aptEl = document.createElement('div');
         aptEl.className = `timeline-appointment bottom`;
-        aptEl.style.left = `${leftPos}px`;
+        aptEl.style.right = `${leftPos}px`;
         // Adjust width based on duration (approx)
         const width = (duration / 60) * pixelsPerHour;
         aptEl.style.width = `${width}px`; 
