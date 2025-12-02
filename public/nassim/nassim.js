@@ -1840,6 +1840,22 @@ async function loadCoins() {
         
         // Update UI
         document.getElementById('userCoins').textContent = customerData.loyaltyPoints || 0;
+
+        // Update pending points display
+        const pendingElement = document.getElementById('pendingPoints');
+        if (pendingElement) {
+            if (customerData.pendingPoints && customerData.pendingPoints > 0) {
+                pendingElement.innerHTML = `
+                    <div class="pending-badge">
+                        <span class="pending-icon">⏳</span>
+                        <span class="pending-text">${customerData.pendingPoints} نقطة معلقة</span>
+                    </div>
+                `;
+                pendingElement.style.display = 'block';
+            } else {
+                pendingElement.style.display = 'none';
+            }
+        }
         
         // Load History
         const historyContainer = document.getElementById('coinsHistoryList');
@@ -1847,18 +1863,29 @@ async function loadCoins() {
             if (customerData.pointsHistory && customerData.pointsHistory.length > 0) {
                 historyContainer.innerHTML = customerData.pointsHistory
                     .sort((a, b) => new Date(b.date) - new Date(a.date))
-                    .map(item => `
-                        <div class="coin-history-item">
-                            <div class="history-icon">${item.type === 'earned' ? '➕' : '➖'}</div>
+                    .map(item => {
+                        const isPending = item.status === 'pending';
+                        const isEarned = item.type === 'earned';
+                        const icon = isPending ? '⏳' : (isEarned ? '➕' : '➖');
+                        const amountClass = isPending ? 'pending' : (isEarned ? 'positive' : 'negative');
+                        const amountPrefix = isPending ? '' : (isEarned ? '+' : '-');
+                        const statusText = isPending ? '<span class="status-tag pending">معلقة</span>' : '';
+                        
+                        return `
+                        <div class="coin-history-item ${isPending ? 'pending-item' : ''}">
+                            <div class="history-icon">${icon}</div>
                             <div class="history-content">
-                                <div class="history-title">${item.description || 'عملية نقاط'}</div>
+                                <div class="history-title">
+                                    ${item.description || 'عملية نقاط'}
+                                    ${statusText}
+                                </div>
                                 <div class="history-date">${formatDate(item.date)}</div>
                             </div>
-                            <div class="history-amount ${item.type === 'earned' ? 'positive' : 'negative'}">
-                                ${item.type === 'earned' ? '+' : '-'}${item.points}
+                            <div class="history-amount ${amountClass}">
+                                ${amountPrefix}${item.points}
                             </div>
                         </div>
-                    `).join('');
+                    `}).join('');
             } else {
                 historyContainer.innerHTML = `
                     <div class="empty-state">

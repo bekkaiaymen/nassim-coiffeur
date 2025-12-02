@@ -6003,3 +6003,50 @@ body.offline::before {
         flex-direction: column;
     }
 }
+
+/* Pending Points Styles */
+.pending-points-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pending-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: rgba(255, 149, 0, 0.15);
+    color: #FF9500;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 1px dashed rgba(255, 149, 0, 0.3);
+}
+
+.pending-icon {
+    font-size: 16px;
+}
+
+.coin-history-item.pending-item {
+    opacity: 0.8;
+    background: rgba(255, 149, 0, 0.05);
+    border-left: 3px solid #FF9500;
+}
+
+.status-tag.pending {
+    display: inline-block;
+    font-size: 10px;
+    background: rgba(255, 149, 0, 0.2);
+    color: #FF9500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.history-amount.pending {
+    color: #FF9500;
+}
+
