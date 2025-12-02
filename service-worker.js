@@ -48,9 +48,11 @@ self.addEventListener('fetch', (event) => {
         const responseClone = response.clone();
         
         // Update cache
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
+        if (event.request.method === 'GET' && event.request.url.startsWith('http')) {
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
         
         return response;
       })
