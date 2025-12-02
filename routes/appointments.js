@@ -161,7 +161,7 @@ router.get('/available-slots', async (req, res) => {
 // Public route to create appointment (for customers)
 router.post('/public/book', async (req, res) => {
     try {
-        const { business, service, serviceName, barber, customer, customerName, customerPhone, date, time, notes } = req.body;
+        const { business, service, serviceName, barber, customer, customerName, customerPhone, date, time, notes, extraCharge, isVIPSlot } = req.body;
 
         if (!business || !service || !customerPhone || !date || !time) {
             return res.status(400).json({ 
@@ -175,13 +175,13 @@ router.post('/public/book', async (req, res) => {
             business: business,
             date: new Date(date),
             time: time,
-            status: { $ne: 'cancelled' }
+            status: { $nin: ['cancelled', 'no-show'] }
         });
 
         if (conflict) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'هذا الموعد محجوز بالفعل' 
+                message: 'هذا الموعد محجوز بالفعل. يرجى اختيار وقت آخر' 
             });
         }
 
@@ -223,6 +223,8 @@ router.post('/public/book', async (req, res) => {
             date: new Date(date),
             time,
             notes: notes || '',
+            extraCharge: extraCharge || 0,
+            isVIPSlot: isVIPSlot || false,
             status: 'pending'
         });
 

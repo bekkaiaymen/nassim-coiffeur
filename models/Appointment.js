@@ -93,6 +93,14 @@ const appointmentSchema = new mongoose.Schema({
     notes: {
         type: String
     },
+    extraCharge: {
+        type: Number,
+        default: 0
+    },
+    isVIPSlot: {
+        type: Boolean,
+        default: false
+    },
     reminderSent: {
         type: Boolean,
         default: false
