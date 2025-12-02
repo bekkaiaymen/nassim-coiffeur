@@ -593,6 +593,7 @@ async function loadPendingAppointments() {
         const empId = employeeData ? employeeData._id : null;
         if (!empId) return;
 
+        // Load appointments assigned to this employee
         const response = await fetch(`${API_BASE}/appointments?status=pending&employee=${empId}`, {
             headers: {
                 'Authorization': `Bearer ${employeeToken}`
@@ -614,16 +615,39 @@ async function loadPendingAppointments() {
             return;
         }
 
+        // Load flexible appointments (any barber)
+        const flexResponse = await fetch(`${API_BASE}/appointments?status=pending&isFlexibleEmployee=true`, {
+            headers: {
+                'Authorization': `Bearer ${employeeToken}`
+            }
+        });
+        
+        let flexAppointments = [];
+        if (flexResponse.ok) {
+            const flexResult = await flexResponse.json();
+            flexAppointments = flexResult.data || [];
+        }
+
+        // Combine both lists
+        const allAppointments = [...appointments, ...flexAppointments];
+
+        if (allAppointments.length === 0) {
+            listContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">لا توجد مواعيد في انتظار التأكيد</div>';
+            return;
+        }
+
         listContainer.innerHTML = '';
-        appointments.forEach(apt => {
+        allAppointments.forEach(apt => {
             const item = document.createElement('div');
             item.className = 'pending-appointment-item';
-            item.style.cssText = 'background: #2d2d2d; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid #444;';
+            const isFlexible = apt.isFlexibleEmployee;
+            item.style.cssText = `background: ${isFlexible ? '#2a2a3e' : '#2d2d2d'}; padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 2px solid ${isFlexible ? '#9b59b6' : '#444'};`;
 
             const date = new Date(apt.date);
             const dateStr = date.toLocaleDateString('ar-DZ');
             
             item.innerHTML = `
+                ${isFlexible ? '<div style="color: #9b59b6; font-weight: bold; font-size: 12px; margin-bottom: 5px;">🎯 حجز مرن - يمكن لأي حلاق تأكيده</div>' : ''}
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <div>
                         <div style="color: #cba35c; font-weight: bold; font-size: 16px;">${apt.customerName}</div>
@@ -633,7 +657,7 @@ async function loadPendingAppointments() {
                 </div>
                 <div style="display: flex; gap: 10px;">
                     <button onclick="confirmAppointment('${apt._id}')" style="flex: 1; background: #27ae60; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                        ✅ تأكيد
+                        ✅ ${isFlexible ? 'قبول وتأكيد' : 'تأكيد'}
                     </button>
                     <button onclick="completeAppointment('${apt._id}')" style="flex: 1; background: #3498db; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
                         ✔️ مكتمل
@@ -655,18 +679,25 @@ async function loadPendingAppointments() {
 // Confirm Appointment (NEW)
 async function confirmAppointment(appointmentId) {
     try {
+        // Assign employee to flexible appointments
+        const updateData = {
+            status: 'confirmed',
+            employee: employeeData._id,
+            isFlexibleEmployee: false // Remove flexible flag after assignment
+        };
+        
         const response = await fetch(`${API_BASE}/appointments/${appointmentId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${employeeToken}`
             },
-            body: JSON.stringify({ status: 'confirmed' })
+            body: JSON.stringify(updateData)
         });
         
         if (!response.ok) throw new Error('فشل في تأكيد الموعد');
         
-        showToast('✅ تم تأكيد الموعد بنجاح', 'success');
+        showToast('✅ تم تأكيد الموعد بنجاح وتم تعيينه لك', 'success');
         await loadPendingAppointments();
         await loadTimeline();
         

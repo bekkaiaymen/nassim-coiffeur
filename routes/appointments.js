@@ -228,13 +228,22 @@ router.post('/public/book', async (req, res) => {
             finalPrice = 100; // Surge price as requested
         }
 
-        // Advanced Conflict Check (Overlap)
-        const dayAppointments = await Appointment.find({
+        // Advanced Conflict Check (Overlap) - Check for specific employee
+        const conflictQuery = {
             business: business,
             date: new Date(date),
-            status: { $nin: ['cancelled', 'no-show'] },
-            ...(barber ? { barber: barber } : {}) // If barber selected, check their schedule
-        });
+            status: { $nin: ['cancelled', 'no-show'] }
+        };
+        
+        // If employee is specified, check only their schedule
+        if (employee) {
+            conflictQuery.employee = employee;
+        } else if (barber) {
+            conflictQuery.barber = barber;
+        }
+        // If isFlexibleEmployee is true, we don't check conflicts (will be handled after confirmation)
+
+        const dayAppointments = await Appointment.find(conflictQuery);
 
         const hasConflict = dayAppointments.some(appt => {
             const [apptH, apptM] = appt.time.split(':').map(Number);
@@ -246,10 +255,10 @@ router.post('/public/book', async (req, res) => {
             return (startTimeInMinutes < apptEnd) && (endTimeInMinutes > apptStart);
         });
 
-        if (hasConflict) {
+        if (hasConflict && !isFlexibleEmployee) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'هذا الموعد محجوز بالفعل (تعارض في الوقت). يرجى اختيار وقت آخر' 
+                message: 'هذا الموعد محجوز بالفعل لدى هذا الحلاق. يرجى اختيار وقت آخر أو حلاق آخر' 
             });
         }
 
@@ -346,6 +355,8 @@ router.post('/public/book', async (req, res) => {
             serviceId: finalServiceId,
             services: services || [service], // Store all service IDs
             barber: barber || null,
+            employee: employee || null,
+            isFlexibleEmployee: isFlexibleEmployee || false,
             date: new Date(date),
             time,
             duration: serviceDuration,
@@ -552,7 +563,7 @@ router.get('/public', async (req, res) => {
 
 router.get('/', protect, ensureTenant, async (req, res) => {
     try {
-        const { date, status, barber, filter, phone } = req.query;
+        const { date, status, barber, filter, phone, isFlexibleEmployee } = req.query;
         const tenantId = req.tenantId;
         let query = { tenant: tenantId };
 
@@ -582,6 +593,7 @@ router.get('/', protect, ensureTenant, async (req, res) => {
         if (status) query.status = status;
         if (barber) query.barber = barber;
         if (req.query.employee) query.employee = req.query.employee;
+        if (isFlexibleEmployee === 'true') query.isFlexibleEmployee = true;
 
         const appointments = await Appointment.find(query)
             .populate('customerId', 'name phone')

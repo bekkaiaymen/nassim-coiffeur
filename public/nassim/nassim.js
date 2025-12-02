@@ -420,6 +420,7 @@ function populateEmployeeSelect(employees) {
     if (!select) return;
     
     select.innerHTML = '<option value="">-- اختر الحلاق --</option>' +
+        '<option value="any">🎯 أي حلاق متاح (سيتم التأكيد من قبل أحد الحلاقين)</option>' +
         employees.map(e => `<option value="${e._id}">${e.name}</option>`).join('');
 }
 
@@ -1163,23 +1164,26 @@ async function submitBooking(e) {
     const selectedEmployee = document.getElementById('employeeSelect').value;
     const selectedEmployeeName = document.getElementById('employeeSelect').selectedOptions[0]?.text;
     
-    // Check employee availability
-    try {
-        const availableResponse = await fetch(`${API_URL}/employees/available`);
-        if (availableResponse.ok) {
-            const availableData = await availableResponse.json();
-            const availableEmployees = availableData.data || [];
-            
-            // Check if selected employee is in available list
-            const isEmployeeAvailable = availableEmployees.some(emp => emp._id === selectedEmployee);
-            
-            if (!isEmployeeAvailable) {
-                showNotification(`⚠️ عذراً، الحلاق ${selectedEmployeeName} غير متاح اليوم\n\nيرجى اختيار حلاق آخر أو موعد آخر`, 'error', 5000);
-                return;
+    // If "any" is selected, skip employee availability check (booking will be pending for all barbers)
+    if (selectedEmployee !== 'any') {
+        // Check employee availability
+        try {
+            const availableResponse = await fetch(`${API_URL}/employees/available`);
+            if (availableResponse.ok) {
+                const availableData = await availableResponse.json();
+                const availableEmployees = availableData.data || [];
+                
+                // Check if selected employee is in available list
+                const isEmployeeAvailable = availableEmployees.some(emp => emp._id === selectedEmployee);
+                
+                if (!isEmployeeAvailable) {
+                    showNotification(`⚠️ عذراً، الحلاق ${selectedEmployeeName} غير متاح اليوم\n\nيرجى اختيار حلاق آخر أو موعد آخر`, 'error', 5000);
+                    return;
+                }
             }
+        } catch (error) {
+            console.error('Error checking employee availability:', error);
         }
-    } catch (error) {
-        console.error('Error checking employee availability:', error);
     }
     
     const bookingData = {
@@ -1191,7 +1195,8 @@ async function submitBooking(e) {
         extraCharge: window.paidForVIPSlot ? 50 : 0,
         services: selectedServices.map(s => s.id), // Multiple services
         service: selectedServices[0].id, // First service for compatibility
-        employee: document.getElementById('employeeSelect').value,
+        employee: selectedEmployee === 'any' ? null : selectedEmployee,
+        isFlexibleEmployee: selectedEmployee === 'any', // Flag for any available barber
         date: selectedDate,
         time: selectedTime,
         dateTime: dateTime,

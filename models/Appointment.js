@@ -66,6 +66,11 @@ const appointmentSchema = new mongoose.Schema({
         type: String,
         trim: true
     },
+    // حجز مرن (أي حلاق متاح)
+    isFlexibleEmployee: {
+        type: Boolean,
+        default: false
+    },
     // نظام التأكيد المزدوج
     confirmations: {
         // تأكيد استلام الطلب

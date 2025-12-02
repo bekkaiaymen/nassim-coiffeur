@@ -84,13 +84,32 @@ body {
 .timeline-strip-container {
     flex: 1;
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: auto;
     background: #222;
     border-radius: 16px;
     position: relative;
     border: 1px solid #444;
-    /* Hide scrollbar */
-    scrollbar-width: none; 
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #cba35c #222;
+}
+
+.timeline-strip-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.timeline-strip-container::-webkit-scrollbar-track {
+    background: #222;
+}
+
+.timeline-strip-container::-webkit-scrollbar-thumb {
+    background: #cba35c;
+    border-radius: 4px;
+}
+
+.timeline-strip-container::-webkit-scrollbar-thumb:hover {
+    background: #e6a612;
 }
 
 .timeline-strip {

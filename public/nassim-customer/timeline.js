@@ -215,9 +215,15 @@ function renderTimeline(date, appointments, availableEmployees = []) {
         track.className = 'timeline-track';
         track.style.width = `${totalWidth}px`;
 
-        // Filter appointments for this barber
+        // Filter appointments for this barber (by ID and name)
         const empAppts = appointments.filter(a => {
-            return (a.barber === emp.name) || (a.employee && a.employee.name === emp.name);
+            // Check by employee ID (most reliable)
+            if (a.employee && typeof a.employee === 'object' && a.employee._id === emp.id) return true;
+            if (a.employee && typeof a.employee === 'string' && a.employee === emp.id) return true;
+            // Fallback to name matching
+            if (a.barber === emp.name) return true;
+            if (a.employee && a.employee.name === emp.name) return true;
+            return false;
         });
 
         empAppts.forEach(apt => {
