@@ -2860,7 +2860,8 @@ function renderTimelineGrid(date, appointments) {
         aptEl.style.left = `${leftPos}px`;
         // Adjust width based on duration (approx)
         const width = (duration / 60) * pixelsPerHour;
-        aptEl.style.width = `${Math.max(width, 100)}px`; // Min width 100px for text readability
+        aptEl.style.width = `${width}px`; 
+        aptEl.style.overflow = 'visible'; // Allow text to spill out if box is small
         
         // Determine status text
         let statusText = 'محجوز';
@@ -2875,7 +2876,7 @@ function renderTimelineGrid(date, appointments) {
         aptEl.style.textAlign = 'center';
         
         aptEl.innerHTML = `
-            <div class="timeline-appointment-time" style="font-size: 11px; white-space: nowrap; font-weight: bold;">${startTimeStr}</div>
+            <div class="timeline-appointment-time" style="font-size: 11px; white-space: nowrap; font-weight: bold;">${startTimeStr} - ${endTimeStr}</div>
             <div class="timeline-appointment-status" style="font-size: 10px;">${statusText}</div>
         `;
         
