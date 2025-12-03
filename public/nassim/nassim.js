@@ -3436,201 +3436,7 @@ async function loadTimelineData(date) {
     }
 }
 
-async function renderTimelineGrid(date, appointments) {
-    const strip = document.getElementById('timelineStrip');
-    if (!strip) return;
-    strip.innerHTML = '';
-    
-    // Configuration
-    const START_HOUR = 9;
-    const END_HOUR = 22;
-    const PIXELS_PER_MINUTE = 6;
-    const NAME_COL_WIDTH = 180;
-    
-    const totalMinutes = (END_HOUR - START_HOUR) * 60;
-    const totalWidth = totalMinutes * PIXELS_PER_MINUTE;
-    
-    strip.style.width = `${totalWidth + NAME_COL_WIDTH}px`;
-    
-    // Fetch available employees with attendance
-    let availableEmployees = [];
-    try {
-        const response = await fetch('/api/employees/available');
-        if (response.ok) {
-            availableEmployees = await response.json();
-        }
-    } catch (error) {
-        console.error('Failed to fetch employees:', error);
-    }
-    
-    // Header Row (Time Markers)
-    const headerRow = document.createElement('div');
-    headerRow.className = 'timeline-header-row';
-    headerRow.style.width = `${totalWidth + NAME_COL_WIDTH}px`;
-    
-    // Empty corner
-    const corner = document.createElement('div');
-    corner.className = 'timeline-corner';
-    corner.style.width = `${NAME_COL_WIDTH}px`;
-    corner.textContent = 'الحلاقين';
-    headerRow.appendChild(corner);
-
-    // Render Time Markers (every 30 mins)
-    for (let i = 0; i <= totalMinutes; i += 30) {
-        const marker = document.createElement('div');
-        const isHour = i % 60 === 0;
-        marker.className = `time-marker ${isHour ? 'hour' : ''}`;
-        marker.style.left = `${NAME_COL_WIDTH + (i * PIXELS_PER_MINUTE)}px`;
-        
-        // Calculate time label
-        const totalMin = (START_HOUR * 60) + i;
-        const h = Math.floor(totalMin / 60);
-        const m = totalMin % 60;
-        const timeLabel = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-        
-        marker.textContent = timeLabel;
-        headerRow.appendChild(marker);
-    }
-    strip.appendChild(headerRow);
-
-    // If no employees, show empty state
-    if (availableEmployees.length === 0) {
-        const emptyRow = document.createElement('div');
-        emptyRow.className = 'timeline-row';
-        emptyRow.innerHTML = `
-            <div class="barber-name-col" style="width: ${NAME_COL_WIDTH}px;">
-                <span style="opacity: 0.6;">لا يوجد حلاقين</span>
-            </div>
-            <div class="timeline-track" style="width: ${totalWidth}px;"></div>
-        `;
-        strip.appendChild(emptyRow);
-        return;
-    }
-
-    // Render rows for each employee
-    availableEmployees.forEach(emp => {
-        const row = document.createElement('div');
-        row.className = 'timeline-row';
-        
-        // Name column
-        const nameCol = document.createElement('div');
-        nameCol.className = 'barber-name-col';
-        nameCol.style.width = `${NAME_COL_WIDTH}px`;
-        
-        // Avatar
-        const avatar = document.createElement('img');
-        avatar.className = 'barber-avatar';
-        avatar.src = emp.avatar || '/images/default-avatar.png';
-        avatar.alt = emp.name;
-        avatar.onerror = function() {
-            this.src = '/images/default-avatar.png';
-        };
-        
-        // Name
-        const nameText = document.createElement('div');
-        nameText.className = 'barber-name-text';
-        nameText.textContent = emp.name;
-        
-        // Status badge
-        const statusBadge = document.createElement('div');
-        statusBadge.className = `barber-status ${emp.todayAttendance ? 'present' : 'absent'}`;
-        statusBadge.textContent = emp.todayAttendance ? 'حاضر' : 'غائب';
-        
-        nameCol.appendChild(avatar);
-        nameCol.appendChild(nameText);
-        nameCol.appendChild(statusBadge);
-        row.appendChild(nameCol);
-
-        // Track
-        const track = document.createElement('div');
-        track.className = 'timeline-track';
-        track.style.width = `${totalWidth}px`;
-
-        // Filter appointments for this barber
-        const empAppts = appointments.filter(a => {
-            const empName = a.employeeName || a.barber;
-            const empId = a.employeeId || (a.employee && a.employee._id);
-            return empId === emp._id || empName === emp.name;
-        });
-
-        // Render appointments for this barber
-        empAppts.forEach(apt => {
-            let h, m;
-            
-            if (apt.time) {
-                [h, m] = apt.time.split(':').map(Number);
-            } else {
-                const aptDate = new Date(apt.appointmentDate || apt.date);
-                h = aptDate.getHours();
-                m = aptDate.getMinutes();
-            }
-            
-            if (h < START_HOUR || h >= END_HOUR) return;
-            
-            const minutesFromStart = (h - START_HOUR) * 60 + m;
-            const leftPos = NAME_COL_WIDTH + (minutesFromStart * PIXELS_PER_MINUTE);
-            const duration = apt.serviceId?.duration || apt.duration || 30;
-            const width = duration * PIXELS_PER_MINUTE;
-            
-            const totalStartMinutes = h * 60 + m;
-            const totalEndMinutes = totalStartMinutes + duration;
-            const endH = Math.floor(totalEndMinutes / 60);
-            const endM = totalEndMinutes % 60;
-            
-            const startTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-            const endTimeStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-            
-            const el = document.createElement('div');
-            let statusClass = 'booked';
-            if (apt.status === 'confirmed') statusClass = 'confirmed';
-            if (apt.status === 'completed') statusClass = 'completed';
-            
-            el.className = `timeline-appointment ${statusClass}`;
-            el.style.left = `${leftPos}px`;
-            el.style.width = `${width}px`;
-            
-            const serviceName = apt.serviceId?.name || apt.service || apt.serviceName || '';
-            
-            el.innerHTML = `
-                <div class="apt-time">${startTimeStr} - ${endTimeStr}</div>
-                <div class="apt-name">${apt.customerName || 'محجوز'}</div>
-                ${serviceName ? `<div class="apt-service">${serviceName}</div>` : ''}
-            `;
-            
-            el.onclick = () => showAppointmentDetails(apt);
-            
-            track.appendChild(el);
-        });
-
-        row.appendChild(track);
-        strip.appendChild(row);
-    });
-    
-    // Add "Now" Line if today
-    const selectedDate = new Date(date);
-    const today = new Date();
-    const isToday = selectedDate.toDateString() === today.toDateString();
-    
-    if (isToday) {
-        const currentHour = today.getHours();
-        const currentMinute = today.getMinutes();
-        
-        if (currentHour >= START_HOUR && currentHour < END_HOUR) {
-            const minutesFromStart = (currentHour - START_HOUR) * 60 + currentMinute;
-            const leftPos = NAME_COL_WIDTH + (minutesFromStart * PIXELS_PER_MINUTE);
-            
-            const nowLine = document.createElement('div');
-            nowLine.className = 'timeline-now-line';
-            nowLine.style.left = `${leftPos}px`;
-            nowLine.style.height = `${availableEmployees.length * 80 + 50}px`;
-            
-            strip.appendChild(nowLine);
-        }
-    }
-}
-
-// Keep old function signature for compatibility
-function oldRenderTimelineGrid_backup(date, appointments) {
+function renderTimelineGrid(date, appointments) {
     const track = document.getElementById('timelineTrack');
     if (!track) return;
     track.innerHTML = '';
@@ -3643,19 +3449,18 @@ function oldRenderTimelineGrid_backup(date, appointments) {
     // Generate hours (9 AM to 9 PM)
     const startHour = 9;
     const endHour = 21;
-    const totalHours = endHour - startHour; // 12 hours
+    const totalHours = endHour - startHour;
     
     for (let hour = startHour; hour <= endHour; hour++) {
         const hourEl = document.createElement('div');
         hourEl.className = 'timeline-hour';
-        hourEl.dataset.hour = hour; // Store hour for debugging
+        hourEl.dataset.hour = hour;
         
         const timeLabel = document.createElement('div');
         timeLabel.className = 'timeline-time-label';
         timeLabel.textContent = `${hour > 12 ? hour - 12 : hour} ${hour >= 12 ? 'PM' : 'AM'}`;
         hourEl.appendChild(timeLabel);
         
-        // Explicit dot element for better control
         const dot = document.createElement('div');
         dot.className = 'timeline-dot';
         hourEl.appendChild(dot);
@@ -3663,12 +3468,11 @@ function oldRenderTimelineGrid_backup(date, appointments) {
     }
     
     // Precise calculation constants
-    const pixelsPerHour = 100; // Each hour block = 100px
-    const containerPadding = 20; // Left/right padding
-    const pixelsPerMinute = pixelsPerHour / 60; // 1.6667px per minute
+    const pixelsPerHour = 100;
+    const containerPadding = 20;
+    const pixelsPerMinute = pixelsPerHour / 60;
     
     appointments.forEach((apt, index) => {
-        // Parse time string "HH:MM"
         let hours, minutes;
         
         if (apt.time) {
@@ -3676,7 +3480,6 @@ function oldRenderTimelineGrid_backup(date, appointments) {
             hours = h;
             minutes = m;
         } else {
-            // Fallback to date object if time string missing
             const aptDate = new Date(apt.appointmentDate || apt.date);
             hours = aptDate.getHours();
             minutes = aptDate.getMinutes();
@@ -3684,14 +3487,9 @@ function oldRenderTimelineGrid_backup(date, appointments) {
         
         if (hours < startHour || hours > endHour) return;
         
-        // Calculate exact position
-        // For hour 9, minutes 0: should be at containerPadding + 0
-        // For hour 10, minutes 0: should be at containerPadding + 100px
-        // For hour 9, minutes 30: should be at containerPadding + 50px
         const totalMinutesFromStart = (hours - startHour) * 60 + minutes;
         const leftPosition = containerPadding + (totalMinutesFromStart * pixelsPerMinute);
         
-        // Calculate duration and end time
         const duration = (apt.serviceId && apt.serviceId.duration) ? apt.serviceId.duration : 30;
         const endTotalMinutes = hours * 60 + minutes + duration;
         const endHours = Math.floor(endTotalMinutes / 60);
@@ -3699,27 +3497,24 @@ function oldRenderTimelineGrid_backup(date, appointments) {
         const endTimeStr = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
         const startTimeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 
-        // Calculate width based on exact duration
         const appointmentWidth = duration * pixelsPerMinute;
 
         const aptEl = document.createElement('div');
         aptEl.className = `timeline-appointment ${index % 2 === 0 ? 'bottom' : 'top'}`;
-        // Use LEFT positioning instead of RIGHT for RTL accuracy
         aptEl.style.left = `${leftPosition}px`;
         aptEl.style.width = `${appointmentWidth}px`;
-        aptEl.style.overflow = 'hidden';        // Determine status text
+        aptEl.style.overflow = 'hidden';
+        
         let statusText = 'محجوز';
         if (apt.status === 'confirmed') statusText = 'مؤكد';
         if (apt.status === 'completed') statusText = 'مكتمل';
         
-        // Center content
         aptEl.style.display = 'flex';
         aptEl.style.flexDirection = 'column';
         aptEl.style.justifyContent = 'center';
         aptEl.style.alignItems = 'center';
         aptEl.style.textAlign = 'center';
         
-        // Get service name
         let serviceName = '';
         if (apt.serviceId && apt.serviceId.name) {
             serviceName = apt.serviceId.name;
@@ -3727,9 +3522,7 @@ function oldRenderTimelineGrid_backup(date, appointments) {
             serviceName = apt.service || apt.serviceName;
         }
         
-        // Adaptive content based on width
         if (duration < 50) {
-            // Compact layout for narrow slots (< 50 mins)
             aptEl.innerHTML = `
                 <div class="timeline-appointment-time" style="font-size: 10px; font-weight: 700; line-height: 1.2; margin-bottom: 2px;">
                     ${startTimeStr}
@@ -3740,7 +3533,6 @@ function oldRenderTimelineGrid_backup(date, appointments) {
                 <div class="timeline-appointment-status" style="font-size: 8px; margin-top: 3px; font-weight: 600;">${statusText}</div>
             `;
         } else if (duration < 90) {
-            // Medium layout (50-90 mins)
             aptEl.innerHTML = `
                 <div class="timeline-appointment-time" style="font-size: 11px; font-weight: 700; line-height: 1.2; margin-bottom: 3px;">
                     ${startTimeStr} - ${endTimeStr}
@@ -3749,7 +3541,6 @@ function oldRenderTimelineGrid_backup(date, appointments) {
                 ${serviceName ? `<div style="font-size: 8px; opacity: 0.8; margin-top: 2px;">${serviceName}</div>` : ''}
             `;
         } else {
-            // Wide layout for long appointments (90+ mins)
             aptEl.innerHTML = `
                 <div class="timeline-appointment-time" style="font-size: 12px; font-weight: 700; line-height: 1.3; margin-bottom: 4px;">
                     ${startTimeStr} - ${endTimeStr}
@@ -3759,9 +3550,7 @@ function oldRenderTimelineGrid_backup(date, appointments) {
             `;
         }
         
-        // Add click handler to show details
         aptEl.onclick = () => showAppointmentDetails(apt);
-        
         track.appendChild(aptEl);
     });
     
@@ -3844,6 +3633,242 @@ function renderTimelineSummary(appointments) {
             <div class="summary-label">مؤكدة</div>
         </div>
     `;
+}
+
+// Fullscreen Vertical Timeline Functions
+function openFullscreenTimeline() {
+    const modal = document.getElementById('fullscreenTimelinePage');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Get current date from timeline date input
+    const dateInput = document.getElementById('timelineDate');
+    const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+    
+    // Update date display
+    const dateDisplay = document.getElementById('fullscreenDateDisplay');
+    if (dateDisplay) {
+        const dateObj = new Date(date + 'T00:00:00');
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        dateDisplay.textContent = dateObj.toLocaleDateString('ar-SA', options);
+    }
+    
+    // Load appointments for vertical view
+    loadVerticalTimeline(date);
+}
+
+function closeFullscreenTimeline() {
+    const modal = document.getElementById('fullscreenTimelinePage');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+async function loadVerticalTimeline(date) {
+    try {
+        const response = await fetch(`/api/appointments/public?date=${date}`);
+        if (!response.ok) throw new Error('فشل تحميل البيانات');
+        
+        const appointments = await response.json();
+        renderVerticalTimeline(date, appointments.data || appointments);
+    } catch (error) {
+        console.error('Error loading vertical timeline:', error);
+        showToast('حدث خطأ أثناء تحميل البيانات', 'error');
+    }
+}
+
+async function renderVerticalTimeline(date, appointments) {
+    const strip = document.getElementById('verticalTimelineStrip');
+    if (!strip) return;
+    strip.innerHTML = '';
+    
+    // Configuration
+    const START_HOUR = 9;
+    const END_HOUR = 22;
+    const PIXELS_PER_MINUTE = 4; // Vertical spacing
+    const NAME_COL_WIDTH = 150;
+    
+    const totalMinutes = (END_HOUR - START_HOUR) * 60;
+    const totalHeight = totalMinutes * PIXELS_PER_MINUTE;
+    
+    // Fetch available employees
+    let availableEmployees = [];
+    try {
+        const response = await fetch('/api/employees/available');
+        if (response.ok) {
+            availableEmployees = await response.json();
+        }
+    } catch (error) {
+        console.error('Failed to fetch employees:', error);
+    }
+    
+    // If no employees, show all appointments in one column
+    if (availableEmployees.length === 0) {
+        availableEmployees = [{ _id: 'all', name: 'جميع المواعيد', avatar: null }];
+    }
+    
+    strip.style.height = `${totalHeight + 100}px`;
+    strip.style.display = 'flex';
+    strip.style.flexDirection = 'row';
+    strip.style.gap = '20px';
+    strip.style.padding = '20px';
+    
+    // Render column for each barber
+    availableEmployees.forEach(emp => {
+        const column = document.createElement('div');
+        column.className = 'vertical-timeline-column';
+        column.style.minWidth = `${NAME_COL_WIDTH}px`;
+        column.style.position = 'relative';
+        
+        // Header
+        const header = document.createElement('div');
+        header.className = 'vertical-column-header';
+        header.style.cssText = `
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        `;
+        
+        if (emp.avatar) {
+            const avatar = document.createElement('img');
+            avatar.src = emp.avatar;
+            avatar.style.cssText = `
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                margin-bottom: 10px;
+                border: 2px solid var(--primary);
+            `;
+            avatar.onerror = function() { this.style.display = 'none'; };
+            header.appendChild(avatar);
+        }
+        
+        const name = document.createElement('div');
+        name.textContent = emp.name;
+        name.style.cssText = `
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 1rem;
+        `;
+        header.appendChild(name);
+        
+        column.appendChild(header);
+        
+        // Timeline track
+        const track = document.createElement('div');
+        track.style.cssText = `
+            position: relative;
+            min-height: ${totalHeight}px;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent,
+                transparent 1px,
+                rgba(255, 255, 255, 0.05) 1px,
+                rgba(255, 255, 255, 0.05) ${60 * PIXELS_PER_MINUTE}px
+            );
+            border-left: 2px solid #444;
+            padding-left: 10px;
+        `;
+        
+        // Time markers
+        for (let h = START_HOUR; h <= END_HOUR; h++) {
+            const marker = document.createElement('div');
+            const topPos = (h - START_HOUR) * 60 * PIXELS_PER_MINUTE;
+            marker.style.cssText = `
+                position: absolute;
+                top: ${topPos}px;
+                left: -40px;
+                width: 35px;
+                text-align: right;
+                font-size: 0.75rem;
+                color: var(--primary);
+                font-weight: 600;
+            `;
+            marker.textContent = `${String(h).padStart(2, '0')}:00`;
+            track.appendChild(marker);
+        }
+        
+        // Filter appointments for this barber
+        const empAppts = emp._id === 'all' ? appointments : appointments.filter(a => {
+            const empName = a.employeeName || a.barber;
+            const empId = a.employeeId || (a.employee && a.employee._id);
+            return empId === emp._id || empName === emp.name;
+        });
+        
+        // Render appointments
+        empAppts.forEach(apt => {
+            let h, m;
+            
+            if (apt.time) {
+                [h, m] = apt.time.split(':').map(Number);
+            } else {
+                const aptDate = new Date(apt.appointmentDate || apt.date);
+                h = aptDate.getHours();
+                m = aptDate.getMinutes();
+            }
+            
+            if (h < START_HOUR || h >= END_HOUR) return;
+            
+            const minutesFromStart = (h - START_HOUR) * 60 + m;
+            const topPos = minutesFromStart * PIXELS_PER_MINUTE;
+            const duration = apt.serviceId?.duration || apt.duration || 30;
+            const height = duration * PIXELS_PER_MINUTE;
+            
+            const el = document.createElement('div');
+            let bgColor = 'linear-gradient(145deg, #3a1e1e, #2d2d2d)';
+            let borderColor = '#F44336';
+            
+            if (apt.status === 'confirmed') {
+                bgColor = 'linear-gradient(145deg, #1e3a5a, #2d2d2d)';
+                borderColor = '#2196F3';
+            } else if (apt.status === 'completed') {
+                bgColor = 'linear-gradient(145deg, #1e5a3a, #2d2d2d)';
+                borderColor = '#4CAF50';
+            }
+            
+            el.style.cssText = `
+                position: absolute;
+                top: ${topPos}px;
+                left: 0;
+                right: 0;
+                height: ${height}px;
+                background: ${bgColor};
+                border: 2px solid ${borderColor};
+                border-radius: 8px;
+                padding: 8px;
+                color: #fff;
+                font-size: 0.8rem;
+                cursor: pointer;
+                transition: transform 0.2s;
+            `;
+            
+            const startTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            const serviceName = apt.serviceId?.name || apt.service || apt.serviceName || '';
+            
+            el.innerHTML = `
+                <div style="font-weight: 700; color: var(--primary);">${startTimeStr}</div>
+                <div style="font-size: 0.75rem;">${apt.customerName || 'محجوز'}</div>
+                ${serviceName ? `<div style="font-size: 0.7rem; opacity: 0.8;">${serviceName}</div>` : ''}
+            `;
+            
+            el.onmouseover = () => el.style.transform = 'scale(1.05)';
+            el.onmouseout = () => el.style.transform = 'scale(1)';
+            el.onclick = () => showAppointmentDetails(apt);
+            
+            track.appendChild(el);
+        });
+        
+        column.appendChild(track);
+        strip.appendChild(column);
+    });
 }
 
 // ==================== Rating Page Functions ====================

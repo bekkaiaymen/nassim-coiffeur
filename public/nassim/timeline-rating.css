@@ -545,6 +545,87 @@
     background: #F44336;
 }
 
+/* Expand Timeline Button */
+.btn-expand-timeline {
+    background: linear-gradient(135deg, var(--primary), #d4a944);
+    color: #1a1a1a;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    box-shadow: 0 4px 12px rgba(203, 163, 92, 0.3);
+}
+
+.btn-expand-timeline:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(203, 163, 92, 0.5);
+}
+
+.btn-expand-timeline svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Fullscreen Vertical Timeline Modal */
+.fullscreen-timeline-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #1a1a1a;
+    z-index: 10000;
+    display: none;
+    flex-direction: column;
+}
+
+.fullscreen-timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+    border-bottom: 2px solid #444;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.fullscreen-timeline-header .modal-title {
+    flex: 1;
+    text-align: center;
+    font-size: 1.2rem;
+    color: var(--primary);
+}
+
+.fullscreen-date-display {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.7);
+    padding: 0 15px;
+}
+
+.fullscreen-timeline-content {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.vertical-timeline-strip {
+    min-width: 100%;
+    height: 100%;
+}
+
+.vertical-timeline-column {
+    flex-shrink: 0;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .barber-name-col {
@@ -575,6 +656,19 @@
     
     .apt-name {
         font-size: 0.6rem;
+    }
+    
+    .btn-expand-timeline {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+    
+    .fullscreen-timeline-header .modal-title {
+        font-size: 1rem;
+    }
+    
+    .fullscreen-date-display {
+        font-size: 0.8rem;
     }
 }
 
