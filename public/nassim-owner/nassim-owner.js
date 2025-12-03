@@ -1335,11 +1335,20 @@ async function openAddPackageModal() {
     try {
         // Load all services first
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/services/by-business/${NASSIM_BUSINESS_ID}`, {
+        const response = await fetch(`${API_URL}/services/public/by-business/${NASSIM_BUSINESS_ID}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load services');
+        }
+        
         const result = await response.json();
-        const allServices = result.data || result || [];
+        const allServices = result.data || result;
+        
+        if (!Array.isArray(allServices)) {
+            throw new Error('Invalid services data');
+        }
         
         // Filter out packages, only show individual services
         const individualServices = allServices.filter(s => !s.isPackage && s.available);
@@ -1423,11 +1432,21 @@ window.calculatePackageTotal = async function() {
     
     try {
         const token = localStorage.getItem('token');
-        const response = await fetch(`${API_URL}/services/by-business/${NASSIM_BUSINESS_ID}`, {
+        const response = await fetch(`${API_URL}/services/public/by-business/${NASSIM_BUSINESS_ID}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        
+        if (!response.ok) {
+            throw new Error('Failed to load services');
+        }
+        
         const result = await response.json();
-        const allServices = result.data || result || [];
+        const allServices = result.data || result;
+        
+        if (!Array.isArray(allServices)) {
+            console.error('Invalid services data:', allServices);
+            return;
+        }
         
         let totalPrice = 0;
         let totalDuration = 0;
