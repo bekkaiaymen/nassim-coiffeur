@@ -2026,6 +2026,15 @@ body::after {
     color: white;
 }
 
+.booking-service-card.has-variants {
+    border: 2px solid rgba(76, 175, 80, 0.3);
+}
+
+.booking-service-card.has-variants:hover {
+    border-color: rgba(76, 175, 80, 0.6);
+    transform: translateY(-4px);
+}
+
 /* Booking Summary */
 .booking-summary {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);

@@ -1034,6 +1034,92 @@ function displayServices(services) {
     container.innerHTML = html;
 }
 
+// Variants Management
+let variantCounter = 0;
+
+function toggleVariantsSection() {
+    const checkbox = document.getElementById('hasVariantsCheckbox');
+    const section = document.getElementById('variantsSection');
+    
+    if (checkbox.checked) {
+        section.style.display = 'block';
+        if (document.getElementById('variantsContainer').children.length === 0) {
+            addVariantRow(); // Add first variant automatically
+        }
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+function addVariantRow() {
+    variantCounter++;
+    const container = document.getElementById('variantsContainer');
+    const row = document.createElement('div');
+    row.className = 'variant-row';
+    row.id = `variant-${variantCounter}`;
+    row.style.cssText = 'background: #1A1A1A; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #2A2A2A;';
+    
+    row.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h5 style="color: #E9E9E9; margin: 0;">نوع ${variantCounter}</h5>
+            <button type="button" onclick="removeVariantRow('variant-${variantCounter}')" style="background: transparent; border: none; color: #D9534F; cursor: pointer; font-size: 20px;">✕</button>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 13px;">اسم النوع *</label>
+            <input type="text" class="form-input variant-name" required placeholder="مثال: صبغة كاملة" style="background: #121212;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 13px;">وصف النوع</label>
+            <input type="text" class="form-input variant-description" placeholder="وصف اختياري" style="background: #121212;">
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+                <label class="form-label" style="font-size: 13px;">السعر (دج) *</label>
+                <input type="number" class="form-input variant-price" required min="0" placeholder="1000" style="background: #121212;">
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-size: 13px;">المدة (دقيقة) *</label>
+                <input type="number" class="form-input variant-duration" required min="5" step="5" value="30" placeholder="30" style="background: #121212;">
+            </div>
+        </div>
+    `;
+    
+    container.appendChild(row);
+}
+
+function removeVariantRow(rowId) {
+    const row = document.getElementById(rowId);
+    if (row) {
+        row.remove();
+    }
+}
+
+function getVariantsData() {
+    const variants = [];
+    const variantRows = document.querySelectorAll('.variant-row');
+    
+    variantRows.forEach(row => {
+        const name = row.querySelector('.variant-name').value;
+        const description = row.querySelector('.variant-description').value;
+        const price = parseFloat(row.querySelector('.variant-price').value);
+        const duration = parseInt(row.querySelector('.variant-duration').value);
+        
+        if (name && price && duration) {
+            variants.push({
+                name: name.trim(),
+                description: description.trim(),
+                price: price,
+                duration: duration
+            });
+        }
+    });
+    
+    return variants;
+}
+
 function openAddServiceModal() {
     const modal = createModal('إضافة خدمة جديدة', `
         <form id="addServiceForm">
@@ -1105,6 +1191,24 @@ function openAddServiceModal() {
                     <span>متاحة للحجز</span>
                 </label>
             </div>
+            
+            <div class="form-group" style="border-top: 2px solid #2A2A2A; padding-top: 20px; margin-top: 20px;">
+                <label class="form-label">
+                    <input type="checkbox" id="hasVariantsCheckbox" onchange="toggleVariantsSection()">
+                    <span>هذه الخدمة لها أنواع فرعية متعددة (مثل: صبغة كاملة، صبغة جزئية...)</span>
+                </label>
+                <small style="color: #999; display: block; margin-top: 8px;">عند التفعيل، يمكن للزبون اختيار الخدمة العامة أو اختيار نوع محدد</small>
+            </div>
+            
+            <div id="variantsSection" style="display: none; background: rgba(42, 42, 42, 0.5); padding: 20px; border-radius: 12px; margin-top: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="color: #CBA35C; margin: 0;">الأنواع الفرعية</h4>
+                    <button type="button" class="btn-sm" onclick="addVariantRow()" style="background: #CBA35C; color: #121212; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        ➕ إضافة نوع
+                    </button>
+                </div>
+                <div id="variantsContainer"></div>
+            </div>
         </form>
     `, [
         { text: 'إلغاء', class: 'btn-secondary', onclick: 'closeModal()' },
@@ -1152,6 +1256,18 @@ async function submitAddService() {
         if (priceMin && priceMax) {
             serviceData.priceMin = priceMin;
             serviceData.priceMax = priceMax;
+        }
+        
+        // Add variants if checkbox is checked
+        const hasVariants = document.getElementById('hasVariantsCheckbox').checked;
+        if (hasVariants) {
+            const variants = getVariantsData();
+            if (variants.length === 0) {
+                showToast('يجب إضافة نوع فرعي واحد على الأقل', 'error');
+                return;
+            }
+            serviceData.hasVariants = true;
+            serviceData.variants = variants;
         }
 
         const token = localStorage.getItem('token');

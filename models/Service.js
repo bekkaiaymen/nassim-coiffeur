@@ -73,6 +73,32 @@ const serviceSchema = new mongoose.Schema({
     showIndividualPrices: {
         type: Boolean,
         default: false // If false, only show total package price
+    },
+    // Service variants/types (e.g., "Full color", "Partial color")
+    hasVariants: {
+        type: Boolean,
+        default: false
+    },
+    variants: [{
+        name: {
+            type: String,
+            required: true
+        },
+        description: String,
+        price: {
+            type: Number,
+            required: true
+        },
+        duration: {
+            type: Number,
+            required: true
+        },
+        image: String
+    }],
+    // If true, service is parent and customer must select variant or book without variant
+    requiresVariantSelection: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

@@ -233,14 +233,16 @@ function displayServices(services) {
                    </div>` 
                 : `<div class="service-icon">${getServiceIcon(service.name)}</div>`
             }
-            <div class="service-info" onclick="selectService('${service._id}')">
+            <div class="service-info" onclick="${service.hasVariants ? `openVariantsModal('${service._id}')` : `selectService('${service._id}')`}">
                 <div class="service-name">
                     ${service.isPackage ? '📦 ' : ''}${service.name}
                     ${service.isPackage ? '<span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-right: 6px; font-weight: 600;">باقة</span>' : ''}
+                    ${service.hasVariants ? '<span style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-right: 6px; font-weight: 600;">أنواع متعددة</span>' : ''}
                 </div>
                 <div class="service-description">${service.description || ''}</div>
                 <div class="service-meta">
                     <span class="service-duration">⏱ ${service.duration} دقيقة</span>
+                    ${service.hasVariants ? '<span style="color: #4CAF50; font-size: 12px; margin-right: 10px;">👆 اضغط للتفاصيل</span>' : ''}
                 </div>
             </div>
         </div>
@@ -272,22 +274,26 @@ function populateBookingServices(services) {
             && !service.image.includes('/uploads/');
 
         return `
-        <div class="booking-service-card" 
+        <div class="booking-service-card${service.hasVariants ? ' has-variants' : ''}" 
              data-service-id="${service._id}"
              data-service-name="${service.name}"
              data-service-price="${service.price}"
              data-service-duration="${service.duration}"
+             data-has-variants="${service.hasVariants || false}"
              data-price-min="${service.priceMin || 0}"
              data-price-max="${service.priceMax || 0}">
             ${hasValidImage
-                ? `<div class="booking-service-image" onclick="openImageLightbox('${service.image}', '${service.name}')">
+                ? `<div class="booking-service-image" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `openImageLightbox('${service.image}', '${service.name}')`}">
                     <img src="${service.image}" alt="${service.name}">
-                    <div class="zoom-overlay">🔍</div>
+                    <div class="zoom-overlay">${service.hasVariants ? '📋' : '🔍'}</div>
                    </div>` 
-                : `<div class="service-icon" onclick="toggleServiceSelection('${service._id}')">${getServiceIcon(service.name)}</div>`
+                : `<div class="service-icon" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}">${getServiceIcon(service.name)}</div>`
             }
-            <div class="service-name" onclick="toggleServiceSelection('${service._id}')">${service.name}</div>
-            <div class="service-meta" onclick="toggleServiceSelection('${service._id}')">
+            <div class="service-name" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}">
+                ${service.name}
+                ${service.hasVariants ? '<br><small style="color: #4CAF50; font-size: 11px;">👆 أنواع متعددة</small>' : ''}
+            </div>
+            <div class="service-meta" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}">
                 <span class="service-duration">⏱ ${service.duration} دقيقة</span>
             </div>
         </div>
@@ -328,6 +334,273 @@ function toggleServiceSelection(serviceId) {
     
     // Update summary display
     updateBookingSummary();
+}
+
+// Open variants modal for services with multiple types
+function openVariantsModal(serviceId) {
+    const service = availableServices.find(s => s._id === serviceId);
+    if (!service || !service.hasVariants || !service.variants || service.variants.length === 0) {
+        selectService(serviceId);
+        return;
+    }
+    
+    const modalContent = `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #CBA35C; margin-bottom: 10px;">${service.name}</h2>
+            <p style="color: #A7A7A7; font-size: 14px;">${service.description || 'اختر نوع الخدمة المناسب لك'}</p>
+        </div>
+        
+        <div style="display: grid; gap: 15px; margin-bottom: 20px;">
+            ${service.variants.map((variant, index) => `
+                <div class="variant-option" onclick="selectVariant('${serviceId}', ${index})" style="
+                    background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
+                    border: 2px solid #2A2A2A;
+                    border-radius: 15px;
+                    padding: 20px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    position: relative;
+                " onmouseover="this.style.borderColor='#CBA35C'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#2A2A2A'; this.style.transform='translateY(0)'">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <div>
+                            <h3 style="color: #E9E9E9; margin: 0 0 8px 0; font-size: 18px;">${variant.name}</h3>
+                            ${variant.description ? `<p style="color: #A7A7A7; margin: 0; font-size: 13px;">${variant.description}</p>` : ''}
+                        </div>
+                        <div style="background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%); color: #121212; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                            ${variant.price} دج
+                        </div>
+                    </div>
+                    <div style="color: #A7A7A7; font-size: 13px;">
+                        ⏱ ${variant.duration} دقيقة
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        
+        <div style="text-align: center; padding-top: 15px; border-top: 1px solid #2A2A2A;">
+            <button onclick="selectServiceGeneral('${serviceId}')" style="
+                background: rgba(203, 163, 92, 0.1);
+                border: 2px dashed #CBA35C;
+                color: #CBA35C;
+                padding: 12px 25px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(203, 163, 92, 0.2)'" onmouseout="this.style.background='rgba(203, 163, 92, 0.1)'">
+                📋 اختيار الخدمة العامة (سأقرر النوع مع الحلاق)
+            </button>
+        </div>
+    `;
+    
+    // Create and show modal
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000; padding: 20px;';
+    modal.innerHTML = `
+        <div class="modal-content" style="
+            background: #121212;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            position: relative;
+        ">
+            <button onclick="closeVariantsModal()" style="
+                position: absolute;
+                top: 15px;
+                left: 15px;
+                background: transparent;
+                border: none;
+                color: #A7A7A7;
+                font-size: 28px;
+                cursor: pointer;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#A7A7A7'">✕</button>
+            ${modalContent}
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function closeVariantsModal() {
+    const modal = document.querySelector('.modal-overlay');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function selectVariant(serviceId, variantIndex) {
+    const service = availableServices.find(s => s._id === serviceId);
+    if (!service || !service.variants || !service.variants[variantIndex]) return;
+    
+    const variant = service.variants[variantIndex];
+    
+    closeVariantsModal();
+    openBookingModal();
+    
+    // Wait for modal to load then select this variant
+    setTimeout(() => {
+        // Add variant as a service selection
+        selectedServices.push({
+            id: serviceId,
+            name: `${service.name} - ${variant.name}`,
+            price: variant.price,
+            duration: variant.duration,
+            variantIndex: variantIndex
+        });
+        
+        updateBookingSummary();
+        showNotification(`✅ تم اختيار: ${variant.name}`, 'success');
+    }, 100);
+}
+
+function selectServiceGeneral(serviceId) {
+    closeVariantsModal();
+    selectService(serviceId);
+}
+
+// Open variants modal from within booking modal
+function openVariantsModalInBooking(serviceId) {
+    const service = availableServices.find(s => s._id === serviceId);
+    if (!service || !service.hasVariants || !service.variants || service.variants.length === 0) {
+        toggleServiceSelection(serviceId);
+        return;
+    }
+    
+    const modalContent = `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #CBA35C; margin-bottom: 10px;">${service.name}</h2>
+            <p style="color: #A7A7A7; font-size: 14px;">${service.description || 'اختر نوع الخدمة المناسب لك'}</p>
+        </div>
+        
+        <div style="display: grid; gap: 15px; margin-bottom: 20px;">
+            ${service.variants.map((variant, index) => `
+                <div class="variant-option" onclick="selectVariantInBooking('${serviceId}', ${index})" style="
+                    background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
+                    border: 2px solid #2A2A2A;
+                    border-radius: 15px;
+                    padding: 20px;
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    position: relative;
+                " onmouseover="this.style.borderColor='#CBA35C'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#2A2A2A'; this.style.transform='translateY(0)'">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                        <div>
+                            <h3 style="color: #E9E9E9; margin: 0 0 8px 0; font-size: 18px;">${variant.name}</h3>
+                            ${variant.description ? `<p style="color: #A7A7A7; margin: 0; font-size: 13px;">${variant.description}</p>` : ''}
+                        </div>
+                        <div style="background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%); color: #121212; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 16px;">
+                            ${variant.price} دج
+                        </div>
+                    </div>
+                    <div style="color: #A7A7A7; font-size: 13px;">
+                        ⏱ ${variant.duration} دقيقة
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        
+        <div style="text-align: center; padding-top: 15px; border-top: 1px solid #2A2A2A;">
+            <button onclick="selectServiceGeneralInBooking('${serviceId}')" style="
+                background: rgba(203, 163, 92, 0.1);
+                border: 2px dashed #CBA35C;
+                color: #CBA35C;
+                padding: 12px 25px;
+                border-radius: 10px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(203, 163, 92, 0.2)'" onmouseout="this.style.background='rgba(203, 163, 92, 0.1)'">
+                📋 اختيار الخدمة العامة (سأقرر النوع مع الحلاق)
+            </button>
+        </div>
+    `;
+    
+    // Create and show modal
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay variants-modal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10001; padding: 20px;';
+    modal.innerHTML = `
+        <div class="modal-content" style="
+            background: #121212;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            position: relative;
+        ">
+            <button onclick="closeVariantsModalInBooking()" style="
+                position: absolute;
+                top: 15px;
+                left: 15px;
+                background: transparent;
+                border: none;
+                color: #A7A7A7;
+                font-size: 28px;
+                cursor: pointer;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='#fff'" onmouseout="this.style.background='transparent'; this.style.color='#A7A7A7'">✕</button>
+            ${modalContent}
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+}
+
+function closeVariantsModalInBooking() {
+    const modal = document.querySelector('.variants-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function selectVariantInBooking(serviceId, variantIndex) {
+    const service = availableServices.find(s => s._id === serviceId);
+    if (!service || !service.variants || !service.variants[variantIndex]) return;
+    
+    const variant = service.variants[variantIndex];
+    
+    closeVariantsModalInBooking();
+    
+    // Add variant as a service selection
+    selectedServices.push({
+        id: serviceId,
+        name: `${service.name} - ${variant.name}`,
+        price: variant.price,
+        duration: variant.duration,
+        variantIndex: variantIndex
+    });
+    
+    checkForMatchingPackages();
+    updateBookingSummary();
+    showNotification(`✅ تم اختيار: ${variant.name}`, 'success');
+}
+
+function selectServiceGeneralInBooking(serviceId) {
+    closeVariantsModalInBooking();
+    toggleServiceSelection(serviceId);
 }
 
 // Select Service (from service cards view)
