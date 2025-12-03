@@ -351,7 +351,12 @@ function openVariantsModal(serviceId) {
         </div>
         
         <div style="display: grid; gap: 15px; margin-bottom: 20px;">
-            ${service.variants.map((variant, index) => `
+            ${service.variants.map((variant, index) => {
+                const hasValidImage = variant.image 
+                    && (variant.image.startsWith('http://') || variant.image.startsWith('https://'))
+                    && !variant.image.includes('/uploads/');
+                
+                return `
                 <div class="variant-option" onclick="selectVariant('${serviceId}', ${index})" style="
                     background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
                     border: 2px solid #2A2A2A;
@@ -360,21 +365,38 @@ function openVariantsModal(serviceId) {
                     cursor: pointer;
                     transition: all 0.3s ease;
                     position: relative;
+                    display: flex;
+                    gap: 15px;
+                    align-items: center;
                 " onmouseover="this.style.borderColor='#CBA35C'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#2A2A2A'; this.style.transform='translateY(0)'">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                        <div>
-                            <h3 style="color: #E9E9E9; margin: 0 0 8px 0; font-size: 18px;">${variant.name}</h3>
-                            ${variant.description ? `<p style="color: #A7A7A7; margin: 0; font-size: 13px;">${variant.description}</p>` : ''}
+                    ${hasValidImage ? `
+                        <div style="flex-shrink: 0;">
+                            <img src="${variant.image}" alt="${variant.name}" style="
+                                width: 80px;
+                                height: 80px;
+                                object-fit: cover;
+                                border-radius: 10px;
+                                border: 2px solid #CBA35C;
+                            ">
                         </div>
-                        <div style="background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%); color: #121212; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                            ${variant.price} دج
+                    ` : ''}
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <h3 style="color: #E9E9E9; margin: 0 0 8px 0; font-size: 18px;">${variant.name}</h3>
+                                ${variant.description ? `<p style="color: #A7A7A7; margin: 0; font-size: 13px;">${variant.description}</p>` : ''}
+                            </div>
+                            <div style="background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%); color: #121212; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; white-space: nowrap; margin-left: 10px;">
+                                ${variant.price} دج
+                            </div>
                         </div>
-                    </div>
-                    <div style="color: #A7A7A7; font-size: 13px;">
-                        ⏱ ${variant.duration} دقيقة
+                        <div style="color: #A7A7A7; font-size: 13px;">
+                            ⏱ ${variant.duration} دقيقة
+                        </div>
                     </div>
                 </div>
-            `).join('')}
+            `;
+            }).join('')}
         </div>
         
         <div style="text-align: center; padding-top: 15px; border-top: 1px solid #2A2A2A;">
@@ -486,7 +508,12 @@ function openVariantsModalInBooking(serviceId) {
         </div>
         
         <div style="display: grid; gap: 15px; margin-bottom: 20px;">
-            ${service.variants.map((variant, index) => `
+            ${service.variants.map((variant, index) => {
+                const hasValidImage = variant.image 
+                    && (variant.image.startsWith('http://') || variant.image.startsWith('https://'))
+                    && !variant.image.includes('/uploads/');
+                
+                return `
                 <div class="variant-option" onclick="selectVariantInBooking('${serviceId}', ${index})" style="
                     background: linear-gradient(135deg, #1A1A1A 0%, #2A2A2A 100%);
                     border: 2px solid #2A2A2A;
@@ -495,21 +522,38 @@ function openVariantsModalInBooking(serviceId) {
                     cursor: pointer;
                     transition: all 0.3s ease;
                     position: relative;
+                    display: flex;
+                    gap: 15px;
+                    align-items: center;
                 " onmouseover="this.style.borderColor='#CBA35C'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#2A2A2A'; this.style.transform='translateY(0)'">
-                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                        <div>
-                            <h3 style="color: #E9E9E9; margin: 0 0 8px 0; font-size: 18px;">${variant.name}</h3>
-                            ${variant.description ? `<p style="color: #A7A7A7; margin: 0; font-size: 13px;">${variant.description}</p>` : ''}
+                    ${hasValidImage ? `
+                        <div style="flex-shrink: 0;">
+                            <img src="${variant.image}" alt="${variant.name}" style="
+                                width: 80px;
+                                height: 80px;
+                                object-fit: cover;
+                                border-radius: 10px;
+                                border: 2px solid #CBA35C;
+                            ">
                         </div>
-                        <div style="background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%); color: #121212; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 16px;">
-                            ${variant.price} دج
+                    ` : ''}
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <h3 style="color: #E9E9E9; margin: 0 0 8px 0; font-size: 18px;">${variant.name}</h3>
+                                ${variant.description ? `<p style="color: #A7A7A7; margin: 0; font-size: 13px;">${variant.description}</p>` : ''}
+                            </div>
+                            <div style="background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%); color: #121212; padding: 8px 15px; border-radius: 8px; font-weight: bold; font-size: 16px; white-space: nowrap; margin-left: 10px;">
+                                ${variant.price} دج
+                            </div>
                         </div>
-                    </div>
-                    <div style="color: #A7A7A7; font-size: 13px;">
-                        ⏱ ${variant.duration} دقيقة
+                        <div style="color: #A7A7A7; font-size: 13px;">
+                            ⏱ ${variant.duration} دقيقة
+                        </div>
                     </div>
                 </div>
-            `).join('')}
+            `;
+            }).join('')}
         </div>
         
         <div style="text-align: center; padding-top: 15px; border-top: 1px solid #2A2A2A;">

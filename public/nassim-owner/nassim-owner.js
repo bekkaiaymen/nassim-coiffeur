@@ -1051,6 +1051,35 @@ function toggleVariantsSection() {
     }
 }
 
+function previewVariantImage(input, variantId) {
+    const row = document.getElementById(variantId);
+    if (!row || !input.files || !input.files[0]) return;
+    
+    const preview = row.querySelector('.variant-image-preview');
+    const img = preview.querySelector('img');
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        img.src = e.target.result;
+        preview.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+}
+
+function removeVariantImage(variantId) {
+    const row = document.getElementById(variantId);
+    if (!row) return;
+    
+    const fileInput = row.querySelector('.variant-image-file');
+    const preview = row.querySelector('.variant-image-preview');
+    const urlInput = row.querySelector('.variant-image-url');
+    
+    fileInput.value = '';
+    urlInput.value = '';
+    preview.style.display = 'none';
+    preview.querySelector('img').src = '';
+}
+
 function addVariantRow() {
     variantCounter++;
     const container = document.getElementById('variantsContainer');
@@ -1085,6 +1114,29 @@ function addVariantRow() {
                 <input type="number" class="form-input variant-duration" required min="5" step="5" value="30" placeholder="30" style="background: #121212;">
             </div>
         </div>
+        
+        <div class="form-group" style="margin-top: 12px;">
+            <label class="form-label" style="font-size: 13px;">صورة النوع (اختياري)</label>
+            <input type="file" class="variant-image-file" accept="image/*" onchange="previewVariantImage(this, 'variant-${variantCounter}')" style="display: none;" id="variantImageFile-${variantCounter}">
+            <label for="variantImageFile-${variantCounter}" style="
+                display: inline-block;
+                background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%);
+                color: #121212;
+                padding: 8px 15px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                📷 اختر صورة
+            </label>
+            <div class="variant-image-preview" style="display: none; margin-top: 8px; position: relative;">
+                <img src="" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid #CBA35C;">
+                <button type="button" onclick="removeVariantImage('variant-${variantCounter}')" style="position: absolute; top: -8px; right: -8px; background: #D9534F; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">✕</button>
+            </div>
+            <input type="url" class="form-input variant-image-url" placeholder="أو أدخل رابط صورة" style="background: #121212; margin-top: 8px; font-size: 12px;">
+        </div>
     `;
     
     container.appendChild(row);
@@ -1097,25 +1149,38 @@ function removeVariantRow(rowId) {
     }
 }
 
-function getVariantsData() {
+async function getVariantsData() {
     const variants = [];
     const variantRows = document.querySelectorAll('.variant-row');
     
-    variantRows.forEach(row => {
+    for (const row of variantRows) {
         const name = row.querySelector('.variant-name').value;
         const description = row.querySelector('.variant-description').value;
         const price = parseFloat(row.querySelector('.variant-price').value);
         const duration = parseInt(row.querySelector('.variant-duration').value);
+        
+        // Handle image upload
+        let imageUrl = row.querySelector('.variant-image-url').value;
+        const imageFile = row.querySelector('.variant-image-file').files[0];
+        
+        if (imageFile) {
+            try {
+                imageUrl = await uploadImage(imageFile);
+            } catch (error) {
+                console.error('Error uploading variant image:', error);
+            }
+        }
         
         if (name && price && duration) {
             variants.push({
                 name: name.trim(),
                 description: description.trim(),
                 price: price,
-                duration: duration
+                duration: duration,
+                image: imageUrl || null
             });
         }
-    });
+    }
     
     return variants;
 }
@@ -1261,7 +1326,8 @@ async function submitAddService() {
         // Add variants if checkbox is checked
         const hasVariants = document.getElementById('hasVariantsCheckbox').checked;
         if (hasVariants) {
-            const variants = getVariantsData();
+            showToast('جاري رفع صور الأنواع...', 'info');
+            const variants = await getVariantsData();
             if (variants.length === 0) {
                 showToast('يجب إضافة نوع فرعي واحد على الأقل', 'error');
                 return;
