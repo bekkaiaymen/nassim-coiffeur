@@ -3490,20 +3490,28 @@ function renderTimelineGrid(date, appointments) {
         
         if (hours < startHour || hours > endHour) return;
         
-        // Calculate exact position
-        // For hour 9, minutes 0: should be at containerPadding + 0
-        // For hour 10, minutes 0: should be at containerPadding + 100px
-        // For hour 9, minutes 30: should be at containerPadding + 50px
-        const totalMinutesFromStart = (hours - startHour) * 60 + minutes;
+        // Add 30 minutes offset to the appointment display time
+        const offsetMinutes = 30;
+        const adjustedTotalMinutes = hours * 60 + minutes + offsetMinutes;
+        const adjustedHours = Math.floor(adjustedTotalMinutes / 60);
+        const adjustedMinutes = adjustedTotalMinutes % 60;
+        
+        // Check if adjusted time is still within range
+        if (adjustedHours > endHour) return;
+        
+        // Calculate exact position with 30-minute offset
+        // For hour 9, minutes 0: display at 9:30 position
+        // For hour 12, minutes 28: display at 12:58 position
+        const totalMinutesFromStart = (adjustedHours - startHour) * 60 + adjustedMinutes;
         const leftPosition = containerPadding + (totalMinutesFromStart * pixelsPerMinute);
         
         // Calculate duration and end time
         const duration = (apt.serviceId && apt.serviceId.duration) ? apt.serviceId.duration : 30;
-        const endTotalMinutes = hours * 60 + minutes + duration;
+        const endTotalMinutes = adjustedTotalMinutes + duration;
         const endHours = Math.floor(endTotalMinutes / 60);
         const endMinutes = endTotalMinutes % 60;
         const endTimeStr = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
-        const startTimeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+        const startTimeStr = `${String(adjustedHours).padStart(2, '0')}:${String(adjustedMinutes).padStart(2, '0')}`;
 
         // Calculate width based on exact duration
         const appointmentWidth = duration * pixelsPerMinute;
