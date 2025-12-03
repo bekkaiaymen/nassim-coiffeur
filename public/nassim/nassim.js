@@ -3490,18 +3490,18 @@ function renderTimelineGrid(date, appointments) {
         
         if (hours < startHour || hours > endHour) return;
         
-        // Add 30 minutes offset to the appointment display time
+        // Subtract 30 minutes to show appointments earlier
         const offsetMinutes = 30;
-        const adjustedTotalMinutes = hours * 60 + minutes + offsetMinutes;
+        const adjustedTotalMinutes = hours * 60 + minutes - offsetMinutes;
         const adjustedHours = Math.floor(adjustedTotalMinutes / 60);
         const adjustedMinutes = adjustedTotalMinutes % 60;
         
         // Check if adjusted time is still within range
-        if (adjustedHours > endHour) return;
+        if (adjustedHours < startHour) return;
         
-        // Calculate exact position with 30-minute offset
-        // For hour 9, minutes 0: display at 9:30 position
-        // For hour 12, minutes 28: display at 12:58 position
+        // Calculate exact position with 30-minute earlier offset
+        // For hour 12, minutes 28: display at 11:58 position
+        // For hour 10, minutes 0: display at 9:30 position
         const totalMinutesFromStart = (adjustedHours - startHour) * 60 + adjustedMinutes;
         const leftPosition = containerPadding + (totalMinutesFromStart * pixelsPerMinute);
         
