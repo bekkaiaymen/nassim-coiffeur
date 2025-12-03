@@ -41,6 +41,7 @@ async function initEmployeeApp() {
     await loadAttendanceStatus(); // NEW: Load attendance status
     await loadServices();
     await loadPendingAppointments();
+    await loadConfirmedAppointments();
     await loadCompletedAppointments();
     generateTimeSlots();
     setDefaultDate();
@@ -53,8 +54,11 @@ async function initEmployeeApp() {
     }
     loadTimeline();
     
-    // Auto-refresh pending appointments every 30 seconds
-    setInterval(loadPendingAppointments, 30000);
+    // Auto-refresh appointments every 30 seconds
+    setInterval(() => {
+        loadPendingAppointments();
+        loadConfirmedAppointments();
+    }, 30000);
 }
 
 function checkAuth() {
@@ -666,9 +670,6 @@ async function loadPendingAppointments() {
                     <button onclick="confirmAppointment('${apt._id}')" style="flex: 1; background: #27ae60; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
                         ✅ ${isFlexible ? 'قبول وتأكيد' : 'تأكيد'}
                     </button>
-                    <button onclick="completeAppointment('${apt._id}')" style="flex: 1; background: #3498db; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
-                        ✔️ مكتمل
-                    </button>
                     <button onclick="rejectAppointment('${apt._id}')" style="flex: 0.5; background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
                         ❌
                     </button>
@@ -680,6 +681,85 @@ async function loadPendingAppointments() {
     } catch (error) {
         console.error('Error loading pending appointments:', error);
         listContainer.innerHTML = '<div style="text-align: center; color: #e74c3c; padding: 20px;">حدث خطأ في تحميل المواعيد</div>';
+    }
+}
+
+// Load Confirmed Appointments
+async function loadConfirmedAppointments() {
+    const listContainer = document.getElementById('confirmedAppointmentsList');
+    if (!listContainer) {
+        console.warn('confirmedAppointmentsList container not found');
+        return;
+    }
+
+    try {
+        const empId = employeeData ? employeeData._id : null;
+        if (!empId) {
+            console.warn('No employee ID found');
+            listContainer.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">يرجى تسجيل الدخول</div>';
+            return;
+        }
+
+        console.log('Loading confirmed appointments for employee:', empId);
+
+        // Load confirmed appointments assigned to this employee
+        const response = await fetch(`${API_BASE}/appointments?status=confirmed&employee=${empId}`, {
+            headers: {
+                'Authorization': `Bearer ${employeeToken}`
+            }
+        });
+        
+        if (response.status === 401) {
+            handleUnauthorized();
+            return;
+        }
+        
+        if (!response.ok) throw new Error('فشل في تحميل المواعيد المؤكدة');
+        
+        const result = await response.json();
+        const appointments = result.data || [];
+        console.log('Confirmed appointments:', appointments.length);
+
+        if (appointments.length === 0) {
+            listContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">لا توجد مواعيد مؤكدة حالياً</div>';
+            return;
+        }
+
+        listContainer.innerHTML = '';
+        appointments.forEach(apt => {
+            const item = document.createElement('div');
+            item.className = 'confirmed-appointment-item';
+            item.style.cssText = 'background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 2px solid #27ae60; box-shadow: 0 4px 8px rgba(39, 174, 96, 0.2);';
+
+            const date = new Date(apt.date);
+            const dateStr = date.toLocaleDateString('ar-DZ');
+            
+            // Calculate if appointment is today
+            const today = new Date();
+            const isToday = date.toDateString() === today.toDateString();
+            
+            item.innerHTML = `
+                ${isToday ? '<div style="color: #2ecc71; font-weight: bold; font-size: 12px; margin-bottom: 5px;">📍 موعد اليوم</div>' : ''}
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <div>
+                        <div style="color: #2ecc71; font-weight: bold; font-size: 18px;">✅ ${apt.customerName}</div>
+                        <div style="color: #aaa; font-size: 13px; margin-top: 3px;">📅 ${dateStr} | ⏰ ${apt.time}</div>
+                        <div style="color: #fff; font-size: 14px; margin-top: 5px;">✂️ ${apt.service || 'خدمة'} | 💰 ${apt.price || 50} دج</div>
+                        ${apt.customerPhone ? `<div style="color: #3498db; font-size: 13px; margin-top: 3px;">📞 ${apt.customerPhone}</div>` : ''}
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="completeAppointment('${apt._id}')" style="flex: 1; background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3); transition: all 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        ✔️ إكمال الخدمة
+                    </button>
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+
+    } catch (error) {
+        console.error('Error loading confirmed appointments:', error);
+        listContainer.innerHTML = '<div style="text-align: center; color: #e74c3c; padding: 20px;">حدث خطأ في تحميل المواعيد المؤكدة</div>';
     }
 }
 
@@ -706,6 +786,7 @@ async function confirmAppointment(appointmentId) {
         
         showToast('✅ تم تأكيد الموعد بنجاح وتم تعيينه لك', 'success');
         await loadPendingAppointments();
+        await loadConfirmedAppointments();
         await loadTimeline();
         
     } catch (error) {
@@ -729,7 +810,7 @@ async function completeAppointment(appointmentId) {
         if (!response.ok) throw new Error('فشل في تحديث الموعد');
         
         showToast('✔️ تم وضع علامة الاكتمال على الموعد', 'success');
-        await loadPendingAppointments();
+        await loadConfirmedAppointments();
         await loadCompletedAppointments();
         await loadTimeline();
         
