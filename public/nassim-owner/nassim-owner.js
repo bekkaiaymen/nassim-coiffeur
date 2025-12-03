@@ -1280,6 +1280,8 @@ async function submitEditService() {
     };
 
     try {
+        console.log('Service data to update:', serviceData);
+        
         const token = localStorage.getItem('token');
         const response = await fetch(`${API_URL}/services/${serviceId}`, {
             method: 'PUT',
@@ -1290,7 +1292,11 @@ async function submitEditService() {
             body: JSON.stringify(serviceData)
         });
 
-        if (!response.ok) throw new Error('Failed to update service');
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Server error response:', errorData);
+            throw new Error(errorData.message || 'Failed to update service');
+        }
 
         showToast('تم تحديث الخدمة بنجاح', 'success');
         closeModal();
@@ -1298,7 +1304,7 @@ async function submitEditService() {
 
     } catch (error) {
         console.error('Error updating service:', error);
-        showToast('حدث خطأ في تحديث الخدمة', 'error');
+        showToast(error.message || 'حدث خطأ في تحديث الخدمة', 'error');
     }
 }
 
