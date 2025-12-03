@@ -216,17 +216,29 @@ async function getNassimBusinessId() {
         // Third try: Fetch from API
         const response = await fetch(`${API_BASE}/businesses/public`);
         if (response.ok) {
-            const businesses = await response.json();
-            const nassim = businesses.find(b => 
-                b.businessName && (
-                    b.businessName.toLowerCase().includes('nassim') ||
-                    b.businessName.toLowerCase().includes('ناسيم')
-                )
-            );
-            if (nassim) {
-                // Cache the business ID
-                localStorage.setItem('nassim_business_id', nassim._id);
-                return nassim._id;
+            const result = await response.json();
+            // Handle different response formats
+            let businesses = [];
+            if (Array.isArray(result)) {
+                businesses = result;
+            } else if (result.data && Array.isArray(result.data)) {
+                businesses = result.data;
+            } else if (result.businesses && Array.isArray(result.businesses)) {
+                businesses = result.businesses;
+            }
+            
+            if (Array.isArray(businesses) && businesses.length > 0) {
+                const nassim = businesses.find(b => 
+                    b.businessName && (
+                        b.businessName.toLowerCase().includes('nassim') ||
+                        b.businessName.toLowerCase().includes('ناسيم')
+                    )
+                );
+                if (nassim) {
+                    // Cache the business ID
+                    localStorage.setItem('nassim_business_id', nassim._id);
+                    return nassim._id;
+                }
             }
         }
         
@@ -270,13 +282,30 @@ function displayCustomerInfo() {
 // Load Employees
 async function loadEmployees() {
     try {
-        const response = await fetch(`${API_BASE}/employees/available`);
+        const nassimBusinessId = await getNassimBusinessId();
+        if (!nassimBusinessId) {
+            console.error('No business ID found');
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE}/employees/public/by-business/${nassimBusinessId}`);
         if (response.ok) {
-            availableEmployees = await response.json();
+            const result = await response.json();
+            // Handle different response formats
+            if (Array.isArray(result)) {
+                availableEmployees = result;
+            } else if (result.data && Array.isArray(result.data)) {
+                availableEmployees = result.data;
+            } else if (result.employees && Array.isArray(result.employees)) {
+                availableEmployees = result.employees;
+            } else {
+                availableEmployees = [];
+            }
             populateEmployeeSelect();
         }
     } catch (error) {
         console.error('Error loading employees:', error);
+        availableEmployees = [];
     }
 }
 
@@ -286,11 +315,17 @@ function populateEmployeeSelect() {
     
     select.innerHTML = '<option value="">-- اختر الحلاق --</option>';
     
+    if (!Array.isArray(availableEmployees)) {
+        console.error('availableEmployees is not an array:', availableEmployees);
+        return;
+    }
+    
     availableEmployees.forEach(emp => {
         const option = document.createElement('option');
         option.value = emp._id;
-        option.textContent = `${emp.name} ${emp.todayAttendance ? '✅' : '❌'}`;
-        if (!emp.todayAttendance) {
+        const isPresent = emp.todayAttendance && emp.todayAttendance.isPresent;
+        option.textContent = `${emp.name} ${isPresent ? '✅' : '❌'}`;
+        if (!isPresent) {
             option.disabled = true;
         }
         select.appendChild(option);
@@ -300,13 +335,30 @@ function populateEmployeeSelect() {
 // Load Services
 async function loadServices() {
     try {
-        const response = await fetch(`${API_BASE}/services`);
+        const nassimBusinessId = await getNassimBusinessId();
+        if (!nassimBusinessId) {
+            console.error('No business ID found');
+            return;
+        }
+        
+        const response = await fetch(`${API_BASE}/services/public/by-business/${nassimBusinessId}`);
         if (response.ok) {
-            services = await response.json();
+            const result = await response.json();
+            // Handle different response formats
+            if (Array.isArray(result)) {
+                services = result;
+            } else if (result.data && Array.isArray(result.data)) {
+                services = result.data;
+            } else if (result.services && Array.isArray(result.services)) {
+                services = result.services;
+            } else {
+                services = [];
+            }
             populateServiceSelect();
         }
     } catch (error) {
         console.error('Error loading services:', error);
+        services = [];
     }
 }
 
@@ -315,6 +367,11 @@ function populateServiceSelect() {
     if (!select) return;
     
     select.innerHTML = '<option value="">-- اختر الخدمة --</option>';
+    
+    if (!Array.isArray(services)) {
+        console.error('services is not an array:', services);
+        return;
+    }
     
     services.forEach(service => {
         const option = document.createElement('option');
