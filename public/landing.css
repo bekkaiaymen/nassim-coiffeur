@@ -354,6 +354,138 @@ section {
     color: var(--text-secondary);
 }
 
+/* Quick Book Banner Section */
+.quick-book-banner-section {
+    padding: 60px 0;
+    background: var(--bg-dark);
+}
+
+.quick-book-banner-landing {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--dark) 100%);
+    border: 2px solid rgba(253, 183, 20, 0.3);
+    border-radius: var(--radius);
+    padding: 40px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 30px;
+    align-items: center;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-book-banner-landing::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 0% 50%, rgba(253, 183, 20, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+}
+
+.quick-book-banner-landing:hover {
+    border-color: var(--primary);
+    box-shadow: 0 12px 50px rgba(253, 183, 20, 0.3);
+    transform: translateY(-3px);
+}
+
+.qb-icon {
+    font-size: 80px;
+    filter: drop-shadow(0 4px 15px rgba(253, 183, 20, 0.5));
+    animation: qbPulse 2s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes qbPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.qb-content {
+    position: relative;
+    z-index: 1;
+}
+
+.qb-title {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--primary);
+    margin-bottom: 8px;
+    text-shadow: 0 2px 10px rgba(253, 183, 20, 0.3);
+}
+
+.qb-subtitle {
+    font-size: 16px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+}
+
+.qb-features {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.qb-feature {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    color: var(--text-primary);
+    padding: 10px 15px;
+    background: rgba(253, 183, 20, 0.05);
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.qb-feature:hover {
+    background: rgba(253, 183, 20, 0.1);
+    transform: translateX(5px);
+}
+
+.qb-feature-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.qb-btn {
+    padding: 20px 40px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+    color: var(--dark);
+    border: none;
+    border-radius: 15px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    white-space: nowrap;
+    text-decoration: none;
+    box-shadow: 0 4px 20px rgba(253, 183, 20, 0.4);
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+}
+
+.qb-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(253, 183, 20, 0.6);
+}
+
+.qb-btn:active {
+    transform: translateY(-1px);
+}
+
+.qb-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
 /* Features Section */
 .features {
     background: var(--surface);
@@ -864,6 +996,25 @@ section {
     
     .stat-number {
         font-size: 28px;
+    }
+    
+    .quick-book-banner-landing {
+        grid-template-columns: 1fr;
+        text-align: center;
+        padding: 30px 20px;
+        gap: 20px;
+    }
+    
+    .qb-icon {
+        font-size: 60px;
+        margin: 0 auto;
+    }
+    
+    .qb-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 18px 30px;
+        font-size: 16px;
     }
     
     .features-grid {
