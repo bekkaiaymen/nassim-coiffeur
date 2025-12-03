@@ -219,17 +219,18 @@ function displayServices(services) {
     }
     
     container.innerHTML = services.map(service => {
-        // Check if image is valid (Cloudinary or external URL)
-        const hasValidImage = service.image 
-            && (service.image.startsWith('http://') || service.image.startsWith('https://'))
-            && !service.image.includes('/uploads/');
+        // Check if image is valid - accept any URL format
+        const hasValidImage = service.image && service.image.trim() !== '';
         
         return `
         <div class="service-card">
             ${hasValidImage
-                ? `<div class="service-image" onclick="openImageLightbox('${service.image}', '${service.name}')" style="width: 80px; height: 100px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0; background: linear-gradient(to bottom, #1a1a1a, #2d2d2d); cursor: zoom-in; position: relative;">
-                    <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: contain;" onerror="console.log('Failed to load service image:', this.src); this.parentElement.outerHTML='<div class=\\'service-icon\\'>${getServiceIcon(service.name)}</div>';">
-                    <div class="zoom-icon" style="position: absolute; top: 4px; right: 4px; background: rgba(203, 163, 92, 0.9); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; pointer-events: none;">🔍</div>
+                ? `<div class="service-image" onclick="openImageLightbox('${service.image}', '${service.name}')" style="width: 100px; height: 120px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); cursor: zoom-in; position: relative; box-shadow: 0 4px 15px rgba(203, 163, 92, 0.3); border: 2px solid rgba(203, 163, 92, 0.2);">
+                    <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="console.log('Failed to load service image:', this.src); this.parentElement.outerHTML='<div class=\\'service-icon\\'>${getServiceIcon(service.name)}</div>';">
+                    <div class="zoom-icon" style="position: absolute; top: 8px; right: 8px; background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,0.4);">🔍</div>
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); padding: 8px 10px; pointer-events: none;">
+                        <div style="color: white; font-size: 10px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">${service.name}</div>
+                    </div>
                    </div>` 
                 : `<div class="service-icon">${getServiceIcon(service.name)}</div>`
             }
@@ -269,9 +270,7 @@ function populateBookingServices(services) {
     const regularServices = services.filter(service => !service.isPackage);
     
     container.innerHTML = regularServices.map(service => {
-        const hasValidImage = service.image 
-            && (service.image.startsWith('http://') || service.image.startsWith('https://'))
-            && !service.image.includes('/uploads/');
+        const hasValidImage = service.image && service.image.trim() !== '';
 
         return `
         <div class="booking-service-card${service.hasVariants ? ' has-variants' : ''}" 
@@ -283,9 +282,9 @@ function populateBookingServices(services) {
              data-price-min="${service.priceMin || 0}"
              data-price-max="${service.priceMax || 0}">
             ${hasValidImage
-                ? `<div class="booking-service-image" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `openImageLightbox('${service.image}', '${service.name}')`}">
-                    <img src="${service.image}" alt="${service.name}">
-                    <div class="zoom-overlay">${service.hasVariants ? '📋' : '🔍'}</div>
+                ? `<div class="booking-service-image" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `openImageLightbox('${service.image}', '${service.name}')`}" style="position: relative; overflow: hidden;">
+                    <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div class="zoom-overlay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(203, 163, 92, 0.95); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; opacity: 0; transition: opacity 0.3s ease;">${service.hasVariants ? '📋' : '🔍'}</div>
                    </div>` 
                 : `<div class="service-icon" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}">${getServiceIcon(service.name)}</div>`
             }
@@ -352,9 +351,7 @@ function openVariantsModal(serviceId) {
         
         <div style="display: grid; gap: 15px; margin-bottom: 20px;">
             ${service.variants.map((variant, index) => {
-                const hasValidImage = variant.image 
-                    && (variant.image.startsWith('http://') || variant.image.startsWith('https://'))
-                    && !variant.image.includes('/uploads/');
+                const hasValidImage = variant.image && variant.image.trim() !== '';
                 
                 return `
                 <div class="variant-option" onclick="selectVariant('${serviceId}', ${index})" style="
@@ -368,16 +365,19 @@ function openVariantsModal(serviceId) {
                     display: flex;
                     gap: 15px;
                     align-items: center;
-                " onmouseover="this.style.borderColor='#CBA35C'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#2A2A2A'; this.style.transform='translateY(0)'">
+                    overflow: hidden;
+                " onmouseover="this.style.borderColor='#CBA35C'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(203, 163, 92, 0.3)'" onmouseout="this.style.borderColor='#2A2A2A'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                     ${hasValidImage ? `
-                        <div style="flex-shrink: 0;">
+                        <div style="flex-shrink: 0; position: relative;">
                             <img src="${variant.image}" alt="${variant.name}" style="
-                                width: 80px;
-                                height: 80px;
+                                width: 100px;
+                                height: 100px;
                                 object-fit: cover;
-                                border-radius: 10px;
-                                border: 2px solid #CBA35C;
+                                border-radius: 12px;
+                                border: 3px solid #CBA35C;
+                                box-shadow: 0 4px 15px rgba(203, 163, 92, 0.4);
                             ">
+                            <div style="position: absolute; top: 5px; right: 5px; background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">✨</div>
                         </div>
                     ` : ''}
                     <div style="flex: 1;">
@@ -509,9 +509,7 @@ function openVariantsModalInBooking(serviceId) {
         
         <div style="display: grid; gap: 15px; margin-bottom: 20px;">
             ${service.variants.map((variant, index) => {
-                const hasValidImage = variant.image 
-                    && (variant.image.startsWith('http://') || variant.image.startsWith('https://'))
-                    && !variant.image.includes('/uploads/');
+                const hasValidImage = variant.image && variant.image.trim() !== '';
                 
                 return `
                 <div class="variant-option" onclick="selectVariantInBooking('${serviceId}', ${index})" style="
@@ -525,16 +523,19 @@ function openVariantsModalInBooking(serviceId) {
                     display: flex;
                     gap: 15px;
                     align-items: center;
-                " onmouseover="this.style.borderColor='#CBA35C'; this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='#2A2A2A'; this.style.transform='translateY(0)'">
+                    overflow: hidden;
+                " onmouseover="this.style.borderColor='#CBA35C'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(203, 163, 92, 0.3)'" onmouseout="this.style.borderColor='#2A2A2A'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                     ${hasValidImage ? `
-                        <div style="flex-shrink: 0;">
+                        <div style="flex-shrink: 0; position: relative;">
                             <img src="${variant.image}" alt="${variant.name}" style="
-                                width: 80px;
-                                height: 80px;
+                                width: 100px;
+                                height: 100px;
                                 object-fit: cover;
-                                border-radius: 10px;
-                                border: 2px solid #CBA35C;
+                                border-radius: 12px;
+                                border: 3px solid #CBA35C;
+                                box-shadow: 0 4px 15px rgba(203, 163, 92, 0.4);
                             ">
+                            <div style="position: absolute; top: 5px; right: 5px; background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">✨</div>
                         </div>
                     ` : ''}
                     <div style="flex: 1;">

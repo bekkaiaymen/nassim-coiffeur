@@ -2035,6 +2035,19 @@ body::after {
     transform: translateY(-4px);
 }
 
+/* Booking Service Image Hover Effect */
+.booking-service-image:hover .zoom-overlay {
+    opacity: 1 !important;
+}
+
+.booking-service-image {
+    transition: all 0.3s ease;
+}
+
+.booking-service-image:hover {
+    transform: scale(1.05);
+}
+
 /* Booking Summary */
 .booking-summary {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
