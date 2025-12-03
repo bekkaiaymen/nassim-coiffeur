@@ -238,7 +238,7 @@ function displayServices(services) {
                 <div class="service-description">${service.description || ''}</div>
                 <div class="service-meta">
                     <span class="service-duration">⏱ ${service.duration} دقيقة</span>
-                    <span class="service-price">${service.price} دج</span>
+                    <span class="service-price">${service.priceMin && service.priceMax && service.priceMin > 0 && service.priceMax > 0 ? `من ${service.priceMin} إلى ${service.priceMax} دج` : `${service.price} دج`}</span>
                 </div>
             </div>
         </div>

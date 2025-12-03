@@ -1008,7 +1008,7 @@ function displayServices(services) {
                 <p class="service-description">${service.description || 'لا يوجد وصف'}</p>
                 
                 <div class="service-meta">
-                    <span class="service-price">${service.price} دج</span>
+                    <span class="service-price">${service.priceMin && service.priceMax ? `من ${service.priceMin} إلى ${service.priceMax} دج` : `${service.price} دج`}</span>
                     <span class="service-duration">⏱️ ${service.duration || 30} دقيقة</span>
                 </div>
                 
@@ -1047,6 +1047,19 @@ function openAddServiceModal() {
             <div class="form-group">
                 <label class="form-label">السعر (دج) *</label>
                 <input type="number" class="form-input" name="price" required min="0" placeholder="500">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">السعر الأدنى (دج) - اختياري</label>
+                    <input type="number" class="form-input" name="priceMin" min="0" placeholder="400">
+                    <small style="color: #999; font-size: 11px;">للخدمات ذات النطاق السعري المتغير</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">السعر الأعلى (دج) - اختياري</label>
+                    <input type="number" class="form-input" name="priceMax" min="0" placeholder="700">
+                    <small style="color: #999; font-size: 11px;">سيظهر "من X إلى Y دج" للزبائن</small>
+                </div>
             </div>
             
             <div class="form-group">
@@ -1110,10 +1123,15 @@ async function submitAddService() {
             console.log('✅ Image uploaded successfully:', imageUrl);
         }
         
+        const priceMin = formData.get('priceMin') ? parseFloat(formData.get('priceMin')) : 0;
+        const priceMax = formData.get('priceMax') ? parseFloat(formData.get('priceMax')) : 0;
+        
         const serviceData = {
             name: formData.get('name'),
             description: formData.get('description'),
             price: parseFloat(formData.get('price')),
+            priceMin: priceMin,
+            priceMax: priceMax,
             duration: parseInt(formData.get('duration')),
             category: formData.get('category'),
             image: imageUrl || null,
@@ -1177,6 +1195,19 @@ async function editService(serviceId) {
                     <input type="number" class="form-input" name="price" required min="0" value="${service.price}">
                 </div>
                 
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">السعر الأدنى (دج) - اختياري</label>
+                        <input type="number" class="form-input" name="priceMin" min="0" value="${service.priceMin || ''}" placeholder="400">
+                        <small style="color: #999; font-size: 11px;">للخدمات ذات النطاق السعري المتغير</small>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">السعر الأعلى (دج) - اختياري</label>
+                        <input type="number" class="form-input" name="priceMax" min="0" value="${service.priceMax || ''}" placeholder="700">
+                        <small style="color: #999; font-size: 11px;">سيظهر "من X إلى Y دج" للزبائن</small>
+                    </div>
+                </div>
+                
                 <div class="form-group">
                     <label class="form-label">المدة (دقيقة) *</label>
                     <input type="number" class="form-input" name="duration" required min="5" step="5" value="${service.duration || 30}">
@@ -1229,10 +1260,15 @@ async function submitEditService() {
     const formData = new FormData(form);
     const serviceId = formData.get('serviceId');
     
+    const priceMin = formData.get('priceMin') ? parseFloat(formData.get('priceMin')) : 0;
+    const priceMax = formData.get('priceMax') ? parseFloat(formData.get('priceMax')) : 0;
+    
     const serviceData = {
         name: formData.get('name'),
         description: formData.get('description'),
         price: parseFloat(formData.get('price')),
+        priceMin: priceMin,
+        priceMax: priceMax,
         duration: parseInt(formData.get('duration')),
         category: formData.get('category'),
         image: formData.get('image'),

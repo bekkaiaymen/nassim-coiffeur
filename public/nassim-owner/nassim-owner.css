@@ -1131,6 +1131,20 @@ body {
     margin-bottom: 20px;
 }
 
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+}
+
 .form-label {
     display: block;
     font-weight: 600;
