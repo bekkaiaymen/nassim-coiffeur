@@ -3899,8 +3899,13 @@ async function handleReferFriend() {
 // Open Location in Google Maps
 function openLocation() {
     // Use the specific location URL provided
-    const mapsUrl = 'https://maps.app.goo.gl/PPKh13qQoVrLJ2RC7?g_st=aw';
+    const mapsUrl = 'https://maps.app.goo.gl/3xGc4sZmgqxm9zJU8?g_st=aw';
     window.open(mapsUrl, '_blank');
+}
+
+// Call Phone
+function callPhone() {
+    window.location.href = 'tel:+213556468196';
 }
 
 
