@@ -78,45 +78,101 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </button>
-                <h2 class="form-title">احجز موعدك</h2>
+                <h2 class="form-title">📅 حجز موعد جديد</h2>
             </div>
 
             <div class="customer-info-card" id="customerInfoCard">
                 <!-- Will be populated by JS -->
             </div>
 
-            <form id="appointmentForm" class="booking-form">
+            <form id="bookingForm" class="booking-form">
                 <div class="form-group">
-                    <label class="form-label">اختر التاريخ</label>
-                    <input type="date" id="appointmentDate" class="form-input" required>
+                    <label class="form-label">اختر الخدمات (اضغط على الخدمة لاختيارها) *</label>
+                    <div id="bookingServicesList" class="booking-services-grid"></div>
+                    <small style="color: var(--text-secondary); display: block; margin-top: 8px;">يمكنك اختيار عدة خدمات</small>
+                </div>
+
+                <div id="selectedServices" class="booking-summary" style="display: none;">
+                    <div class="summary-content">
+                        <div class="summary-row">
+                            <span class="summary-label">عدد الخدمات:</span>
+                            <strong id="servicesCount">0</strong>
+                        </div>
+                        <div class="summary-row">
+                            <span class="summary-label">المدة الإجمالية:</span>
+                            <strong id="totalDuration">0 دقيقة</strong>
+                        </div>
+                        <div class="summary-row total-price-row">
+                            <span class="summary-label">المجموع:</span>
+                            <strong id="totalPrice">0 دج</strong>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">اختر الحلاق</label>
-                    <select id="employeeSelect" class="form-input" required>
+                    <label class="form-label">اختر الحلاق *</label>
+                    <select id="employeeSelect" class="form-select" required>
                         <option value="">-- اختر الحلاق --</option>
                     </select>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">اختر الخدمة</label>
-                    <select id="serviceSelect" class="form-input" required>
-                        <option value="">-- اختر الخدمة --</option>
-                    </select>
+                    <label class="form-label">التاريخ *</label>
+                    <input type="date" id="appointmentDate" class="form-input" required onchange="loadAvailableSlots()" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">الوقت المتاح</label>
-                    <div id="timeSlotsContainer" class="time-slots-container">
-                        <p class="loading-text">اختر التاريخ والحلاق لعرض الأوقات المتاحة</p>
+                    <label class="form-label">الوقت *</label>
+                    <input type="time" id="appointmentTime" class="form-input" required style="font-size: 16px; padding: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">الأوقات المتاحة (اختياري)</label>
+                    <div id="timeSlots" class="time-slots">
+                        <div class="working-hours-info">
+                            <div class="working-hours-header">
+                                <span class="hours-icon">🕐</span>
+                                <h4>أوقات العمل</h4>
+                            </div>
+                            <div class="working-hours-grid">
+                                <div class="working-shift morning-shift">
+                                    <div class="shift-icon">🌅</div>
+                                    <div class="shift-details">
+                                        <span class="shift-label">الفترة الصباحية</span>
+                                        <span class="shift-time">10:00 ص - 2:00 م</span>
+                                    </div>
+                                </div>
+                                <div class="working-shift evening-shift">
+                                    <div class="shift-icon">🌆</div>
+                                    <div class="shift-details">
+                                        <span class="shift-label">الفترة المسائية</span>
+                                        <span class="shift-time">4:30 م - 9:00 م</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="restricted-time-notice">
+                                <div class="notice-icon">⚠️</div>
+                                <div class="notice-content">
+                                    <div class="notice-title">أوقات غير متاحة</div>
+                                    <div class="notice-time">5:40 م - 9:00 م</div>
+                                    <div class="notice-reason">بسبب ضغط العمل</div>
+                                    <div class="notice-action">
+                                        <span class="vip-badge-small">VIP</span>
+                                        <span class="notice-text">أو دفع 50 دج</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <button type="submit" class="btn-primary-large" id="confirmBookingBtn" disabled>
+                <div class="form-group">
+                    <label class="form-label">ملاحظات إضافية</label>
+                    <textarea id="appointmentNotes" rows="3" placeholder="أي ملاحظات خاصة؟" style="resize: vertical;"></textarea>
+                </div>
+
+                <button type="submit" class="book-now-btn" id="confirmBookingBtn">
                     تأكيد الحجز
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
                 </button>
             </form>
         </div>

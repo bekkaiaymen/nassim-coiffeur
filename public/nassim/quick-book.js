@@ -3,9 +3,12 @@ let customerData = {};
 let selectedTimeSlot = null;
 let availableEmployees = [];
 let services = [];
+let selectedServices = []; // Array to track multiple selected services
+let availableServices = [];
 
 // API Base URL
 const API_BASE = '/api';
+const NASSIM_BUSINESS_ID = '675088cd09b3d653b6f8a50f';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
@@ -33,20 +36,20 @@ function setupEventListeners() {
         customerForm.addEventListener('submit', handleCustomerSubmit);
     }
     
-    // Appointment Form Submit
-    const appointmentForm = document.getElementById('appointmentForm');
-    if (appointmentForm) {
-        appointmentForm.addEventListener('submit', handleAppointmentSubmit);
+    // Booking Form Submit (changed from appointmentForm to bookingForm)
+    const bookingForm = document.getElementById('bookingForm');
+    if (bookingForm) {
+        bookingForm.addEventListener('submit', handleAppointmentSubmit);
     }
     
-    // Date, Employee, Service change
+    // Date, Employee, Time change
     const dateInput = document.getElementById('appointmentDate');
+    const timeInput = document.getElementById('appointmentTime');
     const employeeSelect = document.getElementById('employeeSelect');
-    const serviceSelect = document.getElementById('serviceSelect');
     
-    if (dateInput) dateInput.addEventListener('change', loadAvailableSlots);
-    if (employeeSelect) employeeSelect.addEventListener('change', loadAvailableSlots);
-    if (serviceSelect) serviceSelect.addEventListener('change', updateConfirmButton);
+    if (dateInput) dateInput.addEventListener('change', updateConfirmButton);
+    if (timeInput) timeInput.addEventListener('change', updateConfirmButton);
+    if (employeeSelect) employeeSelect.addEventListener('change', updateConfirmButton);
 }
 
 // Navigation Functions
@@ -363,22 +366,108 @@ async function loadServices() {
 }
 
 function populateServiceSelect() {
-    const select = document.getElementById('serviceSelect');
-    if (!select) return;
-    
-    select.innerHTML = '<option value="">-- اختر الخدمة --</option>';
+    const container = document.getElementById('bookingServicesList');
+    if (!container) return;
     
     if (!Array.isArray(services)) {
         console.error('services is not an array:', services);
         return;
     }
     
-    services.forEach(service => {
-        const option = document.createElement('option');
-        option.value = service._id;
-        option.textContent = `${service.name} - ${service.price} دج (${service.duration} دقيقة)`;
-        select.appendChild(option);
-    });
+    availableServices = services;
+    
+    // Filter out packages from the service list
+    const regularServices = services.filter(service => !service.isPackage);
+    
+    container.innerHTML = regularServices.map(service => {
+        const hasValidImage = service.image && service.image.trim() !== '';
+        
+        return `
+        <div class="booking-service-card" 
+             data-service-id="${service._id}"
+             data-service-name="${service.name}"
+             data-service-price="${service.price}"
+             data-service-duration="${service.duration}"
+             onclick="toggleServiceSelection('${service._id}')">
+            ${hasValidImage
+                ? `<div class="booking-service-image">
+                    <img src="${service.image}" alt="${service.name}">
+                   </div>` 
+                : `<div class="service-icon">${getServiceIcon(service.name)}</div>`
+            }
+            <div class="service-name">${service.name}</div>
+            <div class="service-meta">
+                <span class="service-duration">⏱ ${service.duration} دقيقة</span>
+            </div>
+        </div>
+        `;
+    }).join('');
+}
+
+// Get Service Icon
+function getServiceIcon(serviceName) {
+    const name = serviceName.toLowerCase();
+    if (name.includes('قص') || name.includes('حلاقة')) return '✂️';
+    if (name.includes('صبغ')) return '🎨';
+    if (name.includes('لحية')) return '🪒';
+    if (name.includes('شامبو')) return '🧴';
+    return '💈';
+}
+
+// Toggle Service Selection
+function toggleServiceSelection(serviceId) {
+    const card = document.querySelector(`[data-service-id="${serviceId}"]`);
+    if (!card) return;
+    
+    // Check if already selected
+    const existingIndex = selectedServices.findIndex(s => s.id === serviceId);
+    
+    if (existingIndex !== -1) {
+        // Remove from selection
+        selectedServices.splice(existingIndex, 1);
+        card.classList.remove('selected');
+    } else {
+        // Add to selection
+        const serviceName = card.dataset.serviceName;
+        const servicePrice = parseInt(card.dataset.servicePrice);
+        const serviceDuration = parseInt(card.dataset.serviceDuration);
+        
+        selectedServices.push({
+            id: serviceId,
+            name: serviceName,
+            price: servicePrice,
+            duration: serviceDuration
+        });
+        
+        card.classList.add('selected');
+    }
+    
+    // Update summary display
+    updateBookingSummary();
+}
+
+// Update Booking Summary
+function updateBookingSummary() {
+    const container = document.getElementById('selectedServices');
+    
+    if (selectedServices.length === 0) {
+        container.style.display = 'none';
+        updateConfirmButton();
+        return;
+    }
+    
+    container.style.display = 'block';
+    
+    // Calculate totals
+    const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+    const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
+    
+    // Update summary
+    document.getElementById('servicesCount').textContent = selectedServices.length;
+    document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
+    document.getElementById('totalPrice').textContent = totalPrice + ' دج';
+    
+    updateConfirmButton();
 }
 
 // Load Available Time Slots
@@ -456,30 +545,39 @@ function selectTimeSlot(time, element) {
 
 function updateConfirmButton() {
     const btn = document.getElementById('confirmBookingBtn');
-    const serviceId = document.getElementById('serviceSelect').value;
+    const employeeId = document.getElementById('employeeSelect').value;
+    const date = document.getElementById('appointmentDate').value;
+    const time = document.getElementById('appointmentTime').value;
     
     if (btn) {
-        btn.disabled = !selectedTimeSlot || !serviceId;
+        btn.disabled = !date || !time || !employeeId || selectedServices.length === 0;
     }
 }
 
-// Handle Appointment Submit
+// Handle Appointment Submit (using bookingForm instead of appointmentForm)
 async function handleAppointmentSubmit(e) {
     e.preventDefault();
     
     const date = document.getElementById('appointmentDate').value;
+    const time = document.getElementById('appointmentTime').value;
     const employeeId = document.getElementById('employeeSelect').value;
-    const serviceId = document.getElementById('serviceSelect').value;
+    const notes = document.getElementById('appointmentNotes')?.value || '';
     
-    if (!date || !employeeId || !serviceId || !selectedTimeSlot) {
-        showToast('الرجاء ملء جميع الحقول واختيار الوقت', 'error');
+    if (!date || !time || !employeeId) {
+        showToast('الرجاء ملء جميع الحقول المطلوبة', 'error');
+        return;
+    }
+    
+    // Validate that at least one service is selected
+    if (!selectedServices || selectedServices.length === 0) {
+        showToast('الرجاء اختيار خدمة واحدة على الأقل', 'error');
         return;
     }
     
     showLoading(true);
     
     // Get Nassim business ID
-    const nassimBusinessId = await getNassimBusinessId();
+    const nassimBusinessId = NASSIM_BUSINESS_ID || await getNassimBusinessId();
     
     if (!nassimBusinessId) {
         showToast('حدث خطأ في تحميل بيانات المحل', 'error');
@@ -487,17 +585,31 @@ async function handleAppointmentSubmit(e) {
         return;
     }
     
+    const dateTime = `${date}T${time}:00`;
+    
+    // Check if booking is for a package
+    const isPackageBooking = selectedServices.length === 1 && selectedServices[0].isPackage;
+    
     const appointmentData = {
         business: nassimBusinessId,
         customer: customerData.id,
         customerName: customerData.name,
         customerPhone: customerData.phone,
-        employee: employeeId,
-        service: serviceId,
+        services: isPackageBooking ? selectedServices[0].packageServices.map(s => s.id) : selectedServices.map(s => s.id),
+        service: isPackageBooking ? selectedServices[0].id : selectedServices[0].id,
+        serviceName: selectedServices.map(s => s.name).join(' + '),
+        employee: employeeId === 'any' ? null : employeeId,
+        isFlexibleEmployee: employeeId === 'any',
         date: date,
-        time: selectedTimeSlot,
+        time: time,
+        dateTime: dateTime,
+        notes: notes,
+        totalPrice: selectedServices.reduce((sum, s) => sum + s.price, 0),
+        totalDuration: selectedServices.reduce((sum, s) => sum + s.duration, 0),
         status: 'pending'
     };
+    
+    console.log('Booking data:', appointmentData);
     
     try {
         const response = await fetch(`${API_BASE}/appointments/public/book`, {
@@ -506,9 +618,10 @@ async function handleAppointmentSubmit(e) {
             body: JSON.stringify(appointmentData)
         });
         
-        if (response.ok) {
-            const result = await response.json();
-            displaySuccessDetails(result.appointment || result);
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            displaySuccessDetails(result.appointment || result.data || result);
             showSuccess();
             showToast('تم حجز الموعد بنجاح!', 'success');
         } else {
