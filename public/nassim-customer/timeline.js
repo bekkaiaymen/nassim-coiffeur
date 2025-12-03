@@ -239,7 +239,7 @@ function renderTimeline(date, appointments, availableEmployees = []) {
             if (h < START_HOUR || h >= END_HOUR) return;
             
             const minutesFromStart = (h - START_HOUR) * 60 + m;
-            const leftPos = minutesFromStart * PIXELS_PER_MINUTE;
+            const leftPos = 180 + (minutesFromStart * PIXELS_PER_MINUTE); // Add 180px offset for name column
             const duration = apt.serviceId?.duration || apt.duration || 30;
             const width = duration * PIXELS_PER_MINUTE;
             
@@ -255,6 +255,7 @@ function renderTimeline(date, appointments, availableEmployees = []) {
             el.className = 'timeline-appointment booked';
             if (apt.price >= 100) el.classList.add('critical'); // Surge pricing style
 
+            // Appointments are positioned absolute within the row, so we need to offset by 180px (name column width)
             el.style.left = `${leftPos}px`;
             el.style.width = `${width}px`;
             
