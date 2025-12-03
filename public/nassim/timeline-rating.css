@@ -32,9 +32,16 @@
     top: 50%;
     left: 20px;
     right: 20px;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.1);
+    height: 3px;
+    background: linear-gradient(90deg, 
+        transparent 0%,
+        rgba(203, 163, 92, 0.3) 5%,
+        rgba(203, 163, 92, 0.5) 50%,
+        rgba(203, 163, 92, 0.3) 95%,
+        transparent 100%
+    );
     z-index: 1;
+    box-shadow: 0 0 10px rgba(203, 163, 92, 0.2);
 }
 
 .timeline-hour {
@@ -55,13 +62,19 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     background: var(--primary);
     border-radius: 50%;
-    border: 3px solid var(--surface);
-    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    border: 4px solid var(--surface);
+    box-shadow: 0 0 10px rgba(203, 163, 92, 0.6), 0 0 20px rgba(203, 163, 92, 0.3);
     z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.timeline-hour:hover .timeline-dot {
+    transform: translate(-50%, -50%) scale(1.3);
+    box-shadow: 0 0 15px rgba(203, 163, 92, 0.8), 0 0 30px rgba(203, 163, 92, 0.4);
 }
 
 .timeline-hour::after {
@@ -73,58 +86,63 @@
     bottom: 50%;
     left: 50%;
     transform: translateX(-50%);
-    margin-bottom: 15px;
-    font-size: 14px;
-    color: var(--text-secondary);
-    font-weight: 600;
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: var(--primary);
+    font-weight: 700;
+    background: rgba(203, 163, 92, 0.1);
+    padding: 4px 10px;
+    border-radius: 6px;
+    white-space: nowrap;
+    border: 1px solid rgba(203, 163, 92, 0.2);
 }
 
 .timeline-appointment {
     position: absolute;
-    height: 50px;
-    background: var(--surface-light);
-    border: 1px solid rgba(203, 163, 92, 0.3);
-    border-left: 3px solid var(--primary);
-    border-radius: 6px;
-    padding: 4px 8px;
+    height: 60px;
+    background: linear-gradient(135deg, rgba(203, 163, 92, 0.15) 0%, rgba(203, 163, 92, 0.25) 100%);
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    padding: 6px 10px;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center; /* Center content horizontally */
-    text-align: center; /* Center text */
+    align-items: center;
+    text-align: center;
     color: var(--text-primary);
     font-size: 11px;
     z-index: 3;
     top: 50%;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(203, 163, 92, 0.3);
+    transition: all 0.3s ease;
     cursor: pointer;
-    overflow: hidden;
-    white-space: nowrap;
+    overflow: visible;
+    backdrop-filter: blur(5px);
 }
 
 /* Alternate positions to avoid overlap */
 .timeline-appointment.top {
-    transform: translateY(-130%);
+    transform: translateY(-140%);
 }
 
 .timeline-appointment.bottom {
-    transform: translateY(30%);
+    transform: translateY(40%);
 }
 
 .timeline-appointment:hover {
     z-index: 10;
-    transform: scale(1.05) translateY(var(--translate-y, -50%));
-    background: var(--primary);
+    transform: scale(1.08);
+    background: linear-gradient(135deg, var(--primary) 0%, rgba(203, 163, 92, 0.9) 100%);
     color: var(--dark);
+    box-shadow: 0 6px 20px rgba(203, 163, 92, 0.5);
 }
 
 .timeline-appointment.top:hover {
-    --translate-y: -140%;
+    transform: translateY(-140%) scale(1.08);
 }
 
 .timeline-appointment.bottom:hover {
-    --translate-y: 40%;
+    transform: translateY(40%) scale(1.08);
 }
 
 .timeline-appointment-time {

@@ -3466,9 +3466,8 @@ function renderTimelineGrid(date, appointments) {
         track.appendChild(hourEl);
     }
     
-    const pixelsPerHour = 100; // Matches CSS width: 100px
-    const startOffset = 20; // Padding of container
-    const hourCenterOffset = 50; // Center of 100px hour element
+    const pixelsPerHour = 100; // Matches CSS width: 100px per hour
+    const containerPadding = 20; // Padding of container
     
     appointments.forEach((apt, index) => {
         // Parse time string "HH:MM"
@@ -3487,13 +3486,15 @@ function renderTimelineGrid(date, appointments) {
         
         if (hours < startHour || hours > endHour) return;
         
-        // Calculate position:
-        // 9:00 is at startOffset + hourCenterOffset (center of first hour)
-        // Each hour adds pixelsPerHour
-        const timeFromStart = (hours - startHour) * 60 + minutes;
-        const leftPos = startOffset + hourCenterOffset + (timeFromStart / 60) * pixelsPerHour;
+        // Calculate position from 9:00 AM
+        // Total minutes from start (9:00 = 0 minutes)
+        const totalMinutesFromStart = (hours - startHour) * 60 + minutes;
+        // Each hour = 100px, so each minute = 100/60 = 1.667px
+        const pixelsPerMinute = pixelsPerHour / 60;
+        // Start position = container padding + (minutes * pixels per minute)
+        const startPos = containerPadding + (totalMinutesFromStart * pixelsPerMinute);
         
-        // Calculate end time
+        // Calculate end time and duration
         const duration = (apt.serviceId && apt.serviceId.duration) ? apt.serviceId.duration : 30; // Default 30 mins
         const endTotalMinutes = hours * 60 + minutes + duration;
         const endHours = Math.floor(endTotalMinutes / 60);
@@ -3501,11 +3502,12 @@ function renderTimelineGrid(date, appointments) {
         const endTimeStr = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
         const startTimeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 
+        // Calculate width based on duration
+        const width = duration * pixelsPerMinute;
+
         const aptEl = document.createElement('div');
-        aptEl.className = `timeline-appointment bottom`;
-        aptEl.style.right = `${leftPos}px`;
-        // Adjust width based on duration (approx)
-        const width = (duration / 60) * pixelsPerHour;
+        aptEl.className = `timeline-appointment ${index % 2 === 0 ? 'bottom' : 'top'}`;
+        aptEl.style.right = `${startPos}px`;
         aptEl.style.width = `${width}px`; 
         aptEl.style.overflow = 'hidden'; // Keep content inside
         
@@ -3521,21 +3523,43 @@ function renderTimelineGrid(date, appointments) {
         aptEl.style.alignItems = 'center';
         aptEl.style.textAlign = 'center';
         
+        // Get service name
+        let serviceName = '';
+        if (apt.serviceId && apt.serviceId.name) {
+            serviceName = apt.serviceId.name;
+        } else if (apt.service || apt.serviceName) {
+            serviceName = apt.service || apt.serviceName;
+        }
+        
         // Adaptive content based on width
         if (duration < 50) {
-            // Stacked layout for narrow slots (e.g. 30 mins)
+            // Compact layout for narrow slots (< 50 mins)
             aptEl.innerHTML = `
-                <div class="timeline-appointment-time" style="font-size: 10px; font-weight: bold; display: flex; flex-direction: column; line-height: 1.1;">
-                    <span>${startTimeStr}</span>
-                    <span>${endTimeStr}</span>
+                <div class="timeline-appointment-time" style="font-size: 10px; font-weight: 700; line-height: 1.2; margin-bottom: 2px;">
+                    ${startTimeStr}
                 </div>
-                <div class="timeline-appointment-status" style="font-size: 9px; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">${statusText}</div>
+                <div style="font-size: 8px; opacity: 0.9; line-height: 1.1;">
+                    ${endTimeStr}
+                </div>
+                <div class="timeline-appointment-status" style="font-size: 8px; margin-top: 3px; font-weight: 600;">${statusText}</div>
+            `;
+        } else if (duration < 90) {
+            // Medium layout (50-90 mins)
+            aptEl.innerHTML = `
+                <div class="timeline-appointment-time" style="font-size: 11px; font-weight: 700; line-height: 1.2; margin-bottom: 3px;">
+                    ${startTimeStr} - ${endTimeStr}
+                </div>
+                <div class="timeline-appointment-status" style="font-size: 9px; font-weight: 600;">${statusText}</div>
+                ${serviceName ? `<div style="font-size: 8px; opacity: 0.8; margin-top: 2px;">${serviceName}</div>` : ''}
             `;
         } else {
-            // Standard layout for wider slots
+            // Wide layout for long appointments (90+ mins)
             aptEl.innerHTML = `
-                <div class="timeline-appointment-time" style="font-size: 11px; white-space: nowrap; font-weight: bold;">${startTimeStr} - ${endTimeStr}</div>
-                <div class="timeline-appointment-status" style="font-size: 10px;">${statusText}</div>
+                <div class="timeline-appointment-time" style="font-size: 12px; font-weight: 700; line-height: 1.3; margin-bottom: 4px;">
+                    ${startTimeStr} - ${endTimeStr}
+                </div>
+                ${serviceName ? `<div style="font-size: 10px; opacity: 0.9; margin-bottom: 2px;">${serviceName}</div>` : ''}
+                <div class="timeline-appointment-status" style="font-size: 9px; font-weight: 600; background: rgba(0,0,0,0.2); padding: 2px 8px; border-radius: 4px;">${statusText}</div>
             `;
         }
         
