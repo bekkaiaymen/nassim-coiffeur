@@ -214,6 +214,17 @@
     }
 }
 
+@keyframes slideUp {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(100px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
 /* Mobile Responsive for Splash */
 @media (max-width: 768px) {
     .splash-logo {
@@ -6465,6 +6476,33 @@ body.offline::before {
     font-size: 10px;
     background: rgba(255, 149, 0, 0.2);
     color: #FF9500;
+}
+
+/* Package Suggestion Banner Responsive */
+@media (max-width: 768px) {
+    #packageSuggestionBanner {
+        width: 95% !important;
+        padding: 15px 20px !important;
+        bottom: 10px !important;
+        font-size: 14px;
+    }
+    
+    #packageSuggestionBanner > div:nth-child(2) {
+        font-size: 16px !important;
+    }
+    
+    #packageSuggestionBanner > div:nth-child(4) {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    
+    #packageSuggestionBanner button {
+        width: 100%;
+        padding: 12px 20px !important;
+    }
+}
+
+.status-tag.pending {
     padding: 2px 6px;
     border-radius: 4px;
     margin-right: 6px;

@@ -241,7 +241,6 @@ function displayServices(services) {
                 <div class="service-description">${service.description || ''}</div>
                 <div class="service-meta">
                     <span class="service-duration">⏱ ${service.duration} دقيقة</span>
-                    <span class="service-price" style="${service.isPackage ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 6px; font-weight: 700;' : ''}">${service.priceMin && service.priceMax && service.priceMin > 0 && service.priceMax > 0 ? `من ${service.priceMin} إلى ${service.priceMax} دج` : `${service.price} دج`}</span>
                 </div>
             </div>
         </div>
@@ -264,19 +263,22 @@ function populateBookingServices(services) {
     const container = document.getElementById('bookingServicesList');
     if (!container) return;
     
-    container.innerHTML = services.map(service => {
+    // Filter out packages from the service list - they will be shown as suggestions
+    const regularServices = services.filter(service => !service.isPackage);
+    
+    container.innerHTML = regularServices.map(service => {
         const hasValidImage = service.image 
             && (service.image.startsWith('http://') || service.image.startsWith('https://'))
             && !service.image.includes('/uploads/');
 
         return `
-        <div class="booking-service-card${service.isPackage ? ' package-card' : ''}" 
+        <div class="booking-service-card" 
              data-service-id="${service._id}"
              data-service-name="${service.name}"
              data-service-price="${service.price}"
              data-service-duration="${service.duration}"
-             data-is-package="${service.isPackage || false}">
-            ${service.isPackage ? '<div class="package-badge">📦 باقة</div>' : ''}
+             data-price-min="${service.priceMin || 0}"
+             data-price-max="${service.priceMax || 0}">
             ${hasValidImage
                 ? `<div class="booking-service-image" onclick="openImageLightbox('${service.image}', '${service.name}')">
                     <img src="${service.image}" alt="${service.name}">
@@ -284,10 +286,9 @@ function populateBookingServices(services) {
                    </div>` 
                 : `<div class="service-icon" onclick="toggleServiceSelection('${service._id}')">${getServiceIcon(service.name)}</div>`
             }
-            <div class="service-name" onclick="toggleServiceSelection('${service._id}')">${service.isPackage ? '📦 ' : ''}${service.name}</div>
+            <div class="service-name" onclick="toggleServiceSelection('${service._id}')">${service.name}</div>
             <div class="service-meta" onclick="toggleServiceSelection('${service._id}')">
                 <span class="service-duration">⏱ ${service.duration} دقيقة</span>
-                <span class="service-price" style="${service.isPackage ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 13px;' : ''}">${service.priceMin && service.priceMax ? `${service.priceMin} - ${service.priceMax} دج` : `${service.price} دج`}</span>
             </div>
         </div>
         `;
@@ -321,6 +322,9 @@ function toggleServiceSelection(serviceId) {
         
         card.classList.add('selected');
     }
+    
+    // Check for matching packages
+    checkForMatchingPackages();
     
     // Update summary display
     updateBookingSummary();
@@ -360,10 +364,157 @@ function updateBookingSummary() {
         priceLabel = `<span style="color:red; font-weight:bold;">100 دج (وقت ذروة)</span>`;
     }
 
-    // Update summary
+    // Update summary with prices shown
     document.getElementById('servicesCount').textContent = selectedServices.length;
     document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
     document.getElementById('totalPrice').innerHTML = priceLabel;
+    document.getElementById('totalPrice').style.display = 'block';
+}
+
+// Check for matching packages based on selected services
+function checkForMatchingPackages() {
+    if (selectedServices.length < 2) {
+        // Hide package suggestion if less than 2 services selected
+        hidePackageSuggestion();
+        return;
+    }
+    
+    // Get all packages
+    const packages = availableServices.filter(s => s.isPackage);
+    
+    // Check if selected services match any package
+    const selectedServiceIds = selectedServices.map(s => s.id).sort().join(',');
+    
+    for (const pkg of packages) {
+        if (!pkg.packageServices || pkg.packageServices.length === 0) continue;
+        
+        // Compare package services with selected services
+        const packageServiceIds = pkg.packageServices.map(id => id.toString()).sort().join(',');
+        
+        if (packageServiceIds === selectedServiceIds) {
+            // Found a matching package!
+            showPackageSuggestion(pkg);
+            return;
+        }
+    }
+    
+    // No matching package found
+    hidePackageSuggestion();
+}
+
+// Show package suggestion banner
+function showPackageSuggestion(pkg) {
+    let banner = document.getElementById('packageSuggestionBanner');
+    
+    if (!banner) {
+        // Create banner if doesn't exist
+        banner = document.createElement('div');
+        banner.id = 'packageSuggestionBanner';
+        banner.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+            z-index: 10000;
+            max-width: 90%;
+            width: 500px;
+            animation: slideUp 0.3s ease-out;
+            text-align: center;
+        `;
+        document.body.appendChild(banner);
+    }
+    
+    // Calculate savings
+    const regularTotal = selectedServices.reduce((sum, s) => sum + s.price, 0);
+    const packagePrice = pkg.price;
+    const savings = regularTotal - packagePrice;
+    
+    banner.innerHTML = `
+        <div style="font-size: 24px; margin-bottom: 10px;">🎉</div>
+        <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px;">
+            باقة متاحة: ${pkg.name}
+        </div>
+        <div style="font-size: 14px; margin-bottom: 8px; opacity: 0.9;">
+            ${pkg.description || ''}
+        </div>
+        <div style="display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; font-size: 15px;">
+            <div>
+                <span style="opacity: 0.8;">السعر العادي:</span>
+                <span style="text-decoration: line-through; margin: 0 5px;">${regularTotal} دج</span>
+            </div>
+            <div>
+                <span style="opacity: 0.8;">سعر الباقة:</span>
+                <span style="font-weight: bold; font-size: 18px;">${packagePrice} دج</span>
+            </div>
+        </div>
+        <div style="background: rgba(255,255,255,0.2); padding: 8px 15px; border-radius: 8px; margin-bottom: 15px; font-weight: bold;">
+            💰 توفير ${savings} دج
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="acceptPackageSuggestion('${pkg._id}')" style="background: white; color: #667eea; border: none; padding: 10px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px;">
+                ✅ استخدام الباقة
+            </button>
+            <button onclick="hidePackageSuggestion()" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 10px 25px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                ❌ الاستمرار بدون الباقة
+            </button>
+        </div>
+    `;
+    
+    banner.style.display = 'block';
+}
+
+// Hide package suggestion
+function hidePackageSuggestion() {
+    const banner = document.getElementById('packageSuggestionBanner');
+    if (banner) {
+        banner.style.display = 'none';
+    }
+}
+
+// Accept package suggestion
+function acceptPackageSuggestion(packageId) {
+    const pkg = availableServices.find(s => s._id === packageId && s.isPackage);
+    if (!pkg) return;
+    
+    // Clear current selections
+    document.querySelectorAll('.booking-service-card.selected').forEach(card => {
+        card.classList.remove('selected');
+    });
+    
+    // Get package services details
+    const packageServiceDetails = [];
+    for (const serviceId of pkg.packageServices) {
+        const service = availableServices.find(s => s._id.toString() === serviceId.toString());
+        if (service) {
+            packageServiceDetails.push({
+                id: service._id,
+                name: service.name,
+                price: service.price,
+                duration: service.duration
+            });
+        }
+    }
+    
+    // Replace selectedServices with package (as single item)
+    selectedServices = [{
+        id: pkg._id,
+        name: pkg.name + ' (باقة)',
+        price: pkg.price,
+        duration: pkg.duration,
+        isPackage: true,
+        packageServices: packageServiceDetails
+    }];
+    
+    // Update UI
+    hidePackageSuggestion();
+    updateBookingSummary();
+    
+    showNotification('✅ تم اختيار الباقة بنجاح!', 'success');
 }
 
 // Update Service Info (legacy support)
@@ -1229,6 +1380,9 @@ async function submitBooking(e) {
         }
     }
     
+    // Check if booking is for a package
+    const isPackageBooking = selectedServices.length === 1 && selectedServices[0].isPackage;
+    
     const bookingData = {
         business: NASSIM_BUSINESS_ID,
         customer: customerData._id,
@@ -1236,8 +1390,8 @@ async function submitBooking(e) {
         customerPhone: customerData.phone,
         paidVIPSlot: window.paidForVIPSlot || false,
         extraCharge: window.paidForVIPSlot ? 100 : 0,
-        services: selectedServices.map(s => s.id), // Multiple services
-        service: selectedServices[0].id, // First service for compatibility
+        services: isPackageBooking ? selectedServices[0].packageServices.map(s => s.id) : selectedServices.map(s => s.id),
+        service: isPackageBooking ? selectedServices[0].id : selectedServices[0].id,
         serviceName: selectedServices.map(s => s.name).join(' + '),
         employee: selectedEmployee === 'any' ? null : selectedEmployee,
         isFlexibleEmployee: selectedEmployee === 'any', // Flag for any available barber
