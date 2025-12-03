@@ -140,6 +140,11 @@ async function handleCustomerSubmit(e) {
                 phone: customerPhone || phone
             };
             
+            // Store token for auto login later
+            if (loginData.token) {
+                localStorage.setItem('quick_book_token', loginData.token);
+            }
+            
             showToast('تم تسجيل الدخول بنجاح', 'success');
             showBookingForm();
         } else {
@@ -185,7 +190,12 @@ async function handleCustomerSubmit(e) {
                     phone: customerPhone || phone
                 };
                 
-                showToast('تم التسجيل بنجاح', 'success');
+                // Store token for auto login later
+                if (registerData.token) {
+                    localStorage.setItem('quick_book_token', registerData.token);
+                }
+                
+                showToast('تم التسجيل بنجاح! مرحباً بك 🎉', 'success');
                 showBookingForm();
             } else {
                 const errorData = await registerResponse.json();
@@ -317,6 +327,14 @@ function populateEmployeeSelect() {
     if (!select) return;
     
     select.innerHTML = '<option value="">-- اختر الحلاق --</option>';
+    
+    // Add "Any Available Barber" option
+    const anyOption = document.createElement('option');
+    anyOption.value = 'any';
+    anyOption.textContent = '🎯 أي حلاق متاح (سيتم التأكيد من قبل أحد الحلاقين)';
+    anyOption.style.fontWeight = 'bold';
+    anyOption.style.color = '#CBA35C';
+    select.appendChild(anyOption);
     
     if (!Array.isArray(availableEmployees)) {
         console.error('availableEmployees is not an array:', availableEmployees);
@@ -622,17 +640,48 @@ async function handleAppointmentSubmit(e) {
         
         if (response.ok && result.success) {
             displaySuccessDetails(result.appointment || result.data || result);
+            showLoading(false);
             showSuccess();
-            showToast('تم حجز الموعد بنجاح!', 'success');
+            showToast('تم حجز الموعد بنجاح! 🎉', 'success');
+            
+            // Auto login after successful booking
+            setTimeout(() => {
+                autoLoginAfterBooking();
+            }, 3000);
         } else {
-            const errorData = await response.json();
-            showToast(errorData.message || 'فشل في حجز الموعد', 'error');
+            showToast(result.message || 'فشل حجز الموعد', 'error');
+            showLoading(false);
         }
     } catch (error) {
         console.error('Error booking appointment:', error);
-        showToast('حدث خطأ في الحجز', 'error');
-    } finally {
+        showToast('حدث خطأ أثناء الحجز', 'error');
         showLoading(false);
+    }
+}
+
+// Auto Login After Booking
+async function autoLoginAfterBooking() {
+    if (!customerData || !customerData.phone) {
+        console.error('No customer data available for auto login');
+        return;
+    }
+    
+    // Store customer token from registration/login
+    const token = localStorage.getItem('quick_book_token');
+    
+    if (token) {
+        // Save token for nassim customer interface
+        localStorage.setItem('customerToken', token);
+        localStorage.setItem('customerData', JSON.stringify(customerData));
+        
+        showToast('جاري تسجيل الدخول إلى حسابك...', 'success');
+        
+        // Redirect to nassim customer interface
+        setTimeout(() => {
+            window.location.href = '/nassim/index.html';
+        }, 1500);
+    } else {
+        console.error('No token available for auto login');
     }
 }
 

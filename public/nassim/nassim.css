@@ -2460,6 +2460,119 @@ textarea {
     color: var(--text-primary);
 }
 
+/* Quick Book Section */
+.quick-book-section {
+    margin: 30px 0;
+}
+
+.quick-book-banner {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--bg-secondary) 100%);
+    border: 2px solid rgba(203, 163, 92, 0.3);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.quick-book-banner:hover {
+    border-color: var(--primary);
+    box-shadow: 0 12px 40px rgba(203, 163, 92, 0.2);
+    transform: translateY(-2px);
+}
+
+.quick-book-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(203, 163, 92, 0.2);
+}
+
+.quick-book-icon {
+    font-size: 48px;
+    filter: drop-shadow(0 4px 8px rgba(203, 163, 92, 0.4));
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.quick-book-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+    margin: 0;
+}
+
+.quick-book-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 5px 0 0 0;
+}
+
+.quick-book-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.quick-book-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(203, 163, 92, 0.05);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    color: var(--text-primary);
+}
+
+.info-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.quick-book-btn {
+    width: 100%;
+    padding: 18px 24px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--dark);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(203, 163, 92, 0.3);
+}
+
+.quick-book-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 30px rgba(203, 163, 92, 0.5);
+}
+
+.quick-book-btn:active {
+    transform: translateY(-1px);
+}
+
+.quick-book-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
 /* Responsive Design */
 @media (max-width: 480px) {
     .working-hours-grid {
