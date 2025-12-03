@@ -1263,6 +1263,9 @@ async function submitEditService() {
     const formData = new FormData(form);
     const serviceId = formData.get('serviceId');
     
+    const priceMinValue = formData.get('priceMin');
+    const priceMaxValue = formData.get('priceMax');
+    
     const serviceData = {
         name: formData.get('name'),
         description: formData.get('description'),
@@ -1270,16 +1273,11 @@ async function submitEditService() {
         duration: parseInt(formData.get('duration')),
         category: formData.get('category'),
         image: formData.get('image'),
-        available: formData.get('available') === 'on'
+        available: formData.get('available') === 'on',
+        // Always send priceMin and priceMax (0 if empty to allow removal)
+        priceMin: priceMinValue && priceMinValue.trim() !== '' ? parseFloat(priceMinValue) : 0,
+        priceMax: priceMaxValue && priceMaxValue.trim() !== '' ? parseFloat(priceMaxValue) : 0
     };
-    
-    // Add price range only if both values are provided
-    const priceMin = formData.get('priceMin') ? parseFloat(formData.get('priceMin')) : null;
-    const priceMax = formData.get('priceMax') ? parseFloat(formData.get('priceMax')) : null;
-    if (priceMin && priceMax) {
-        serviceData.priceMin = priceMin;
-        serviceData.priceMax = priceMax;
-    }
 
     try {
         const token = localStorage.getItem('token');
