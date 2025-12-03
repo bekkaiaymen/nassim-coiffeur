@@ -2078,7 +2078,7 @@ async function submitAddProduct() {
         const priceValue = parseInt(formData.get('price'), 10) || 0;
         const stockValue = formData.get('stock') ? parseInt(formData.get('stock'), 10) : null;
         const categoryValue = formData.get('category');
-        const baseDescription = formData.get('description') || '';
+        const baseDescription = formData.get('description') || 'منتج';
 
         // Using rewards API - store product as 'gift' type with metadata
         const productData = {
@@ -2229,11 +2229,12 @@ async function submitEditProduct() {
         const priceValue = parseInt(formData.get('price'), 10) || 0;
         const stockValue = formData.get('stock') ? parseInt(formData.get('stock'), 10) : null;
         const categoryValue = formData.get('category');
+        const baseDescription = formData.get('description') || 'منتج';
 
         // Using rewards API - store product as 'gift' type with metadata
         const productData = {
             name: formData.get('name'),
-            description: formData.get('description'),
+            description: baseDescription,
             icon: '🛍️',
             image: image || null,
             pointsCost: priceValue,
