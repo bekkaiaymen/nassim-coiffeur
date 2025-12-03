@@ -197,6 +197,20 @@
             color: var(--text-light);
         }
 
+        .feature-text a {
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .feature-text a:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 10px rgba(253, 185, 19, 0.5);
+        }
+
+        .feature-text a:active {
+            transform: scale(0.98);
+        }
+
         /* Buttons */
         .cta-buttons {
             display: flex;
@@ -387,6 +401,24 @@
                     <div class="feature-item">
                         <div class="feature-icon">🎁</div>
                         <div class="feature-text">برنامج نقاط ومكافآت حصرية</div>
+                    </div>
+                    
+                    <div class="feature-item" style="background: linear-gradient(135deg, rgba(253, 185, 19, 0.1) 0%, rgba(253, 185, 19, 0.05) 100%); border-color: var(--primary);">
+                        <div class="feature-icon">📞</div>
+                        <div class="feature-text">
+                            <a href="tel:+213556468196" style="color: var(--primary); text-decoration: none; font-weight: 700;">
+                                +213 556 468 196
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <div class="feature-item" style="background: linear-gradient(135deg, rgba(253, 185, 19, 0.1) 0%, rgba(253, 185, 19, 0.05) 100%); border-color: var(--primary);">
+                        <div class="feature-icon">📍</div>
+                        <div class="feature-text">
+                            <a href="https://maps.app.goo.gl/3xGc4sZmgqxm9zJU8?g_st=aw" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 700;">
+                                موقعنا على الخريطة
+                            </a>
+                        </div>
                     </div>
                 </div>
 
