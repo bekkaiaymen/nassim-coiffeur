@@ -150,10 +150,11 @@ async function handleCustomerSubmit(e) {
         } else {
             // Login failed - try to register
             // Get Nassim business ID
-            const nassimBusinessId = await getNassimBusinessId();
+            const nassimBusinessId = NASSIM_BUSINESS_ID || await getNassimBusinessId();
             
             if (!nassimBusinessId) {
                 showToast('حدث خطأ في تحميل بيانات المحل', 'error');
+                showLoading(false);
                 return;
             }
             
@@ -196,16 +197,18 @@ async function handleCustomerSubmit(e) {
                 }
                 
                 showToast('تم التسجيل بنجاح! مرحباً بك 🎉', 'success');
+                showLoading(false);
                 showBookingForm();
             } else {
                 const errorData = await registerResponse.json();
+                console.error('Registration error:', errorData);
                 showToast(errorData.message || 'حدث خطأ في التسجيل', 'error');
+                showLoading(false);
             }
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error in customer submit:', error);
         showToast('حدث خطأ في الاتصال بالخادم', 'error');
-    } finally {
         showLoading(false);
     }
 }
@@ -298,6 +301,8 @@ async function loadEmployees() {
         const nassimBusinessId = await getNassimBusinessId();
         if (!nassimBusinessId) {
             console.error('No business ID found');
+            availableEmployees = [];
+            populateEmployeeSelect();
             return;
         }
         
@@ -312,13 +317,19 @@ async function loadEmployees() {
             } else if (result.employees && Array.isArray(result.employees)) {
                 availableEmployees = result.employees;
             } else {
+                console.warn('Unexpected employees response format:', result);
                 availableEmployees = [];
             }
-            populateEmployeeSelect();
+        } else {
+            console.error('Failed to load employees:', response.status);
+            availableEmployees = [];
         }
     } catch (error) {
         console.error('Error loading employees:', error);
         availableEmployees = [];
+    } finally {
+        // Always call populateEmployeeSelect to ensure UI is updated
+        populateEmployeeSelect();
     }
 }
 
@@ -359,6 +370,8 @@ async function loadServices() {
         const nassimBusinessId = await getNassimBusinessId();
         if (!nassimBusinessId) {
             console.error('No business ID found');
+            services = [];
+            populateServiceSelect();
             return;
         }
         
@@ -373,13 +386,19 @@ async function loadServices() {
             } else if (result.services && Array.isArray(result.services)) {
                 services = result.services;
             } else {
+                console.warn('Unexpected services response format:', result);
                 services = [];
             }
-            populateServiceSelect();
+        } else {
+            console.error('Failed to load services:', response.status);
+            services = [];
         }
     } catch (error) {
         console.error('Error loading services:', error);
         services = [];
+    } finally {
+        // Always call populateServiceSelect to ensure UI is updated
+        populateServiceSelect();
     }
 }
 
@@ -389,6 +408,7 @@ function populateServiceSelect() {
     
     if (!Array.isArray(services)) {
         console.error('services is not an array:', services);
+        container.innerHTML = '<p style="text-align: center; color: #A7A7A7; padding: 20px;">لا توجد خدمات متاحة</p>';
         return;
     }
     
@@ -396,6 +416,11 @@ function populateServiceSelect() {
     
     // Filter out packages from the service list
     const regularServices = services.filter(service => !service.isPackage);
+    
+    if (regularServices.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #A7A7A7; padding: 20px;">لا توجد خدمات متاحة</p>';
+        return;
+    }
     
     container.innerHTML = regularServices.map(service => {
         const hasValidImage = service.image && service.image.trim() !== '';
