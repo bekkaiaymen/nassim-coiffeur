@@ -1888,6 +1888,30 @@ body::after {
     position: relative;
 }
 
+.booking-service-card.package-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border: 2px solid rgba(102, 126, 234, 0.3);
+}
+
+.booking-service-card.package-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.package-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 700;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
 .booking-service-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 4px 16px rgba(203, 163, 92, 0.2);
@@ -1898,6 +1922,11 @@ body::after {
     border-color: var(--primary);
     color: white;
     box-shadow: 0 6px 20px rgba(203, 163, 92, 0.4);
+}
+
+.booking-service-card.package-card.selected {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
 }
 
 .booking-service-card.selected::after {

@@ -506,12 +506,17 @@
         <div id="servicesPage" class="page">
             <div class="page-header">
                 <h2 class="page-title">إدارة الخدمات</h2>
-                <button class="btn-primary" onclick="openAddServiceModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    خدمة جديدة
-                </button>
+                <div style="display: flex; gap: 12px;">
+                    <button class="btn-primary" onclick="openAddServiceModal()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        خدمة جديدة
+                    </button>
+                    <button class="btn-secondary" onclick="openAddPackageModal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                        📦 باقة خدمات
+                    </button>
+                </div>
             </div>
 
             <div class="services-grid" id="servicesList"></div>

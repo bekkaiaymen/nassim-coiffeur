@@ -1004,7 +1004,10 @@ function displayServices(services) {
                  class="service-image" 
                  onerror="console.error('Failed to load image:', this.src); this.src='https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&h=180&fit=crop';">
             <div class="service-content">
-                <h3 class="service-title">${service.name}</h3>
+                <h3 class="service-title">
+                    ${service.isPackage ? '📦 ' : ''}${service.name}
+                    ${service.isPackage ? '<span style="background: var(--primary); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-right: 8px;">باقة</span>' : ''}
+                </h3>
                 <p class="service-description">${service.description || 'لا يوجد وصف'}</p>
                 
                 <div class="service-meta">
@@ -1324,6 +1327,175 @@ async function submitEditService() {
     } catch (error) {
         console.error('Error updating service:', error);
         showToast(error.message || 'حدث خطأ في تحديث الخدمة', 'error');
+    }
+}
+
+// Open Add Package Modal
+async function openAddPackageModal() {
+    try {
+        // Load all services first
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/services/by-business/${NASSIM_BUSINESS_ID}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        const allServices = result.data || result || [];
+        
+        // Filter out packages, only show individual services
+        const individualServices = allServices.filter(s => !s.isPackage && s.available);
+        
+        const modal = createModal('إنشاء باقة خدمات 📦', `
+            <form id="addPackageForm">
+                <div class="form-group">
+                    <label class="form-label">اسم الباقة *</label>
+                    <input type="text" class="form-input" name="name" required placeholder="مثال: باقة الع روس الكاملة">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">الوصف</label>
+                    <textarea class="form-input" name="description" rows="2" placeholder="وصف الباقة (اختياري)"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">الخدمات المضمنة في الباقة *</label>
+                    <div style="max-height: 200px; overflow-y: auto; border: 2px solid var(--gray-300); border-radius: 8px; padding: 12px;">
+                        ${individualServices.map(service => `
+                            <label style="display: flex; align-items: center; padding: 8px; cursor: pointer; border-radius: 4px;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background=''">
+                                <input type="checkbox" name="packageServices" value="${service._id}" onchange="calculatePackageTotal()" style="margin-left: 8px;">
+                                <span style="flex: 1;">${service.name}</span>
+                                <span style="color: var(--primary); font-weight: 600;">${service.price} دج</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                    <small style="color: #666; margin-top: 8px; display: block;">اختر الخدمات التي تريد تضمينها في الباقة</small>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">السعر الإجمالي للخدمات</label>
+                        <input type="text" class="form-input" id="packageOriginalTotal" readonly style="background: #f5f5f5; font-weight: 600; color: var(--primary);" value="0 دج">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">سعر الباقة (بعد الخصم) *</label>
+                        <input type="number" class="form-input" name="price" required min="0" placeholder="800">
+                        <small style="color: #666; font-size: 11px;">السعر الخاص للباقة</small>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">المدة الإجمالية (دقيقة) *</label>
+                    <input type="number" class="form-input" id="packageTotalDuration" name="duration" required min="5" step="5" value="0" readonly style="background: #f5f5f5;">
+                    <small style="color: #666; font-size: 11px;">سيتم حسابها تلقائياً من الخدمات المختارة</small>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">
+                        <input type="checkbox" name="available" checked>
+                        <span>متاحة للحجز</span>
+                    </label>
+                </div>
+                
+                <input type="hidden" name="isPackage" value="true">
+            </form>
+        `, [
+            { text: 'إلغاء', class: 'btn-secondary', onclick: 'closeModal()' },
+            { text: 'إنشاء الباقة', class: 'btn-primary', onclick: 'submitAddPackage()' }
+        ]);
+        
+        showModal(modal);
+        
+    } catch (error) {
+        console.error('Error loading services:', error);
+        showToast('حدث خطأ في تحميل الخدمات', 'error');
+    }
+}
+
+// Calculate package total
+window.calculatePackageTotal = async function() {
+    const checkboxes = document.querySelectorAll('input[name="packageServices"]:checked');
+    const serviceIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (serviceIds.length === 0) {
+        document.getElementById('packageOriginalTotal').value = '0 دج';
+        document.getElementById('packageTotalDuration').value = 0;
+        return;
+    }
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/services/by-business/${NASSIM_BUSINESS_ID}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const result = await response.json();
+        const allServices = result.data || result || [];
+        
+        let totalPrice = 0;
+        let totalDuration = 0;
+        
+        serviceIds.forEach(id => {
+            const service = allServices.find(s => s._id === id);
+            if (service) {
+                totalPrice += service.price || 0;
+                totalDuration += service.duration || 0;
+            }
+        });
+        
+        document.getElementById('packageOriginalTotal').value = `${totalPrice} دج`;
+        document.getElementById('packageTotalDuration').value = totalDuration;
+        
+    } catch (error) {
+        console.error('Error calculating total:', error);
+    }
+};
+
+// Submit Add Package
+async function submitAddPackage() {
+    const form = document.getElementById('addPackageForm');
+    const formData = new FormData(form);
+    
+    const selectedServices = Array.from(document.querySelectorAll('input[name="packageServices"]:checked')).map(cb => cb.value);
+    
+    if (selectedServices.length < 2) {
+        showToast('يجب اختيار خدمتين على الأقل لإنشاء باقة', 'error');
+        return;
+    }
+    
+    const packageData = {
+        name: formData.get('name'),
+        description: formData.get('description') || `باقة تشمل ${selectedServices.length} خدمات`,
+        price: parseFloat(formData.get('price')),
+        duration: parseInt(formData.get('duration')),
+        category: 'other',
+        available: formData.get('available') === 'on',
+        business: NASSIM_BUSINESS_ID,
+        isPackage: true,
+        packageServices: selectedServices,
+        showIndividualPrices: false
+    };
+
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/services`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(packageData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to add package');
+        }
+
+        showToast('تمت إضافة الباقة بنجاح ✨', 'success');
+        closeModal();
+        loadServices();
+
+    } catch (error) {
+        console.error('Error adding package:', error);
+        showToast(error.message || 'حدث خطأ في إضافة الباقة', 'error');
     }
 }
 

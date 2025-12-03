@@ -56,7 +56,24 @@ const serviceSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    tags: [String]
+    tags: [String],
+    // Package/Bundle fields
+    isPackage: {
+        type: Boolean,
+        default: false
+    },
+    packageServices: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Service'
+    }],
+    packageDiscount: {
+        type: Number,
+        default: 0 // Percentage discount or fixed amount
+    },
+    showIndividualPrices: {
+        type: Boolean,
+        default: false // If false, only show total package price
+    }
 }, {
     timestamps: true
 });
@@ -64,5 +81,6 @@ const serviceSchema = new mongoose.Schema({
 // Index for faster queries
 serviceSchema.index({ category: 1 });
 serviceSchema.index({ available: 1 });
+serviceSchema.index({ isPackage: 1 });
 
 module.exports = mongoose.model('Service', serviceSchema);

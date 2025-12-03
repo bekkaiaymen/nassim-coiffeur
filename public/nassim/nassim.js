@@ -234,11 +234,14 @@ function displayServices(services) {
                 : `<div class="service-icon">${getServiceIcon(service.name)}</div>`
             }
             <div class="service-info" onclick="selectService('${service._id}')">
-                <div class="service-name">${service.name}</div>
+                <div class="service-name">
+                    ${service.isPackage ? '📦 ' : ''}${service.name}
+                    ${service.isPackage ? '<span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; margin-right: 6px; font-weight: 600;">باقة</span>' : ''}
+                </div>
                 <div class="service-description">${service.description || ''}</div>
                 <div class="service-meta">
                     <span class="service-duration">⏱ ${service.duration} دقيقة</span>
-                    <span class="service-price">${service.priceMin && service.priceMax && service.priceMin > 0 && service.priceMax > 0 ? `من ${service.priceMin} إلى ${service.priceMax} دج` : `${service.price} دج`}</span>
+                    <span class="service-price" style="${service.isPackage ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 12px; border-radius: 6px; font-weight: 700;' : ''}">${service.priceMin && service.priceMax && service.priceMin > 0 && service.priceMax > 0 ? `من ${service.priceMin} إلى ${service.priceMax} دج` : `${service.price} دج`}</span>
                 </div>
             </div>
         </div>
@@ -267,11 +270,13 @@ function populateBookingServices(services) {
             && !service.image.includes('/uploads/');
 
         return `
-        <div class="booking-service-card" 
+        <div class="booking-service-card${service.isPackage ? ' package-card' : ''}" 
              data-service-id="${service._id}"
              data-service-name="${service.name}"
              data-service-price="${service.price}"
-             data-service-duration="${service.duration}">
+             data-service-duration="${service.duration}"
+             data-is-package="${service.isPackage || false}">
+            ${service.isPackage ? '<div class="package-badge">📦 باقة</div>' : ''}
             ${hasValidImage
                 ? `<div class="booking-service-image" onclick="openImageLightbox('${service.image}', '${service.name}')">
                     <img src="${service.image}" alt="${service.name}">
@@ -279,10 +284,10 @@ function populateBookingServices(services) {
                    </div>` 
                 : `<div class="service-icon" onclick="toggleServiceSelection('${service._id}')">${getServiceIcon(service.name)}</div>`
             }
-            <div class="service-name" onclick="toggleServiceSelection('${service._id}')">${service.name}</div>
+            <div class="service-name" onclick="toggleServiceSelection('${service._id}')">${service.isPackage ? '📦 ' : ''}${service.name}</div>
             <div class="service-meta" onclick="toggleServiceSelection('${service._id}')">
                 <span class="service-duration">⏱ ${service.duration} دقيقة</span>
-                <span class="service-price">${service.priceMin && service.priceMax ? `${service.priceMin} - ${service.priceMax} دج` : `${service.price} دج`}</span>
+                <span class="service-price" style="${service.isPackage ? 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 4px 10px; border-radius: 6px; font-weight: 700; font-size: 13px;' : ''}">${service.priceMin && service.priceMax ? `${service.priceMin} - ${service.priceMax} دج` : `${service.price} دج`}</span>
             </div>
         </div>
         `;
