@@ -1045,19 +1045,20 @@ function openAddServiceModal() {
             </div>
             
             <div class="form-group">
-                <label class="form-label">السعر (دج) *</label>
-                <input type="number" class="form-input" name="price" required min="0" placeholder="500">
+                <label class="form-label">السعر (دج) <span id="priceRequiredLabel">*</span></label>
+                <input type="number" class="form-input" id="priceInput" name="price" min="0" placeholder="500">
+                <small style="color: #666; font-size: 11px;">للسعر الثابت. أو استخدم نطاق السعر بالأسفل</small>
             </div>
             
             <div class="form-row">
                 <div class="form-group">
                     <label class="form-label">السعر الأدنى (دج) - اختياري</label>
-                    <input type="number" class="form-input" name="priceMin" min="0" placeholder="400">
+                    <input type="number" class="form-input" id="priceMinInput" name="priceMin" min="0" placeholder="400" onchange="togglePriceRequired()">
                     <small style="color: #999; font-size: 11px;">للخدمات ذات النطاق السعري المتغير</small>
                 </div>
                 <div class="form-group">
                     <label class="form-label">السعر الأعلى (دج) - اختياري</label>
-                    <input type="number" class="form-input" name="priceMax" min="0" placeholder="700">
+                    <input type="number" class="form-input" id="priceMaxInput" name="priceMax" min="0" placeholder="700" onchange="togglePriceRequired()">
                     <small style="color: #999; font-size: 11px;">سيظهر "من X إلى Y دج" للزبائن</small>
                 </div>
             </div>
@@ -1123,10 +1124,20 @@ async function submitAddService() {
             console.log('✅ Image uploaded successfully:', imageUrl);
         }
         
+        const priceMin = formData.get('priceMin') ? parseFloat(formData.get('priceMin')) : null;
+        const priceMax = formData.get('priceMax') ? parseFloat(formData.get('priceMax')) : null;
+        const basePrice = formData.get('price') ? parseFloat(formData.get('price')) : null;
+        
+        // Validate: either price or price range must be provided
+        if (!basePrice && (!priceMin || !priceMax)) {
+            showToast('يجب إدخال السعر أو نطاق السعر (الأدنى والأعلى)', 'error');
+            return;
+        }
+        
         const serviceData = {
             name: formData.get('name'),
             description: formData.get('description'),
-            price: parseFloat(formData.get('price')),
+            price: basePrice || (priceMin && priceMax ? Math.round((priceMin + priceMax) / 2) : 0),
             duration: parseInt(formData.get('duration')),
             category: formData.get('category'),
             image: imageUrl || null,
@@ -1134,9 +1145,7 @@ async function submitAddService() {
             business: NASSIM_BUSINESS_ID
         };
         
-        // Add price range only if both values are provided
-        const priceMin = formData.get('priceMin') ? parseFloat(formData.get('priceMin')) : null;
-        const priceMax = formData.get('priceMax') ? parseFloat(formData.get('priceMax')) : null;
+        // Add price range if both values are provided
         if (priceMin && priceMax) {
             serviceData.priceMin = priceMin;
             serviceData.priceMax = priceMax;
@@ -1194,19 +1203,20 @@ async function editService(serviceId) {
                 </div>
                 
                 <div class="form-group">
-                    <label class="form-label">السعر (دج) *</label>
-                    <input type="number" class="form-input" name="price" required min="0" value="${service.price}">
+                    <label class="form-label">السعر (دج) <span id="editPriceRequiredLabel">*</span></label>
+                    <input type="number" class="form-input" id="editPriceInput" name="price" min="0" value="${service.price || ''}">
+                    <small style="color: #666; font-size: 11px;">للسعر الثابت. أو استخدم نطاق السعر بالأسفل</small>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">السعر الأدنى (دج) - اختياري</label>
-                        <input type="number" class="form-input" name="priceMin" min="0" value="${service.priceMin || ''}" placeholder="400">
+                        <input type="number" class="form-input" id="editPriceMinInput" name="priceMin" min="0" value="${service.priceMin || ''}" placeholder="400" onchange="toggleEditPriceRequired()">
                         <small style="color: #999; font-size: 11px;">للخدمات ذات النطاق السعري المتغير</small>
                     </div>
                     <div class="form-group">
                         <label class="form-label">السعر الأعلى (دج) - اختياري</label>
-                        <input type="number" class="form-input" name="priceMax" min="0" value="${service.priceMax || ''}" placeholder="700">
+                        <input type="number" class="form-input" id="editPriceMaxInput" name="priceMax" min="0" value="${service.priceMax || ''}" placeholder="700" onchange="toggleEditPriceRequired()">
                         <small style="color: #999; font-size: 11px;">سيظهر "من X إلى Y دج" للزبائن</small>
                     </div>
                 </div>
@@ -1265,18 +1275,27 @@ async function submitEditService() {
     
     const priceMinValue = formData.get('priceMin');
     const priceMaxValue = formData.get('priceMax');
+    const basePrice = formData.get('price') ? parseFloat(formData.get('price')) : null;
+    
+    const priceMin = priceMinValue && priceMinValue.trim() !== '' ? parseFloat(priceMinValue) : 0;
+    const priceMax = priceMaxValue && priceMaxValue.trim() !== '' ? parseFloat(priceMaxValue) : 0;
+    
+    // Validate: either price or price range must be provided
+    if (!basePrice && (!priceMin || !priceMax)) {
+        showToast('يجب إدخال السعر أو نطاق السعر (الأدنى والأعلى)', 'error');
+        return;
+    }
     
     const serviceData = {
         name: formData.get('name'),
         description: formData.get('description'),
-        price: parseFloat(formData.get('price')),
+        price: basePrice || (priceMin && priceMax ? Math.round((priceMin + priceMax) / 2) : 0),
         duration: parseInt(formData.get('duration')),
         category: formData.get('category'),
         image: formData.get('image'),
         available: formData.get('available') === 'on',
-        // Always send priceMin and priceMax (0 if empty to allow removal)
-        priceMin: priceMinValue && priceMinValue.trim() !== '' ? parseFloat(priceMinValue) : 0,
-        priceMax: priceMaxValue && priceMaxValue.trim() !== '' ? parseFloat(priceMaxValue) : 0
+        priceMin: priceMin,
+        priceMax: priceMax
     };
 
     try {
@@ -3739,4 +3758,45 @@ function renderCustomerFeedbackList(appointments) {
             </div>
         `;
     }).join('');
+}
+
+// Toggle price field required status based on price range
+function togglePriceRequired() {
+    const priceInput = document.getElementById('priceInput');
+    const priceMinInput = document.getElementById('priceMinInput');
+    const priceMaxInput = document.getElementById('priceMaxInput');
+    const requiredLabel = document.getElementById('priceRequiredLabel');
+    
+    if (!priceInput || !priceMinInput || !priceMaxInput || !requiredLabel) return;
+    
+    const hasRange = priceMinInput.value && priceMaxInput.value;
+    
+    if (hasRange) {
+        priceInput.removeAttribute('required');
+        requiredLabel.textContent = '';
+        priceInput.style.borderColor = '';
+    } else {
+        priceInput.setAttribute('required', 'required');
+        requiredLabel.textContent = '*';
+    }
+}
+
+function toggleEditPriceRequired() {
+    const priceInput = document.getElementById('editPriceInput');
+    const priceMinInput = document.getElementById('editPriceMinInput');
+    const priceMaxInput = document.getElementById('editPriceMaxInput');
+    const requiredLabel = document.getElementById('editPriceRequiredLabel');
+    
+    if (!priceInput || !priceMinInput || !priceMaxInput || !requiredLabel) return;
+    
+    const hasRange = priceMinInput.value && priceMaxInput.value;
+    
+    if (hasRange) {
+        priceInput.removeAttribute('required');
+        requiredLabel.textContent = '';
+        priceInput.style.borderColor = '';
+    } else {
+        priceInput.setAttribute('required', 'required');
+        requiredLabel.textContent = '*';
+    }
 }
