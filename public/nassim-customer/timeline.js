@@ -49,7 +49,7 @@ function updateCurrentTimeLine() {
     }
     
     const minutesSinceStart = (currentHour - START_HOUR) * 60 + currentMinute;
-    const position = minutesSinceStart * PIXELS_PER_MINUTE;
+    const position = 180 + (minutesSinceStart * PIXELS_PER_MINUTE);
     
     const line = document.getElementById('currentTimeLine');
     if (line) {
@@ -293,7 +293,7 @@ function updateCurrentTimeLine() {
     }
     
     const minutesSinceStart = (currentHour - START_HOUR) * 60 + currentMinute;
-    const position = 150 + (minutesSinceStart * PIXELS_PER_MINUTE); // Offset by 150px
+    const position = 180 + (minutesSinceStart * PIXELS_PER_MINUTE); // Offset by 180px to match barber names column
     
     const line = document.getElementById('currentTimeLine');
     if (line) {
