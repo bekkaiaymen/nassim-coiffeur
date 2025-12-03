@@ -3449,10 +3449,12 @@ function renderTimelineGrid(date, appointments) {
     // Generate hours (9 AM to 9 PM)
     const startHour = 9;
     const endHour = 21;
+    const totalHours = endHour - startHour; // 12 hours
     
     for (let hour = startHour; hour <= endHour; hour++) {
         const hourEl = document.createElement('div');
         hourEl.className = 'timeline-hour';
+        hourEl.dataset.hour = hour; // Store hour for debugging
         
         const timeLabel = document.createElement('div');
         timeLabel.className = 'timeline-time-label';
@@ -3466,8 +3468,10 @@ function renderTimelineGrid(date, appointments) {
         track.appendChild(hourEl);
     }
     
-    const pixelsPerHour = 100; // Matches CSS width: 100px per hour
-    const containerPadding = 20; // Padding of container
+    // Precise calculation constants
+    const pixelsPerHour = 100; // Each hour block = 100px
+    const containerPadding = 20; // Left/right padding
+    const pixelsPerMinute = pixelsPerHour / 60; // 1.6667px per minute
     
     appointments.forEach((apt, index) => {
         // Parse time string "HH:MM"
@@ -3486,32 +3490,30 @@ function renderTimelineGrid(date, appointments) {
         
         if (hours < startHour || hours > endHour) return;
         
-        // Calculate position from 9:00 AM
-        // Total minutes from start (9:00 = 0 minutes)
+        // Calculate exact position
+        // For hour 9, minutes 0: should be at containerPadding + 0
+        // For hour 10, minutes 0: should be at containerPadding + 100px
+        // For hour 9, minutes 30: should be at containerPadding + 50px
         const totalMinutesFromStart = (hours - startHour) * 60 + minutes;
-        // Each hour = 100px, so each minute = 100/60 = 1.667px
-        const pixelsPerMinute = pixelsPerHour / 60;
-        // Start position = container padding + (minutes * pixels per minute)
-        const startPos = containerPadding + (totalMinutesFromStart * pixelsPerMinute);
+        const leftPosition = containerPadding + (totalMinutesFromStart * pixelsPerMinute);
         
-        // Calculate end time and duration
-        const duration = (apt.serviceId && apt.serviceId.duration) ? apt.serviceId.duration : 30; // Default 30 mins
+        // Calculate duration and end time
+        const duration = (apt.serviceId && apt.serviceId.duration) ? apt.serviceId.duration : 30;
         const endTotalMinutes = hours * 60 + minutes + duration;
         const endHours = Math.floor(endTotalMinutes / 60);
         const endMinutes = endTotalMinutes % 60;
         const endTimeStr = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
         const startTimeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
 
-        // Calculate width based on duration
-        const width = duration * pixelsPerMinute;
+        // Calculate width based on exact duration
+        const appointmentWidth = duration * pixelsPerMinute;
 
         const aptEl = document.createElement('div');
         aptEl.className = `timeline-appointment ${index % 2 === 0 ? 'bottom' : 'top'}`;
-        aptEl.style.right = `${startPos}px`;
-        aptEl.style.width = `${width}px`; 
-        aptEl.style.overflow = 'hidden'; // Keep content inside
-        
-        // Determine status text
+        // Use LEFT positioning instead of RIGHT for RTL accuracy
+        aptEl.style.left = `${leftPosition}px`;
+        aptEl.style.width = `${appointmentWidth}px`;
+        aptEl.style.overflow = 'hidden';        // Determine status text
         let statusText = 'محجوز';
         if (apt.status === 'confirmed') statusText = 'مؤكد';
         if (apt.status === 'completed') statusText = 'مكتمل';
@@ -3568,6 +3570,32 @@ function renderTimelineGrid(date, appointments) {
         
         track.appendChild(aptEl);
     });
+    
+    // Add current time indicator if today
+    const selectedDate = new Date(date);
+    const today = new Date();
+    const isToday = selectedDate.toDateString() === today.toDateString();
+    
+    if (isToday) {
+        const currentHour = today.getHours();
+        const currentMinute = today.getMinutes();
+        
+        if (currentHour >= startHour && currentHour <= endHour) {
+            const currentTimeMinutes = (currentHour - startHour) * 60 + currentMinute;
+            const currentTimePosition = containerPadding + (currentTimeMinutes * pixelsPerMinute);
+            
+            const currentTimeLine = document.createElement('div');
+            currentTimeLine.className = 'current-time-indicator';
+            currentTimeLine.style.left = `${currentTimePosition}px`;
+            
+            const currentTimeLabel = document.createElement('div');
+            currentTimeLabel.className = 'current-time-label';
+            currentTimeLabel.textContent = 'الآن';
+            currentTimeLine.appendChild(currentTimeLabel);
+            
+            track.appendChild(currentTimeLine);
+        }
+    }
 }
 
 function showAppointmentDetails(apt) {

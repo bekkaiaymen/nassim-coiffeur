@@ -8,7 +8,7 @@
     margin-top: 20px;
     white-space: nowrap;
     position: relative;
-    direction: rtl; /* Enforce RTL for timeline */
+    direction: ltr; /* Use LTR for precise positioning */
     /* Hide scrollbar for clean look */
     scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none;  /* IE and Edge */
@@ -25,6 +25,7 @@
     align-items: center;
     padding: 0 20px;
     min-width: max-content;
+    direction: ltr; /* Ensure LTR for accurate positioning */
 }
 
 .timeline-line {
@@ -55,6 +56,18 @@
     flex-shrink: 0;
     margin-right: 0;
     z-index: 2;
+}
+
+.timeline-hour::before {
+    content: '';
+    position: absolute;
+    top: 30%;
+    bottom: 30%;
+    left: 50%;
+    width: 1px;
+    background: rgba(203, 163, 92, 0.15);
+    transform: translateX(-50%);
+    z-index: 1;
 }
 
 .timeline-dot {
@@ -146,13 +159,87 @@
 }
 
 .timeline-appointment-time {
-    font-weight: bold;
-    margin-bottom: 2px;
+    font-weight: 700;
+    margin-bottom: 3px;
+    letter-spacing: 0.3px;
+    line-height: 1.2;
 }
 
 .timeline-appointment-status {
-    font-size: 10px;
-    opacity: 0.8;
+    font-size: 9px;
+    opacity: 0.9;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Current Time Indicator */
+.current-time-indicator {
+    position: absolute;
+    top: 20%;
+    bottom: 20%;
+    width: 3px;
+    background: linear-gradient(180deg, 
+        transparent 0%,
+        #ff3b30 10%,
+        #ff3b30 90%,
+        transparent 100%
+    );
+    z-index: 10;
+    animation: pulse-indicator 2s ease-in-out infinite;
+}
+
+.current-time-indicator::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 12px;
+    height: 12px;
+    background: #ff3b30;
+    border-radius: 50%;
+    border: 3px solid var(--surface);
+    box-shadow: 0 0 15px rgba(255, 59, 48, 0.8);
+}
+
+.current-time-indicator::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid #ff3b30;
+}
+
+.current-time-label {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff3b30;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.4);
+}
+
+@keyframes pulse-indicator {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 10px rgba(255, 59, 48, 0.5);
+    }
+    50% {
+        opacity: 0.8;
+        box-shadow: 0 0 20px rgba(255, 59, 48, 0.8);
+    }
 }
 
 /* Rating Page Redesign */
