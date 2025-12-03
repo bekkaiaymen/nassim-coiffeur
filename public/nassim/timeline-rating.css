@@ -288,3 +288,293 @@
     outline: none;
     border-color: var(--primary);
 }
+
+/* ========================================
+   PROFESSIONAL TIMELINE VIEW (Barber Rows)
+   ======================================== */
+.professional-timeline-container {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+    border-radius: 12px;
+    margin-top: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    direction: ltr;
+}
+
+.timeline-strip {
+    min-width: fit-content;
+    padding: 0;
+    direction: ltr;
+}
+
+.timeline-header-row {
+    display: flex;
+    height: 50px;
+    background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+    border-bottom: 2px solid #444;
+    position: sticky;
+    top: 0;
+    z-index: 40;
+}
+
+.timeline-corner {
+    width: 180px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: var(--primary);
+    background: #2d2d2d;
+    border-right: 2px solid #444;
+    position: sticky;
+    left: 0;
+    z-index: 50;
+    font-size: 0.9rem;
+}
+
+.time-marker {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.6);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0 10px;
+    border-left: 1px solid rgba(255,255,255,0.1);
+}
+
+.time-marker.hour {
+    color: var(--primary);
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-left: 2px solid rgba(203, 163, 92, 0.3);
+}
+
+.timeline-row {
+    display: flex;
+    height: 80px;
+    border-bottom: 1px solid #444;
+    position: relative;
+}
+
+.timeline-row:hover {
+    background: rgba(255,255,255,0.02);
+}
+
+.barber-name-col {
+    width: 180px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    font-weight: bold;
+    color: var(--primary);
+    background: #2d2d2d;
+    border-right: 2px solid #444;
+    position: sticky;
+    left: 0;
+    z-index: 30;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+}
+
+.barber-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary);
+}
+
+.barber-name-text {
+    font-size: 0.85rem;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.barber-status {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.barber-status.present {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4CAF50;
+}
+
+.barber-status.absent {
+    background: rgba(244, 67, 54, 0.2);
+    color: #F44336;
+}
+
+.timeline-track {
+    flex: 1;
+    position: relative;
+    background: repeating-linear-gradient(
+        to right,
+        transparent,
+        transparent 1px,
+        rgba(255, 255, 255, 0.05) 1px,
+        rgba(255, 255, 255, 0.05) 180px /* 30 mins * 6px/min = 180px */
+    );
+}
+
+.timeline-appointment {
+    position: absolute;
+    top: 10px;
+    height: 60px;
+    background: linear-gradient(145deg, #2d2d2d, #1e3a2a);
+    border: 2px solid var(--success-color);
+    border-radius: 12px;
+    padding: 8px;
+    color: #fff;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.3s, z-index 0.3s;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-width: 80px;
+    cursor: pointer;
+}
+
+.timeline-appointment:hover {
+    transform: translateY(-2px) scale(1.02);
+    z-index: 20;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+.timeline-appointment.booked {
+    background: linear-gradient(145deg, #3a1e1e, #2d2d2d);
+    border-color: var(--danger-color);
+}
+
+.timeline-appointment.confirmed {
+    background: linear-gradient(145deg, #1e3a5a, #2d2d2d);
+    border-color: #2196F3;
+}
+
+.timeline-appointment.completed {
+    background: linear-gradient(145deg, #1e5a3a, #2d2d2d);
+    border-color: #4CAF50;
+    opacity: 0.8;
+}
+
+.apt-time {
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    color: var(--primary);
+}
+
+.apt-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+.apt-service {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+}
+
+/* Current Time Indicator */
+.timeline-now-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #FF5252;
+    z-index: 25;
+    box-shadow: 0 0 10px rgba(255, 82, 82, 0.6);
+}
+
+.timeline-now-line::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    width: 10px;
+    height: 10px;
+    background: #FF5252;
+    border-radius: 50%;
+    box-shadow: 0 0 10px rgba(255, 82, 82, 0.8);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.5);
+        opacity: 0.5;
+    }
+}
+
+/* Legend dots */
+.legend-dot.confirmed {
+    background: #2196F3;
+}
+
+.legend-dot.completed {
+    background: #4CAF50;
+}
+
+.legend-dot.absent {
+    background: #F44336;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .barber-name-col {
+        width: 120px;
+    }
+    
+    .timeline-corner {
+        width: 120px;
+    }
+    
+    .barber-avatar {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .barber-name-text {
+        font-size: 0.75rem;
+    }
+    
+    .timeline-appointment {
+        padding: 6px;
+        min-width: 60px;
+    }
+    
+    .apt-time {
+        font-size: 0.65rem;
+    }
+    
+    .apt-name {
+        font-size: 0.6rem;
+    }
+}
+
