@@ -107,50 +107,81 @@ async function handleCustomerSubmit(e) {
     showLoading(true);
     
     try {
-        // Check if customer exists
-        const checkResponse = await fetch(`${API_BASE}/customers/check-phone`, {
+        // Try to login first
+        const loginResponse = await fetch(`${API_BASE}/customers/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone })
+            body: JSON.stringify({ phone, password })
         });
         
-        const checkData = await checkResponse.json();
-        
-        if (checkData.exists) {
-            // Customer exists - verify password
-            const loginResponse = await fetch(`${API_BASE}/customers/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone, password })
-            });
+        if (loginResponse.ok) {
+            // Login successful
+            const loginData = await loginResponse.json();
             
-            if (loginResponse.ok) {
-                const loginData = await loginResponse.json();
-                customerData = {
-                    id: loginData.customer._id,
-                    name: loginData.customer.name,
-                    phone: loginData.customer.phone
-                };
-                showToast('تم تسجيل الدخول بنجاح', 'success');
-                showBookingForm();
-            } else {
-                showToast('كلمة المرور غير صحيحة', 'error');
+            // Extract customer info from response
+            let customerId, customerName, customerPhone;
+            
+            if (loginData.data && loginData.data.user) {
+                customerId = loginData.data.user.id;
+                customerName = loginData.data.user.name;
+                customerPhone = loginData.data.user.phone;
+            } else if (loginData.user) {
+                customerId = loginData.user._id || loginData.user.id;
+                customerName = loginData.user.name;
+                customerPhone = loginData.user.phone;
             }
+            
+            customerData = {
+                id: customerId,
+                name: customerName || name,
+                phone: customerPhone || phone
+            };
+            
+            showToast('تم تسجيل الدخول بنجاح', 'success');
+            showBookingForm();
         } else {
-            // Register new customer
+            // Login failed - try to register
+            // Get Nassim business ID
+            const nassimBusinessId = await getNassimBusinessId();
+            
+            if (!nassimBusinessId) {
+                showToast('حدث خطأ في تحميل بيانات المحل', 'error');
+                return;
+            }
+            
             const registerResponse = await fetch(`${API_BASE}/customers/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, phone, password })
+                body: JSON.stringify({ 
+                    name, 
+                    phone, 
+                    password,
+                    followedBusinesses: [nassimBusinessId]
+                })
             });
             
             if (registerResponse.ok) {
                 const registerData = await registerResponse.json();
+                
+                // Extract customer info
+                let customerId, customerName, customerPhone;
+                
+                if (registerData.data && registerData.data.user) {
+                    customerId = registerData.data.user.id;
+                    customerName = registerData.data.user.name;
+                    customerPhone = registerData.data.user.phone;
+                } else if (registerData.user) {
+                    customerId = registerData.user._id || registerData.user.id;
+                    customerName = registerData.user.name;
+                    customerPhone = registerData.user.phone;
+                }
+                
                 customerData = {
-                    id: registerData.customer._id,
-                    name: registerData.customer.name,
-                    phone: registerData.customer.phone
+                    id: customerId,
+                    name: customerName || name,
+                    phone: customerPhone || phone
                 };
+                
                 showToast('تم التسجيل بنجاح', 'success');
                 showBookingForm();
             } else {
@@ -163,6 +194,60 @@ async function handleCustomerSubmit(e) {
         showToast('حدث خطأ في الاتصال بالخادم', 'error');
     } finally {
         showLoading(false);
+    }
+}
+
+// Get Nassim Business ID
+async function getNassimBusinessId() {
+    try {
+        // First try: Get from URL parameter (if passed)
+        const urlParams = new URLSearchParams(window.location.search);
+        const businessIdParam = urlParams.get('businessId');
+        if (businessIdParam) {
+            return businessIdParam;
+        }
+        
+        // Second try: Get from localStorage (cached)
+        const cachedBusinessId = localStorage.getItem('nassim_business_id');
+        if (cachedBusinessId) {
+            return cachedBusinessId;
+        }
+        
+        // Third try: Fetch from API
+        const response = await fetch(`${API_BASE}/businesses/public`);
+        if (response.ok) {
+            const businesses = await response.json();
+            const nassim = businesses.find(b => 
+                b.businessName && (
+                    b.businessName.toLowerCase().includes('nassim') ||
+                    b.businessName.toLowerCase().includes('ناسيم')
+                )
+            );
+            if (nassim) {
+                // Cache the business ID
+                localStorage.setItem('nassim_business_id', nassim._id);
+                return nassim._id;
+            }
+        }
+        
+        // Fallback: Use hardcoded business ID
+        // TODO: Update this with actual Nassim business ID from database
+        // You can find it by logging into the owner dashboard
+        const fallbackBusinessId = '675088cd09b3d653b6f8a50f'; // Replace with actual ID
+        localStorage.setItem('nassim_business_id', fallbackBusinessId);
+        return fallbackBusinessId;
+        
+    } catch (error) {
+        console.error('Error getting business ID:', error);
+        
+        // Return cached or fallback
+        const cachedBusinessId = localStorage.getItem('nassim_business_id');
+        if (cachedBusinessId) {
+            return cachedBusinessId;
+        }
+        
+        // Last resort fallback
+        return '675088cd09b3d653b6f8a50f'; // Replace with actual ID
     }
 }
 
@@ -254,10 +339,19 @@ async function loadAvailableSlots() {
     
     container.innerHTML = '<p class="loading-text">جاري تحميل الأوقات المتاحة...</p>';
     
+    // Get Nassim business ID
+    const nassimBusinessId = await getNassimBusinessId();
+    
+    if (!nassimBusinessId) {
+        container.innerHTML = '<p class="loading-text">حدث خطأ في تحميل البيانات</p>';
+        return;
+    }
+    
     try {
-        const response = await fetch(`${API_BASE}/appointments/available-slots?date=${date}&employeeId=${employeeId}`);
+        const response = await fetch(`${API_BASE}/appointments/available-slots?business=${nassimBusinessId}&date=${date}&barber=${employeeId}`);
         if (response.ok) {
-            const slots = await response.json();
+            const result = await response.json();
+            const slots = result.data || result;
             renderTimeSlots(slots);
         } else {
             container.innerHTML = '<p class="loading-text">لا توجد أوقات متاحة في هذا التاريخ</p>';
@@ -327,19 +421,29 @@ async function handleAppointmentSubmit(e) {
     
     showLoading(true);
     
+    // Get Nassim business ID
+    const nassimBusinessId = await getNassimBusinessId();
+    
+    if (!nassimBusinessId) {
+        showToast('حدث خطأ في تحميل بيانات المحل', 'error');
+        showLoading(false);
+        return;
+    }
+    
     const appointmentData = {
-        customerId: customerData.id,
+        business: nassimBusinessId,
+        customer: customerData.id,
         customerName: customerData.name,
         customerPhone: customerData.phone,
-        employeeId: employeeId,
-        serviceId: serviceId,
-        appointmentDate: date,
+        employee: employeeId,
+        service: serviceId,
+        date: date,
         time: selectedTimeSlot,
         status: 'pending'
     };
     
     try {
-        const response = await fetch(`${API_BASE}/appointments`, {
+        const response = await fetch(`${API_BASE}/appointments/public/book`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(appointmentData)
@@ -347,7 +451,7 @@ async function handleAppointmentSubmit(e) {
         
         if (response.ok) {
             const result = await response.json();
-            displaySuccessDetails(result.appointment);
+            displaySuccessDetails(result.appointment || result);
             showSuccess();
             showToast('تم حجز الموعد بنجاح!', 'success');
         } else {
