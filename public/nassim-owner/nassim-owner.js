@@ -1080,43 +1080,137 @@ function removeVariantImage(variantId) {
     preview.querySelector('img').src = '';
 }
 
+// Edit mode variant management
+function toggleEditVariantsSection() {
+    const checkbox = document.getElementById('editHasVariantsCheckbox');
+    const section = document.getElementById('editVariantsSection');
+    
+    if (checkbox.checked) {
+        section.style.display = 'block';
+        if (document.getElementById('editVariantsContainer').children.length === 0) {
+            addEditVariantRow();
+        }
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+function loadExistingVariants(variants) {
+    const container = document.getElementById('editVariantsContainer');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    variants.forEach((variant, index) => {
+        addEditVariantRow(variant, index);
+    });
+}
+
+function addEditVariantRow(existingVariant = null, index = null) {
+    variantCounter++;
+    const container = document.getElementById('editVariantsContainer');
+    const row = document.createElement('div');
+    row.className = 'variant-row';
+    const rowId = `edit-variant-${variantCounter}`;
+    row.id = rowId;
+    row.style.cssText = 'background: #2d2d2d; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 2px solid #3a3a3a;';
+    
+    const variantName = existingVariant ? existingVariant.name : '';
+    const variantDesc = existingVariant ? existingVariant.description : '';
+    const variantPrice = existingVariant ? existingVariant.price : '';
+    const variantDuration = existingVariant ? existingVariant.duration : 30;
+    const variantImage = existingVariant ? existingVariant.image : '';
+    
+    row.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <h5 style="color: #CBA35C; margin: 0; font-size: 15px; font-weight: 600;">${existingVariant ? variantName : `نوع جديد ${variantCounter}`}</h5>
+            <button type="button" onclick="removeVariantRow('${rowId}')" style="background: #D9534F; border: none; color: white; cursor: pointer; font-size: 16px; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 13px; color: #E9E9E9; font-weight: 600;">اسم النوع *</label>
+            <input type="text" class="form-input variant-name" required placeholder="مثال: صبغة كاملة" value="${variantName}" style="background: #1a1a1a; color: #E9E9E9; border: 1px solid #4a4a4a;">
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 13px; color: #E9E9E9; font-weight: 600;">وصف النوع</label>
+            <input type="text" class="form-input variant-description" placeholder="وصف اختياري" value="${variantDesc}" style="background: #1a1a1a; color: #E9E9E9; border: 1px solid #4a4a4a;">
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+                <label class="form-label" style="font-size: 13px; color: #E9E9E9; font-weight: 600;">السعر (دج) *</label>
+                <input type="number" class="form-input variant-price" required min="0" placeholder="1000" value="${variantPrice}" style="background: #1a1a1a; color: #E9E9E9; border: 1px solid #4a4a4a;">
+            </div>
+            <div class="form-group">
+                <label class="form-label" style="font-size: 13px; color: #E9E9E9; font-weight: 600;">المدة (دقيقة) *</label>
+                <input type="number" class="form-input variant-duration" required min="5" step="5" value="${variantDuration}" placeholder="30" style="background: #1a1a1a; color: #E9E9E9; border: 1px solid #4a4a4a;">
+            </div>
+        </div>
+        
+        <div class="form-group" style="margin-top: 12px;">
+            <label class="form-label" style="font-size: 13px; color: #E9E9E9; font-weight: 600;">صورة النوع (اختياري)</label>
+            <input type="file" class="variant-image-file" accept="image/*" onchange="previewVariantImage(this, '${rowId}')" style="display: none;" id="variantImageFile-${rowId}">
+            <label for="variantImageFile-${rowId}" style="
+                display: inline-block;
+                background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%);
+                color: #121212;
+                padding: 8px 15px;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 12px;
+                font-weight: 600;
+                transition: all 0.3s ease;
+            " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                📷 اختر صورة
+            </label>
+            <div class="variant-image-preview" style="display: ${variantImage ? 'block' : 'none'}; margin-top: 8px; position: relative; width: fit-content;">
+                <img src="${variantImage || ''}" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid #CBA35C;">
+                <button type="button" onclick="removeVariantImage('${rowId}')" style="position: absolute; top: -8px; right: -8px; background: #D9534F; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">✕</button>
+            </div>
+            <input type="url" class="form-input variant-image-url" placeholder="أو أدخل رابط صورة" value="${variantImage || ''}" style="background: #1a1a1a; color: #E9E9E9; margin-top: 8px; font-size: 12px; border: 1px solid #4a4a4a;">
+        </div>
+    `;
+    
+    container.appendChild(row);
+}
+
 function addVariantRow() {
     variantCounter++;
     const container = document.getElementById('variantsContainer');
     const row = document.createElement('div');
     row.className = 'variant-row';
     row.id = `variant-${variantCounter}`;
-    row.style.cssText = 'background: #1A1A1A; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #2A2A2A;';
+    row.style.cssText = 'background: #2d2d2d; padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 2px solid #3a3a3a;';
     
     row.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h5 style="color: #E9E9E9; margin: 0;">نوع ${variantCounter}</h5>
-            <button type="button" onclick="removeVariantRow('variant-${variantCounter}')" style="background: transparent; border: none; color: #D9534F; cursor: pointer; font-size: 20px;">✕</button>
+            <h5 style="color: #CBA35C; margin: 0; font-size: 15px; font-weight: 600;">نوع ${variantCounter}</h5>
+            <button type="button" onclick="removeVariantRow('variant-${variantCounter}')" style="background: #D9534F; border: none; color: white; cursor: pointer; font-size: 16px; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
         </div>
         
         <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label" style="font-size: 13px;">اسم النوع *</label>
-            <input type="text" class="form-input variant-name" required placeholder="مثال: صبغة كاملة" style="background: #121212;">
+            <label class="form-label" style="font-size: 13px; color: #E9E9E9; font-weight: 600;">اسم النوع *</label>
+            <input type="text" class="form-input variant-name" required placeholder="مثال: صبغة كاملة" style="background: #1a1a1a; color: #E9E9E9; border: 1px solid #4a4a4a;">
         </div>
         
         <div class="form-group" style="margin-bottom: 12px;">
-            <label class="form-label" style="font-size: 13px;">وصف النوع</label>
-            <input type="text" class="form-input variant-description" placeholder="وصف اختياري" style="background: #121212;">
+            <label class="form-label" style="font-size: 13px; color: #E9E9E9; font-weight: 600;">وصف النوع</label>
+            <input type="text" class="form-input variant-description" placeholder="وصف اختياري" style="background: #1a1a1a; color: #E9E9E9; border: 1px solid #4a4a4a;">
         </div>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
             <div class="form-group">
-                <label class="form-label" style="font-size: 13px;">السعر (دج) *</label>
-                <input type="number" class="form-input variant-price" required min="0" placeholder="1000" style="background: #121212;">
+                <label class="form-label" style="font-size: 13px; color: #E9E9E9; font-weight: 600;">السعر (دج) *</label>
+                <input type="number" class="form-input variant-price" required min="0" placeholder="1000" style="background: #1a1a1a; color: #E9E9E9; border: 1px solid #4a4a4a;">
             </div>
             <div class="form-group">
-                <label class="form-label" style="font-size: 13px;">المدة (دقيقة) *</label>
-                <input type="number" class="form-input variant-duration" required min="5" step="5" value="30" placeholder="30" style="background: #121212;">
+                <label class="form-label" style="font-size: 13px; color: #E9E9E9; font-weight: 600;">المدة (دقيقة) *</label>
+                <input type="number" class="form-input variant-duration" required min="5" step="5" value="30" placeholder="30" style="background: #1a1a1a; color: #E9E9E9; border: 1px solid #4a4a4a;">
             </div>
         </div>
         
         <div class="form-group" style="margin-top: 12px;">
-            <label class="form-label" style="font-size: 13px;">صورة النوع (اختياري)</label>
+            <label class="form-label" style="font-size: 13px; color: #E9E9E9; font-weight: 600;">صورة النوع (اختياري)</label>
             <input type="file" class="variant-image-file" accept="image/*" onchange="previewVariantImage(this, 'variant-${variantCounter}')" style="display: none;" id="variantImageFile-${variantCounter}">
             <label for="variantImageFile-${variantCounter}" style="
                 display: inline-block;
@@ -1131,11 +1225,11 @@ function addVariantRow() {
             " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                 📷 اختر صورة
             </label>
-            <div class="variant-image-preview" style="display: none; margin-top: 8px; position: relative;">
+            <div class="variant-image-preview" style="display: none; margin-top: 8px; position: relative; width: fit-content;">
                 <img src="" alt="Preview" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 2px solid #CBA35C;">
                 <button type="button" onclick="removeVariantImage('variant-${variantCounter}')" style="position: absolute; top: -8px; right: -8px; background: #D9534F; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">✕</button>
             </div>
-            <input type="url" class="form-input variant-image-url" placeholder="أو أدخل رابط صورة" style="background: #121212; margin-top: 8px; font-size: 12px;">
+            <input type="url" class="form-input variant-image-url" placeholder="أو أدخل رابط صورة" style="background: #1a1a1a; color: #E9E9E9; margin-top: 8px; font-size: 12px; border: 1px solid #4a4a4a;">
         </div>
     `;
     
@@ -1151,7 +1245,43 @@ function removeVariantRow(rowId) {
 
 async function getVariantsData() {
     const variants = [];
-    const variantRows = document.querySelectorAll('.variant-row');
+    const variantRows = document.querySelectorAll('#variantsContainer .variant-row');
+    
+    for (const row of variantRows) {
+        const name = row.querySelector('.variant-name').value;
+        const description = row.querySelector('.variant-description').value;
+        const price = parseFloat(row.querySelector('.variant-price').value);
+        const duration = parseInt(row.querySelector('.variant-duration').value);
+        
+        // Handle image upload
+        let imageUrl = row.querySelector('.variant-image-url').value;
+        const imageFile = row.querySelector('.variant-image-file').files[0];
+        
+        if (imageFile) {
+            try {
+                imageUrl = await uploadImage(imageFile);
+            } catch (error) {
+                console.error('Error uploading variant image:', error);
+            }
+        }
+        
+        if (name && price && duration) {
+            variants.push({
+                name: name.trim(),
+                description: description.trim(),
+                price: price,
+                duration: duration,
+                image: imageUrl || null
+            });
+        }
+    }
+    
+    return variants;
+}
+
+async function getEditVariantsData() {
+    const variants = [];
+    const variantRows = document.querySelectorAll('#editVariantsContainer .variant-row');
     
     for (const row of variantRows) {
         const name = row.querySelector('.variant-name').value;
@@ -1439,11 +1569,36 @@ async function editService(serviceId) {
                         <span>متاحة للحجز</span>
                     </label>
                 </div>
+                
+                <div class="form-group" style="border-top: 2px solid #2A2A2A; padding-top: 20px; margin-top: 20px;">
+                    <label class="form-label">
+                        <input type="checkbox" id="editHasVariantsCheckbox" ${service.hasVariants ? 'checked' : ''} onchange="toggleEditVariantsSection()">
+                        <span>هذه الخدمة لها أنواع فرعية متعددة</span>
+                    </label>
+                    <small style="color: #999; display: block; margin-top: 8px;">عند التفعيل، يمكن للزبون اختيار الخدمة العامة أو اختيار نوع محدد</small>
+                </div>
+                
+                <div id="editVariantsSection" style="display: ${service.hasVariants ? 'block' : 'none'}; background: rgba(42, 42, 42, 0.5); padding: 20px; border-radius: 12px; margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <h4 style="color: #CBA35C; margin: 0;">الأنواع الفرعية</h4>
+                        <button type="button" class="btn-sm" onclick="addEditVariantRow()" style="background: #CBA35C; color: #121212; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                            ➕ إضافة نوع جديد
+                        </button>
+                    </div>
+                    <div id="editVariantsContainer"></div>
+                </div>
             </form>
         `, [
             { text: 'إلغاء', class: 'btn-secondary', onclick: 'closeModal()' },
             { text: 'حفظ', class: 'btn-primary', onclick: 'submitEditService()' }
         ]);
+        
+        // Load existing variants
+        if (service.hasVariants && service.variants && service.variants.length > 0) {
+            setTimeout(() => {
+                loadExistingVariants(service.variants);
+            }, 100);
+        }
         
         showModal(modal);
         
@@ -1482,6 +1637,28 @@ async function submitEditService() {
         priceMin: priceMin,
         priceMax: priceMax
     };
+    
+    // Handle variants in edit mode
+    const hasVariants = document.getElementById('editHasVariantsCheckbox').checked;
+    if (hasVariants) {
+        const container = document.getElementById('editVariantsContainer');
+        if (container && container.children.length > 0) {
+            showToast('جاري رفع صور الأنواع...', 'info');
+            const variants = await getEditVariantsData();
+            if (variants.length === 0) {
+                showToast('يجب إضافة نوع فرعي واحد على الأقل', 'error');
+                return;
+            }
+            serviceData.hasVariants = true;
+            serviceData.variants = variants;
+        } else {
+            serviceData.hasVariants = false;
+            serviceData.variants = [];
+        }
+    } else {
+        serviceData.hasVariants = false;
+        serviceData.variants = [];
+    }
 
     try {
         console.log('Service data to update:', serviceData);
