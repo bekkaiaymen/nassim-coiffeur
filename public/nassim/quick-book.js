@@ -68,13 +68,20 @@ function showLoginForm() {
 }
 
 function showBookingForm() {
-    document.getElementById('welcomeSection').style.display = 'none';
-    document.getElementById('loginSection').style.display = 'none';
-    document.getElementById('bookingSection').style.display = 'block';
-    document.getElementById('successSection').style.display = 'none';
-    
-    // Display customer info
-    displayCustomerInfo();
+    try {
+        document.getElementById('welcomeSection').style.display = 'none';
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('bookingSection').style.display = 'block';
+        document.getElementById('successSection').style.display = 'none';
+        
+        // Display customer info
+        displayCustomerInfo();
+        
+        // Scroll to top
+        window.scrollTo(0, 0);
+    } catch (error) {
+        console.error('Error showing booking form:', error);
+    }
 }
 
 function showSuccess() {
@@ -125,13 +132,24 @@ async function handleCustomerSubmit(e) {
             let customerId, customerName, customerPhone;
             
             if (loginData.data && loginData.data.user) {
-                customerId = loginData.data.user.id;
+                customerId = loginData.data.user._id || loginData.data.user.id;
                 customerName = loginData.data.user.name;
                 customerPhone = loginData.data.user.phone;
             } else if (loginData.user) {
                 customerId = loginData.user._id || loginData.user.id;
                 customerName = loginData.user.name;
                 customerPhone = loginData.user.phone;
+            } else if (loginData.customer) {
+                customerId = loginData.customer._id || loginData.customer.id;
+                customerName = loginData.customer.name;
+                customerPhone = loginData.customer.phone;
+            }
+            
+            if (!customerId) {
+                console.error('Could not extract customer ID from login response:', loginData);
+                showLoading(false);
+                showToast('حدث خطأ في استخراج بيانات الحساب', 'error');
+                return;
             }
             
             customerData = {
@@ -140,13 +158,20 @@ async function handleCustomerSubmit(e) {
                 phone: customerPhone || phone
             };
             
+            console.log('Customer logged in successfully:', customerData);
+            
             // Store token for auto login later
             if (loginData.token) {
                 localStorage.setItem('quick_book_token', loginData.token);
             }
             
+            showLoading(false);
             showToast('تم تسجيل الدخول بنجاح', 'success');
-            showBookingForm();
+            
+            // Small delay to ensure loading overlay is hidden
+            setTimeout(() => {
+                showBookingForm();
+            }, 100);
         } else {
             // Login failed - try to register
             // Get Nassim business ID
@@ -176,13 +201,24 @@ async function handleCustomerSubmit(e) {
                 let customerId, customerName, customerPhone;
                 
                 if (registerData.data && registerData.data.user) {
-                    customerId = registerData.data.user.id;
+                    customerId = registerData.data.user._id || registerData.data.user.id;
                     customerName = registerData.data.user.name;
                     customerPhone = registerData.data.user.phone;
                 } else if (registerData.user) {
                     customerId = registerData.user._id || registerData.user.id;
                     customerName = registerData.user.name;
                     customerPhone = registerData.user.phone;
+                } else if (registerData.customer) {
+                    customerId = registerData.customer._id || registerData.customer.id;
+                    customerName = registerData.customer.name;
+                    customerPhone = registerData.customer.phone;
+                }
+                
+                if (!customerId) {
+                    console.error('Could not extract customer ID from registration response:', registerData);
+                    showLoading(false);
+                    showToast('حدث خطأ في استخراج بيانات الحساب', 'error');
+                    return;
                 }
                 
                 customerData = {
@@ -191,14 +227,20 @@ async function handleCustomerSubmit(e) {
                     phone: customerPhone || phone
                 };
                 
+                console.log('Customer registered successfully:', customerData);
+                
                 // Store token for auto login later
                 if (registerData.token) {
                     localStorage.setItem('quick_book_token', registerData.token);
                 }
                 
-                showToast('تم التسجيل بنجاح! مرحباً بك 🎉', 'success');
                 showLoading(false);
-                showBookingForm();
+                showToast('تم التسجيل بنجاح! مرحباً بك 🎉', 'success');
+                
+                // Small delay to ensure loading overlay is hidden
+                setTimeout(() => {
+                    showBookingForm();
+                }, 100);
             } else {
                 const errorData = await registerResponse.json();
                 console.error('Registration error:', errorData);
@@ -282,7 +324,15 @@ async function getNassimBusinessId() {
 // Display Customer Info
 function displayCustomerInfo() {
     const card = document.getElementById('customerInfoCard');
-    if (!card || !customerData.name) return;
+    if (!card) {
+        console.warn('customerInfoCard element not found');
+        return;
+    }
+    
+    if (!customerData || !customerData.name) {
+        console.warn('customerData or name not available');
+        return;
+    }
     
     const initial = customerData.name.charAt(0).toUpperCase();
     
@@ -293,6 +343,7 @@ function displayCustomerInfo() {
             <p>📱 ${customerData.phone}</p>
         </div>
     `;
+    card.style.display = 'flex';
 }
 
 // Load Employees
