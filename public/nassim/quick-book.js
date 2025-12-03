@@ -527,16 +527,35 @@ function displaySuccessDetails(appointment) {
     const container = document.getElementById('appointmentDetails');
     if (!container) return;
     
-    const employee = availableEmployees.find(e => e._id === appointment.employeeId);
-    const service = services.find(s => s._id === (appointment.serviceId._id || appointment.serviceId));
+    // Safe extraction of IDs
+    const employeeId = appointment.employee?._id || appointment.employee || appointment.employeeId;
+    const serviceId = appointment.service?._id || appointment.service || appointment.serviceId?._id || appointment.serviceId;
     
-    const dateObj = new Date(appointment.appointmentDate);
+    // Find employee and service safely
+    const employee = Array.isArray(availableEmployees) 
+        ? availableEmployees.find(e => e._id === employeeId) 
+        : null;
+    const service = Array.isArray(services) 
+        ? services.find(s => s._id === serviceId) 
+        : null;
+    
+    // Get date from different possible fields
+    const dateValue = appointment.date || appointment.appointmentDate;
+    const dateObj = new Date(dateValue);
     const dateStr = dateObj.toLocaleDateString('ar-SA', { 
         weekday: 'long', 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric' 
     });
+    
+    // Get employee name from different sources
+    const employeeName = employee?.name || appointment.barber || appointment.employeeName || 'غير محدد';
+    
+    // Get service details
+    const serviceName = service?.name || appointment.serviceName || 'غير محدد';
+    const serviceDuration = service?.duration || appointment.duration || 30;
+    const servicePrice = service?.price || appointment.price || 0;
     
     container.innerHTML = `
         <div class="detail-row">
@@ -549,19 +568,19 @@ function displaySuccessDetails(appointment) {
         </div>
         <div class="detail-row">
             <span class="detail-label">الحلاق</span>
-            <span class="detail-value">${employee ? employee.name : 'غير محدد'}</span>
+            <span class="detail-value">${employeeName}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">الخدمة</span>
-            <span class="detail-value">${service ? service.name : 'غير محدد'}</span>
+            <span class="detail-value">${serviceName}</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">المدة</span>
-            <span class="detail-value">${service ? service.duration : 30} دقيقة</span>
+            <span class="detail-value">${serviceDuration} دقيقة</span>
         </div>
         <div class="detail-row">
             <span class="detail-label">السعر</span>
-            <span class="detail-value">${service ? service.price : 0} دج</span>
+            <span class="detail-value">${servicePrice} دج</span>
         </div>
     `;
 }
