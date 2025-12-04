@@ -550,8 +550,8 @@ function populateServiceSelect() {
     
     availableServices = services;
     
-    // Use all services including packages (Updated)
-    const displayServices = services;
+    // Filter out packages from the initial list (they will be auto-detected)
+    const displayServices = services.filter(s => !s.isPackage);
     
     if (displayServices.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #A7A7A7; padding: 20px;">لا توجد خدمات متاحة</p>';
@@ -561,6 +561,7 @@ function populateServiceSelect() {
     container.innerHTML = displayServices.map(service => {
         const hasValidImage = service.image && service.image.trim() !== '';
         const isPackage = service.isPackage || false;
+        const hasVariants = service.hasVariants || false;
         
         return `
         <div class="booking-service-card ${isPackage ? 'package-card' : ''}" 
@@ -569,6 +570,7 @@ function populateServiceSelect() {
              data-service-price="${service.price}"
              data-service-duration="${service.duration}"
              data-is-package="${isPackage}"
+             data-has-variants="${hasVariants}"
              onclick="toggleServiceSelection('${service._id}')">
             ${hasValidImage
                 ? `<div class="booking-service-image">
@@ -579,6 +581,7 @@ function populateServiceSelect() {
             <div class="service-name">
                 ${isPackage ? '<span style="background:#e74c3c; color:white; padding:2px 6px; border-radius:4px; font-size:0.8em; margin-left:5px;">باقة</span>' : ''}
                 ${service.name}
+                ${hasVariants ? '<span style="font-size:0.8em; color:#3498db; display:block;">(اضغط للاختيارات)</span>' : ''}
             </div>
             <div class="service-meta">
                 <span class="service-duration">⏱ ${service.duration} دقيقة</span>
@@ -611,7 +614,17 @@ function toggleServiceSelection(serviceId) {
         // Remove from selection
         selectedServices.splice(existingIndex, 1);
         card.classList.remove('selected');
+        
+        // Re-check packages after removal
+        checkPackageAvailability();
     } else {
+        // Check for variants
+        const hasVariants = card.dataset.hasVariants === 'true';
+        if (hasVariants) {
+            showVariantsModal(serviceId);
+            return;
+        }
+
         // Add to selection
         const serviceName = card.dataset.serviceName;
         const servicePrice = parseInt(card.dataset.servicePrice);
@@ -627,10 +640,227 @@ function toggleServiceSelection(serviceId) {
         });
         
         card.classList.add('selected');
+        
+        // Check for packages after addition
+        checkPackageAvailability();
     }
     
     // Update summary display
     updateBookingSummary();
+}
+
+// Show Variants Modal
+function showVariantsModal(serviceId) {
+    const service = availableServices.find(s => s._id === serviceId);
+    if (!service || !service.variants) return;
+    
+    // Create modal if not exists
+    let modal = document.getElementById('variantsModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'variantsModal';
+        modal.className = 'modal';
+        modal.style.display = 'none';
+        document.body.appendChild(modal);
+    }
+    
+    const variantsHtml = service.variants.map((variant, index) => `
+        <div class="variant-option" onclick="selectVariant('${serviceId}', ${index})" 
+             style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <div style="font-weight: bold;">${variant.name}</div>
+                <div style="font-size: 0.9em; color: #666;">${variant.duration} دقيقة</div>
+            </div>
+            <div style="font-weight: bold; color: #2ecc71;">${variant.price} دج</div>
+        </div>
+    `).join('');
+    
+    modal.innerHTML = `
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>${service.name}</h3>
+                <span class="close-btn" onclick="document.getElementById('variantsModal').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 15px; color: #666;">اختر نوع الخدمة:</p>
+                <div class="variants-list" style="border: 1px solid #eee; border-radius: 8px; overflow: hidden;">
+                    ${variantsHtml}
+                    <div class="variant-option" onclick="selectVariant('${serviceId}', -1)" 
+                         style="padding: 15px; background: #f9f9f9; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: bold;">سأختار مع الحلاق</div>
+                            <div style="font-size: 0.9em; color: #666;">تحديد السعر والوقت لاحقاً</div>
+                        </div>
+                        <div style="font-weight: bold; color: #999;">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    modal.style.display = 'block';
+}
+
+// Select Variant
+function selectVariant(serviceId, variantIndex) {
+    const service = availableServices.find(s => s._id === serviceId);
+    if (!service) return;
+    
+    let name = service.name;
+    let price = service.price;
+    let duration = service.duration;
+    
+    if (variantIndex >= 0 && service.variants[variantIndex]) {
+        const variant = service.variants[variantIndex];
+        name = `${service.name} - ${variant.name}`;
+        price = variant.price;
+        duration = variant.duration;
+    } else {
+        name = `${service.name} (تحديد مع الحلاق)`;
+        // Keep base price/duration or set to defaults if needed
+    }
+    
+    // Add to selection
+    selectedServices.push({
+        id: serviceId,
+        name: name,
+        price: price,
+        duration: duration,
+        isPackage: false,
+        variantIndex: variantIndex
+    });
+    
+    // Mark card as selected
+    const card = document.querySelector(`[data-service-id="${serviceId}"]`);
+    if (card) card.classList.add('selected');
+    
+    // Close modal
+    document.getElementById('variantsModal').style.display = 'none';
+    
+    updateBookingSummary();
+    checkPackageAvailability();
+}
+
+// Check Package Availability
+function checkPackageAvailability() {
+    // Get IDs of selected services (excluding packages themselves)
+    const selectedIds = selectedServices.filter(s => !s.isPackage).map(s => s.id);
+    
+    if (selectedIds.length < 2) return;
+    
+    // Find packages that match selected services
+    const packages = availableServices.filter(s => s.isPackage && s.packageServices && s.packageServices.length > 0);
+    
+    for (const pkg of packages) {
+        // Check if all package services are selected
+        // We assume packageServices contains objects with _id or just IDs. 
+        // Based on schema, it's ObjectId ref, so likely populated objects or just IDs.
+        // Let's handle both.
+        const pkgServiceIds = pkg.packageServices.map(s => s._id || s);
+        
+        const isMatch = pkgServiceIds.every(id => selectedIds.includes(id.toString()));
+        
+        if (isMatch && pkgServiceIds.length === selectedIds.length) {
+            // Exact match found!
+            showPackageToast(pkg);
+            return; // Show one at a time
+        }
+    }
+}
+
+function showPackageToast(pkg) {
+    // Check if already showing
+    if (document.getElementById('packageToast')) return;
+    
+    const toast = document.createElement('div');
+    toast.id = 'packageToast';
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #2c3e50;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 30px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        animation: slideUp 0.3s ease-out;
+        width: 90%;
+        max-width: 400px;
+    `;
+    
+    toast.innerHTML = `
+        <div style="flex: 1;">
+            <div style="font-weight: bold; color: #f1c40f;">باقة متاحة!</div>
+            <div style="font-size: 0.9em;">${pkg.name} بسعر ${pkg.price} دج</div>
+        </div>
+        <button onclick="applyPackage('${pkg._id}')" style="
+            background: #f1c40f;
+            color: #2c3e50;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+        ">تطبيق</button>
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;font-size:1.2em;">&times;</button>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Auto remove after 10 seconds
+    setTimeout(() => {
+        if (toast.parentElement) toast.remove();
+    }, 10000);
+}
+
+function applyPackage(packageId) {
+    const pkg = availableServices.find(s => s._id === packageId);
+    if (!pkg) return;
+    
+    // Remove component services
+    const pkgServiceIds = pkg.packageServices.map(s => (s._id || s).toString());
+    
+    // Filter out services that are part of the package
+    // We need to be careful not to remove services that are NOT part of the package
+    // But here we only matched if ALL selected services are in the package (exact match logic above)
+    // If we want to support partial match + others, we need to be more selective.
+    // For now, let's remove the ones that match.
+    
+    // Find indices to remove (reverse order to not mess up indices)
+    for (let i = selectedServices.length - 1; i >= 0; i--) {
+        if (pkgServiceIds.includes(selectedServices[i].id)) {
+            // Remove visual selection
+            const card = document.querySelector(`[data-service-id="${selectedServices[i].id}"]`);
+            if (card) card.classList.remove('selected');
+            
+            selectedServices.splice(i, 1);
+        }
+    }
+    
+    // Add package
+    selectedServices.push({
+        id: pkg._id,
+        name: pkg.name,
+        price: pkg.price,
+        duration: pkg.duration,
+        isPackage: true
+    });
+    
+    // Note: We don't have a card for the package visible, so we can't select it visually.
+    // But it will appear in the summary.
+    
+    updateBookingSummary();
+    
+    // Remove toast
+    const toast = document.getElementById('packageToast');
+    if (toast) toast.remove();
+    
+    showToast(`تم تطبيق باقة ${pkg.name}`, 'success');
 }
 
 // Update Booking Summary
@@ -656,6 +886,7 @@ function updateBookingSummary() {
     
     updateConfirmButton();
     checkAvailability(); // Re-check availability with new duration
+
 }
 
 // Load Available Time Slots
