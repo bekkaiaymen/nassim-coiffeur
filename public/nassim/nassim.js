@@ -3474,8 +3474,32 @@ function renderTimelineStrip(date, appointments, availableEmployees = []) {
     if (!strip) return;
     strip.innerHTML = '';
     
-    // Calculate total width
-    const totalMinutes = (TIMELINE_END_HOUR - TIMELINE_START_HOUR) * 60;
+    // Determine start hour based on current time (only for today)
+    const now = new Date();
+    const today = new Date().toISOString().split('T')[0];
+    const selectedDate = document.getElementById('timelineDate')?.value || today;
+    
+    let effectiveStartHour = TIMELINE_START_HOUR;
+    
+    // If viewing today, start from current hour (or next hour)
+    if (selectedDate === today) {
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        // Start from current hour, or next hour if we're past 45 minutes
+        if (currentHour >= TIMELINE_START_HOUR && currentHour < TIMELINE_END_HOUR) {
+            effectiveStartHour = currentMinute > 45 ? currentHour + 1 : currentHour;
+        }
+        
+        // Don't show anything if we're past closing time
+        if (currentHour >= TIMELINE_END_HOUR) {
+            strip.innerHTML = '<div style="text-align: center; padding: 60px; color: #888; font-size: 18px;">⏰ انتهى وقت العمل اليوم</div>';
+            return;
+        }
+    }
+    
+    // Calculate total width from effective start hour
+    const totalMinutes = (TIMELINE_END_HOUR - effectiveStartHour) * 60;
     const totalWidth = totalMinutes * TIMELINE_PIXELS_PER_MINUTE;
     strip.style.width = `${totalWidth + 180}px`; // Add space for barber names
     
@@ -3490,15 +3514,15 @@ function renderTimelineStrip(date, appointments, availableEmployees = []) {
     corner.style.width = '180px';
     headerRow.appendChild(corner);
 
-    // Render Time Markers (every 30 mins)
+    // Render Time Markers (every 30 mins) starting from effective start hour
     for (let i = 0; i <= totalMinutes; i += 30) {
         const marker = document.createElement('div');
         const isHour = i % 60 === 0;
         marker.className = `time-marker ${isHour ? 'hour' : ''}`;
         marker.style.left = `${180 + (i * TIMELINE_PIXELS_PER_MINUTE)}px`; // Offset by 180px
         
-        // Calculate time label
-        const totalMin = (TIMELINE_START_HOUR * 60) + i;
+        // Calculate time label from effective start hour
+        const totalMin = (effectiveStartHour * 60) + i;
         const h = Math.floor(totalMin / 60);
         const m = totalMin % 60;
         const timeLabel = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
@@ -3519,13 +3543,13 @@ function renderTimelineStrip(date, appointments, availableEmployees = []) {
     });
 
     // Filter employees to show only those who are present
-    const today = new Date().toISOString().split('T')[0];
-    const selectedDate = document.getElementById('timelineDate').value;
+    const todayDate = new Date().toISOString().split('T')[0];
+    const pickedDate = document.getElementById('timelineDate').value;
     
     let employees = [];
     
     // Only show available employees for today
-    if (selectedDate === today && availableEmployees.length > 0) {
+    if (pickedDate === todayDate && availableEmployees.length > 0) {
         employees = availableEmployees.map(emp => ({
             name: emp.name,
             id: emp._id,
@@ -3596,9 +3620,9 @@ function renderTimelineStrip(date, appointments, availableEmployees = []) {
                 m = aptDate.getMinutes();
             }
             
-            if (h < TIMELINE_START_HOUR || h >= TIMELINE_END_HOUR) return;
+            if (h < effectiveStartHour || h >= TIMELINE_END_HOUR) return;
             
-            const minutesFromStart = (h - TIMELINE_START_HOUR) * 60 + m;
+            const minutesFromStart = (h - effectiveStartHour) * 60 + m;
             const leftPos = 180 + (minutesFromStart * TIMELINE_PIXELS_PER_MINUTE); // Add 180px offset for name column
             const duration = apt.serviceId?.duration || apt.duration || 30;
             const width = duration * TIMELINE_PIXELS_PER_MINUTE;
@@ -3645,6 +3669,15 @@ function updateCurrentTimeLine() {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
+    const today = new Date().toISOString().split('T')[0];
+    const selectedDate = document.getElementById('timelineDate')?.value || today;
+    
+    // Only show current time line for today
+    if (selectedDate !== today) {
+        const line = document.getElementById('currentTimeLine');
+        if (line) line.style.display = 'none';
+        return;
+    }
     
     // Check if within working hours
     if (currentHour < TIMELINE_START_HOUR || currentHour >= TIMELINE_END_HOUR) {
@@ -3653,13 +3686,22 @@ function updateCurrentTimeLine() {
         return;
     }
     
-    const minutesSinceStart = (currentHour - TIMELINE_START_HOUR) * 60 + currentMinute;
-    const position = 180 + (minutesSinceStart * TIMELINE_PIXELS_PER_MINUTE); // Offset by 180px to match barber names column
+    // Calculate effective start hour for today (same logic as renderTimelineStrip)
+    let effectiveStartHour = TIMELINE_START_HOUR;
+    if (currentHour >= TIMELINE_START_HOUR && currentHour < TIMELINE_END_HOUR) {
+        effectiveStartHour = currentMinute > 45 ? currentHour + 1 : currentHour;
+    }
+    
+    // Calculate position relative to effective start hour
+    const minutesSinceEffectiveStart = (currentHour - effectiveStartHour) * 60 + currentMinute;
+    const position = 180 + (minutesSinceEffectiveStart * TIMELINE_PIXELS_PER_MINUTE); // Offset by 180px to match barber names column
     
     const line = document.getElementById('currentTimeLine');
-    if (line) {
+    if (line && minutesSinceEffectiveStart >= 0) {
         line.style.display = 'block';
         line.style.left = `${position}px`;
+    } else if (line) {
+        line.style.display = 'none';
     }
 }
 
@@ -3768,11 +3810,35 @@ async function renderVerticalTimeline(date, appointments) {
     strip.innerHTML = '';
     
     // Configuration
-    const START_HOUR = 9;
+    const BASE_START_HOUR = 9;
     const END_HOUR = 22;
     const PIXELS_PER_MINUTE = 4; // Vertical spacing
     
-    const totalMinutes = (END_HOUR - START_HOUR) * 60;
+    // Determine start hour based on current time (only for today)
+    const now = new Date();
+    const today = new Date().toISOString().split('T')[0];
+    const selectedDate = date || today;
+    
+    let effectiveStartHour = BASE_START_HOUR;
+    
+    // If viewing today, start from current hour
+    if (selectedDate === today) {
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        
+        // Start from current hour, or next hour if we're past 45 minutes
+        if (currentHour >= BASE_START_HOUR && currentHour < END_HOUR) {
+            effectiveStartHour = currentMinute > 45 ? currentHour + 1 : currentHour;
+        }
+        
+        // Don't show anything if we're past closing time
+        if (currentHour >= END_HOUR) {
+            strip.innerHTML = '<div style="text-align: center; padding: 60px; color: #888; font-size: 18px;">⏰ انتهى وقت العمل اليوم</div>';
+            return;
+        }
+    }
+    
+    const totalMinutes = (END_HOUR - effectiveStartHour) * 60;
     const totalHeight = totalMinutes * PIXELS_PER_MINUTE;
     
     // Fetch available employees
@@ -3829,11 +3895,11 @@ async function renderVerticalTimeline(date, appointments) {
             rgba(255, 255, 255, 0.05) ${60 * PIXELS_PER_MINUTE}px
         )`;
         
-        // Time markers
-        for (let h = START_HOUR; h <= END_HOUR; h++) {
+        // Time markers - start from effective start hour
+        for (let h = effectiveStartHour; h <= END_HOUR; h++) {
             const marker = document.createElement('div');
             marker.className = 'vertical-time-marker';
-            const topPos = (h - START_HOUR) * 60 * PIXELS_PER_MINUTE;
+            const topPos = (h - effectiveStartHour) * 60 * PIXELS_PER_MINUTE;
             marker.style.top = `${topPos}px`;
             
             const timeLabel = document.createElement('span');
@@ -3862,9 +3928,9 @@ async function renderVerticalTimeline(date, appointments) {
                 m = aptDate.getMinutes();
             }
             
-            if (h < START_HOUR || h >= END_HOUR) return;
+            if (h < effectiveStartHour || h >= END_HOUR) return;
             
-            const minutesFromStart = (h - START_HOUR) * 60 + m;
+            const minutesFromStart = (h - effectiveStartHour) * 60 + m;
             const topPos = minutesFromStart * PIXELS_PER_MINUTE;
             const duration = apt.serviceId?.duration || apt.duration || 30;
             const height = duration * PIXELS_PER_MINUTE;
