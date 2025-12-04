@@ -378,7 +378,7 @@ async function handleAddCustomer(event) {
             time: time,
             serviceId: serviceId,
             serviceName: serviceName,
-            status: 'completed', // Auto-complete for quick add so it appears in rating list
+            status: 'confirmed', // Set to confirmed so employee can mark as completed
             employeeId: employeeData ? employeeData.id : null,
             employeeName: employeeData ? employeeData.name : null
         };
@@ -399,8 +399,21 @@ async function handleAddCustomer(event) {
         document.getElementById('quickAddForm').reset();
         setDefaultDate();
         
-        // Refresh completed appointments just in case (though this is a new appointment)
-        // If the user marks it as completed later, it will show up.
+        // Refresh lists and scroll to confirmed section
+        await loadConfirmedAppointments();
+        await loadTimeline();
+        
+        // Scroll to confirmed appointments section
+        const confirmedSection = document.getElementById('confirmedAppointmentsList');
+        if (confirmedSection) {
+            confirmedSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Highlight the section briefly
+            confirmedSection.parentElement.style.transition = 'box-shadow 0.5s';
+            confirmedSection.parentElement.style.boxShadow = '0 0 20px rgba(39, 174, 96, 0.5)';
+            setTimeout(() => {
+                confirmedSection.parentElement.style.boxShadow = 'none';
+            }, 2000);
+        }
         
     } catch (error) {
         console.error('Add error:', error);
@@ -813,6 +826,18 @@ async function completeAppointment(appointmentId) {
         await loadConfirmedAppointments();
         await loadCompletedAppointments();
         await loadTimeline();
+        
+        // Scroll to rating section
+        const ratingSection = document.getElementById('completedAppointmentsList');
+        if (ratingSection) {
+            ratingSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Highlight
+            ratingSection.parentElement.style.transition = 'box-shadow 0.5s';
+            ratingSection.parentElement.style.boxShadow = '0 0 20px rgba(203, 163, 92, 0.5)';
+            setTimeout(() => {
+                ratingSection.parentElement.style.boxShadow = 'none';
+            }, 2000);
+        }
         
     } catch (error) {
         console.error('Complete error:', error);
