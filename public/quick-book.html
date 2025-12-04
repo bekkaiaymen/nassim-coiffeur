@@ -179,19 +179,22 @@
 
         .services-grid {
             display: grid;
-            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
         }
 
         .service-card {
             background: var(--surface);
             border: 2px solid #2A2A2A;
             border-radius: var(--radius-sm);
-            padding: 16px;
+            padding: 12px;
             cursor: pointer;
             transition: all 0.3s;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
+            text-align: center;
+            height: 100%;
         }
 
         .service-card:hover {
@@ -206,28 +209,122 @@
             box-shadow: 0 0 20px rgba(203, 163, 92, 0.2);
         }
 
+        .service-image {
+            width: 100%;
+            height: 120px;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            background-color: #2A2A2A;
+        }
+
+        .service-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s;
+        }
+
+        .service-card:hover .service-image img {
+            transform: scale(1.05);
+        }
+
         .service-info {
-            flex: 1;
+            width: 100%;
+            margin-bottom: 8px;
         }
 
         .service-name {
             font-weight: 600;
             color: var(--text-primary);
-            font-size: 16px;
+            font-size: 15px;
             margin-bottom: 4px;
+            line-height: 1.4;
         }
 
         .service-duration {
-            font-size: 13px;
+            font-size: 12px;
             color: var(--text-secondary);
         }
 
         .service-price {
             color: var(--primary);
             font-weight: 700;
+            font-size: 16px;
+            margin-top: auto;
+        }
+
+        /* Booking Summary Styles */
+        .booking-summary {
+            background: var(--surface);
+            border: 2px solid var(--primary);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .booking-summary.show {
+            display: block;
+        }
+
+        .summary-title {
             font-size: 18px;
-            white-space: nowrap;
-            margin-right: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(203, 163, 92, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .summary-label {
+            color: var(--text-secondary);
+        }
+
+        .summary-value {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .summary-total {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .summary-total .summary-value {
+            color: var(--success);
+        }
+
+        .selected-services-list {
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .selected-service-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .time-input-group {
@@ -426,6 +523,26 @@
                 <!-- Services will be loaded here -->
             </div>
 
+            <!-- Booking Summary Section -->
+            <div id="bookingSummary" class="booking-summary">
+                <div class="summary-title">ملخص الحجز</div>
+                <div class="selected-services-list" id="selectedServicesList">
+                    <!-- Selected services will be listed here -->
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">عدد الخدمات:</span>
+                    <span class="summary-value" id="summaryCount">0</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">المدة المتوقعة:</span>
+                    <span class="summary-value" id="summaryDuration">0 دقيقة</span>
+                </div>
+                <div class="summary-total">
+                    <span>الإجمالي:</span>
+                    <span class="summary-value" id="summaryTotal">0 دج</span>
+                </div>
+            </div>
+
             <div class="section-title">
                 <span>📅</span>
                 <span>حدد الموعد</span>
@@ -548,8 +665,8 @@
                     // Image or Icon
                     let imageHtml = '';
                     if (hasValidImage) {
-                        imageHtml = `<div class="service-image" style="width: 100%; height: 120px; overflow: hidden; border-radius: 10px; margin-bottom: 10px;">
-                            <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                        imageHtml = `<div class="service-image">
+                            <img src="${service.image}" alt="${service.name}">
                         </div>`;
                     } else {
                         // Fallback icon if no image
@@ -609,6 +726,44 @@
                     checkPackageAvailability();
                 }
             }
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('bookingSummary');
+            const listDiv = document.getElementById('selectedServicesList');
+            const countSpan = document.getElementById('summaryCount');
+            const durationSpan = document.getElementById('summaryDuration');
+            const totalSpan = document.getElementById('summaryTotal');
+
+            if (selectedServices.length === 0) {
+                summaryDiv.classList.remove('show');
+                setTimeout(() => {
+                    if (selectedServices.length === 0) summaryDiv.style.display = 'none';
+                }, 300);
+                return;
+            }
+
+            summaryDiv.style.display = 'block';
+            // Small delay to allow display:block to apply before adding class for animation
+            setTimeout(() => summaryDiv.classList.add('show'), 10);
+
+            // Update list
+            listDiv.innerHTML = selectedServices.map(s => `
+                <div class="selected-service-item">
+                    <span>${s.name}</span>
+                    <span>${s.price} دج</span>
+                </div>
+            `).join('');
+
+            // Update totals
+            const totalCount = selectedServices.length;
+            const totalDuration = selectedServices.reduce((sum, s) => sum + (s.duration || 0), 0);
+            const totalPrice = selectedServices.reduce((sum, s) => sum + (s.price || 0), 0);
+
+            countSpan.textContent = totalCount;
+            durationSpan.textContent = `${totalDuration} دقيقة`;
+            totalSpan.textContent = `${totalPrice} دج`;
         }
 
         // Show Variants Modal
@@ -698,6 +853,7 @@
             document.getElementById('variantsModal').style.display = 'none';
             
             checkPackageAvailability();
+            updateSummary();
         }
 
         function checkPackageAvailability() {
@@ -797,6 +953,7 @@
             if (toast) toast.remove();
             
             showToast(`تم تطبيق باقة ${pkg.name}`, 'success');
+            updateSummary();
         }
 
         function generateTimeInputs() {
