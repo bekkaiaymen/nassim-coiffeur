@@ -1,0 +1,270 @@
+/* Timeline CSS copied from nassim-customer/timeline.css */
+:root {
+    --primary-color: #FDB714;
+    --primary-dark: #e6a612;
+    --secondary-color: #2C3E50;
+    --text-dark: #2C3E50;
+    --text-light: #7F8C8D;
+    --bg-light: #F8F9FA;
+    --bg-white: #FFFFFF;
+    --border-color: #E0E0E0;
+    --success-color: #27AE60;
+    --warning-color: #F39C12;
+    --danger-color: #E74C3C;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+/* Scoped to timeline page to avoid conflicts */
+#timelinePage .timeline-strip-container {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: auto;
+    background: #222;
+    border-radius: 16px;
+    position: relative;
+    border: 1px solid #444;
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: #cba35c #222;
+    direction: ltr;
+    min-height: 400px;
+}
+
+#timelinePage .timeline-strip-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+#timelinePage .timeline-strip-container::-webkit-scrollbar-track {
+    background: #222;
+}
+
+#timelinePage .timeline-strip-container::-webkit-scrollbar-thumb {
+    background: #cba35c;
+    border-radius: 4px;
+}
+
+#timelinePage .timeline-strip-container::-webkit-scrollbar-thumb:hover {
+    background: #e6a612;
+}
+
+#timelinePage .timeline-strip {
+    position: relative;
+    height: 100%;
+    background: repeating-linear-gradient(
+        to right,
+        #2d2d2d,
+        #2d2d2d 1px,
+        #222 1px,
+        #222 150px /* 30 mins * 5px/min = 150px */
+    );
+}
+
+#timelinePage .time-marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    border-left: 1px solid #555;
+    color: #888;
+    font-size: 1rem;
+    padding-left: 5px;
+    pointer-events: none;
+}
+
+#timelinePage .time-marker.hour {
+    border-left: 2px solid #777;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+#timelinePage .timeline-appointment {
+    position: absolute;
+    top: 5px !important;
+    height: 70px !important;
+    background: linear-gradient(145deg, #2d2d2d, #1e3a2a);
+    border: 2px solid var(--success-color);
+    border-radius: 12px;
+    padding: 0;
+    color: #fff;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    transition: transform 0.3s;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 100px;
+}
+
+#timelinePage .timeline-appointment:hover {
+    transform: scale(1.05);
+    z-index: 10;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+}
+
+#timelinePage .timeline-appointment.booked {
+    background: linear-gradient(145deg, #3a1e1e, #2d2d2d);
+    border-color: var(--danger-color);
+    opacity: 0.9;
+}
+
+#timelinePage .timeline-appointment.critical {
+    border-color: #FF5252;
+    background: linear-gradient(145deg, #5a1e1e, #2d2d2d);
+}
+
+#timelinePage .current-time-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #FF0000;
+    z-index: 20;
+    box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+    pointer-events: none;
+}
+
+#timelinePage .current-time-line::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: -4px;
+    width: 10px;
+    height: 10px;
+    background: #FF0000;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+}
+
+#timelinePage .apt-time {
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-align: center;
+    white-space: nowrap;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    width: 100%;
+    overflow: hidden;
+    text-overflow: clip;
+    padding: 0 2px;
+    direction: ltr;
+    background: transparent;
+    margin-bottom: 0;
+}
+
+#timelinePage .apt-name {
+    display: none;
+}
+
+#timelinePage .timeline-legend {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    padding: 1.5rem;
+    background: #2d2d2d;
+    border-radius: 12px;
+    margin-top: 1rem;
+    border: 1px solid #444;
+}
+
+#timelinePage .legend-item {
+    color: #fff;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+#timelinePage .legend-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+#timelinePage .legend-dot.available {
+    background: var(--success-color);
+}
+
+#timelinePage .legend-dot.booked {
+    background: var(--danger-color);
+}
+
+#timelinePage .legend-dot.partially {
+    background: var(--warning-color);
+}
+
+/* Multi-Barber Timeline Styles */
+#timelinePage .timeline-header-row {
+    display: flex;
+    height: 40px;
+    position: relative;
+    border-bottom: 1px solid #444;
+    background: #2d2d2d;
+}
+
+#timelinePage .timeline-corner {
+    width: 180px;
+    flex-shrink: 0;
+    border-right: 2px solid #444;
+    background: #222;
+    position: sticky;
+    left: 0;
+    z-index: 30;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+}
+
+#timelinePage .timeline-row {
+    display: flex;
+    height: 80px;
+    border-bottom: 1px solid #444;
+    position: relative;
+}
+
+#timelinePage .barber-name-col {
+    width: 180px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    font-weight: bold;
+    color: var(--primary-color);
+    background: #2d2d2d;
+    border-right: 2px solid #444;
+    position: sticky;
+    left: 0;
+    z-index: 30;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+}
+
+#timelinePage .barber-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 2px 8px rgba(253, 183, 20, 0.3);
+}
+
+#timelinePage .barber-name-text {
+    font-size: 14px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+#timelinePage .timeline-track {
+    flex: 1;
+    position: relative;
+    background: repeating-linear-gradient(
+        to right,
+        transparent,
+        transparent 1px,
+        rgba(255, 255, 255, 0.05) 1px,
+        rgba(255, 255, 255, 0.05) 180px /* 30 mins * 6px/min = 180px */
+    );
+}

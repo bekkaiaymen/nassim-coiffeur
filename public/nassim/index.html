@@ -25,6 +25,7 @@
     <title>✂️ Nassim Coiffeur - صالون الحلاقة الأول</title>
     <link rel="stylesheet" href="/nassim/nassim.css">
     <link rel="stylesheet" href="/nassim/timeline-rating.css">
+    <link rel="stylesheet" href="/nassim/timeline-new.css">
     <link rel="stylesheet" href="/nassim/ai-wassim.css">
     <link rel="stylesheet" href="/nassim/ai-stylist.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -796,18 +797,12 @@
                 <div class="timeline-legend">
                     <span class="legend-item"><span class="legend-dot available"></span>متاح</span>
                     <span class="legend-item"><span class="legend-dot booked"></span>محجوز</span>
-                    <button class="btn-expand-timeline" onclick="openFullscreenTimeline()">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
-                        </svg>
-                        عرض كامل
-                    </button>
                 </div>
 
                 <!-- Horizontal Timeline View -->
-                <div class="timeline-container" id="timelineContainer">
-                    <div class="timeline-track" id="timelineTrack">
-                        <!-- Will be populated by JS -->
+                <div class="timeline-strip-container">
+                    <div class="timeline-strip" id="timelineStrip">
+                        <!-- Slots will be injected here -->
                     </div>
                 </div>
             </div>
