@@ -647,6 +647,7 @@ function updateBookingSummary() {
     document.getElementById('totalPrice').textContent = totalPrice + ' دج';
     
     updateConfirmButton();
+    checkAvailability(); // Re-check availability with new duration
 }
 
 // Load Available Time Slots
