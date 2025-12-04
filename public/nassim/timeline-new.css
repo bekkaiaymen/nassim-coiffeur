@@ -486,3 +486,113 @@
     }
 }
 
+
+/* Mobile Optimization for Horizontal Timeline */
+@media (max-width: 768px) {
+    #timelinePage .timeline-strip-container {
+        min-height: 300px;
+        border-radius: 12px;
+    }
+    
+    #timelinePage .timeline-header-row {
+        height: 35px;
+    }
+    
+    #timelinePage .timeline-corner {
+        width: 100px !important;
+    }
+    
+    #timelinePage .barber-name-col {
+        width: 100px !important;
+        padding: 5px;
+    }
+    
+    #timelinePage .barber-avatar {
+        width: 35px;
+        height: 35px;
+    }
+    
+    #timelinePage .barber-name-text {
+        font-size: 11px;
+    }
+    
+    #timelinePage .timeline-row {
+        height: 65px;
+    }
+    
+    #timelinePage .time-marker {
+        font-size: 0.85rem;
+        padding-left: 3px;
+    }
+    
+    #timelinePage .time-marker.hour {
+        font-size: 1rem;
+    }
+    
+    #timelinePage .timeline-appointment {
+        height: 55px !important;
+        top: 5px !important;
+    }
+    
+    #timelinePage .apt-time {
+        font-size: 1.2rem;
+    }
+    
+    #timelinePage .timeline-legend {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    #timelinePage .btn-expand-timeline {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 16px;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    #timelinePage .timeline-strip-container {
+        min-height: 250px;
+    }
+    
+    #timelinePage .timeline-corner {
+        width: 80px !important;
+    }
+    
+    #timelinePage .barber-name-col {
+        width: 80px !important;
+        padding: 3px;
+    }
+    
+    #timelinePage .barber-avatar {
+        width: 30px;
+        height: 30px;
+    }
+    
+    #timelinePage .barber-name-text {
+        font-size: 10px;
+    }
+    
+    #timelinePage .timeline-row {
+        height: 55px;
+    }
+    
+    #timelinePage .timeline-appointment {
+        height: 45px !important;
+    }
+    
+    #timelinePage .apt-time {
+        font-size: 1rem;
+    }
+    
+    #timelinePage .time-marker {
+        font-size: 0.75rem;
+    }
+    
+    #timelinePage .time-marker.hour {
+        font-size: 0.9rem;
+    }
+}
+
