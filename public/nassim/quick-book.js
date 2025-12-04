@@ -9,7 +9,7 @@ let availableServices = [];
 
 // API Base URL
 const API_BASE = '/api';
-const NASSIM_BUSINESS_ID = '675088cd09b3d653b6f8a50f';
+const NASSIM_BUSINESS_ID = '69259331651b1babc1eb83dc';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
@@ -307,7 +307,7 @@ async function getNassimBusinessId() {
         // Fallback: Use hardcoded business ID
         // TODO: Update this with actual Nassim business ID from database
         // You can find it by logging into the owner dashboard
-        const fallbackBusinessId = '675088cd09b3d653b6f8a50f'; // Replace with actual ID
+        const fallbackBusinessId = '69259331651b1babc1eb83dc'; // Replace with actual ID
         localStorage.setItem('nassim_business_id', fallbackBusinessId);
         return fallbackBusinessId;
         
@@ -321,7 +321,7 @@ async function getNassimBusinessId() {
         }
         
         // Last resort fallback
-        return '675088cd09b3d653b6f8a50f'; // Replace with actual ID
+        return '69259331651b1babc1eb83dc'; // Replace with actual ID
     }
 }
 
