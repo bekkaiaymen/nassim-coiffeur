@@ -550,23 +550,25 @@ function populateServiceSelect() {
     
     availableServices = services;
     
-    // Filter out packages from the service list
-    const regularServices = services.filter(service => !service.isPackage);
+    // Use all services including packages
+    const displayServices = services;
     
-    if (regularServices.length === 0) {
+    if (displayServices.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #A7A7A7; padding: 20px;">لا توجد خدمات متاحة</p>';
         return;
     }
     
-    container.innerHTML = regularServices.map(service => {
+    container.innerHTML = displayServices.map(service => {
         const hasValidImage = service.image && service.image.trim() !== '';
+        const isPackage = service.isPackage || false;
         
         return `
-        <div class="booking-service-card" 
+        <div class="booking-service-card ${isPackage ? 'package-card' : ''}" 
              data-service-id="${service._id}"
              data-service-name="${service.name}"
              data-service-price="${service.price}"
              data-service-duration="${service.duration}"
+             data-is-package="${isPackage}"
              onclick="toggleServiceSelection('${service._id}')">
             ${hasValidImage
                 ? `<div class="booking-service-image">
@@ -574,9 +576,13 @@ function populateServiceSelect() {
                    </div>` 
                 : `<div class="service-icon">${getServiceIcon(service.name)}</div>`
             }
-            <div class="service-name">${service.name}</div>
+            <div class="service-name">
+                ${isPackage ? '<span style="background:#e74c3c; color:white; padding:2px 6px; border-radius:4px; font-size:0.8em; margin-left:5px;">باقة</span>' : ''}
+                ${service.name}
+            </div>
             <div class="service-meta">
                 <span class="service-duration">⏱ ${service.duration} دقيقة</span>
+                <span class="service-price" style="margin-right: auto; font-weight: bold; color: #2ecc71;">${service.price} دج</span>
             </div>
         </div>
         `;
@@ -610,12 +616,14 @@ function toggleServiceSelection(serviceId) {
         const serviceName = card.dataset.serviceName;
         const servicePrice = parseInt(card.dataset.servicePrice);
         const serviceDuration = parseInt(card.dataset.serviceDuration);
+        const isPackage = card.dataset.isPackage === 'true';
         
         selectedServices.push({
             id: serviceId,
             name: serviceName,
             price: servicePrice,
-            duration: serviceDuration
+            duration: serviceDuration,
+            isPackage: isPackage
         });
         
         card.classList.add('selected');
