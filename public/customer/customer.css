@@ -1179,6 +1179,27 @@ textarea:focus {
     transform: translateY(-2px);
 }
 
+.form-input[type="file"] {
+    padding: 12px;
+    cursor: pointer;
+}
+
+.form-input[type="file"]::-webkit-file-upload-button {
+    background: var(--primary);
+    color: var(--text-dark);
+    border: none;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.form-input[type="file"]::-webkit-file-upload-button:hover {
+    background: var(--primary-light);
+}
+
 .form-input::placeholder,
 textarea::placeholder {
     color: var(--text-muted);

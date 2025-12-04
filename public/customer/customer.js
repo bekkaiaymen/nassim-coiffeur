@@ -1526,11 +1526,12 @@ function loadAccountData() {
     }
     
     // تحديث صورة الملف الشخصي
-    if (customerData.profileImage) {
+    if (customerData.photo || customerData.avatar || customerData.profileImage) {
         const imgElement = document.getElementById('profileImage');
+        const photoUrl = customerData.photo || customerData.avatar || customerData.profileImage;
         if (imgElement) {
-            imgElement.src = customerData.profileImage;
-            console.log('✅ Profile image updated');
+            imgElement.src = photoUrl;
+            console.log('✅ Profile image updated:', photoUrl);
         }
     }
     
@@ -1548,6 +1549,18 @@ function editProfile() {
         document.getElementById('editPhone').value = customerData.phone || '';
         document.getElementById('editEmail').value = customerData.email || '';
         document.getElementById('editAddress').value = customerData.address || '';
+        
+        // Add photo input if not exists
+        const form = document.getElementById('editProfileForm');
+        if (form && !document.getElementById('editPhotoInput')) {
+            const photoGroup = document.createElement('div');
+            photoGroup.className = 'form-group';
+            photoGroup.innerHTML = `
+                <label class="form-label">صورة الملف الشخصي</label>
+                <input type="file" id="editPhotoInput" class="form-input" accept="image/*">
+            `;
+            form.insertBefore(photoGroup, form.firstChild);
+        }
     }
     
     // Setup form submit
@@ -1556,12 +1569,17 @@ function editProfile() {
         form.onsubmit = async (e) => {
             e.preventDefault();
             
-            const updatedData = {
-                name: document.getElementById('editName').value,
-                phone: document.getElementById('editPhone').value,
-                email: document.getElementById('editEmail').value,
-                address: document.getElementById('editAddress').value
-            };
+            const formData = new FormData();
+            formData.append('name', document.getElementById('editName').value);
+            formData.append('phone', document.getElementById('editPhone').value);
+            formData.append('email', document.getElementById('editEmail').value);
+            formData.append('address', document.getElementById('editAddress').value);
+            
+            // Handle photo upload if present
+            const photoInput = document.getElementById('editPhotoInput'); // Assuming you add this input
+            if (photoInput && photoInput.files[0]) {
+                formData.append('photo', photoInput.files[0]);
+            }
             
             try {
                 if (!customerData || !customerData._id) {
@@ -1572,16 +1590,15 @@ function editProfile() {
                 const response = await fetch(`${API_URL}/customers/public/profile/${customerData._id}`, {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify(updatedData)
+                    body: formData
                 });
                 
                 if (response.ok) {
                     const data = await response.json();
                     if (data.success) {
-                        customerData = { ...customerData, ...updatedData };
+                        customerData = data.data; // Update with full response data including new photo URL
                         localStorage.setItem('customerData', JSON.stringify(customerData));
                         showNotification('تم حفظ التغييرات بنجاح! ✓', 'success');
                         setTimeout(() => showAccount(), 1000);

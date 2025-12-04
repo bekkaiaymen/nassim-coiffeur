@@ -31,6 +31,9 @@ const customerSchema = new mongoose.Schema({
         trim: true,
         lowercase: true
     },
+    photo: {
+        type: String
+    },
     dateOfBirth: {
         type: Date
     },

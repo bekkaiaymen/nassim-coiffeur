@@ -37,6 +37,7 @@ function previewPhoto(event) {
             if (icon) icon.style.display = 'none';
             
             registrationData.photo = e.target.result;
+            registrationData.photoFile = file; // Store file for upload
         };
         reader.readAsDataURL(file);
     }
@@ -371,15 +372,18 @@ async function submitRegistration() {
         submitBtn.disabled = true;
 
         // Prepare data
-        const data = {
-            name: registrationData.name,
-            phone: registrationData.phone,
-            email: registrationData.email || undefined,
-            password: registrationData.password,
-            followedBusinesses: registrationData.followedBusinesses.map(b => b.id)
-        };
+        const formData = new FormData();
+        formData.append('name', registrationData.name);
+        formData.append('phone', registrationData.phone);
+        if (registrationData.email) formData.append('email', registrationData.email);
+        formData.append('password', registrationData.password);
+        formData.append('followedBusinesses', JSON.stringify(registrationData.followedBusinesses.map(b => b.id)));
+        
+        if (registrationData.photoFile) {
+            formData.append('photo', registrationData.photoFile);
+        }
 
-        console.log('Sending registration data:', data);
+        console.log('Sending registration data...');
 
         // API URL based on environment
         const API_URL = window.location.hostname === 'localhost' 
@@ -389,10 +393,7 @@ async function submitRegistration() {
         // Send request
         const response = await fetch(`${API_URL}/customers/register`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
+            body: formData // Send as FormData
         });
 
         const result = await response.json();

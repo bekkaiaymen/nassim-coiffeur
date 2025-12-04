@@ -2,12 +2,58 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const cloudinary = require('cloudinary').v2;
 const Customer = require('../models/Customer');
 const User = require('../models/User');
 const Business = require('../models/Business');
 const Appointment = require('../models/Appointment');
 const Invoice = require('../models/Invoice');
 const { protect, ensureTenant, addTenantFilter, checkLimit } = require('../middleware/auth');
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'demo',
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+// Configure Multer
+const useCloudinary = Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME &&
+    process.env.CLOUDINARY_API_KEY &&
+    process.env.CLOUDINARY_API_SECRET
+);
+
+const storage = useCloudinary 
+    ? multer.memoryStorage() 
+    : multer.diskStorage({
+        destination: function (req, file, cb) {
+            const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
+            if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true });
+            }
+            cb(null, uploadsDir);
+        },
+        filename: function (req, file, cb) {
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+            cb(null, 'customer-' + uniqueSuffix + path.extname(file.originalname));
+        }
+    });
+
+const upload = multer({
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Not an image! Please upload an image.'), false);
+        }
+    }
+});
 
 // Get all customers for a business (owner dashboard)
 router.get('/business/:businessId', protect, async (req, res) => {
@@ -74,9 +120,44 @@ router.delete('/cleanup-old-accounts', async (req, res) => {
 });
 
 // Register new customer with followed businesses
-router.post('/register', async (req, res) => {
+router.post('/register', upload.single('photo'), async (req, res) => {
     try {
-        const { name, phone, email, password, followedBusinesses } = req.body;
+        const { name, phone, email, password } = req.body;
+        let followedBusinesses = [];
+        
+        try {
+            followedBusinesses = JSON.parse(req.body.followedBusinesses || '[]');
+        } catch (e) {
+            console.error('Error parsing followedBusinesses:', e);
+            // Fallback if it's already an array (e.g. from JSON request)
+            if (Array.isArray(req.body.followedBusinesses)) {
+                followedBusinesses = req.body.followedBusinesses;
+            }
+        }
+
+        // Handle photo upload
+        let photoUrl = null;
+        if (req.file) {
+            if (useCloudinary) {
+                try {
+                    const result = await new Promise((resolve, reject) => {
+                        const uploadStream = cloudinary.uploader.upload_stream(
+                            { folder: 'customer-profiles' },
+                            (error, result) => {
+                                if (error) reject(error);
+                                else resolve(result);
+                            }
+                        );
+                        uploadStream.end(req.file.buffer);
+                    });
+                    photoUrl = result.secure_url;
+                } catch (uploadError) {
+                    console.error('Cloudinary upload error:', uploadError);
+                }
+            } else {
+                photoUrl = `/uploads/${req.file.filename}`;
+            }
+        }
 
         // Validate required fields
         if (!name || !phone || !password) {
@@ -147,7 +228,8 @@ router.post('/register', async (req, res) => {
             email: email || `customer_${phone}@smartbiz.com`,
             phone,
             password,
-            role: 'customer'
+            role: 'customer',
+            avatar: photoUrl // Save photo URL
         });
 
         // Create customer profiles for each followed business
@@ -176,7 +258,8 @@ router.post('/register', async (req, res) => {
                     name,
                     phone,
                     email: email || undefined,
-                    status: 'active'
+                    status: 'active',
+                    photo: photoUrl // Save photo URL
                 });
 
                 customerProfiles.push({
@@ -464,7 +547,7 @@ router.get('/public/profile', async (req, res) => {
 });
 
 // Public route to update customer profile (no tenant middleware)
-router.put('/public/profile/:id', async (req, res) => {
+router.put('/public/profile/:id', upload.single('photo'), async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -490,6 +573,36 @@ router.put('/public/profile/:id', async (req, res) => {
                 });
             }
             
+            // Handle photo upload
+            if (req.file) {
+                let photoUrl = null;
+                if (useCloudinary) {
+                    try {
+                        const result = await new Promise((resolve, reject) => {
+                            const uploadStream = cloudinary.uploader.upload_stream(
+                                { folder: 'customer-profiles' },
+                                (error, result) => {
+                                    if (error) reject(error);
+                                    else resolve(result);
+                                }
+                            );
+                            uploadStream.end(req.file.buffer);
+                        });
+                        photoUrl = result.secure_url;
+                    } catch (uploadError) {
+                        console.error('Cloudinary upload error:', uploadError);
+                    }
+                } else {
+                    photoUrl = `/uploads/${req.file.filename}`;
+                }
+                
+                if (photoUrl) {
+                    customer.photo = photoUrl;
+                    // Also update user avatar
+                    await User.findByIdAndUpdate(decoded.id, { avatar: photoUrl });
+                }
+            }
+
             // Update customer fields
             const { name, phone, email, address } = req.body;
             if (name) customer.name = name;
