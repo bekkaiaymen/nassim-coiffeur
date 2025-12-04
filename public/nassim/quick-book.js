@@ -1012,12 +1012,26 @@ async function handleAppointmentSubmit(e) {
     // Check if booking is for a package
     const isPackageBooking = selectedServices.length === 1 && selectedServices[0].isPackage;
     
+    // Handle package services safely
+    let serviceIds = [];
+    if (isPackageBooking) {
+        const pkg = availableServices.find(s => s._id === selectedServices[0].id);
+        if (pkg && pkg.packageServices) {
+            serviceIds = pkg.packageServices.map(s => s._id || s.id || s);
+        } else {
+            // Fallback if package details not found
+            serviceIds = [selectedServices[0].id];
+        }
+    } else {
+        serviceIds = selectedServices.map(s => s.id);
+    }
+
     const appointmentData = {
         business: nassimBusinessId,
         customer: customerData.id,
         customerName: customerData.name,
         customerPhone: customerData.phone,
-        services: isPackageBooking ? selectedServices[0].packageServices.map(s => s.id) : selectedServices.map(s => s.id),
+        services: serviceIds,
         service: isPackageBooking ? selectedServices[0].id : selectedServices[0].id,
         serviceName: selectedServices.map(s => s.name).join(' + '),
         employee: employeeId === 'any' ? null : employeeId,
