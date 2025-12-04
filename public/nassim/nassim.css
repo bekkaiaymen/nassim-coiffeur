@@ -6675,3 +6675,40 @@ body.offline::before {
     transform: scale(0.98);
 }
 
+
+/* Contact Info Section */
+.contact-info-section {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.contact-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    padding: 10px 16px;
+    border-radius: 50px;
+    color: var(--text-primary);
+    text-decoration: none;
+    border: 1px solid rgba(203, 163, 92, 0.2);
+    transition: all 0.3s ease;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.contact-pill:hover {
+    background: var(--surface-light);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.contact-pill i {
+    color: var(--primary);
+    font-size: 16px;
+}
+
