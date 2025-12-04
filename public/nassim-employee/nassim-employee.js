@@ -379,7 +379,7 @@ async function handleAddCustomer(event) {
             serviceId: serviceId,
             serviceName: serviceName,
             status: 'confirmed', // Set to confirmed so employee can mark as completed
-            employeeId: employeeData ? employeeData.id : null,
+            employeeId: employeeData ? (employeeData._id || employeeData.id) : null,
             employeeName: employeeData ? employeeData.name : null
         };
 
