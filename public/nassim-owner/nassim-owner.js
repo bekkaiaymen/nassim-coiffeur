@@ -3893,7 +3893,8 @@ async function handleQuickBookingSubmit(event) {
         barber: employeeName || undefined,
         employeeId: employeeId || undefined,
         employeeName: employeeName || undefined,
-        notes: notes || undefined
+        notes: notes || undefined,
+        isQuickBooking: true // Mark as in-store quick booking
     });
 
     try {

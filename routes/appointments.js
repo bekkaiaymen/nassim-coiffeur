@@ -417,7 +417,12 @@ router.post('/public/book', async (req, res) => {
         customerDoc.lastVisit = new Date();
         
         // New Points System Logic
-        // 1. Check if customer is new (no completed appointments)
+        // 1. Check if customer is new (no previous appointments - any status)
+        const previousAppointments = await Appointment.find({
+            customerId: customerDoc._id
+        }).countDocuments();
+        
+        // Check specifically for completed appointments
         const completedAppointments = await Appointment.find({
             customerId: customerDoc._id,
             status: 'completed'
@@ -472,14 +477,17 @@ router.post('/public/book', async (req, res) => {
         }
 
         // 3. Points for the Customer (Referee)
-        // Rule: New Customer = 100 points. Referred Customer = 0 points.
-        // If customer is new AND NOT referred -> 100 points
-        // If customer is new AND referred -> 0 points (as per user request)
-        // If booking is via Quick Book (in-store) -> 0 points (as per user request)
+        // Rule: New Customer = 100 points ONLY on FIRST booking from public interface
+        // Conditions for reward:
+        // - Must be first appointment (previousAppointments === 0)
+        // - NOT referred by someone (isReferred = false)
+        // - NOT from Quick Book in-store (isQuickBooking = false)
+        // - Booking from public interface (quick-book.html)
         
         let pendingPoints = 0;
         
-        if (completedAppointments === 0 && !isReferred && !isQuickBooking) {
+        // Only give reward if this is truly the FIRST appointment ever
+        if (previousAppointments === 0 && !isReferred && !isQuickBooking) {
             pendingPoints = 100;
         }
         
