@@ -3771,7 +3771,6 @@ async function renderVerticalTimeline(date, appointments) {
     const START_HOUR = 9;
     const END_HOUR = 22;
     const PIXELS_PER_MINUTE = 4; // Vertical spacing
-    const NAME_COL_WIDTH = 150;
     
     const totalMinutes = (END_HOUR - START_HOUR) * 60;
     const totalHeight = totalMinutes * PIXELS_PER_MINUTE;
@@ -3792,89 +3791,55 @@ async function renderVerticalTimeline(date, appointments) {
         availableEmployees = [{ _id: 'all', name: 'جميع المواعيد', avatar: null }];
     }
     
-    strip.style.height = `${totalHeight + 100}px`;
-    strip.style.display = 'flex';
-    strip.style.flexDirection = 'row';
-    strip.style.gap = '20px';
-    strip.style.padding = '20px';
+    // Set strip height
+    strip.style.height = `${totalHeight + 150}px`; // Extra space for headers
     
     // Render column for each barber
     availableEmployees.forEach(emp => {
         const column = document.createElement('div');
         column.className = 'vertical-timeline-column';
-        column.style.minWidth = `${NAME_COL_WIDTH}px`;
-        column.style.position = 'relative';
         
         // Header
         const header = document.createElement('div');
         header.className = 'vertical-column-header';
-        header.style.cssText = `
-            text-align: center;
-            padding: 15px;
-            background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
-            border-radius: 12px;
-            margin-bottom: 20px;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        `;
         
         if (emp.avatar) {
             const avatar = document.createElement('img');
             avatar.src = emp.avatar;
-            avatar.style.cssText = `
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                margin-bottom: 10px;
-                border: 2px solid var(--primary);
-            `;
             avatar.onerror = function() { this.style.display = 'none'; };
             header.appendChild(avatar);
         }
         
         const name = document.createElement('div');
         name.textContent = emp.name;
-        name.style.cssText = `
-            font-weight: bold;
-            color: var(--primary);
-            font-size: 1rem;
-        `;
         header.appendChild(name);
         
         column.appendChild(header);
         
         // Timeline track
         const track = document.createElement('div');
-        track.style.cssText = `
-            position: relative;
-            min-height: ${totalHeight}px;
-            background: repeating-linear-gradient(
-                to bottom,
-                transparent,
-                transparent 1px,
-                rgba(255, 255, 255, 0.05) 1px,
-                rgba(255, 255, 255, 0.05) ${60 * PIXELS_PER_MINUTE}px
-            );
-            border-left: 2px solid #444;
-            padding-left: 10px;
-        `;
+        track.className = 'vertical-timeline-track';
+        track.style.position = 'relative';
+        track.style.minHeight = `${totalHeight}px`;
+        track.style.background = `repeating-linear-gradient(
+            to bottom,
+            transparent,
+            transparent 1px,
+            rgba(255, 255, 255, 0.05) 1px,
+            rgba(255, 255, 255, 0.05) ${60 * PIXELS_PER_MINUTE}px
+        )`;
         
         // Time markers
         for (let h = START_HOUR; h <= END_HOUR; h++) {
             const marker = document.createElement('div');
+            marker.className = 'vertical-time-marker';
             const topPos = (h - START_HOUR) * 60 * PIXELS_PER_MINUTE;
-            marker.style.cssText = `
-                position: absolute;
-                top: ${topPos}px;
-                left: -40px;
-                width: 35px;
-                text-align: right;
-                font-size: 0.75rem;
-                color: var(--primary);
-                font-weight: 600;
-            `;
-            marker.textContent = `${String(h).padStart(2, '0')}:00`;
+            marker.style.top = `${topPos}px`;
+            
+            const timeLabel = document.createElement('span');
+            timeLabel.textContent = `${String(h).padStart(2, '0')}:00`;
+            marker.appendChild(timeLabel);
+            
             track.appendChild(marker);
         }
         
@@ -3905,44 +3870,24 @@ async function renderVerticalTimeline(date, appointments) {
             const height = duration * PIXELS_PER_MINUTE;
             
             const el = document.createElement('div');
-            let bgColor = 'linear-gradient(145deg, #3a1e1e, #2d2d2d)';
-            let borderColor = '#F44336';
+            el.className = 'vertical-appointment';
             
-            if (apt.status === 'confirmed') {
-                bgColor = 'linear-gradient(145deg, #1e3a5a, #2d2d2d)';
-                borderColor = '#2196F3';
-            } else if (apt.status === 'completed') {
-                bgColor = 'linear-gradient(145deg, #1e5a3a, #2d2d2d)';
-                borderColor = '#4CAF50';
-            }
+            if (apt.status === 'confirmed') el.classList.add('confirmed');
+            else if (apt.status === 'completed') el.classList.add('completed');
+            else el.classList.add('booked');
             
-            el.style.cssText = `
-                position: absolute;
-                top: ${topPos}px;
-                left: 0;
-                right: 0;
-                height: ${height}px;
-                background: ${bgColor};
-                border: 2px solid ${borderColor};
-                border-radius: 8px;
-                padding: 8px;
-                color: #fff;
-                font-size: 0.8rem;
-                cursor: pointer;
-                transition: transform 0.2s;
-            `;
+            el.style.top = `${topPos}px`;
+            el.style.height = `${height}px`;
             
             const startTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
             const serviceName = apt.serviceId?.name || apt.service || apt.serviceName || '';
             
             el.innerHTML = `
-                <div style="font-weight: 700; color: var(--primary);">${startTimeStr}</div>
-                <div style="font-size: 0.75rem;">${apt.customerName || 'محجوز'}</div>
-                ${serviceName ? `<div style="font-size: 0.7rem; opacity: 0.8;">${serviceName}</div>` : ''}
+                <div class="time">${startTimeStr}</div>
+                <div class="client">${apt.customerName || 'محجوز'}</div>
+                ${serviceName ? `<div class="service" style="font-size: 0.7rem; opacity: 0.8;">${serviceName}</div>` : ''}
             `;
             
-            el.onmouseover = () => el.style.transform = 'scale(1.05)';
-            el.onmouseout = () => el.style.transform = 'scale(1)';
             el.onclick = () => showAppointmentDetails(apt);
             
             track.appendChild(el);

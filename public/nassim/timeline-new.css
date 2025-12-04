@@ -268,3 +268,221 @@
         rgba(255, 255, 255, 0.05) 180px /* 30 mins * 6px/min = 180px */
     );
 }
+
+/* Vertical View Button */
+.btn-expand-timeline {
+    background: var(--secondary-color);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.btn-expand-timeline:hover {
+    background: #34495e;
+}
+
+/* Fullscreen Vertical Timeline Modal */
+.fullscreen-timeline-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #1a1a1a;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.fullscreen-timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background: #2d2d2d;
+    border-bottom: 1px solid #444;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    z-index: 10;
+}
+
+.fullscreen-timeline-header .modal-title {
+    color: #fff;
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.fullscreen-timeline-header .modal-back-btn {
+    background: transparent;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fullscreen-timeline-header .modal-back-btn:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.fullscreen-date-display {
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.fullscreen-timeline-content {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+    background: #222;
+    padding: 0;
+}
+
+/* Vertical Timeline Strip Styles */
+.vertical-timeline-strip {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    padding: 20px;
+    min-height: 100%;
+}
+
+.vertical-timeline-column {
+    min-width: 150px;
+    position: relative;
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+}
+
+.vertical-column-header {
+    text-align: center;
+    padding: 15px;
+    background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+    border-radius: 12px;
+    margin-bottom: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border: 1px solid #444;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.vertical-column-header img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-bottom: 10px;
+    border: 2px solid var(--primary-color);
+    object-fit: cover;
+}
+
+.vertical-column-header div {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1rem;
+}
+
+.vertical-time-marker {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    pointer-events: none;
+}
+
+.vertical-time-marker span {
+    position: absolute;
+    left: -45px; /* Move time label to the left */
+    top: -10px;
+    color: #888;
+    font-size: 0.8rem;
+    background: #222;
+    padding: 2px 5px;
+    border-radius: 4px;
+}
+
+.vertical-appointment {
+    position: absolute;
+    left: 5px;
+    right: 5px;
+    background: linear-gradient(145deg, #2d2d2d, #1e3a2a);
+    border: 1px solid var(--success-color);
+    border-radius: 8px;
+    padding: 8px;
+    color: #fff;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 2;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.vertical-appointment.booked {
+    background: linear-gradient(145deg, #3a1e1e, #2d2d2d);
+    border-color: var(--danger-color);
+}
+
+.vertical-appointment .time {
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+    color: #fff;
+}
+
+.vertical-appointment .client {
+    color: #ccc;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+}
+
+/* Mobile Responsiveness for Vertical View */
+@media (max-width: 768px) {
+    .fullscreen-timeline-header {
+        padding: 10px 15px;
+    }
+    
+    .fullscreen-timeline-header .modal-title {
+        font-size: 1rem;
+    }
+    
+    .vertical-timeline-strip {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .vertical-timeline-column {
+        min-width: 120px;
+    }
+    
+    .vertical-column-header {
+        padding: 10px;
+    }
+    
+    .vertical-column-header img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .vertical-column-header div {
+        font-size: 0.9rem;
+    }
+}
+
