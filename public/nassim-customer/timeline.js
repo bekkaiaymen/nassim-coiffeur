@@ -261,7 +261,6 @@ function renderTimeline(date, appointments, availableEmployees = []) {
             
             el.innerHTML = `
                 <div class="apt-time">${startTimeStr} - ${endTimeStr}</div>
-                <div class="apt-name">${apt.customerName || 'محجوز'}</div>
             `;
             
             track.appendChild(el);

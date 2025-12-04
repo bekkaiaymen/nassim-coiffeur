@@ -588,10 +588,12 @@ body {
 }
 
 .timeline-appointment {
-    top: 10px !important; /* Override old style */
-    height: 60px !important; /* Override old style */
-    font-size: 0.8rem;
-    padding: 5px;
+    top: 5px !important; /* Override old style */
+    height: 70px !important; /* Override old style */
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .timeline-appointment.critical {
@@ -600,12 +602,19 @@ body {
 }
 
 .apt-time {
-    font-size: 0.9rem;
-    padding: 1px 4px;
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-align: center;
+    white-space: nowrap;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    width: 100%;
+    overflow: hidden;
+    padding: 0 5px;
 }
 
 .apt-name {
-    font-size: 0.9rem;
+    display: none;
 }
 
 
