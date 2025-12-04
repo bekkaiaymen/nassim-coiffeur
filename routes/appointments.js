@@ -702,26 +702,54 @@ router.post('/', protect, ensureTenant, checkLimit('appointments'), async (req, 
             });
         }
 
-        // Check for conflicts within tenant
-        const query = {
+        // Determine duration
+        let duration = 30;
+        if (serviceObjectId) {
+            try {
+                const Service = require('../models/Service');
+                const serviceDoc = await Service.findById(serviceObjectId);
+                if (serviceDoc && serviceDoc.duration) {
+                    duration = serviceDoc.duration;
+                }
+            } catch (e) {
+                console.warn('Could not fetch service duration', e);
+            }
+        }
+        
+        // Calculate time range
+        const [newH, newM] = time.split(':').map(Number);
+        const newStart = newH * 60 + newM;
+        const newEnd = newStart + duration;
+
+        // Check for conflicts (Overlap)
+        const conflictQuery = {
             tenant: tenantId,
             date: appointmentDate,
-            time: time,
             status: { $ne: 'cancelled' }
         };
 
         if (resolvedEmployeeId) {
-            query.employee = resolvedEmployeeId;
+            conflictQuery.employee = resolvedEmployeeId;
         } else if (resolvedBarberName) {
-            query.barber = resolvedBarberName;
+            conflictQuery.barber = resolvedBarberName;
         }
+        
+        const dayAppointments = await Appointment.find(conflictQuery);
+        
+        const hasConflict = dayAppointments.some(apt => {
+            const [aptH, aptM] = apt.time.split(':').map(Number);
+            const aptStart = aptH * 60 + aptM;
+            const aptDuration = apt.duration || 30;
+            const aptEnd = aptStart + aptDuration;
+            
+            // Check overlap: (StartA < EndB) && (EndA > StartB)
+            return (newStart < aptEnd) && (newEnd > aptStart);
+        });
 
-        const conflict = await Appointment.findOne(query);
-
-        if (conflict) {
-            return res.status(400).json({ 
+        if (hasConflict) {
+             return res.status(400).json({ 
                 success: false, 
-                message: 'هذا الموعد محجوز بالفعل لهذا الموظف' 
+                message: 'هذا الموعد يتعارض مع موعد آخر محجوز مسبقاً (يرجى التحقق من مدة الخدمة)' 
             });
         }
 
@@ -744,6 +772,7 @@ router.post('/', protect, ensureTenant, checkLimit('appointments'), async (req, 
             serviceId: serviceObjectId,
             date: appointmentDate,
             time,
+            duration: duration, // Save the calculated duration
             barber: resolvedBarberName,
             employee: resolvedEmployeeId,
             employeeName: resolvedEmployeeName,
