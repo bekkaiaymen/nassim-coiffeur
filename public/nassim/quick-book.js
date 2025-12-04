@@ -550,7 +550,7 @@ function populateServiceSelect() {
     
     availableServices = services;
     
-    // Use all services including packages
+    // Use all services including packages (Updated)
     const displayServices = services;
     
     if (displayServices.length === 0) {
