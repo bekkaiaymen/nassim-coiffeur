@@ -171,10 +171,12 @@ router.get('/available-slots', async (req, res) => {
         }
 
         // Mark booked slots as unavailable based on duration overlap
+        const requestedDuration = parseInt(req.query.duration) || 30;
+        
         allSlots.forEach(slot => {
             const [slotH, slotM] = slot.time.split(':').map(Number);
             const slotStart = slotH * 60 + slotM;
-            const slotEnd = slotStart + 30; // Assuming 30 min slots
+            const slotEnd = slotStart + requestedDuration; // Use requested duration
 
             const isBlocked = appointments.some(apt => {
                 const [aptH, aptM] = apt.time.split(':').map(Number);

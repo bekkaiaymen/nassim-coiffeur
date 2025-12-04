@@ -673,7 +673,10 @@ async function loadAvailableSlots() {
     }
     
     try {
-        const response = await fetch(`${API_BASE}/appointments/available-slots?business=${nassimBusinessId}&date=${date}&barber=${employeeId}`);
+        // Calculate total duration
+        const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0) || 30;
+        
+        const response = await fetch(`${API_BASE}/appointments/available-slots?business=${nassimBusinessId}&date=${date}&barber=${employeeId}&duration=${totalDuration}`);
         if (response.ok) {
             const result = await response.json();
             const slots = result.data || result;
