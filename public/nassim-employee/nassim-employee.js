@@ -245,9 +245,11 @@ function setupForms() {
         // Add listeners for availability check
         const dateInput = document.getElementById('appointmentDate');
         const timeInput = document.getElementById('appointmentTime');
+        const serviceSelect = document.getElementById('serviceType');
         
         if (dateInput) dateInput.addEventListener('change', checkEmployeeAvailability);
         if (timeInput) timeInput.addEventListener('change', checkEmployeeAvailability);
+        if (serviceSelect) serviceSelect.addEventListener('change', checkEmployeeAvailability);
     }
     
     if (ratingForm) {
@@ -308,6 +310,7 @@ function populateServiceSelect() {
 async function checkEmployeeAvailability() {
     const date = document.getElementById('appointmentDate').value;
     const time = document.getElementById('appointmentTime').value;
+    const serviceId = document.getElementById('serviceType').value;
     const statusDiv = document.getElementById('empAvailabilityStatus');
     
     // Create status div if not exists
@@ -332,7 +335,14 @@ async function checkEmployeeAvailability() {
         const businessId = employeeData.business || '69259331651b1babc1eb83dc';
         const empId = employeeData._id || employeeData.id;
         
-        const response = await fetch(`${API_BASE}/appointments/available-slots?business=${businessId}&date=${date}&employee=${empId}`, {
+        // Get service duration
+        let duration = 30;
+        if (serviceId && servicesCache) {
+            const service = servicesCache.find(s => s._id === serviceId);
+            if (service) duration = service.duration || 30;
+        }
+        
+        const response = await fetch(`${API_BASE}/appointments/available-slots?business=${businessId}&date=${date}&employee=${empId}&checkTime=${time}&duration=${duration}`, {
             headers: {
                 'Authorization': `Bearer ${employeeToken}`
             }
@@ -340,17 +350,11 @@ async function checkEmployeeAvailability() {
         
         if (response.ok) {
             const result = await response.json();
-            if (result.success && result.data) {
-                const slot = result.data.find(s => s.time === time);
-                
-                if (slot) {
-                    if (slot.available) {
-                        statusEl.innerHTML = '<span style="color: #2ecc71;">✅ هذا الوقت متاح</span>';
-                    } else {
-                        statusEl.innerHTML = '<span style="color: #e74c3c;">❌ لديك موعد آخر في هذا الوقت</span>';
-                    }
+            if (result.success) {
+                if (result.available) {
+                    statusEl.innerHTML = '<span style="color: #2ecc71;">✅ هذا الوقت متاح</span>';
                 } else {
-                    statusEl.innerHTML = '<span style="color: #f39c12;">⚠️ وقت خارج أوقات العمل</span>';
+                    statusEl.innerHTML = '<span style="color: #e74c3c;">❌ لديك موعد آخر في هذا الوقت</span>';
                 }
             }
         }

@@ -96,23 +96,20 @@ async function checkAvailability() {
     
     try {
         const nassimBusinessId = NASSIM_BUSINESS_ID || await getNassimBusinessId();
-        const response = await fetch(`${API_BASE}/appointments/available-slots?business=${nassimBusinessId}&date=${date}&employee=${employeeId}`);
+        
+        // Calculate total duration
+        const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0) || 30;
+        
+        const response = await fetch(`${API_BASE}/appointments/available-slots?business=${nassimBusinessId}&date=${date}&employee=${employeeId}&checkTime=${time}&duration=${totalDuration}`);
         
         if (response.ok) {
             const result = await response.json();
-            if (result.success && result.data) {
-                const slot = result.data.find(s => s.time === time);
-                
-                if (slot) {
-                    if (slot.available) {
-                        statusEl.innerHTML = '<span style="color: #2ecc71;">✅ هذا الوقت متاح</span>';
-                    } else {
-                        statusEl.innerHTML = '<span style="color: #e74c3c;">❌ هذا الوقت محجوز، يرجى اختيار وقت آخر</span>';
-                    }
+            
+            if (result.success) {
+                if (result.available) {
+                    statusEl.innerHTML = '<span style="color: #2ecc71;">✅ هذا الوقت متاح</span>';
                 } else {
-                    // Time not in standard slots (e.g. custom time)
-                    // We can't be sure, but usually we stick to slots
-                    statusEl.innerHTML = '<span style="color: #f39c12;">⚠️ وقت خارج أوقات العمل الرسمية</span>';
+                    statusEl.innerHTML = '<span style="color: #e74c3c;">❌ هذا الوقت محجوز، يرجى اختيار وقت آخر</span>';
                 }
             }
         }

@@ -113,7 +113,7 @@ router.get('/public/customer/:phone', async (req, res) => {
 // Public route to get available time slots (no auth required)
 router.get('/available-slots', async (req, res) => {
     try {
-        const { business, date, barber, employee } = req.query;
+        const { business, date, barber, employee, checkTime, duration } = req.query;
         
         if (!business || !date) {
             return res.status(400).json({ 
@@ -134,6 +134,31 @@ router.get('/available-slots', async (req, res) => {
         }
         
         const appointments = await Appointment.find(query).select('time duration');
+        
+        // If checking a specific time
+        if (checkTime) {
+            const checkDuration = parseInt(duration) || 30;
+            const [checkH, checkM] = checkTime.split(':').map(Number);
+            const checkStart = checkH * 60 + checkM;
+            const checkEnd = checkStart + checkDuration;
+            
+            const conflict = appointments.find(apt => {
+                const [aptH, aptM] = apt.time.split(':').map(Number);
+                const aptStart = aptH * 60 + aptM;
+                const aptDuration = apt.duration || 30;
+                const aptEnd = aptStart + aptDuration;
+                
+                // Check overlap
+                return (checkStart < aptEnd) && (checkEnd > aptStart);
+            });
+            
+            return res.json({
+                success: true,
+                available: !conflict,
+                message: conflict ? 'Time slot is occupied' : 'Time slot is available',
+                conflict: conflict
+            });
+        }
         
         // Generate all time slots (9 AM to 9 PM, every 30 mins)
         const allSlots = [];
