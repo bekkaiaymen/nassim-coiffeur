@@ -2342,7 +2342,17 @@ async function updateProfile(e) {
     };
     
     try {
-        const response = await fetch(`${API_URL}/customers/profile`, {
+        // Get customer ID from stored data
+        const customerId = customerData?._id || customerData?.id;
+        if (!customerId) {
+            console.error('No customer ID found. CustomerData:', customerData);
+            showNotification('لم يتم العثور على معلومات العميل', 'error');
+            return;
+        }
+        
+        console.log('Updating profile for customer:', customerId);
+        
+        const response = await fetch(`${API_URL}/customers/public/profile/${customerId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -2355,14 +2365,20 @@ async function updateProfile(e) {
         
         if (response.ok && data.success) {
             showNotification('تم تحديث الملف الشخصي بنجاح', 'success');
+            // Update local storage
+            if (data.data) {
+                customerData = data.data;
+                localStorage.setItem('customerData', JSON.stringify(customerData));
+            }
             await loadCustomerProfile();
             showAccount();
         } else {
+            console.error('Profile update failed:', response.status, data);
             showNotification(data.message || 'فشل تحديث الملف الشخصي', 'error');
         }
     } catch (error) {
         console.error('Error updating profile:', error);
-        showNotification('حدث خطأ', 'error');
+        showNotification('حدث خطأ في الاتصال', 'error');
     }
 }
 
@@ -2876,10 +2892,11 @@ async function setupBackgroundSync() {
 // Install Prompt
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
+    // Don't prevent default - let browser show banner
+    // e.preventDefault();
     deferredPrompt = e;
     
-    // Show install button
+    // Optionally show custom install button
     showInstallPrompt();
 });
 
