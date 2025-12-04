@@ -818,7 +818,7 @@ async function handleAppointmentSubmit(e) {
             // Auto login after successful booking
             setTimeout(() => {
                 autoLoginAfterBooking();
-            }, 1500);
+            }, 100);
         } else {
             console.error('Booking failed:', result.message);
             showToast(result.message || 'فشل حجز الموعد', 'error');
@@ -883,7 +883,7 @@ async function autoLoginAfterBooking() {
         // Redirect to nassim customer interface
         setTimeout(() => {
             window.location.href = '/nassim/index.html';
-        }, 500);
+        }, 100);
     } else {
         console.log('Could not get token, redirecting without auto-login');
         // Clear password from memory for security
@@ -892,7 +892,7 @@ async function autoLoginAfterBooking() {
         // Redirect anyway
         setTimeout(() => {
             window.location.href = '/nassim/index.html';
-        }, 1000);
+        }, 100);
     }
 }
 
