@@ -44,8 +44,33 @@
             <span class="legend-item"><span class="legend-dot available"></span>متاح</span>
             <span class="legend-item"><span class="legend-dot booked"></span>محجوز</span>
             <span class="legend-item"><span class="legend-dot partially"></span>متاح جزئياً</span>
+            <button class="btn-expand-timeline" onclick="openFullscreenTimeline()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                </svg>
+                عرض عمودي
+            </button>
         </div>
     </main>
+
+    <!-- Fullscreen Vertical Timeline Modal -->
+    <div id="fullscreenTimelineModal" class="fullscreen-timeline-modal" style="display: none;">
+        <div class="fullscreen-timeline-header">
+            <button class="modal-back-btn" onclick="closeFullscreenTimeline()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+            <h2 class="modal-title">📅 الجدول الزمني - عرض كامل</h2>
+            <div class="fullscreen-date-display" id="fullscreenDateDisplay"></div>
+        </div>
+        
+        <div class="fullscreen-timeline-content">
+            <div class="vertical-timeline-strip" id="verticalTimelineStrip">
+                <!-- Will be populated by JS -->
+            </div>
+        </div>
+    </div>
 
     <!-- Toast Notification -->
     <div id="toast" class="toast"></div>

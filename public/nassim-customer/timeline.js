@@ -354,3 +354,179 @@ function showToast(message, type = 'success') {
         toast.classList.remove('show');
     }, 3000);
 }
+
+// Fullscreen Vertical Timeline Functions
+function openFullscreenTimeline() {
+    const modal = document.getElementById('fullscreenTimelineModal');
+    if (!modal) return;
+    
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    
+    // Get current date from timeline date input
+    const dateInput = document.getElementById('timelineDate');
+    const date = dateInput ? dateInput.value : new Date().toISOString().split('T')[0];
+    
+    // Update date display
+    const dateDisplay = document.getElementById('fullscreenDateDisplay');
+    if (dateDisplay) {
+        const dateObj = new Date(date + 'T00:00:00');
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        dateDisplay.textContent = dateObj.toLocaleDateString('ar-SA', options);
+    }
+    
+    // Load appointments for vertical view
+    loadVerticalTimeline(date);
+}
+
+function closeFullscreenTimeline() {
+    const modal = document.getElementById('fullscreenTimelineModal');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+}
+
+async function loadVerticalTimeline(date) {
+    try {
+        const response = await fetch(`${API_BASE}/appointments/public?date=${date}`);
+        if (!response.ok) throw new Error('فشل تحميل البيانات');
+        
+        const result = await response.json();
+        const appointments = result.data || [];
+        
+        // Get available employees
+        const empResponse = await fetch(`${API_BASE}/employees/available`);
+        let availableEmployees = [];
+        if (empResponse.ok) {
+            const empResult = await empResponse.json();
+            availableEmployees = empResult.data || [];
+        }
+        
+        renderVerticalTimeline(date, appointments, availableEmployees);
+    } catch (error) {
+        console.error('Error loading vertical timeline:', error);
+        showToast('حدث خطأ أثناء تحميل البيانات', 'error');
+    }
+}
+
+async function renderVerticalTimeline(date, appointments, availableEmployees = []) {
+    const strip = document.getElementById('verticalTimelineStrip');
+    if (!strip) return;
+    strip.innerHTML = '';
+    
+    // Configuration for vertical view
+    const PIXELS_PER_MINUTE_VERTICAL = 4;
+    
+    const totalMinutes = (END_HOUR - START_HOUR) * 60;
+    const totalHeight = totalMinutes * PIXELS_PER_MINUTE_VERTICAL;
+    
+    // If no employees, show all appointments in one column
+    if (availableEmployees.length === 0) {
+        availableEmployees = [{ _id: 'all', name: 'جميع الحلاقين', avatar: null }];
+    }
+    
+    // Set strip height
+    strip.style.height = `${totalHeight + 150}px`;
+    
+    // Render column for each barber
+    availableEmployees.forEach(emp => {
+        const column = document.createElement('div');
+        column.className = 'vertical-timeline-column';
+        
+        // Header
+        const header = document.createElement('div');
+        header.className = 'vertical-column-header';
+        
+        if (emp.avatar) {
+            const avatar = document.createElement('img');
+            avatar.src = emp.avatar;
+            avatar.onerror = function() { this.style.display = 'none'; };
+            header.appendChild(avatar);
+        }
+        
+        const name = document.createElement('div');
+        name.textContent = emp.name;
+        header.appendChild(name);
+        
+        column.appendChild(header);
+        
+        // Timeline track
+        const track = document.createElement('div');
+        track.className = 'vertical-timeline-track';
+        track.style.minHeight = `${totalHeight}px`;
+        track.style.background = `repeating-linear-gradient(
+            to bottom,
+            transparent,
+            transparent 1px,
+            rgba(255, 255, 255, 0.05) 1px,
+            rgba(255, 255, 255, 0.05) ${60 * PIXELS_PER_MINUTE_VERTICAL}px
+        )`;
+        
+        // Time markers (every hour)
+        for (let h = START_HOUR; h <= END_HOUR; h++) {
+            const marker = document.createElement('div');
+            marker.className = 'vertical-time-marker';
+            const topPos = (h - START_HOUR) * 60 * PIXELS_PER_MINUTE_VERTICAL;
+            marker.style.top = `${topPos}px`;
+            
+            const timeLabel = document.createElement('span');
+            timeLabel.textContent = `${String(h).padStart(2, '0')}:00`;
+            marker.appendChild(timeLabel);
+            
+            track.appendChild(marker);
+        }
+        
+        // Filter appointments for this barber
+        const empAppts = emp._id === 'all' ? appointments : appointments.filter(a => {
+            const empName = a.employeeName || a.barber;
+            const empId = a.employeeId || (a.employee && a.employee._id);
+            return empId === emp._id || empName === emp.name;
+        });
+        
+        // Render appointments
+        empAppts.forEach(apt => {
+            let h, m;
+            
+            if (apt.time) {
+                [h, m] = apt.time.split(':').map(Number);
+            } else {
+                const aptDate = new Date(apt.appointmentDate || apt.date);
+                h = aptDate.getHours();
+                m = aptDate.getMinutes();
+            }
+            
+            if (h < START_HOUR || h >= END_HOUR) return;
+            
+            const minutesFromStart = (h - START_HOUR) * 60 + m;
+            const topPos = minutesFromStart * PIXELS_PER_MINUTE_VERTICAL;
+            const duration = apt.serviceId?.duration || apt.duration || 30;
+            const height = duration * PIXELS_PER_MINUTE_VERTICAL;
+            
+            const el = document.createElement('div');
+            el.className = 'vertical-appointment';
+            
+            // Set status class
+            if (apt.status === 'confirmed') el.classList.add('confirmed');
+            else if (apt.status === 'completed') el.classList.add('completed');
+            else el.classList.add('booked');
+            
+            el.style.top = `${topPos}px`;
+            el.style.height = `${height}px`;
+            
+            const startTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            const serviceName = apt.serviceId?.name || apt.service || apt.serviceName || '';
+            
+            el.innerHTML = `
+                <div class="time">${startTimeStr}</div>
+                <div class="client">${apt.customerName || 'محجوز'}</div>
+                ${serviceName ? `<div class="service">${serviceName}</div>` : ''}
+            `;
+            
+            track.appendChild(el);
+        });
+        
+        column.appendChild(track);
+        strip.appendChild(column);
+    });
+}
