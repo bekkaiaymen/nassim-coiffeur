@@ -402,8 +402,15 @@ function populateEmployeeSelect() {
     anyOption.style.color = '#CBA35C';
     select.appendChild(anyOption);
     
+    // Ensure availableEmployees is always an array
     if (!Array.isArray(availableEmployees)) {
         console.error('availableEmployees is not an array:', availableEmployees);
+        availableEmployees = [];
+        return;
+    }
+    
+    if (availableEmployees.length === 0) {
+        console.warn('No employees available');
         return;
     }
     
@@ -461,8 +468,16 @@ function populateServiceSelect() {
     const container = document.getElementById('bookingServicesList');
     if (!container) return;
     
+    // Ensure services is always an array
     if (!Array.isArray(services)) {
         console.error('services is not an array:', services);
+        services = [];
+        container.innerHTML = '<p style="text-align: center; color: #A7A7A7; padding: 20px;">لا توجد خدمات متاحة</p>';
+        return;
+    }
+    
+    if (services.length === 0) {
+        console.warn('No services available');
         container.innerHTML = '<p style="text-align: center; color: #A7A7A7; padding: 20px;">لا توجد خدمات متاحة</p>';
         return;
     }
