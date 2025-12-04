@@ -202,7 +202,7 @@ router.get('/available-slots', async (req, res) => {
 // Public route to create appointment (for customers)
 router.post('/public/book', async (req, res) => {
     try {
-        const { business, service, services, serviceName, barber, employee, isFlexibleEmployee, customer, customerName, customerPhone, date, time, notes, extraCharge, isVIPSlot, totalDuration, totalPrice } = req.body;
+        const { business, service, services, serviceName, barber, employee, isFlexibleEmployee, customer, customerName, customerPhone, date, time, notes, extraCharge, isVIPSlot, totalDuration, totalPrice, isQuickBooking } = req.body;
 
         if (!business || (!service && (!services || services.length === 0)) || !customerPhone || !date || !time) {
             return res.status(400).json({ 
@@ -475,10 +475,11 @@ router.post('/public/book', async (req, res) => {
         // Rule: New Customer = 100 points. Referred Customer = 0 points.
         // If customer is new AND NOT referred -> 100 points
         // If customer is new AND referred -> 0 points (as per user request)
+        // If booking is via Quick Book (in-store) -> 0 points (as per user request)
         
         let pendingPoints = 0;
         
-        if (completedAppointments === 0 && !isReferred) {
+        if (completedAppointments === 0 && !isReferred && !isQuickBooking) {
             pendingPoints = 100;
         }
         

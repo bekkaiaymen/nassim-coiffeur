@@ -797,7 +797,8 @@ async function handleAppointmentSubmit(e) {
         notes: notes,
         totalPrice: selectedServices.reduce((sum, s) => sum + s.price, 0),
         totalDuration: selectedServices.reduce((sum, s) => sum + s.duration, 0),
-        status: 'pending'
+        status: 'pending',
+        isQuickBooking: true // Flag to indicate in-store quick booking (no welcome bonus)
     };
     
     console.log('Customer data:', customerData);
