@@ -722,7 +722,8 @@ async function handleAppointmentSubmit(e) {
         status: 'pending'
     };
     
-    console.log('Booking data:', appointmentData);
+    console.log('Customer data:', customerData);
+    console.log('Booking data to send:', appointmentData);
     
     try {
         const response = await fetch(`${API_BASE}/appointments/public/book`, {
@@ -731,10 +732,15 @@ async function handleAppointmentSubmit(e) {
             body: JSON.stringify(appointmentData)
         });
         
+        console.log('Response status:', response.status);
         const result = await response.json();
+        console.log('Response result:', result);
         
         if (response.ok && result.success) {
-            displaySuccessDetails(result.appointment || result.data || result);
+            const appointmentData = result.data || result.appointment || result;
+            console.log('Appointment created successfully:', appointmentData);
+            console.log('Appointment ID:', appointmentData._id);
+            displaySuccessDetails(appointmentData);
             showLoading(false);
             showSuccess();
             showToast('تم حجز الموعد بنجاح! 🎉', 'success');
@@ -744,6 +750,7 @@ async function handleAppointmentSubmit(e) {
                 autoLoginAfterBooking();
             }, 3000);
         } else {
+            console.error('Booking failed:', result.message);
             showToast(result.message || 'فشل حجز الموعد', 'error');
             showLoading(false);
         }
