@@ -1,5 +1,6 @@
 // Quick Book JavaScript
 let customerData = {};
+let customerPassword = null; // For auto-login after booking
 let selectedTimeSlot = null;
 let availableEmployees = [];
 let services = [];
@@ -103,6 +104,9 @@ async function handleCustomerSubmit(e) {
         showToast('الرجاء ملء جميع الحقول', 'error');
         return;
     }
+    
+    // Store password for auto-login after booking
+    customerPassword = password;
     
     if (phone.length !== 10 || !phone.startsWith('0')) {
         showToast('رقم الهاتف يجب أن يكون 10 أرقام ويبدأ بـ 0', 'error');
@@ -742,13 +746,45 @@ async function autoLoginAfterBooking() {
         return;
     }
     
-    // Store customer token from registration/login
-    const token = localStorage.getItem('quick_book_token');
+    // Try to get token from localStorage
+    let token = localStorage.getItem('quick_book_token');
+    
+    // If no token, try to login again using stored password
+    if (!token && customerPassword) {
+        console.log('No token found, attempting to create session with stored password...');
+        
+        try {
+            const loginResponse = await fetch(`${API_BASE}/customers/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    phone: customerData.phone, 
+                    password: customerPassword 
+                })
+            });
+            
+            if (loginResponse.ok) {
+                const loginData = await loginResponse.json();
+                token = loginData.token;
+                if (token) {
+                    localStorage.setItem('quick_book_token', token);
+                    console.log('Session created successfully with stored password');
+                }
+            } else {
+                console.error('Login failed:', await loginResponse.text());
+            }
+        } catch (error) {
+            console.error('Error getting token:', error);
+        }
+    }
     
     if (token) {
         // Save token for nassim customer interface
         localStorage.setItem('customerToken', token);
         localStorage.setItem('customerData', JSON.stringify(customerData));
+        
+        // Clear password from memory for security
+        customerPassword = null;
         
         showToast('جاري تسجيل الدخول إلى حسابك...', 'success');
         
@@ -757,7 +793,9 @@ async function autoLoginAfterBooking() {
             window.location.href = '/nassim/index.html';
         }, 1500);
     } else {
-        console.error('No token available for auto login');
+        console.log('Could not get token, redirecting without auto-login');
+        // Clear password from memory for security
+        customerPassword = null;
     }
 }
 
