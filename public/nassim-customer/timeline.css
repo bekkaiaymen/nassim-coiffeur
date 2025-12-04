@@ -602,15 +602,17 @@ body {
 }
 
 .apt-time {
-    font-size: 1.8rem;
-    font-weight: 900;
-    letter-spacing: 1px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: 0;
     text-align: center;
     white-space: nowrap;
     text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     width: 100%;
     overflow: hidden;
-    padding: 0 5px;
+    text-overflow: clip;
+    padding: 0 2px;
+    direction: ltr;
 }
 
 .apt-name {

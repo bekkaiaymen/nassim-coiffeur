@@ -259,8 +259,9 @@ function renderTimeline(date, appointments, availableEmployees = []) {
             el.style.left = `${leftPos}px`;
             el.style.width = `${width}px`;
             
+            // Remove spaces around hyphen to save space
             el.innerHTML = `
-                <div class="apt-time">${startTimeStr} - ${endTimeStr}</div>
+                <div class="apt-time">${startTimeStr}-${endTimeStr}</div>
             `;
             
             track.appendChild(el);
