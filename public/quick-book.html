@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>✂️ Nassim Coiffeur - حجز سريع</title>
     <link rel="icon" href="/nassim/logo.jpg">
+    <link rel="stylesheet" href="/nassim/quick-book-modal.css">
     <style>
         * {
             margin: 0;
@@ -470,7 +471,8 @@
     <script>
         const API_BASE = '/api';
         const BUSINESS_ID = '69259331651b1babc1eb83dc';
-        let selectedServiceId = null;
+        let availableServices = [];
+        let selectedServices = []; // Array of objects {id, name, price, duration, isPackage, variantIndex}
 
         document.addEventListener('DOMContentLoaded', () => {
             initQuickBook();
@@ -494,8 +496,6 @@
             }
         }
 
-        let selectedServices = new Set();
-
         async function loadEmployees() {
             try {
                 const response = await fetch(`${API_BASE}/employees/public/by-business/${BUSINESS_ID}`);
@@ -516,7 +516,6 @@
                 });
             } catch (error) {
                 console.error('Load employees error:', error);
-                // Don't show toast for this, just keep "Any barber"
             }
         }
 
@@ -527,20 +526,43 @@
 
                 const result = await response.json();
                 const services = result.data || [];
+                availableServices = services;
 
                 const grid = document.getElementById('servicesGrid');
                 grid.innerHTML = '';
 
-                services.forEach(service => {
+                // Filter out packages from initial display
+                const displayServices = services.filter(s => !s.isPackage);
+
+                displayServices.forEach(service => {
                     const card = document.createElement('div');
                     card.className = 'service-card';
                     card.dataset.id = service._id;
                     card.dataset.price = service.price;
                     card.dataset.duration = service.duration || 30;
+                    card.dataset.isPackage = service.isPackage || false;
+                    card.dataset.hasVariants = service.hasVariants || false;
                     
+                    const hasValidImage = service.image && service.image.trim() !== '';
+                    
+                    // Image or Icon
+                    let imageHtml = '';
+                    if (hasValidImage) {
+                        imageHtml = `<div class="service-image" style="width: 100%; height: 120px; overflow: hidden; border-radius: 10px; margin-bottom: 10px;">
+                            <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>`;
+                    } else {
+                        // Fallback icon if no image
+                        // We can use the existing layout or add an icon
+                    }
+
                     card.innerHTML = `
+                        ${imageHtml}
                         <div class="service-info">
-                            <div class="service-name">${service.name}</div>
+                            <div class="service-name">
+                                ${service.name}
+                                ${service.hasVariants ? '<span style="font-size:0.8em; color:#3498db; display:block;">(اضغط للاختيارات)</span>' : ''}
+                            </div>
                             <div class="service-duration">${service.duration || 30} دقيقة</div>
                         </div>
                         <div class="service-price">${service.price} دج</div>
@@ -557,13 +579,224 @@
         }
 
         function toggleService(card, serviceId) {
-            if (selectedServices.has(serviceId)) {
-                selectedServices.delete(serviceId);
+            // Check if already selected
+            const existingIndex = selectedServices.findIndex(s => s.id === serviceId);
+
+            if (existingIndex !== -1) {
+                // Remove
+                selectedServices.splice(existingIndex, 1);
                 card.classList.remove('selected');
+                checkPackageAvailability();
             } else {
-                selectedServices.add(serviceId);
-                card.classList.add('selected');
+                // Check for variants
+                const hasVariants = card.dataset.hasVariants === 'true';
+                if (hasVariants) {
+                    showVariantsModal(serviceId);
+                    return;
+                }
+
+                // Add
+                const service = availableServices.find(s => s._id === serviceId);
+                if (service) {
+                    selectedServices.push({
+                        id: serviceId,
+                        name: service.name,
+                        price: service.price,
+                        duration: service.duration,
+                        isPackage: false
+                    });
+                    card.classList.add('selected');
+                    checkPackageAvailability();
+                }
             }
+        }
+
+        // Show Variants Modal
+        function showVariantsModal(serviceId) {
+            const service = availableServices.find(s => s._id === serviceId);
+            if (!service || !service.variants) return;
+            
+            // Create modal if not exists
+            let modal = document.getElementById('variantsModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'variantsModal';
+                modal.className = 'modal';
+                modal.style.display = 'none';
+                document.body.appendChild(modal);
+            }
+            
+            const variantsHtml = service.variants.map((variant, index) => `
+                <div class="variant-option" onclick="selectVariant('${serviceId}', ${index})" 
+                    style="padding: 15px; border-bottom: 1px solid #333; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-primary);">
+                    <div>
+                        <div style="font-weight: bold;">${variant.name}</div>
+                        <div style="font-size: 0.9em; color: var(--text-secondary);">${variant.duration} دقيقة</div>
+                    </div>
+                    <div style="font-weight: bold; color: var(--success);">${variant.price} دج</div>
+                </div>
+            `).join('');
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="background: var(--surface); border: 1px solid #333;">
+                    <div class="modal-header" style="border-bottom: 1px solid #333;">
+                        <h3 style="color: var(--primary);">${service.name}</h3>
+                        <span class="close-btn" onclick="document.getElementById('variantsModal').style.display='none'">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <p style="margin-bottom: 15px; color: var(--text-secondary);">اختر نوع الخدمة:</p>
+                        <div class="variants-list" style="border: 1px solid #333; border-radius: 8px; overflow: hidden;">
+                            ${variantsHtml}
+                            <div class="variant-option" onclick="selectVariant('${serviceId}', -1)" 
+                                style="padding: 15px; background: rgba(255,255,255,0.05); cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: var(--text-primary);">
+                                <div>
+                                    <div style="font-weight: bold;">سأختار مع الحلاق</div>
+                                    <div style="font-size: 0.9em; color: var(--text-secondary);">تحديد السعر والوقت لاحقاً</div>
+                                </div>
+                                <div style="font-weight: bold; color: var(--text-muted);">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.style.display = 'block';
+        }
+
+        function selectVariant(serviceId, variantIndex) {
+            const service = availableServices.find(s => s._id === serviceId);
+            if (!service) return;
+            
+            let name = service.name;
+            let price = service.price;
+            let duration = service.duration;
+            
+            if (variantIndex >= 0 && service.variants[variantIndex]) {
+                const variant = service.variants[variantIndex];
+                name = `${service.name} - ${variant.name}`;
+                price = variant.price;
+                duration = variant.duration;
+            } else {
+                name = `${service.name} (تحديد مع الحلاق)`;
+            }
+            
+            // Add to selection
+            selectedServices.push({
+                id: serviceId,
+                name: name,
+                price: price,
+                duration: duration,
+                isPackage: false,
+                variantIndex: variantIndex
+            });
+            
+            // Mark card as selected
+            const card = document.querySelector(`.service-card[data-id="${serviceId}"]`);
+            if (card) card.classList.add('selected');
+            
+            // Close modal
+            document.getElementById('variantsModal').style.display = 'none';
+            
+            checkPackageAvailability();
+        }
+
+        function checkPackageAvailability() {
+            // Get IDs of selected services (excluding packages themselves)
+            const selectedIds = selectedServices.filter(s => !s.isPackage).map(s => s.id);
+            
+            if (selectedIds.length < 2) return;
+            
+            // Find packages that match selected services
+            const packages = availableServices.filter(s => s.isPackage && s.packageServices && s.packageServices.length > 0);
+            
+            for (const pkg of packages) {
+                const pkgServiceIds = pkg.packageServices.map(s => s._id || s);
+                const isMatch = pkgServiceIds.every(id => selectedIds.includes(id.toString()));
+                
+                if (isMatch && pkgServiceIds.length === selectedIds.length) {
+                    showPackageToast(pkg);
+                    return;
+                }
+            }
+        }
+
+        function showPackageToast(pkg) {
+            if (document.getElementById('packageToast')) return;
+            
+            const toast = document.createElement('div');
+            toast.id = 'packageToast';
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: var(--surface);
+                color: var(--text-primary);
+                padding: 15px 20px;
+                border-radius: 30px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                animation: slideUpToast 0.3s ease-out;
+                width: 90%;
+                max-width: 400px;
+                border: 1px solid var(--primary);
+            `;
+            
+            toast.innerHTML = `
+                <div style="flex: 1;">
+                    <div style="font-weight: bold; color: var(--primary);">باقة متاحة!</div>
+                    <div style="font-size: 0.9em;">${pkg.name} بسعر ${pkg.price} دج</div>
+                </div>
+                <button onclick="applyPackage('${pkg._id}')" style="
+                    background: var(--primary);
+                    color: var(--dark);
+                    border: none;
+                    padding: 8px 15px;
+                    border-radius: 20px;
+                    font-weight: bold;
+                    cursor: pointer;
+                ">تطبيق</button>
+                <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;font-size:1.2em;">&times;</button>
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                if (toast.parentElement) toast.remove();
+            }, 10000);
+        }
+
+        function applyPackage(packageId) {
+            const pkg = availableServices.find(s => s._id === packageId);
+            if (!pkg) return;
+            
+            const pkgServiceIds = pkg.packageServices.map(s => (s._id || s).toString());
+            
+            // Remove component services
+            for (let i = selectedServices.length - 1; i >= 0; i--) {
+                if (pkgServiceIds.includes(selectedServices[i].id)) {
+                    const card = document.querySelector(`.service-card[data-id="${selectedServices[i].id}"]`);
+                    if (card) card.classList.remove('selected');
+                    selectedServices.splice(i, 1);
+                }
+            }
+            
+            // Add package
+            selectedServices.push({
+                id: pkg._id,
+                name: pkg.name,
+                price: pkg.price,
+                duration: pkg.duration,
+                isPackage: true
+            });
+            
+            const toast = document.getElementById('packageToast');
+            if (toast) toast.remove();
+            
+            showToast(`تم تطبيق باقة ${pkg.name}`, 'success');
         }
 
         function generateTimeInputs() {
@@ -622,7 +855,7 @@
                 return;
             }
 
-            if (selectedServices.size === 0) {
+            if (selectedServices.length === 0) {
                 showToast('الرجاء اختيار خدمة واحدة على الأقل', 'error');
                 return;
             }
@@ -652,9 +885,23 @@
                 }
             }
 
-            const selectedCards = Array.from(document.querySelectorAll('.service-card.selected'));
-            const serviceNames = selectedCards.map(card => card.querySelector('.service-name').textContent).join(' + ');
-            const serviceIds = Array.from(selectedServices);
+            // Prepare data
+            const serviceNames = selectedServices.map(s => s.name).join(' + ');
+            
+            // Handle package services safely
+            let serviceIds = [];
+            const isPackageBooking = selectedServices.length === 1 && selectedServices[0].isPackage;
+            
+            if (isPackageBooking) {
+                const pkg = availableServices.find(s => s._id === selectedServices[0].id);
+                if (pkg && pkg.packageServices) {
+                    serviceIds = pkg.packageServices.map(s => s._id || s.id || s);
+                } else {
+                    serviceIds = [selectedServices[0].id];
+                }
+            } else {
+                serviceIds = selectedServices.map(s => s.id);
+            }
 
             const submitBtn = document.getElementById('submitBtn');
             const loading = document.getElementById('loading');
@@ -679,7 +926,9 @@
                     notes: referrerName ? `حجز سريع عبر إحالة من: ${referrerName}` : 'حجز سريع',
                     referrer: referrerName, // Send referrer explicitly
                     extraCharge: extraCharge,
-                    isVIPSlot: isVIPSlot
+                    isVIPSlot: isVIPSlot,
+                    totalPrice: selectedServices.reduce((sum, s) => sum + s.price, 0),
+                    totalDuration: selectedServices.reduce((sum, s) => sum + s.duration, 0)
                 };
 
                 const response = await fetch(`${API_BASE}/appointments/public/book`, {
