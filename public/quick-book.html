@@ -561,9 +561,16 @@
                     <span class="required">*</span>
                     الوقت
                 </label>
-                <div class="time-input-group">
-                    <select id="timeSlotSelect" class="form-select" required disabled>
-                        <option value="">اختر التاريخ والحلاق أولاً</option>
+                <div class="time-input-group" style="display: flex; gap: 10px;">
+                    <select id="hourSelect" class="form-select" style="flex: 1;">
+                        <option value="">الساعة</option>
+                    </select>
+                    <select id="minuteSelect" class="form-select" style="flex: 1;">
+                        <option value="">الدقيقة</option>
+                    </select>
+                    <select id="periodSelect" class="form-select" style="flex: 1;">
+                        <option value="AM">صباحاً</option>
+                        <option value="PM">مساءً</option>
                     </select>
                 </div>
                 <div id="availabilityStatus" style="font-size: 0.85em; margin-top: 8px; color: var(--text-secondary);"></div>
@@ -596,12 +603,15 @@
             loadReferrerInfo();
             await loadServices();
             await loadEmployees();
-            // generateTimeInputs(); // Removed in favor of dynamic slots
+            generateTimeInputs();
             setMinDate();
             
             // Add event listeners for availability checking
-            document.getElementById('appointmentDate').addEventListener('change', loadAvailableSlots);
-            document.getElementById('barberSelect').addEventListener('change', loadAvailableSlots);
+            document.getElementById('appointmentDate').addEventListener('change', checkTimeAvailability);
+            document.getElementById('barberSelect').addEventListener('change', checkTimeAvailability);
+            document.getElementById('hourSelect').addEventListener('change', checkTimeAvailability);
+            document.getElementById('minuteSelect').addEventListener('change', checkTimeAvailability);
+            document.getElementById('periodSelect').addEventListener('change', checkTimeAvailability);
         }
 
         function loadReferrerInfo() {
@@ -767,84 +777,11 @@
             totalSpan.textContent = `${totalPrice} دج`;
             
             // Reload slots when services (duration) change
-            loadAvailableSlots();
+            checkTimeAvailability();
         }
 
         async function loadAvailableSlots() {
-            const dateInput = document.getElementById('appointmentDate');
-            const barberSelect = document.getElementById('barberSelect');
-            const timeSelect = document.getElementById('timeSlotSelect');
-            const statusDiv = document.getElementById('availabilityStatus');
-            
-            const date = dateInput.value;
-            const barberId = barberSelect.value;
-            
-            // Reset select
-            timeSelect.innerHTML = '<option value="">جاري التحقق من الأوقات...</option>';
-            timeSelect.disabled = true;
-            statusDiv.textContent = '';
-            
-            if (!date) {
-                timeSelect.innerHTML = '<option value="">اختر التاريخ أولاً</option>';
-                return;
-            }
-            
-            if (selectedServices.length === 0) {
-                timeSelect.innerHTML = '<option value="">اختر خدمة واحدة على الأقل</option>';
-                statusDiv.textContent = 'يجب اختيار خدمة لحساب المدة المطلوبة';
-                statusDiv.style.color = 'var(--error)';
-                return;
-            }
-
-            try {
-                const totalDuration = selectedServices.reduce((sum, s) => sum + (s.duration || 0), 0);
-                
-                // Build query URL
-                let url = `${API_BASE}/appointments/available-slots?business=${BUSINESS_ID}&date=${date}&duration=${totalDuration}`;
-                if (barberId) {
-                    url += `&barber=${barberId}`;
-                }
-                
-                const response = await fetch(url);
-                const result = await response.json();
-                
-                if (!result.success) throw new Error(result.message);
-                
-                const slots = result.data || [];
-                const availableSlots = slots.filter(s => s.available);
-                
-                timeSelect.innerHTML = '<option value="">اختر الوقت المناسب</option>';
-                
-                if (availableSlots.length === 0) {
-                    const option = document.createElement('option');
-                    option.textContent = 'لا توجد مواعيد متاحة في هذا اليوم';
-                    timeSelect.appendChild(option);
-                    statusDiv.textContent = '⚠️ جميع المواعيد محجوزة، يرجى اختيار يوم آخر أو حلاق آخر';
-                    statusDiv.style.color = 'var(--error)';
-                } else {
-                    availableSlots.forEach(slot => {
-                        const option = document.createElement('option');
-                        option.value = slot.time;
-                        // Format time nicely (e.g., 09:00 -> 9:00 ص)
-                        const [h, m] = slot.time.split(':');
-                        let hour = parseInt(h);
-                        const ampm = hour >= 12 ? 'م' : 'ص';
-                        if (hour > 12) hour -= 12;
-                        option.textContent = `${hour}:${m} ${ampm}`;
-                        timeSelect.appendChild(option);
-                    });
-                    
-                    timeSelect.disabled = false;
-                    statusDiv.textContent = `✅ متاح ${availableSlots.length} موعد (المدة المطلوبة: ${totalDuration} دقيقة)`;
-                    statusDiv.style.color = 'var(--success)';
-                }
-                
-            } catch (error) {
-                console.error('Error loading slots:', error);
-                timeSelect.innerHTML = '<option value="">فشل تحميل الأوقات</option>';
-                statusDiv.textContent = 'حدث خطأ أثناء فحص المواعيد';
-                statusDiv.style.color = 'var(--error)';
-            }
+            // Deprecated: Replaced by checkTimeAvailability
         }
 
         // Show Variants Modal
@@ -1038,7 +975,93 @@
         }
 
         function generateTimeInputs() {
-            // Deprecated: Replaced by loadAvailableSlots
+            const hourSelect = document.getElementById('hourSelect');
+            const minuteSelect = document.getElementById('minuteSelect');
+            
+            // Generate hours (1-12)
+            for (let h = 1; h <= 12; h++) {
+                const option = document.createElement('option');
+                option.value = h;
+                option.textContent = h;
+                hourSelect.appendChild(option);
+            }
+            
+            // Generate minutes (0-55, step 5)
+            for (let m = 0; m < 60; m += 5) {
+                const option = document.createElement('option');
+                option.value = String(m).padStart(2, '0');
+                option.textContent = String(m).padStart(2, '0');
+                minuteSelect.appendChild(option);
+            }
+        }
+
+        async function checkTimeAvailability() {
+            const dateInput = document.getElementById('appointmentDate');
+            const barberSelect = document.getElementById('barberSelect');
+            const hourSelect = document.getElementById('hourSelect');
+            const minuteSelect = document.getElementById('minuteSelect');
+            const periodSelect = document.getElementById('periodSelect');
+            const statusDiv = document.getElementById('availabilityStatus');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            const date = dateInput.value;
+            const barberId = barberSelect.value;
+            const hour = hourSelect.value;
+            const minute = minuteSelect.value;
+            const period = periodSelect.value;
+            
+            // Reset status
+            statusDiv.textContent = '';
+            submitBtn.disabled = true;
+            
+            if (!date || !hour || !minute) {
+                return;
+            }
+            
+            if (selectedServices.length === 0) {
+                statusDiv.textContent = '⚠️ يجب اختيار خدمة لحساب المدة المطلوبة';
+                statusDiv.style.color = 'var(--error)';
+                return;
+            }
+
+            // Convert to 24h format
+            let hour24 = parseInt(hour);
+            if (period === 'PM' && hour24 < 12) hour24 += 12;
+            if (period === 'AM' && hour24 === 12) hour24 = 0;
+            
+            const timeString = `${String(hour24).padStart(2, '0')}:${minute}`;
+            const totalDuration = selectedServices.reduce((sum, s) => sum + (s.duration || 0), 0);
+
+            statusDiv.textContent = '⏳ جاري التحقق من التوفر...';
+            statusDiv.style.color = 'var(--text-secondary)';
+
+            try {
+                // Build query URL
+                let url = `${API_BASE}/appointments/available-slots?business=${BUSINESS_ID}&date=${date}&checkTime=${timeString}&duration=${totalDuration}`;
+                if (barberId) {
+                    url += `&barber=${barberId}`;
+                }
+                
+                const response = await fetch(url);
+                const result = await response.json();
+                
+                if (!result.success) throw new Error(result.message);
+                
+                if (result.available) {
+                    statusDiv.innerHTML = `✅ <b>الوقت متاح!</b> (المدة: ${totalDuration} دقيقة)`;
+                    statusDiv.style.color = 'var(--success)';
+                    submitBtn.disabled = false;
+                } else {
+                    statusDiv.innerHTML = `❌ <b>الوقت غير متاح</b> - يوجد حجز آخر يتعارض مع المدة المطلوبة`;
+                    statusDiv.style.color = 'var(--error)';
+                    submitBtn.disabled = true;
+                }
+                
+            } catch (error) {
+                console.error('Error checking availability:', error);
+                statusDiv.textContent = 'حدث خطأ أثناء فحص المواعيد';
+                statusDiv.style.color = 'var(--error)';
+            }
         }
 
         function setMinDate() {
@@ -1068,7 +1091,10 @@
             const phone = document.getElementById('customerPhone').value.trim();
             const barberId = document.getElementById('barberSelect').value;
             const date = document.getElementById('appointmentDate').value;
-            const time = document.getElementById('timeSlotSelect').value;
+            
+            const hour = document.getElementById('hourSelect').value;
+            const minute = document.getElementById('minuteSelect').value;
+            const period = document.getElementById('periodSelect').value;
 
             if (!name || !phone) {
                 showToast('الرجاء إدخال الاسم ورقم الهاتف', 'error');
@@ -1085,10 +1111,16 @@
                 return;
             }
 
-            if (!time) {
+            if (!hour || !minute) {
                 showToast('الرجاء اختيار الوقت', 'error');
                 return;
             }
+            
+            // Convert to 24h format for submission
+            let hour24 = parseInt(hour);
+            if (period === 'PM' && hour24 < 12) hour24 += 12;
+            if (period === 'AM' && hour24 === 12) hour24 = 0;
+            const time = `${String(hour24).padStart(2, '0')}:${minute}`;
             
             // Check VIP restriction for evening slots (17:40 - 21:00)
             let extraCharge = 0;
