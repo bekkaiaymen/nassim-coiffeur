@@ -214,8 +214,22 @@ router.post('/public/book', async (req, res) => {
         let serviceDuration = 30; // Default duration
         let basePrice = 50; // Default price
 
-        // Fetch service details
-        if (service) {
+        // Fetch service details and calculate total duration
+        if (services && services.length > 0) {
+            try {
+                const serviceDocs = await Service.find({ _id: { $in: services } });
+                if (serviceDocs.length > 0) {
+                    // Sum up durations
+                    serviceDuration = serviceDocs.reduce((sum, s) => sum + (s.duration || 30), 0);
+                    // Sum up prices (optional, but good for consistency)
+                    basePrice = serviceDocs.reduce((sum, s) => sum + (s.price || 50), 0);
+                }
+            } catch (err) {
+                console.error('Error fetching services:', err);
+                // Fallback to provided totalDuration if available
+                if (totalDuration) serviceDuration = parseInt(totalDuration);
+            }
+        } else if (service) {
             try {
                 const serviceDoc = await Service.findById(service);
                 if (serviceDoc) {
@@ -225,6 +239,9 @@ router.post('/public/book', async (req, res) => {
             } catch (err) {
                 console.error('Error fetching service:', err);
             }
+        } else if (totalDuration) {
+            // Fallback if no service IDs but duration provided
+            serviceDuration = parseInt(totalDuration);
         }
 
         // Calculate End Time
