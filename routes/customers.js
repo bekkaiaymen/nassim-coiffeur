@@ -492,11 +492,22 @@ router.get('/public/profile', async (req, res) => {
                 
                 if (customer) {
                     // التحقق من أن معلومات Customer تطابق User
+                    let needsUpdate = false;
                     if (customer.phone !== user.phone || customer.name !== user.name) {
-                        console.log('⚠️ Customer data mismatch, updating...');
                         customer.name = user.name;
                         customer.phone = user.phone;
                         customer.email = user.email;
+                        needsUpdate = true;
+                    }
+                    
+                    // Sync photo from User if missing in Customer or if User has a photo and Customer doesn't
+                    if (user.avatar && !customer.photo) {
+                        customer.photo = user.avatar;
+                        needsUpdate = true;
+                    }
+
+                    if (needsUpdate) {
+                        console.log('⚠️ Customer data mismatch, updating...');
                         await customer.save();
                     }
                     return res.json({ success: true, data: customer });
@@ -510,6 +521,7 @@ router.get('/public/profile', async (req, res) => {
                     name: user.name,
                     phone: user.phone,
                     email: user.email,
+                    photo: user.avatar,
                     loyaltyPoints: 0,
                     totalVisits: 0
                 });

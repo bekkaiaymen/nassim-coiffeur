@@ -1522,11 +1522,25 @@ function loadAccountData() {
     }
     
     // تحديث صورة الملف الشخصي
-    if (customerData.profileImage) {
-        const imgElement = document.getElementById('profileImage');
-        if (imgElement) {
-            imgElement.src = customerData.profileImage;
-            console.log('✅ Profile image updated');
+    const imgElement = document.getElementById('profileImage');
+    if (imgElement) {
+        const photoUrl = customerData.photo || customerData.avatar || customerData.profileImage;
+        if (photoUrl) {
+            // Handle local paths that might be missing the leading slash or full URL
+            let finalUrl = photoUrl;
+            if (!finalUrl.startsWith('http') && !finalUrl.startsWith('/')) {
+                finalUrl = '/' + finalUrl;
+            }
+            
+            imgElement.src = finalUrl;
+            
+            // Add error handler to fallback to placeholder
+            imgElement.onerror = function() {
+                console.log('❌ Failed to load profile image:', finalUrl);
+                this.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces';
+            };
+            
+            console.log('✅ Profile image updated:', finalUrl);
         }
     }
     

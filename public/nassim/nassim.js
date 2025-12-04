@@ -190,6 +190,23 @@ function updateUIWithCustomerData() {
     if (document.getElementById('profilePhone')) {
         document.getElementById('profilePhone').textContent = customerData.phone || '';
     }
+    
+    // Update profile image
+    const imgElement = document.getElementById('profileImage');
+    if (imgElement) {
+        const photoUrl = customerData.photo || customerData.avatar || customerData.profileImage;
+        if (photoUrl) {
+            let finalUrl = photoUrl;
+            if (!finalUrl.startsWith('http') && !finalUrl.startsWith('/')) {
+                finalUrl = '/' + finalUrl;
+            }
+            imgElement.src = finalUrl;
+            imgElement.onerror = function() {
+                console.log('❌ Failed to load profile image:', finalUrl);
+                this.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces';
+            };
+        }
+    }
 }
 
 // Load Services
