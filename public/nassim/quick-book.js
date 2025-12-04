@@ -48,9 +48,78 @@ function setupEventListeners() {
     const timeInput = document.getElementById('appointmentTime');
     const employeeSelect = document.getElementById('employeeSelect');
     
-    if (dateInput) dateInput.addEventListener('change', updateConfirmButton);
-    if (timeInput) timeInput.addEventListener('change', updateConfirmButton);
-    if (employeeSelect) employeeSelect.addEventListener('change', updateConfirmButton);
+    if (dateInput) dateInput.addEventListener('change', () => {
+        updateConfirmButton();
+        checkAvailability();
+    });
+    if (timeInput) timeInput.addEventListener('change', () => {
+        updateConfirmButton();
+        checkAvailability();
+    });
+    if (employeeSelect) employeeSelect.addEventListener('change', () => {
+        updateConfirmButton();
+        checkAvailability();
+    });
+}
+
+// Check Availability
+async function checkAvailability() {
+    const date = document.getElementById('appointmentDate').value;
+    const time = document.getElementById('appointmentTime').value;
+    const employeeId = document.getElementById('employeeSelect').value;
+    const statusDiv = document.getElementById('availabilityStatus');
+    
+    // Create status div if not exists
+    if (!statusDiv) {
+        const timeGroup = document.getElementById('appointmentTime').parentElement;
+        const div = document.createElement('div');
+        div.id = 'availabilityStatus';
+        div.style.marginTop = '5px';
+        div.style.fontSize = '13px';
+        timeGroup.appendChild(div);
+    }
+    
+    const statusEl = document.getElementById('availabilityStatus');
+    statusEl.innerHTML = '';
+    
+    if (!date || !time) return;
+    
+    // If "Any Barber" is selected, we assume it's available (or we could check if ALL are busy)
+    if (employeeId === 'any') {
+        statusEl.innerHTML = '<span style="color: #2ecc71;">✅ متاح (حجز مرن)</span>';
+        return;
+    }
+    
+    if (!employeeId) return;
+    
+    statusEl.innerHTML = '<span style="color: #f39c12;">⏳ جاري التحقق...</span>';
+    
+    try {
+        const nassimBusinessId = NASSIM_BUSINESS_ID || await getNassimBusinessId();
+        const response = await fetch(`${API_BASE}/appointments/available-slots?business=${nassimBusinessId}&date=${date}&employee=${employeeId}`);
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+                const slot = result.data.find(s => s.time === time);
+                
+                if (slot) {
+                    if (slot.available) {
+                        statusEl.innerHTML = '<span style="color: #2ecc71;">✅ هذا الوقت متاح</span>';
+                    } else {
+                        statusEl.innerHTML = '<span style="color: #e74c3c;">❌ هذا الوقت محجوز، يرجى اختيار وقت آخر</span>';
+                    }
+                } else {
+                    // Time not in standard slots (e.g. custom time)
+                    // We can't be sure, but usually we stick to slots
+                    statusEl.innerHTML = '<span style="color: #f39c12;">⚠️ وقت خارج أوقات العمل الرسمية</span>';
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Availability check failed:', error);
+        statusEl.innerHTML = '';
+    }
 }
 
 // Navigation Functions

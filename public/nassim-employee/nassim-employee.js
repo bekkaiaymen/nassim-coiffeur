@@ -241,6 +241,13 @@ function setupForms() {
     
     if (quickAddForm) {
         quickAddForm.addEventListener('submit', handleAddCustomer);
+        
+        // Add listeners for availability check
+        const dateInput = document.getElementById('appointmentDate');
+        const timeInput = document.getElementById('appointmentTime');
+        
+        if (dateInput) dateInput.addEventListener('change', checkEmployeeAvailability);
+        if (timeInput) timeInput.addEventListener('change', checkEmployeeAvailability);
     }
     
     if (ratingForm) {
@@ -294,6 +301,62 @@ function populateServiceSelect() {
             option.dataset.name = service.name;
             select.appendChild(option);
         });
+    }
+}
+
+// Check Employee Availability
+async function checkEmployeeAvailability() {
+    const date = document.getElementById('appointmentDate').value;
+    const time = document.getElementById('appointmentTime').value;
+    const statusDiv = document.getElementById('empAvailabilityStatus');
+    
+    // Create status div if not exists
+    if (!statusDiv) {
+        const timeGroup = document.getElementById('appointmentTime').parentElement;
+        const div = document.createElement('div');
+        div.id = 'empAvailabilityStatus';
+        div.style.marginTop = '5px';
+        div.style.fontSize = '13px';
+        timeGroup.appendChild(div);
+    }
+    
+    const statusEl = document.getElementById('empAvailabilityStatus');
+    statusEl.innerHTML = '';
+    
+    if (!date || !time || !employeeData) return;
+    
+    statusEl.innerHTML = '<span style="color: #f39c12;">⏳ جاري التحقق...</span>';
+    
+    try {
+        // Use the employee's business ID or fallback
+        const businessId = employeeData.business || '69259331651b1babc1eb83dc';
+        const empId = employeeData._id || employeeData.id;
+        
+        const response = await fetch(`${API_BASE}/appointments/available-slots?business=${businessId}&date=${date}&employee=${empId}`, {
+            headers: {
+                'Authorization': `Bearer ${employeeToken}`
+            }
+        });
+        
+        if (response.ok) {
+            const result = await response.json();
+            if (result.success && result.data) {
+                const slot = result.data.find(s => s.time === time);
+                
+                if (slot) {
+                    if (slot.available) {
+                        statusEl.innerHTML = '<span style="color: #2ecc71;">✅ هذا الوقت متاح</span>';
+                    } else {
+                        statusEl.innerHTML = '<span style="color: #e74c3c;">❌ لديك موعد آخر في هذا الوقت</span>';
+                    }
+                } else {
+                    statusEl.innerHTML = '<span style="color: #f39c12;">⚠️ وقت خارج أوقات العمل</span>';
+                }
+            }
+        }
+    } catch (error) {
+        console.error('Availability check failed:', error);
+        statusEl.innerHTML = '';
     }
 }
 

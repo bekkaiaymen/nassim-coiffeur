@@ -113,7 +113,7 @@ router.get('/public/customer/:phone', async (req, res) => {
 // Public route to get available time slots (no auth required)
 router.get('/available-slots', async (req, res) => {
     try {
-        const { business, date, barber } = req.query;
+        const { business, date, barber, employee } = req.query;
         
         if (!business || !date) {
             return res.status(400).json({ 
@@ -128,8 +128,9 @@ router.get('/available-slots', async (req, res) => {
             status: { $ne: 'cancelled' }
         };
         
-        if (barber) {
-            query.barber = barber;
+        const targetEmployee = barber || employee;
+        if (targetEmployee) {
+            query.$or = [{ barber: targetEmployee }, { employee: targetEmployee }];
         }
         
         const appointments = await Appointment.find(query).select('time duration');
