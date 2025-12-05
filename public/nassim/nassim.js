@@ -42,7 +42,66 @@ function getAuthHeaders() {
 }
 
 // Initialize
+// Initialize IndexedDB for storing data when app is closed
+function initIndexedDB() {
+    return new Promise((resolve) => {
+        if (!window.indexedDB) {
+            console.warn('⚠️ IndexedDB not supported');
+            resolve();
+            return;
+        }
+        
+        const request = indexedDB.open('nassim-db', 1);
+        
+        request.onerror = () => {
+            console.error('IndexedDB error:', request.error);
+            resolve();
+        };
+        
+        request.onsuccess = () => {
+            console.log('✅ IndexedDB opened');
+            resolve();
+        };
+        
+        request.onupgradeneeded = (event) => {
+            console.log('🔧 Creating IndexedDB schema...');
+            const db = event.target.result;
+            
+            if (!db.objectStoreNames.contains('appdata')) {
+                const store = db.createObjectStore('appdata');
+                store.add('token', 'token');
+                store.add('customerId', 'customerId');
+                console.log('✅ Object stores created');
+            }
+        };
+    });
+}
+
+// Store data in IndexedDB
+function saveToIndexedDB(key, value) {
+    if (!window.indexedDB) return;
+    
+    try {
+        const request = indexedDB.open('nassim-db', 1);
+        request.onsuccess = () => {
+            const db = request.result;
+            const transaction = db.transaction(['appdata'], 'readwrite');
+            const store = transaction.objectStore('appdata');
+            
+            store.put(value, key);
+            console.log(`💾 Saved to IndexedDB: ${key}`);
+        };
+    } catch (e) {
+        console.warn('Could not save to IndexedDB:', e);
+    }
+}
+
+// Initialize
+
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize IndexedDB early
+    await initIndexedDB();
+    
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator.standalone === true);
     if (isiOS && !isStandalone) {
@@ -84,10 +143,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Check and show notification permission banner
     checkNotificationPermissionBanner();
-    
-    // Don't show automatic booking offers
-    // checkFirstBookingOffer(); // Disabled
-    // checkReturningCustomerOffer(); // Disabled
     
     // Set minimum date to today
     const today = new Date().toISOString().split('T')[0];
@@ -137,6 +192,11 @@ async function loadCustomerProfile() {
             if (data.success && data.data) {
                 customerData = data.data;
                 localStorage.setItem('customerData', JSON.stringify(customerData));
+                // Save token and customer ID to IndexedDB for Service Worker
+                saveToIndexedDB('token', token);
+                saveToIndexedDB('customerId', customerData._id);
+                console.log('💾 Customer data and credentials saved for Service Worker');
+                
                 updateUIWithCustomerData();
                 await loadAppointments();
                 if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
@@ -2911,6 +2971,10 @@ async function saveSubscriptionToServer(subscription) {
     if (!subscription || !token || !customerData?._id) {
         return;
     }
+    
+    // Save token and customer ID to IndexedDB for SW access
+    saveToIndexedDB('token', token);
+    saveToIndexedDB('customerId', customerData._id);
 
     try {
         const response = await fetch(`${API_URL}/notifications/subscriptions`, {
@@ -2927,10 +2991,12 @@ async function saveSubscriptionToServer(subscription) {
             throw new Error('Failed to save subscription');
         }
 
+
         const data = await response.json();
         if (data.success) {
             const alreadySubscribed = localStorage.getItem(PUSH_SUBSCRIPTION_FLAG) === 'true';
             localStorage.setItem(PUSH_SUBSCRIPTION_FLAG, 'true');
+            console.log('✅ Push subscription saved to server and IndexedDB');
             if (!alreadySubscribed) {
                 showNotification('✅ سيتم إرسال الإشعارات حتى عند إغلاق التطبيق', 'success', 4500);
             }
@@ -2940,7 +3006,6 @@ async function saveSubscriptionToServer(subscription) {
         showNotification('تعذر حفظ إعدادات الإشعارات، حاول مرة أخرى لاحقاً', 'warning');
     }
 }
-
 function getDeviceInfo() {
     const userAgent = navigator.userAgent || '';
     const language = navigator.language || 'ar';

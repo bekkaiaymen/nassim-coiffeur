@@ -233,6 +233,46 @@ router.post('/create', customerAuth, async (req, res) => {
     }
 });
 
+// Check for unread notifications (for Service Worker background sync)
+router.get('/check-unread/:customerId', customerAuth, async (req, res) => {
+    try {
+        const { customerId } = req.params;
+        
+        // Verify customer belongs to user
+        const customer = await Customer.findOne({ 
+            _id: customerId,
+            user: req.userId 
+        });
+
+        if (!customer) {
+            return res.status(403).json({ 
+                success: false, 
+                message: 'غير مصرح لك بالوصول' 
+            });
+        }
+
+        // Get notifications from last 60 seconds
+        const sixtySecondsAgo = new Date(Date.now() - 60 * 1000);
+        
+        const notifications = await Notification.find({
+            customer: customerId,
+            read: false,
+            createdAt: { $gte: sixtySecondsAgo }
+        })
+        .populate('business', 'businessName')
+        .sort({ createdAt: -1 })
+        .limit(10);
+
+        res.json({ 
+            success: true, 
+            data: notifications
+        });
+    } catch (error) {
+        console.error('Check unread error:', error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+});
+
 // Mark notification as read
 router.patch('/:id/read', customerAuth, async (req, res) => {
     try {
@@ -432,32 +472,6 @@ async function sendWebPush(subscriptionDoc, payload) {
     try {
         const pushOptions = {
             endpoint: subscriptionDoc.endpoint,
-            keys: subscriptionDoc.keys || {},
-            TTL: 24 * 60 * 60 // 24 hours for offline delivery attempt
-        };
-
-        await webpush.sendNotification(pushOptions, payload);
-
-        subscriptionDoc.lastNotifiedAt = new Date();
-        subscriptionDoc.isActive = true;
-        subscriptionDoc.lastError = null;
-        await subscriptionDoc.save();
-        console.log('✅ Push sent to:', subscriptionDoc.endpoint.substring(0, 50) + '...');
-    } catch (error) {
-        subscriptionDoc.lastError = error.message;
-
-        if (error.statusCode === 404 || error.statusCode === 410) {
-            subscriptionDoc.isActive = false;
-            console.warn('❌ Push endpoint expired/invalid, marking inactive');
-        } else {
-            console.error('❌ sendWebPush error:', error.statusCode || 'unknown', error.message);
-        }
-
-        await subscriptionDoc.save().catch(() => {});
-    }
-}
-
-module.exports = router;
             keys: subscriptionDoc.keys || {},
             TTL: 24 * 60 * 60 // 24 hours for offline delivery attempt
         };
