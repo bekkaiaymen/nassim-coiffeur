@@ -375,26 +375,38 @@
         }
 
         // Detect if input is email or phone
-        function detectInputType(identifier) {
-            // Check if email
-            if (identifier.includes('@')) {
-                return { type: 'email', value: identifier };
+        function normalizePhone(value) {
+            let phone = value.replace(/\s+/g, '').replace(/-/g, '');
+            if (phone.startsWith('+213')) {
+                phone = '0' + phone.slice(4);
             }
-            // Assume phone number
-            let phone = identifier.replace(/\s/g, '');
-            // Normalize phone (add 0 if starts with 5)
+            if (phone.startsWith('213')) {
+                phone = '0' + phone.slice(3);
+            }
             if (/^5[0-9]{8}$/.test(phone)) {
                 phone = '0' + phone;
             }
-            return { type: 'phone', value: phone };
+            return phone;
+        }
+
+        function detectInputType(identifier) {
+            const trimmed = identifier.trim();
+            // Check if email
+            if (trimmed.includes('@')) {
+                return { type: 'email', value: trimmed.toLowerCase() };
+            }
+            // Assume phone number
+            return { type: 'phone', value: normalizePhone(trimmed) };
         }
 
         // Login Form
         document.getElementById('customerLoginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const identifier = document.getElementById('identifier').value.trim();
-            const password = document.getElementById('password').value;
+            const identifierInput = document.getElementById('identifier').value || '';
+            const passwordInput = document.getElementById('password').value || '';
+            const identifier = identifierInput.trim();
+            const password = passwordInput.trim();
             const loginBtn = document.getElementById('loginBtn');
             const btnText = loginBtn.querySelector('.btn-text');
             const spinner = loginBtn.querySelector('.spinner');

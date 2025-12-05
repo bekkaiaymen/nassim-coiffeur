@@ -313,9 +313,11 @@ router.post('/login', async (req, res) => {
     try {
         const { phone, email, password } = req.body;
 
-        console.log('Login attempt:', { phone, email, hasPassword: !!password });
+        const sanitizedPassword = typeof password === 'string' ? password.trim() : '';
+        const hasPassword = sanitizedPassword.length > 0;
+        console.log('Login attempt:', { phone, email, hasPassword });
 
-        if ((!phone && !email) || !password) {
+        if ((!phone && !email) || !hasPassword) {
             return res.status(400).json({
                 success: false,
                 message: 'الرجاء إدخال رقم الجوال أو البريد الإلكتروني وكلمة المرور'
@@ -325,12 +327,38 @@ router.post('/login', async (req, res) => {
         // Build query - search by phone or email
         // Note: We check role='customer' OR we allow business owners who are also customers
         let query = {};
+        let identifierProvided = false;
         if (email && email.includes('@')) {
-            query.email = email;
-            console.log('Searching by email:', email);
+            const normalizedEmail = email.trim().toLowerCase();
+            if (normalizedEmail) {
+                query.email = normalizedEmail;
+                identifierProvided = true;
+                console.log('Searching by email:', normalizedEmail);
+            }
         } else if (phone) {
-            query.phone = phone;
-            console.log('Searching by phone:', phone);
+            let normalizedPhone = phone.toString().trim();
+            normalizedPhone = normalizedPhone.replace(/\s+/g, '').replace(/-/g, '');
+            if (normalizedPhone.startsWith('+213')) {
+                normalizedPhone = '0' + normalizedPhone.slice(4);
+            }
+            if (normalizedPhone.startsWith('213')) {
+                normalizedPhone = '0' + normalizedPhone.slice(3);
+            }
+            if (/^5\d{8}$/.test(normalizedPhone)) {
+                normalizedPhone = '0' + normalizedPhone;
+            }
+            if (normalizedPhone) {
+                query.phone = normalizedPhone;
+                identifierProvided = true;
+                console.log('Searching by phone:', normalizedPhone);
+            }
+        }
+
+        if (!identifierProvided) {
+            return res.status(400).json({
+                success: false,
+                message: 'الرجاء إدخال رقم الجوال أو البريد الإلكتروني بشكل صحيح'
+            });
         }
 
         const allowedRoles = ['customer', 'business_owner', 'employee'];
@@ -378,7 +406,7 @@ router.post('/login', async (req, res) => {
         }
 
         // Check password
-        const isMatch = await bcrypt.compare(password, user.password);
+        const isMatch = await bcrypt.compare(sanitizedPassword, user.password);
         if (!isMatch) {
             console.log('Password mismatch for user:', user._id);
             return res.status(401).json({
