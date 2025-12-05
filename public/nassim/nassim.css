@@ -6715,3 +6715,57 @@ body.offline::before {
     font-size: 18px;
 }
 
+.secret-contact-card {
+    margin: 12px 0 0;
+    padding: 16px;
+    background: var(--surface);
+    border: 1px dashed rgba(203, 163, 92, 0.3);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.secret-contact-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    background: rgba(203, 163, 92, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+}
+
+.secret-contact-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.secret-contact-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.secret-contact-note {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.secret-contact-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--primary);
+    font-weight: 600;
+    text-decoration: none;
+    margin-top: 4px;
+}
+
+.secret-contact-link::after {
+    content: '↗';
+    font-size: 12px;
+}
+

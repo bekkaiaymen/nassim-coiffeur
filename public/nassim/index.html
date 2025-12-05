@@ -78,17 +78,13 @@
         <div class="main-content">
             <!-- Contact Info Section -->
             <div class="contact-info-section">
-                <a href="tel:+213556468196" class="contact-pill">
-                    <i class="fas fa-phone"></i>
-                    <span>0556 46 81 96</span>
-                </a>
                 <a href="https://www.tiktok.com/@elsoultannassim3" target="_blank" class="contact-pill">
                     <i class="fab fa-tiktok"></i>
                     <span>@elsoultannassim3</span>
                 </a>
-                <a href="#" target="_blank" class="contact-pill">
+                <a href="#" target="_blank" class="contact-pill" title="أضف رابط الفيسبوك لاحقاً">
                     <i class="fab fa-facebook"></i>
-                    <span>Facebook</span>
+                    <span>صفحة Facebook</span>
                 </a>
                 <a href="https://maps.app.goo.gl/bjmwmxf1nQrE8FWN6?g_st=aw" target="_blank" class="contact-pill">
                     <i class="fas fa-map-marker-alt"></i>
@@ -628,6 +624,34 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </button>
+
+                <button class="menu-item" onclick="toggleSalonHotline()">
+                    <div class="menu-item-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="24" height="24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                        </svg>
+                    </div>
+                    <div class="menu-item-content">
+                        <span class="menu-item-title">رقم الصالون السري</span>
+                        <span class="menu-item-subtitle" id="salonHotlineToggleText">اضغط لإظهار الرقم</span>
+                    </div>
+                    <svg class="menu-item-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+
+                <div id="salonHotlineCard" class="secret-contact-card hidden">
+                    <div class="secret-contact-icon">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="28" height="28">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                        </svg>
+                    </div>
+                    <div class="secret-contact-content">
+                        <p class="secret-contact-title">0556 46 81 96</p>
+                        <p class="secret-contact-note">رقم مخفي داخل الإعدادات لعملائنا الدائمين</p>
+                        <a href="tel:+213556468196" class="secret-contact-link">اتصل الآن</a>
+                    </div>
+                </div>
             </div>
 
             <button class="logout-btn" onclick="logout()">

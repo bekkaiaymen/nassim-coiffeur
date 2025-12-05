@@ -2976,6 +2976,18 @@ function showNotificationSettings() {
     showNotification('قريباً', 'info');
 }
 
+function toggleSalonHotline() {
+    const card = document.getElementById('salonHotlineCard');
+    if (!card) return;
+    card.classList.toggle('hidden');
+    const toggleText = document.getElementById('salonHotlineToggleText');
+    if (toggleText) {
+        toggleText.textContent = card.classList.contains('hidden') 
+            ? 'اضغط لإظهار الرقم'
+            : 'اضغط لإخفاء الرقم';
+    }
+}
+
 // ============================================
 // AI Assistant - Floating Icon & Chat
 // ============================================
