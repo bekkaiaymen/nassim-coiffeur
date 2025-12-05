@@ -537,12 +537,19 @@
 
         // PWA Install Prompt
         let deferredPrompt = null;
+        const isiOSDevice = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        const isInStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator.standalone === true);
+
         window.addEventListener('beforeinstallprompt', (event) => {
             deferredPrompt = event;
             showInstallCTA();
         });
 
-        function showInstallCTA() {
+        if (isiOSDevice && !isInStandalone) {
+            setTimeout(() => showInstallCTA(true), 1500);
+        }
+
+        function showInstallCTA(forceInstructions = false) {
             if (document.getElementById('installAppButton')) {
                 return;
             }
@@ -558,8 +565,8 @@
             `;
 
             btn.addEventListener('click', async () => {
-                if (!deferredPrompt) {
-                    alert('لفتح رسالة التثبيت، اختر من قائمة المتصفح "تثبيت التطبيق"');
+                if (!deferredPrompt || forceInstructions || isiOSDevice) {
+                    showIOSInstallSteps();
                     return;
                 }
 
@@ -572,6 +579,10 @@
             });
 
             document.body.appendChild(btn);
+        }
+
+        function showIOSInstallSteps() {
+            alert('لتثبيت Nassim على iPhone:\n\n1️⃣ اضغط على زر المشاركة (⬆️) في Safari\n2️⃣ اختر "إضافة إلى الشاشة الرئيسية"\n3️⃣ اضغط "إضافة" وسيظهر التطبيق على الشاشة الرئيسية');
         }
     </script>
 </body>

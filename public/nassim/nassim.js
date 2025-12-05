@@ -41,6 +41,11 @@ function getAuthHeaders() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator.standalone === true);
+    if (isiOS && !isStandalone) {
+        setTimeout(() => showInstallCTA({ ios: true }), 2000);
+    }
     
     // Hide splash screen and show main page after 3.5 seconds
     setTimeout(() => {
@@ -2938,9 +2943,15 @@ function showInstallPrompt() {
     }, 3000);
 }
 
-function showInstallCTA() {
+function showInstallCTA(options = {}) {
     const container = document.getElementById('installPromptContainer');
     if (!container) return;
+    if (options.ios) {
+        const desc = container.querySelector('.install-cta-desc');
+        if (desc) {
+            desc.textContent = 'على iPhone: اضغط على زر المشاركة ثم "إضافة إلى الشاشة الرئيسية"';
+        }
+    }
     container.classList.remove('hidden');
 }
 
