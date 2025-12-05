@@ -6683,6 +6683,8 @@ body.offline::before {
     gap: 10px;
     margin-bottom: 20px;
     flex-wrap: wrap;
+    position: relative;
+    z-index: 10;
 }
 
 .contact-pill {
@@ -6690,25 +6692,26 @@ body.offline::before {
     align-items: center;
     gap: 8px;
     background: var(--surface);
-    padding: 10px 16px;
+    padding: 12px 18px;
     border-radius: 50px;
     color: var(--text-primary);
     text-decoration: none;
-    border: 1px solid rgba(203, 163, 92, 0.2);
+    border: 2px solid rgba(203, 163, 92, 0.3);
     transition: all 0.3s ease;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .contact-pill:hover {
     background: var(--surface-light);
     border-color: var(--primary);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    box-shadow: 0 6px 16px rgba(203, 163, 92, 0.4);
 }
 
 .contact-pill i {
     color: var(--primary);
-    font-size: 16px;
+    font-size: 18px;
 }
 
