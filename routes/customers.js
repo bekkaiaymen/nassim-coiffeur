@@ -333,17 +333,19 @@ router.post('/login', async (req, res) => {
             console.log('Searching by phone:', phone);
         }
 
-        // Find user - first try as customer, then as any role
+        const allowedRoles = ['customer', 'business_owner', 'employee'];
+
+        // Find user - first try as customer, then as any allowed role
         let user = await User.findOne({ ...query, role: 'customer' });
         
-        // If not found as customer, check if user exists with other role
+        // If not found as customer, check if user exists with other allowed role
         if (!user) {
             user = await User.findOne(query);
-            if (user && user.role !== 'customer') {
-                console.log('User found with different role:', user.role);
+            if (user && !allowedRoles.includes(user.role)) {
+                console.log('User found with unsupported role:', user.role);
                 return res.status(401).json({
                     success: false,
-                    message: 'هذا البريد مسجل كـ ' + (user.role === 'business_owner' ? 'صاحب محل' : 'موظف') + '. الرجاء استخدام صفحة تسجيل الدخول المناسبة'
+                    message: 'هذا الحساب غير مخصص لتسجيل دخول العملاء'
                 });
             }
         }
@@ -353,6 +355,14 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({
                 success: false,
                 message: 'البيانات غير صحيحة'
+            });
+        }
+
+        if (!allowedRoles.includes(user.role)) {
+            console.log('User role not allowed:', user.role);
+            return res.status(401).json({
+                success: false,
+                message: 'هذا الحساب غير مخصص لتسجيل دخول العملاء'
             });
         }
 
