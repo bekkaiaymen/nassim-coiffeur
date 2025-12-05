@@ -68,10 +68,8 @@ function initIndexedDB() {
             const db = event.target.result;
             
             if (!db.objectStoreNames.contains('appdata')) {
-                const store = db.createObjectStore('appdata');
-                store.add('token', 'token');
-                store.add('customerId', 'customerId');
-                console.log('✅ Object stores created');
+                db.createObjectStore('appdata');
+                console.log('✅ Object store "appdata" created');
             }
         };
     });
@@ -199,8 +197,16 @@ async function loadCustomerProfile() {
                 
                 updateUIWithCustomerData();
                 await loadAppointments();
-                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-                    subscribeToPushNotifications();
+                
+                // Setup notifications and background sync after customer data is loaded
+                if (swRegistration) {
+                    await setupBackgroundSync();
+                    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                        subscribeToPushNotifications();
+                    } else if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                        // Auto-request permission for better UX
+                        setTimeout(() => requestNotificationPermission(), 2000);
+                    }
                 }
                 return;
             }
@@ -2783,15 +2789,19 @@ if ('serviceWorker' in navigator) {
     window.addEventListener('load', async () => {
         try {
             swRegistration = await navigator.serviceWorker.register('/nassim/service-worker.js');
+            console.log('✅ Service Worker registered successfully');
             
             // Wait for Service Worker to be ready
             await navigator.serviceWorker.ready;
+            console.log('✅ Service Worker is ready');
             
-            // Request notification permission
-            requestNotificationPermission();
-            
-            // Setup background sync after SW is ready
+            // Setup background sync immediately (it will wait for auth data)
             await setupBackgroundSync();
+            
+            // Request notification permission only if logged in
+            if (token && customerData) {
+                requestNotificationPermission();
+            }
             
             // Check for updates
             swRegistration.addEventListener('updatefound', () => {
@@ -2809,9 +2819,11 @@ if ('serviceWorker' in navigator) {
             // Handle messages from service worker
             navigator.serviceWorker.addEventListener('message', event => {
                 if (event.data.type === 'GET_TOKEN' && event.ports && event.ports[0]) {
-                    event.ports[0].postMessage(token);
+                    const currentToken = localStorage.getItem('customerToken');
+                    event.ports[0].postMessage(currentToken);
                 } else if (event.data.type === 'GET_CUSTOMER_ID' && event.ports && event.ports[0]) {
-                    event.ports[0].postMessage(customerData?._id);
+                    const currentCustomerId = customerData?._id || localStorage.getItem('customerData') ? JSON.parse(localStorage.getItem('customerData'))?._id : null;
+                    event.ports[0].postMessage(currentCustomerId);
                 }
             });
             

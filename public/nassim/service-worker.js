@@ -498,6 +498,12 @@ function openIndexedDB() {
         const request = indexedDB.open('nassim-db', 1);
         request.onerror = () => reject(request.error);
         request.onsuccess = () => resolve(request.result);
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains('appdata')) {
+                db.createObjectStore('appdata');
+            }
+        };
     });
 }
 
