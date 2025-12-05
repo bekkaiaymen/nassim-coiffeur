@@ -752,6 +752,31 @@ section {
     color: var(--text-secondary);
 }
 
+.contact-link {
+    display: inline-block;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-light);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.contact-link:hover {
+    color: #ffe39a;
+}
+
+.contact-link-disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.contact-note {
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
 /* Footer */
 .footer {
     background: var(--dark);
