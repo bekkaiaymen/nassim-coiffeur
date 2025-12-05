@@ -84,6 +84,7 @@ self.addEventListener('fetch', event => {
 
 // Push Notification Handler
 self.addEventListener('push', event => {
+    console.log('🔔 Push event received in SW');
     
     let notificationData = {
         title: 'Nassim Coiffeur',
@@ -91,21 +92,24 @@ self.addEventListener('push', event => {
         icon: '/nassim/logo.jpg',
         badge: '/nassim/logo.jpg',
         vibrate: [200, 100, 200, 100, 200],
-        tag: 'nassim-notification-' + Date.now(), // Unique tag for each notification
-        requireInteraction: true, // Keep notification visible
+        tag: 'nassim-' + Date.now(),
+        requireInteraction: true,
         silent: false
     };
     
     if (event.data) {
         try {
             const data = event.data.json();
+            console.log('📨 Push payload:', data);
             notificationData = {
                 ...notificationData,
                 title: data.title || notificationData.title,
                 body: data.message || data.body || notificationData.body,
-                data: data
+                data: data,
+                tag: data.type ? `nassim-${data.type}-${Date.now()}` : notificationData.tag
             };
         } catch (e) {
+            console.error('Push JSON parse error:', e);
             notificationData.body = event.data.text();
         }
     }
@@ -117,26 +121,26 @@ self.addEventListener('push', event => {
             badge: notificationData.badge,
             vibrate: notificationData.vibrate,
             tag: notificationData.tag,
-            requireInteraction: notificationData.requireInteraction,
-            silent: notificationData.silent,
-            renotify: true, // Renotify even if tag is same
+            requireInteraction: true,
+            silent: false,
+            renotify: true,
             timestamp: Date.now(),
             data: notificationData.data,
             actions: [
                 {
                     action: 'open',
-                    title: 'فتح التطبيق'
+                    title: 'فتح'
                 },
                 {
                     action: 'close',
                     title: 'إغلاق'
                 }
             ],
-            // For Android/Chrome specific
             image: notificationData.icon,
             dir: 'rtl',
             lang: 'ar'
-        })
+        }).then(() => console.log('✅ Notification displayed'))
+          .catch(err => console.error('❌ Failed to show notification:', err))
     );
 });
 
@@ -175,6 +179,7 @@ async function checkForNewNotifications() {
     try {
         const token = await getTokenFromStorage();
         if (!token) {
+            console.warn('⚠️ No token for background sync');
             return;
         }
         
@@ -182,45 +187,55 @@ async function checkForNewNotifications() {
         const customerId = await getCustomerIdFromStorage();
         
         if (!customerId) {
+            console.warn('⚠️ No customer ID for background sync');
             return;
         }
         
-        const response = await fetch(`${API_URL}/notifications/customer/${customerId}`, {
+        console.log('🔍 Background sync: checking unread for', customerId);
+        
+        const response = await fetch(`${API_URL}/notifications/check-unread/${customerId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (!response.ok) {
+            console.warn('⚠️ Check-unread endpoint returned', response.status);
             return;
         }
         
         const data = await response.json();
-        if (data.success && data.data) {
-            const unreadNotifications = data.data.filter(n => !n.read);
+        if (data.success && data.data && data.data.length > 0) {
+            console.log('📬 Background sync found', data.data.length, 'unread notifications');
             
-            // Show notification for each unread (up to 3)
-            const toShow = unreadNotifications.slice(0, 3);
-            for (const notif of toShow) {
-                await self.registration.showNotification(notif.title, {
-                    body: notif.message,
-                    icon: '/nassim/logo.jpg',
-                    badge: '/nassim/logo.jpg',
-                    vibrate: [200, 100, 200, 100, 200],
-                    tag: 'nassim-' + notif._id,
-                    requireInteraction: true, // Keep visible
-                    renotify: true,
-                    timestamp: new Date(notif.createdAt).getTime(),
-                    data: notif,
-                    dir: 'rtl',
-                    lang: 'ar',
-                    actions: [
-                        { action: 'open', title: 'فتح التطبيق' },
-                        { action: 'close', title: 'إغلاق' }
-                    ]
-                });
+            // Show notification for each unread
+            for (const notif of data.data) {
+                try {
+                    await self.registration.showNotification(notif.title, {
+                        body: notif.message,
+                        icon: '/nassim/logo.jpg',
+                        badge: '/nassim/logo.jpg',
+                        vibrate: [200, 100, 200, 100, 200],
+                        tag: 'nassim-' + notif._id,
+                        requireInteraction: true,
+                        renotify: true,
+                        timestamp: new Date(notif.createdAt).getTime(),
+                        data: notif,
+                        dir: 'rtl',
+                        lang: 'ar',
+                        actions: [
+                            { action: 'open', title: 'فتح' },
+                            { action: 'close', title: 'إغلاق' }
+                        ]
+                    });
+                    console.log('✅ Notification shown:', notif.title);
+                } catch (notifErr) {
+                    console.error('❌ Failed to show notification:', notifErr);
+                }
             }
+        } else {
+            console.log('ℹ️ No new unread notifications');
         }
     } catch (error) {
-        console.error('❌ Error checking notifications:', error);
+        console.error('❌ Error in background sync:', error);
     }
 }
 
@@ -255,8 +270,16 @@ async function getCustomerIdFromStorage() {
 
 // Periodic Background Sync (if supported)
 self.addEventListener('periodicsync', event => {
+    console.log('⏰ Periodic sync triggered:', event.tag);
     
     if (event.tag === 'check-notifications-periodic') {
         event.waitUntil(checkForNewNotifications());
+    }
+});
+
+// Keep service worker alive
+self.addEventListener('message', event => {
+    if (event.data && event.data.type === 'KEEP_ALIVE') {
+        console.log('💪 Keeping SW alive');
     }
 });

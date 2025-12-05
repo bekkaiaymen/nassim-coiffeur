@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { queuePushDelivery } = require('../services/pushService');
 
 const notificationSchema = new mongoose.Schema({
     user: {
@@ -48,5 +49,19 @@ const notificationSchema = new mongoose.Schema({
 // Index for faster queries
 notificationSchema.index({ user: 1, read: 1, createdAt: -1 });
 notificationSchema.index({ customer: 1 });
+
+notificationSchema.pre('save', function(next) {
+    this.wasNew = this.isNew;
+    next();
+});
+
+notificationSchema.post('save', function(doc, next) {
+    if (this.wasNew) {
+        queuePushDelivery(doc).catch((error) => {
+            console.error('Push delivery error:', error?.message || error);
+        });
+    }
+    next();
+});
 
 module.exports = mongoose.model('Notification', notificationSchema);

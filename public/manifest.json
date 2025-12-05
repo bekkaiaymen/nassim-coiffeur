@@ -89,5 +89,10 @@
     }
   ],
   "related_applications": [],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "serviceworker": {
+    "src": "/nassim/service-worker.js",
+    "scope": "/nassim",
+    "update_via_cache": "none"
+  }
 }

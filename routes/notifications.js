@@ -1,22 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const webpush = require('web-push');
 const Notification = require('../models/Notification');
 const Customer = require('../models/Customer');
-const PushSubscription = require('../models/PushSubscription');
 const { protect } = require('../middleware/auth');
-
-const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY || 'BPX8TzW3Qj9SarBGDGlkz8MkFv_X1hMpgIhUZ1d7DIgsvJp9wjTmlYkuinW0avz8bMBHiye6hIdJwLFwbo8_slg';
-const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY || 'i9bbTfzz3p8XD9Qn_nme3pmQsKTGc2A512CI9KpUw8U';
-
-if (VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY) {
-    try {
-        webpush.setVapidDetails('mailto:notifications@nassim-coiffeur.com', VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
-    } catch (error) {
-        console.error('Failed to configure VAPID keys:', error.message);
-    }
-}
+const {
+    getVapidPublicKey,
+    savePushSubscription,
+    deletePushSubscription
+} = require('../services/pushService');
 
 // Customer auth middleware
 const customerAuth = async (req, res, next) => {
@@ -38,11 +30,12 @@ const customerAuth = async (req, res, next) => {
 
 // Public endpoint to expose VAPID public key
 router.get('/vapid-public-key', (req, res) => {
-    if (!VAPID_PUBLIC_KEY) {
+    const publicKey = getVapidPublicKey();
+    if (!publicKey) {
         return res.status(503).json({ success: false, message: 'مفاتيح VAPID غير جاهزة بعد' });
     }
 
-    res.json({ success: true, publicKey: VAPID_PUBLIC_KEY });
+    res.json({ success: true, publicKey });
 });
 
 // Save or update push subscription for a customer
@@ -63,27 +56,17 @@ router.post('/subscriptions', customerAuth, async (req, res) => {
             return res.status(403).json({ success: false, message: 'غير مصرح لك بحفظ هذا الاشتراك' });
         }
 
-        const payload = {
-            user: req.userId,
-            customer: customerId,
-            endpoint: subscription.endpoint,
-            keys: subscription.keys || {},
-            expirationTime: subscription.expirationTime || null,
+        const savedSubscription = await savePushSubscription({
+            subscription,
+            userId: req.userId,
+            customerId,
             deviceInfo: {
                 os: deviceInfo?.os || null,
                 browser: deviceInfo?.browser || null,
                 language: deviceInfo?.language || null,
                 userAgent: deviceInfo?.userAgent || null
-            },
-            isActive: true,
-            lastError: null
-        };
-
-        const savedSubscription = await PushSubscription.findOneAndUpdate(
-            { endpoint: subscription.endpoint },
-            payload,
-            { new: true, upsert: true, setDefaultsOnInsert: true }
-        );
+            }
+        });
 
         res.json({ success: true, data: savedSubscription });
     } catch (error) {
@@ -101,22 +84,18 @@ router.delete('/subscriptions', customerAuth, async (req, res) => {
             return res.status(400).json({ success: false, message: 'يجب إرسال رابط الاشتراك' });
         }
 
-        const subscription = await PushSubscription.findOne({ endpoint });
+        const deletedSubscription = await deletePushSubscription({ endpoint, userId: req.userId });
 
-        if (!subscription) {
+        if (!deletedSubscription) {
             return res.status(404).json({ success: false, message: 'الاشتراك غير موجود' });
         }
-
-        if (subscription.user.toString() !== req.userId.toString()) {
-            return res.status(403).json({ success: false, message: 'غير مصرح لك بحذف هذا الاشتراك' });
-        }
-
-        await subscription.deleteOne();
 
         res.json({ success: true, message: 'تم حذف الاشتراك' });
     } catch (error) {
         console.error('Delete subscription error:', error);
-        res.status(500).json({ success: false, message: 'تعذر حذف الاشتراك' });
+        const status = error.statusCode || 500;
+        const message = status === 403 ? 'غير مصرح لك بحذف هذا الاشتراك' : 'تعذر حذف الاشتراك';
+        res.status(status).json({ success: false, message });
     }
 });
 
@@ -242,10 +221,6 @@ router.post('/create', customerAuth, async (req, res) => {
         const populatedNotification = await Notification.findById(notification._id)
             .populate('business', 'businessName')
             .populate('customer', 'name');
-
-        queuePushDelivery(populatedNotification).catch(err => {
-            console.error('Push delivery error:', err);
-        });
 
         res.status(201).json({ 
             success: true, 
@@ -403,12 +378,14 @@ router.delete('/user/all', customerAuth, async (req, res) => {
 
 async function queuePushDelivery(notification) {
     if (!notification || !VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+        console.warn('⚠️ Push not configured: missing VAPID or notification');
         return;
     }
 
     try {
         const customerId = notification.customer?._id || notification.customer;
         if (!customerId) {
+            console.warn('⚠️ No customer ID for notification');
             return;
         }
 
@@ -417,7 +394,10 @@ async function queuePushDelivery(notification) {
             isActive: true
         });
 
+        console.log(`📋 Found ${subscriptions.length} active subscriptions for customer ${customerId}`);
+
         if (!subscriptions.length) {
+            console.log('ℹ️ No active subscriptions found');
             return;
         }
 
@@ -435,34 +415,71 @@ async function queuePushDelivery(notification) {
             }
         });
 
-        await Promise.allSettled(
+        console.log('🚀 Sending push to', subscriptions.length, 'subscriptions...');
+
+        const results = await Promise.allSettled(
             subscriptions.map(sub => sendWebPush(sub, payload))
         );
+
+        const successful = results.filter(r => r.status === 'fulfilled').length;
+        console.log(`✅ Push delivery completed: ${successful}/${subscriptions.length} successful`);
     } catch (error) {
-        console.error('queuePushDelivery error:', error);
+        console.error('❌ queuePushDelivery error:', error);
     }
 }
 
 async function sendWebPush(subscriptionDoc, payload) {
     try {
-        await webpush.sendNotification({
+        const pushOptions = {
             endpoint: subscriptionDoc.endpoint,
-            keys: subscriptionDoc.keys || {}
-        }, payload);
+            keys: subscriptionDoc.keys || {},
+            TTL: 24 * 60 * 60 // 24 hours for offline delivery attempt
+        };
+
+        await webpush.sendNotification(pushOptions, payload);
 
         subscriptionDoc.lastNotifiedAt = new Date();
         subscriptionDoc.isActive = true;
         subscriptionDoc.lastError = null;
         await subscriptionDoc.save();
+        console.log('✅ Push sent to:', subscriptionDoc.endpoint.substring(0, 50) + '...');
     } catch (error) {
         subscriptionDoc.lastError = error.message;
 
         if (error.statusCode === 404 || error.statusCode === 410) {
             subscriptionDoc.isActive = false;
+            console.warn('❌ Push endpoint expired/invalid, marking inactive');
+        } else {
+            console.error('❌ sendWebPush error:', error.statusCode || 'unknown', error.message);
         }
 
         await subscriptionDoc.save().catch(() => {});
-        console.error('sendWebPush error:', error.statusCode || '', error.body || error.message);
+    }
+}
+
+module.exports = router;
+            keys: subscriptionDoc.keys || {},
+            TTL: 24 * 60 * 60 // 24 hours for offline delivery attempt
+        };
+
+        await webpush.sendNotification(pushOptions, payload);
+
+        subscriptionDoc.lastNotifiedAt = new Date();
+        subscriptionDoc.isActive = true;
+        subscriptionDoc.lastError = null;
+        await subscriptionDoc.save();
+        console.log('✅ Push sent to:', subscriptionDoc.endpoint.substring(0, 50) + '...');
+    } catch (error) {
+        subscriptionDoc.lastError = error.message;
+
+        if (error.statusCode === 404 || error.statusCode === 410) {
+            subscriptionDoc.isActive = false;
+            console.warn('❌ Push endpoint expired/invalid, marking inactive');
+        } else {
+            console.error('❌ sendWebPush error:', error.statusCode || 'unknown', error.message);
+        }
+
+        await subscriptionDoc.save().catch(() => {});
     }
 }
 

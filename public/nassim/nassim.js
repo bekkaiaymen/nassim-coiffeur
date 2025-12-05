@@ -2968,24 +2968,48 @@ function getDeviceInfo() {
 // Setup Background Sync
 async function setupBackgroundSync() {
     if (!swRegistration) {
+        console.warn('⚠️ No SW registration for background sync');
         return;
     }
     
     if ('sync' in swRegistration) {
         try {
             await swRegistration.sync.register('check-notifications');
+            console.log('✅ Background sync registered: check-notifications');
         } catch (error) {
+            console.error('Background sync error:', error.message);
         }
+    } else {
+        console.warn('⚠️ Background Sync API not supported');
     }
     
     // Setup periodic sync (if supported)
     if ('periodicSync' in swRegistration) {
         try {
             await swRegistration.periodicSync.register('check-notifications-periodic', {
-                minInterval: 15 * 60 * 1000 // 15 minutes
+                minInterval: 5 * 60 * 1000 // 5 minutes for testing
             });
+            console.log('✅ Periodic sync registered: check-notifications-periodic');
         } catch (error) {
+            console.error('Periodic sync error:', error.message);
         }
+    } else {
+        console.warn('⚠️ Periodic Sync API not supported');
+    }
+}
+
+// Manual sync trigger for testing
+async function triggerBackgroundSync() {
+    if (!swRegistration || !('sync' in swRegistration)) {
+        console.error('Background sync not supported');
+        return;
+    }
+    try {
+        await swRegistration.sync.register('check-notifications');
+        console.log('✅ Manual sync triggered');
+        showNotification('تم بدء فحص الإشعارات في الخلفية', 'info');
+    } catch (error) {
+        console.error('Manual sync error:', error);
     }
 }
 
