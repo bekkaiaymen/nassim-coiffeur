@@ -10,6 +10,8 @@ let availableServices = [];
 let availableEmployees = [];
 let selectedServices = []; // Array to track multiple selected services
 let lastAppointmentStatuses = {}; // Track appointment statuses to detect confirmations
+const PUSH_SUBSCRIPTION_FLAG = 'nassimPushSubscribed';
+let pushSubscription = null;
 
 function isProductItem(item) {
     return item?.metadata?.isProduct === true || item?.icon === '🛍️';
@@ -137,6 +139,9 @@ async function loadCustomerProfile() {
                 localStorage.setItem('customerData', JSON.stringify(customerData));
                 updateUIWithCustomerData();
                 await loadAppointments();
+                if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+                    subscribeToPushNotifications();
+                }
                 return;
             }
         } else if (response.status === 401) {
@@ -2834,24 +2839,56 @@ function dismissNotificationBanner() {
 }
 
 // Subscribe to Push Notifications
-async function subscribeToPushNotifications() {
-    if (!swRegistration) return;
-    
-    try {
-        // Check if push notifications are supported
-    if (!('PushManager' in window)) {
+async function subscribeToPushNotifications(force = false) {
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') {
         return;
-    }        // Skip subscription if no VAPID key configured
-        // Backend needs to provide VAPID public key
-        
-        // TODO: Implement when backend provides VAPID keys:
-        // const response = await fetch(`${API_URL}/notifications/vapid-public-key`);
-        // const { publicKey } = await response.json();
-        // subscription = await swRegistration.pushManager.subscribe({
-        //     userVisibleOnly: true,
-        //     applicationServerKey: urlBase64ToUint8Array(publicKey)
-        // });
+    }
+
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        return;
+    }
+
+    if (!token || !customerData?._id) {
+        return;
+    }
+
+    try {
+        if (!swRegistration) {
+            swRegistration = await navigator.serviceWorker.ready;
+        }
+
+        const vapidResponse = await fetch(`${API_URL}/notifications/vapid-public-key`);
+        if (!vapidResponse.ok) {
+            throw new Error('Failed to fetch VAPID key');
+        }
+        const vapidData = await vapidResponse.json();
+
+        if (!vapidData.success || !vapidData.publicKey) {
+            console.warn('Missing VAPID public key, push subscription skipped');
+            return;
+        }
+
+        let subscription = await swRegistration.pushManager.getSubscription();
+        const applicationServerKey = urlBase64ToUint8Array(vapidData.publicKey);
+
+        if (!subscription || force) {
+            if (subscription && force) {
+                await subscription.unsubscribe().catch(() => {});
+            }
+
+            subscription = await swRegistration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey
+            });
+        }
+
+        pushSubscription = subscription;
+        await saveSubscriptionToServer(subscription);
     } catch (error) {
+        if (error.name === 'NotAllowedError') {
+            localStorage.removeItem(PUSH_SUBSCRIPTION_FLAG);
+            showNotification('يرجى تفعيل الإشعارات من إعدادات المتصفح للحصول على التحديثات الفورية', 'warning', 5000);
+        }
         console.error('❌ Push subscription failed:', error);
     }
 }
@@ -2868,6 +2905,64 @@ function urlBase64ToUint8Array(base64String) {
         outputArray[i] = rawData.charCodeAt(i);
     }
     return outputArray;
+}
+
+async function saveSubscriptionToServer(subscription) {
+    if (!subscription || !token || !customerData?._id) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`${API_URL}/notifications/subscriptions`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({
+                subscription,
+                customerId: customerData._id,
+                deviceInfo: getDeviceInfo()
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to save subscription');
+        }
+
+        const data = await response.json();
+        if (data.success) {
+            const alreadySubscribed = localStorage.getItem(PUSH_SUBSCRIPTION_FLAG) === 'true';
+            localStorage.setItem(PUSH_SUBSCRIPTION_FLAG, 'true');
+            if (!alreadySubscribed) {
+                showNotification('✅ سيتم إرسال الإشعارات حتى عند إغلاق التطبيق', 'success', 4500);
+            }
+        }
+    } catch (error) {
+        console.error('saveSubscriptionToServer error:', error);
+        showNotification('تعذر حفظ إعدادات الإشعارات، حاول مرة أخرى لاحقاً', 'warning');
+    }
+}
+
+function getDeviceInfo() {
+    const userAgent = navigator.userAgent || '';
+    const language = navigator.language || 'ar';
+
+    let os = 'other';
+    if (/android/i.test(userAgent)) os = 'Android';
+    else if (/iphone|ipad|ipod/i.test(userAgent)) os = 'iOS';
+    else if (/windows/i.test(userAgent)) os = 'Windows';
+    else if (/mac os/i.test(userAgent)) os = 'macOS';
+
+    let browser = 'unknown';
+    if (/edg/i.test(userAgent)) browser = 'Edge';
+    else if (/chrome/i.test(userAgent)) browser = 'Chrome';
+    else if (/safari/i.test(userAgent) && !/chrome/i.test(userAgent)) browser = 'Safari';
+    else if (/firefox/i.test(userAgent)) browser = 'Firefox';
+
+    return {
+        os,
+        browser,
+        language,
+        userAgent
+    };
 }
 
 // Setup Background Sync
