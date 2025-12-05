@@ -534,6 +534,45 @@
                 .then(() => console.log('✅ PWA: Service Worker registered'))
                 .catch((err) => console.error('❌ PWA: Registration failed', err));
         }
+
+        // PWA Install Prompt
+        let deferredPrompt = null;
+        window.addEventListener('beforeinstallprompt', (event) => {
+            deferredPrompt = event;
+            showInstallCTA();
+        });
+
+        function showInstallCTA() {
+            if (document.getElementById('installAppButton')) {
+                return;
+            }
+
+            const btn = document.createElement('button');
+            btn.id = 'installAppButton';
+            btn.className = 'install-app-btn';
+            btn.innerHTML = `
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                <span>ثبت التطبيق</span>
+            `;
+
+            btn.addEventListener('click', async () => {
+                if (!deferredPrompt) {
+                    alert('لفتح رسالة التثبيت، اختر من قائمة المتصفح "تثبيت التطبيق"');
+                    return;
+                }
+
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    btn.remove();
+                }
+                deferredPrompt = null;
+            });
+
+            document.body.appendChild(btn);
+        }
     </script>
 </body>
 </html>

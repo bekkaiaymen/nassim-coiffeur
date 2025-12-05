@@ -2898,6 +2898,7 @@ window.addEventListener('beforeinstallprompt', (e) => {
     
     // Optionally show custom install button
     showInstallPrompt();
+    showInstallCTA();
 });
 
 function showInstallPrompt() {
@@ -2935,6 +2936,29 @@ function showInstallPrompt() {
             header.appendChild(installBtn);
         }
     }, 3000);
+}
+
+function showInstallCTA() {
+    const container = document.getElementById('installPromptContainer');
+    if (!container) return;
+    container.classList.remove('hidden');
+}
+
+async function promptPWAInstall() {
+    if (!deferredPrompt) {
+        showManualInstallInstructions();
+        return;
+    }
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+        showNotification('✅ التطبيق مثبت على جهازك', 'success');
+        const container = document.getElementById('installPromptContainer');
+        if (container) {
+            container.classList.add('hidden');
+        }
+    }
+    deferredPrompt = null;
 }
 
 // Show manual installation instructions
