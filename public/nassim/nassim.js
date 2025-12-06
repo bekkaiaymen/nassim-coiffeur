@@ -97,6 +97,44 @@ function saveToIndexedDB(key, value) {
 // Initialize
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // History Management
+    history.replaceState({ page: 'root' }, '', '');
+    history.pushState({ page: 'home' }, '', '');
+
+    window.addEventListener('popstate', (event) => {
+        const state = event.state;
+
+        // Close booking modal if we are not in bookingModal state
+        if (state?.page !== 'bookingModal') {
+            if (typeof _internalCloseBookingModal === 'function') {
+                _internalCloseBookingModal();
+            }
+        }
+
+        if (!state || state.page === 'root') {
+            showNotification('اضغط مرة أخرى للخروج', 'info');
+            showHome(false);
+        } else if (state.page === 'home') {
+            showHome(false);
+        } else if (state.page === 'posts') {
+            showPosts(false);
+        } else if (state.page === 'shop') {
+            showShop(false);
+        } else if (state.page === 'coins') {
+            showCoins(false);
+        } else if (state.page === 'account') {
+            showAccount(false);
+        } else if (state.page === 'bookingHistory') {
+            showBookingHistory(false);
+        } else if (state.page === 'notifications') {
+            showNotificationsPage(false);
+        } else if (state.page === 'editProfile') {
+            editProfile(false);
+        } else if (state.page === 'bookingModal') {
+            openBookingModal(false);
+        }
+    });
+
     // Initialize IndexedDB early
     await initIndexedDB();
     
@@ -2459,13 +2497,19 @@ async function updateProfile(e) {
 }
 
 // Navigation Functions
-function showHome() {
+function showHome(addToHistory = true) {
+    if (addToHistory) {
+        history.pushState({ page: 'home' }, '', '');
+    }
     hideAllPages();
     document.getElementById('homePage').classList.remove('hidden');
     updateActiveNav(0);
 }
 
-function showPosts() {
+function showPosts(addToHistory = true) {
+    if (addToHistory) {
+        history.pushState({ page: 'posts' }, '', '');
+    }
     hideAllPages();
     document.getElementById('postsPage').classList.remove('hidden');
     updateActiveNav(1);
@@ -2475,7 +2519,10 @@ function showRewards() {
     showShop();
 }
 
-function showShop() {
+function showShop(addToHistory = true) {
+    if (addToHistory) {
+        history.pushState({ page: 'shop' }, '', '');
+    }
     hideAllPages();
     document.getElementById('rewardsPage').classList.remove('hidden');
     switchShopTab('products');
@@ -2504,13 +2551,16 @@ function switchShopTab(tab, button) {
     }
 }
 
-function showCoins() {
+function showCoins(addToHistory = true) {
     if (!token) {
         showNotification('سجل دخول لعرض عملاتك', 'error');
         setTimeout(() => {
             window.location.href = '/customer-login';
         }, 2000);
         return;
+    }
+    if (addToHistory) {
+        history.pushState({ page: 'coins' }, '', '');
     }
     hideAllPages();
     document.getElementById('coinsPage').classList.remove('hidden');
@@ -2587,7 +2637,7 @@ async function loadCoins() {
     }
 }
 
-function showAccount() {
+function showAccount(addToHistory = true) {
     if (!token) {
         showNotification('سجل دخول لعرض حسابك', 'error');
         setTimeout(() => {
@@ -2595,38 +2645,50 @@ function showAccount() {
         }, 2000);
         return;
     }
+    if (addToHistory) {
+        history.pushState({ page: 'account' }, '', '');
+    }
     hideAllPages();
     document.getElementById('accountPage').classList.remove('hidden');
     updateActiveNav(4);
 }
 
-function showBookingHistory() {
+function showBookingHistory(addToHistory = true) {
     if (!token) {
         showNotification('سجل دخول لعرض حجوزاتك', 'error');
         return;
+    }
+    if (addToHistory) {
+        history.pushState({ page: 'bookingHistory' }, '', '');
     }
     hideAllPages();
     document.getElementById('bookingHistoryPage').classList.remove('hidden');
     loadAppointments();
 }
 
-function showNotificationsPage() {
+function showNotificationsPage(addToHistory = true) {
     if (!token) {
         showNotification('سجل دخول لعرض الإشعارات', 'error');
         return;
+    }
+    if (addToHistory) {
+        history.pushState({ page: 'notifications' }, '', '');
     }
     hideAllPages();
     document.getElementById('notificationsPage').classList.remove('hidden');
     loadNotifications();
 }
 
-function editProfile() {
+function editProfile(addToHistory = true) {
     if (!customerData) return;
     
     document.getElementById('editName').value = customerData.name || '';
     document.getElementById('editPhone').value = customerData.phone || '';
     document.getElementById('editEmail').value = customerData.email || '';
     
+    if (addToHistory) {
+        history.pushState({ page: 'editProfile' }, '', '');
+    }
     hideAllPages();
     document.getElementById('editProfilePage').classList.remove('hidden');
 }
@@ -2652,15 +2714,18 @@ function updateActiveNav(index) {
 }
 
 // Modal Functions
-function openBookingModal() {
+function openBookingModal(addToHistory = true) {
     const modal = document.getElementById('bookingModal');
     if (modal) {
+        if (addToHistory) {
+            history.pushState({ page: 'bookingModal' }, '', '');
+        }
         modal.classList.add('show');
         document.body.style.overflow = 'hidden';
     }
 }
 
-function closeBookingModal() {
+function _internalCloseBookingModal() {
     const modal = document.getElementById('bookingModal');
     if (modal) {
         modal.classList.remove('show');
@@ -2672,6 +2737,14 @@ function closeBookingModal() {
             card.classList.remove('selected');
         });
         updateBookingSummary();
+    }
+}
+
+function closeBookingModal() {
+    if (history.state && history.state.page === 'bookingModal') {
+        history.back();
+    } else {
+        _internalCloseBookingModal();
     }
 }
 
