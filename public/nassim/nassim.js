@@ -279,6 +279,9 @@ function updateUIWithCustomerData() {
     if (document.getElementById('userPoints')) {
         document.getElementById('userPoints').textContent = toArabicNumerals(points);
     }
+    if (document.getElementById('accountPagePoints')) {
+        document.getElementById('accountPagePoints').textContent = toArabicNumerals(points);
+    }
     
     // Update tier
     let tier = 'برونزي';
@@ -292,6 +295,9 @@ function updateUIWithCustomerData() {
     }
     if (document.getElementById('loyaltyTier')) {
         document.getElementById('loyaltyTier').innerHTML = `${tier} ${tierBadge}`;
+    }
+    if (document.getElementById('accountPageTier')) {
+        document.getElementById('accountPageTier').textContent = tier;
     }
     
     // Update profile page

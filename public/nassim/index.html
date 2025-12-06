@@ -584,6 +584,25 @@
                 <h2 class="profile-name" id="profileName"></h2>
                 <p class="profile-email" id="profileEmail"></p>
                 <p class="profile-phone" id="profilePhone" style="color: #999; font-size: 14px; margin-top: 4px;"></p>
+                
+                <!-- Points Display in Account -->
+                <div class="account-points-card" onclick="showCoins()" style="margin-top: 16px; background: rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #FFD700 0%, #FDB931 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 2px 10px rgba(253, 185, 49, 0.3);">
+                            ⭐
+                        </div>
+                        <div>
+                            <div style="color: #ccc; font-size: 12px; margin-bottom: 2px;">نقاط الولاء</div>
+                            <div style="color: #fff; font-weight: bold; font-size: 18px;" id="accountPagePoints">0</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #FDB931; font-size: 12px; font-weight: 600;" id="accountPageTier">برونزي</span>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="color: #666;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </div>
+                </div>
             </div>
         </div>
 
