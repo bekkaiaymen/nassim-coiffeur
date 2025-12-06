@@ -397,10 +397,10 @@ function populateBookingServices(services) {
     const container = document.getElementById('bookingServicesList');
     if (!container) return;
     
-    // Filter out packages from the service list - they will be shown as suggestions
-    const regularServices = services.filter(service => !service.isPackage);
+    // Include all services including packages
+    const allServices = services;
     
-    container.innerHTML = regularServices.map(service => {
+    container.innerHTML = allServices.map(service => {
         const hasValidImage = service.image && service.image.trim() !== '';
 
         return `
@@ -420,7 +420,8 @@ function populateBookingServices(services) {
                 : `<div class="service-icon" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}">${getServiceIcon(service.name)}</div>`
             }
             <div class="service-name" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}">
-                ${service.name}
+                ${service.isPackage ? '📦 ' : ''}${service.name}
+                ${service.isPackage ? '<br><span style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;">باقة</span>' : ''}
                 ${service.hasVariants ? '<br><small style="color: #4CAF50; font-size: 11px;">👆 أنواع متعددة</small>' : ''}
             </div>
             <div class="service-meta" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}">
