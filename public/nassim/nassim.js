@@ -137,6 +137,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Initialize IndexedDB early
     await initIndexedDB();
+
+    // Initialize User Guide
+    setTimeout(() => {
+        if (typeof TourGuide !== 'undefined') {
+            TourGuide.init();
+        }
+    }, 4000); // Start guide after splash screen
     
     const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (navigator.standalone === true);
@@ -4632,5 +4639,123 @@ function openLocation() {
 function callPhone() {
     window.location.href = 'tel:+213556468196';
 }
+
+// Tour Guide System
+const TourGuide = {
+    init: function() {
+        const token = localStorage.getItem('customerToken');
+        
+        // Step 1: Guest - Guide to Account Creation
+        if (!token) {
+            if (!localStorage.getItem('tour_guest_seen')) {
+                this.showTooltip('nav-account', 'أنشئ حسابك الآن', 'اضغط هنا وأدخل معلوماتك للاستفادة من كافة المميزات', 'top');
+                const btn = document.getElementById('nav-account');
+                if(btn) {
+                    btn.classList.add('tour-highlight');
+                    btn.addEventListener('click', () => {
+                        localStorage.setItem('tour_guest_seen', 'true');
+                        btn.classList.remove('tour-highlight');
+                        this.hideTooltip();
+                    }, {once: true});
+                }
+            }
+        } 
+        // Step 2: User - Guide to Booking
+        else {
+            if (!localStorage.getItem('tour_booking_seen')) {
+                // Ensure we are on home page
+                if(document.getElementById('homePage').style.display !== 'none') {
+                    this.showTooltip('nav-booking', 'احجز موعدك', 'اضغط هنا لحجز موعد جديد', 'top');
+                    const btn = document.getElementById('nav-booking');
+                    if(btn) {
+                        btn.classList.add('tour-highlight');
+                        btn.addEventListener('click', () => {
+                            localStorage.setItem('tour_booking_seen', 'true');
+                            btn.classList.remove('tour-highlight');
+                            this.hideTooltip();
+                            // Prepare for Step 3
+                            setTimeout(() => this.showBookingFormTour(), 800);
+                        }, {once: true});
+                    }
+                }
+            }
+        }
+    },
+    
+    showBookingFormTour: function() {
+        const checkModal = setInterval(() => {
+            const modal = document.getElementById('bookingModal');
+            if (modal && modal.style.display === 'block') {
+                clearInterval(checkModal);
+                
+                // Highlight Form
+                const form = document.getElementById('bookingForm');
+                if(form) {
+                    this.showTooltip('bookingForm', 'أكمل الحجز', 'املأ المعلومات وأكد موعدك', 'bottom');
+                    
+                    // Remove on submit or close
+                    const closeHandler = () => {
+                        this.hideTooltip();
+                        localStorage.setItem('tour_booking_completed', 'true');
+                    };
+                    
+                    form.addEventListener('submit', closeHandler, {once: true});
+                    const closeBtn = modal.querySelector('.close-btn');
+                    if(closeBtn) closeBtn.addEventListener('click', () => this.hideTooltip(), {once: true});
+                }
+            }
+        }, 500);
+        
+        // Stop checking after 10 seconds
+        setTimeout(() => clearInterval(checkModal), 10000);
+    },
+
+    showTooltip: function(targetId, title, text, position = 'top') {
+        this.hideTooltip();
+        
+        const target = document.getElementById(targetId);
+        if (!target) return;
+        
+        const rect = target.getBoundingClientRect();
+        
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tour-tooltip';
+        tooltip.innerHTML = `
+            <div class="tour-arrow ${position}"></div>
+            <div class="tour-content">
+                <h4>${title}</h4>
+                <p>${text}</p>
+                <button onclick="TourGuide.hideTooltip()">حسناً</button>
+            </div>
+        `;
+        
+        document.body.appendChild(tooltip);
+        
+        const tooltipRect = tooltip.getBoundingClientRect();
+        
+        let top, left;
+        
+        if (position === 'top') {
+            top = rect.top - tooltipRect.height - 15;
+            left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+        } else {
+            top = rect.bottom + 15;
+            left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+        }
+        
+        // Keep within screen bounds
+        if (left < 10) left = 10;
+        if (left + tooltipRect.width > window.innerWidth - 10) left = window.innerWidth - tooltipRect.width - 10;
+        
+        tooltip.style.top = `${top}px`;
+        tooltip.style.left = `${left}px`;
+    },
+    
+    hideTooltip: function() {
+        const existing = document.querySelector('.tour-tooltip');
+        if (existing) existing.remove();
+        document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+    }
+};
 
 
