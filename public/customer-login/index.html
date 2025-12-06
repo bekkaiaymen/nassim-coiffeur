@@ -2,78 +2,64 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل دخول العميل - SmartBiz</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>تسجيل دخول العميل - Nassim Coiffeur</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #CBA35C;
+            --primary-dark: #B8944F;
+            --bg-dark: #0E0E0F;
+            --surface: #1A1A1A;
+            --text-primary: #E9E9E9;
+            --text-secondary: #A7A7A7;
+            --radius: 20px;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            font-family: 'Cairo', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            direction: rtl;
             padding: 20px;
         }
 
-        .login-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        .container {
             width: 100%;
             max-width: 450px;
-            padding: 40px;
-            animation: slideIn 0.5s ease;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .login-card {
+            background-color: var(--surface);
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .logo {
+        .logo-area {
             text-align: center;
             margin-bottom: 30px;
         }
 
-        .logo img {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid #CBA35C;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 12px rgba(203, 163, 92, 0.3);
-        }
-
-        .logo svg {
-            width: 60px;
-            height: 60px;
-            margin-bottom: 15px;
-        }
-
-        .logo h1 {
-            font-size: 28px;
-            color: #1f2937;
+        .logo-area h1 {
+            color: var(--primary);
+            font-size: 24px;
             margin-bottom: 10px;
         }
 
-        .logo p {
-            color: #6b7280;
-            font-size: 16px;
+        .logo-area p {
+            color: var(--text-secondary);
+            font-size: 14px;
         }
 
         .form-group {
@@ -82,59 +68,110 @@
 
         .form-group label {
             display: block;
+            color: var(--text-secondary);
             margin-bottom: 8px;
-            color: #374151;
-            font-weight: 600;
+            font-size: 14px;
         }
 
-        .form-group input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e5e7eb;
-            border-radius: 10px;
-            font-family: 'Cairo', sans-serif;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #6366f1;
-        }
-
-        .login-btn {
+        .form-input {
             width: 100%;
             padding: 14px;
-            background: #6366f1;
-            color: white;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .password-input {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
             border: none;
-            border-radius: 10px;
-            font-family: 'Cairo', sans-serif;
-            font-size: 18px;
-            font-weight: 600;
+            color: var(--text-secondary);
             cursor: pointer;
-            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
             margin-top: 10px;
         }
 
-        .login-btn:hover {
-            background: #4f46e5;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        .btn-primary:active {
+            transform: scale(0.98);
         }
 
-        .login-btn:disabled {
-            background: #9ca3af;
+        .btn-primary:disabled {
+            opacity: 0.7;
             cursor: not-allowed;
-            transform: none;
         }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .register-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--surface);
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            color: var(--text-primary);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .notification.success { border-right: 4px solid #4CAF50; }
+        .notification.error { border-right: 4px solid #f44336; }
 
         .spinner {
             display: none;
             width: 20px;
             height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
+            border: 2px solid rgba(0, 0, 0, 0.3);
+            border-top-color: #000;
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
             margin: 0 auto;
@@ -143,213 +180,41 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
-        .divider {
-            text-align: center;
-            margin: 25px 0;
-            color: #9ca3af;
-            position: relative;
-        }
-
-        .divider::before,
-        .divider::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            width: 40%;
-            height: 1px;
-            background: #e5e7eb;
-        }
-
-        .divider::before {
-            right: 0;
-        }
-
-        .divider::after {
-            left: 0;
-        }
-
-        .demo-section {
-            margin-top: 20px;
-        }
-
-        .demo-title {
-            text-align: center;
-            color: #6b7280;
-            font-size: 14px;
-            margin-bottom: 15px;
-        }
-
-        .demo-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .demo-btn {
-            flex: 1;
-            padding: 12px;
-            background: #f3f4f6;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
-            font-family: 'Cairo', sans-serif;
-            font-weight: 600;
-            color: #374151;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .demo-btn:hover {
-            background: #e5e7eb;
-            border-color: #6366f1;
-            transform: translateY(-2px);
-        }
-
-        .info-box {
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
-            font-size: 14px;
-            color: #1e40af;
-        }
-
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .back-link a {
-            color: #6366f1;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .back-link a:hover {
-            text-decoration: underline;
-        }
-
-        .notification {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0);
-            background: white;
-            padding: 40px 60px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            z-index: 1000;
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            max-width: 500px;
-            text-align: center;
-            font-size: 24px;
-            font-weight: 600;
-        }
-
-        .notification.show {
-            transform: translate(-50%, -50%) scale(1);
-            opacity: 1;
-        }
-
-        .notification.success {
-            border-top: 6px solid #10b981;
-            color: #059669;
-        }
-
-        .notification.error {
-            border-top: 6px solid #ef4444;
-            color: #dc2626;
-        }
-        
-        .notification::before {
-            content: '';
-            display: block;
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            border-radius: 50%;
-            animation: scaleUp 0.5s ease;
-        }
-        
-        .notification.success::before {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            content: '✓';
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 48px;
-            line-height: 80px;
-        }
-        
-        .notification.error::before {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            content: '✕';
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 48px;
-            line-height: 80px;
-        }
-        
-        @keyframes scaleUp {
-            from {
-                transform: scale(0) rotate(-180deg);
-            }
-            to {
-                transform: scale(1) rotate(0deg);
-            }
-        }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="logo">
-            <svg viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="18" fill="#6366f1"/>
-                <path d="M20 10 L28 25 L12 25 Z" fill="white"/>
-            </svg>
-            <h1>حسابي</h1>
-            <p>تسجيل دخول العميل</p>
-        </div>
-
-        <form id="customerLoginForm">
-            <div class="form-group">
-                <label>رقم الجوال أو البريد الإلكتروني</label>
-                <input type="text" id="identifier" placeholder="05xxxxxxxx أو email@example.com" required>
+    <div class="container">
+        <div class="login-card">
+            <div class="logo-area">
+                <h1>✂️ Nassim Coiffeur</h1>
+                <p>مرحباً بعودتك</p>
             </div>
 
-            <div class="form-group">
-                <label>كلمة المرور</label>
-                <div style="position: relative;">
-                    <input type="password" id="password" placeholder="أدخل كلمة المرور" required>
-                    <button type="button" onclick="togglePassword()" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 20px;">
-                        👁️
-                    </button>
+            <form id="customerLoginForm">
+                <div class="form-group">
+                    <label>رقم الجوال</label>
+                    <input type="tel" id="identifier" class="form-input" placeholder="05xxxxxxxx" required>
                 </div>
-            </div>
 
-            <button type="submit" id="loginBtn" class="login-btn">
-                <span class="btn-text">تسجيل الدخول</span>
-                <div class="spinner"></div>
-            </button>
-        </form>
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+                    <div class="password-input">
+                        <input type="password" id="password" class="form-input" placeholder="أدخل كلمة المرور" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword()">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
 
-        <div class="divider">أو</div>
-
-        <div class="info-box">
-            💡 <strong>تلميح:</strong> استخدم رقم جوالك أو بريدك الإلكتروني المسجل مع كلمة المرور
-        </div>
-        
-        <div class="back-link" style="margin-top: 15px;">
-            <span style="color: #6b7280;">ليس لديك حساب؟</span>
-            <a href="/customer-register">سجل الآن مجاناً</a>
-        </div>
-
-        <div class="back-link">
-            <a href="/">← العودة للصفحة الرئيسية</a>
+                <button type="submit" id="loginBtn" class="btn-primary">
+                    <span class="btn-text">تسجيل الدخول</span>
+                    <div class="spinner"></div>
+                </button>
+                
+                <div class="register-link">
+                    ليس لديك حساب؟ <a href="/customer-register">إنشاء حساب جديد</a>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -368,13 +233,12 @@
             notification.textContent = message;
             notification.className = `notification ${type} show`;
             
-            // Keep notification visible for the full duration
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, 5000);
+            }, 3000);
         }
 
-        // Detect if input is email or phone
+        // Normalize phone number
         function normalizePhone(value) {
             let phone = value.replace(/\s+/g, '').replace(/-/g, '');
             if (phone.startsWith('+213')) {
@@ -389,16 +253,6 @@
             return phone;
         }
 
-        function detectInputType(identifier) {
-            const trimmed = identifier.trim();
-            // Check if email
-            if (trimmed.includes('@')) {
-                return { type: 'email', value: trimmed.toLowerCase() };
-            }
-            // Assume phone number
-            return { type: 'phone', value: normalizePhone(trimmed) };
-        }
-
         // Login Form
         document.getElementById('customerLoginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -411,40 +265,28 @@
             const btnText = loginBtn.querySelector('.btn-text');
             const spinner = loginBtn.querySelector('.spinner');
             
-            // Validate inputs
             if (!identifier || !password) {
                 showNotification('الرجاء إدخال جميع الحقول', 'error');
                 return;
             }
 
-            // Detect input type
-            const input = detectInputType(identifier);
+            // Normalize phone
+            const phone = normalizePhone(identifier);
             
-            // Disable button and show spinner
             loginBtn.disabled = true;
             btnText.style.display = 'none';
             spinner.style.display = 'block';
             
             try {
-                // Prepare login data
                 const loginData = {
+                    phone: phone,
                     password: password
                 };
                 
-                if (input.type === 'email') {
-                    loginData.email = input.value;
-                } else {
-                    loginData.phone = input.value;
-                }
-                
-                console.log('Login attempt:', { type: input.type, identifier: input.value });
-                
-                // API URL based on environment
                 const API_URL = window.location.hostname === 'localhost' 
                     ? 'http://localhost:3000/api'
                     : 'https://nassim-coiffeur.onrender.com/api';
                 
-                // Send login request
                 const response = await fetch(`${API_URL}/customers/login`, {
                     method: 'POST',
                     headers: {
@@ -454,49 +296,30 @@
                 });
                 
                 const data = await response.json();
-                console.log('Login response:', data);
                 
                 if (response.ok && data.success) {
-                    // Save token and user data
                     localStorage.setItem('customerToken', data.data.token);
                     localStorage.setItem('customerData', JSON.stringify(data.data.user));
                     
-                    // Show success message
                     showNotification('✓ تم تسجيل الدخول بنجاح!', 'success');
                     
-                    // Redirect based on followed businesses
                     setTimeout(() => {
-                        if (data.data.followsNassim) {
-                            window.location.href = '/nassim';
-                        } else {
-                            window.location.href = '/customer';
-                        }
-                    }, 1500);
+                        window.location.href = '/nassim';
+                    }, 1000);
                 } else {
                     showNotification(data.message || 'البيانات غير صحيحة', 'error');
-                    
-                    // Re-enable button
                     loginBtn.disabled = false;
                     btnText.style.display = 'inline';
                     spinner.style.display = 'none';
                 }
             } catch (error) {
                 console.error('Login error:', error);
-                showNotification('حدث خطأ في الاتصال. حاول مرة أخرى.', 'error');
-                
-                // Re-enable button
+                showNotification('حدث خطأ في الاتصال', 'error');
                 loginBtn.disabled = false;
                 btnText.style.display = 'inline';
                 spinner.style.display = 'none';
             }
         });
-
-        // Check if already logged in
-        if (localStorage.getItem('customerToken')) {
-            // Optionally verify token before redirecting
-            // For now, just redirect
-            // window.location.href = '/customer';
-        }
     </script>
 </body>
 </html>
