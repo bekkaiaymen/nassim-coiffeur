@@ -236,6 +236,13 @@ function renderTimeline(date, appointments, availableEmployees = []) {
                 m = aptDate.getMinutes();
             }
             
+            // تأخير العرض بـ 30 دقيقة: إذا كان الموعد في 11:00، اعرضه في 10:30
+            let totalMinutes = h * 60 + m;
+            totalMinutes -= 30; // تأخير 30 دقيقة
+            
+            h = Math.floor(totalMinutes / 60);
+            m = totalMinutes % 60;
+            
             if (h < START_HOUR || h >= END_HOUR) return;
             
             const minutesFromStart = (h - START_HOUR) * 60 + m;
@@ -495,6 +502,13 @@ async function renderVerticalTimeline(date, appointments, availableEmployees = [
                 h = aptDate.getHours();
                 m = aptDate.getMinutes();
             }
+            
+            // تأخير العرض بـ 30 دقيقة: إذا كان الموعد في 11:00، اعرضه في 10:30
+            let totalMinutes = h * 60 + m;
+            totalMinutes -= 30; // تأخير 30 دقيقة
+            
+            h = Math.floor(totalMinutes / 60);
+            m = totalMinutes % 60;
             
             if (h < START_HOUR || h >= END_HOUR) return;
             

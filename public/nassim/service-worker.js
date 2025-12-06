@@ -1,8 +1,8 @@
 // Nassim Coiffeur - Service Worker
-// Version 3.0 - Enhanced Android Notifications Support
+// Version 3.1 - Critical Android Push Fix
 // التطبيق النقال الاحترافي مع دعم الإشعارات حتى عند إغلاق التطبيق
 
-const CACHE_NAME = 'nassim-v3.0';
+const CACHE_NAME = 'nassim-v3.1';
 const urlsToCache = [
     '/nassim/',
     '/nassim/index.html',
@@ -11,6 +11,16 @@ const urlsToCache = [
     '/nassim/favicon.svg',
     '/nassim/logo.jpg'
 ];
+
+// Keep Service Worker alive
+let keepAliveInterval = null;
+function startKeepAlive() {
+    if (keepAliveInterval) return;
+    keepAliveInterval = setInterval(() => {
+        console.log('💓 Service Worker heartbeat');
+    }, 25000); // Every 25 seconds
+}
+startKeepAlive();
 
 // =====================================================
 // 1. INSTALL EVENT - تثبيت Service Worker
@@ -116,6 +126,9 @@ self.addEventListener('push', event => {
         timestamp: new Date().toLocaleTimeString('ar')
     });
     
+    // Restart keep-alive on push
+    startKeepAlive();
+    
     let notificationData = {
         title: 'Nassim Coiffeur',
         body: 'لديك إشعار جديد',
@@ -153,54 +166,56 @@ self.addEventListener('push', event => {
         }
     }
     
-    event.waitUntil(
-        (async () => {
+    // CRITICAL: Keep Service Worker alive until notification is shown
+    const showNotificationPromise = (async () => {
+        try {
+            console.log('📲 Showing notification:', notificationData.title);
+            await self.registration.showNotification(notificationData.title, {
+                body: notificationData.body,
+                icon: notificationData.icon,
+                badge: notificationData.badge,
+                vibrate: notificationData.vibrate,
+                tag: notificationData.tag,
+                requireInteraction: true,
+                silent: false,
+                renotify: true,
+                timestamp: Date.now(),
+                data: notificationData.data || {},
+                actions: [
+                    { action: 'open', title: 'فتح' },
+                    { action: 'close', title: 'إغلاق' }
+                ],
+                image: notificationData.image,
+                dir: 'rtl',
+                lang: 'ar'
+            });
+            console.log('✅ Notification shown successfully!');
+            
             try {
-                console.log('📲 Showing notification:', notificationData.title);
-                await self.registration.showNotification(notificationData.title, {
+                await self.registration.sync.register('sync-notification-shown');
+                console.log('📌 Sync registered for notification tracking');
+            } catch (syncErr) {
+                console.log('ℹ️ Sync not available:', syncErr.message);
+            }
+        } catch (err) {
+            console.error('❌ Show notification failed:', err);
+            try {
+                console.log('🔄 Attempting fallback notification...');
+                await self.registration.showNotification('Nassim Coiffeur', {
                     body: notificationData.body,
-                    icon: notificationData.icon,
-                    badge: notificationData.badge,
-                    vibrate: notificationData.vibrate,
+                    icon: '/nassim/logo.jpg',
                     tag: notificationData.tag,
-                    requireInteraction: true,
-                    silent: false,
-                    renotify: true,
-                    timestamp: Date.now(),
-                    data: notificationData.data || {},
-                    actions: [
-                        { action: 'open', title: 'فتح' },
-                        { action: 'close', title: 'إغلاق' }
-                    ],
-                    image: notificationData.image,
-                    dir: 'rtl',
-                    lang: 'ar'
+                    requireInteraction: true
                 });
-                console.log('✅ Notification shown successfully!');
-                
-                try {
-                    await self.registration.sync.register('sync-notification-shown');
-                    console.log('📌 Sync registered for notification tracking');
-                } catch (syncErr) {
-                    console.log('ℹ️ Sync not available:', syncErr.message);
-                }
-            } catch (err) {
-                console.error('❌ Show notification failed:', err);
-                try {
-                    console.log('🔄 Attempting fallback notification...');
-                    await self.registration.showNotification('Nassim Coiffeur', {
-                        body: notificationData.body,
-                        icon: '/nassim/logo.jpg',
-                        tag: notificationData.tag,
-                        requireInteraction: true
-                    });
-                    console.log('✅ Fallback notification shown');
+                console.log('✅ Fallback notification shown');
                 } catch (fallbackErr) {
                     console.error('❌ Fallback also failed:', fallbackErr);
                 }
             }
-        })()
-    );
+        })();
+    
+    // CRITICAL: Don't let SW terminate before notification is shown
+    event.waitUntil(showNotificationPromise);
 });
 
 // =====================================================
