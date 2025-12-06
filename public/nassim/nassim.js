@@ -3882,17 +3882,28 @@ function renderTimelineStrip(date, appointments, availableEmployees = []) {
             
             if (h < effectiveStartHour || h >= TIMELINE_END_HOUR) return;
             
-            const minutesFromStart = (h - effectiveStartHour) * 60 + m;
+            // حفظ الوقت الأصلي للعرض (النص داخل المربع)
+            const originalH = h;
+            const originalM = m;
+            
+            // تأخير الموضع فقط بـ 30 دقيقة (وليس النص)
+            let posH = h;
+            let posM = m;
+            let totalPosMinutes = posH * 60 + posM - 30; // تأخير 30 دقيقة
+            posH = Math.floor(totalPosMinutes / 60);
+            posM = totalPosMinutes % 60;
+            
+            const minutesFromStart = (posH - effectiveStartHour) * 60 + posM;
             const leftPos = 180 + (minutesFromStart * TIMELINE_PIXELS_PER_MINUTE); // Add 180px offset for name column
             const duration = apt.serviceId?.duration || apt.duration || 30;
             const width = duration * TIMELINE_PIXELS_PER_MINUTE;
             
-            const totalStartMinutes = h * 60 + m;
+            const totalStartMinutes = originalH * 60 + originalM;
             const totalEndMinutes = totalStartMinutes + duration;
             const endH = Math.floor(totalEndMinutes / 60);
             const endM = totalEndMinutes % 60;
             
-            const startTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            const startTimeStr = `${String(originalH).padStart(2, '0')}:${String(originalM).padStart(2, '0')}`;
             const endTimeStr = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
             
             const el = document.createElement('div');
@@ -4190,7 +4201,18 @@ async function renderVerticalTimeline(date, appointments) {
             
             if (h < effectiveStartHour || h >= END_HOUR) return;
             
-            const minutesFromStart = (h - effectiveStartHour) * 60 + m;
+            // حفظ الوقت الأصلي للعرض (النص داخل المربع)
+            const originalH = h;
+            const originalM = m;
+            
+            // تأخير الموضع فقط بـ 30 دقيقة (وليس النص)
+            let posH = h;
+            let posM = m;
+            let totalPosMinutes = posH * 60 + posM - 30; // تأخير 30 دقيقة
+            posH = Math.floor(totalPosMinutes / 60);
+            posM = totalPosMinutes % 60;
+            
+            const minutesFromStart = (posH - effectiveStartHour) * 60 + posM;
             const topPos = minutesFromStart * PIXELS_PER_MINUTE;
             const duration = apt.serviceId?.duration || apt.duration || 30;
             const height = duration * PIXELS_PER_MINUTE;
@@ -4205,7 +4227,7 @@ async function renderVerticalTimeline(date, appointments) {
             el.style.top = `${topPos}px`;
             el.style.height = `${height}px`;
             
-            const startTimeStr = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            const startTimeStr = `${String(originalH).padStart(2, '0')}:${String(originalM).padStart(2, '0')}`;
             const serviceName = apt.serviceId?.name || apt.service || apt.serviceName || '';
             
             el.innerHTML = `
