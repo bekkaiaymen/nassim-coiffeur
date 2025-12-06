@@ -362,13 +362,13 @@ function displayServices(services) {
         return `
         <div class="service-card">
             ${hasValidImage
-                ? `<div class="service-image" style="width: 100px; height: 120px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); position: relative; box-shadow: 0 4px 15px rgba(203, 163, 92, 0.3); border: 2px solid rgba(203, 163, 92, 0.2);">
+                ? `<div class="service-image" onclick="${service.hasVariants ? `openVariantsModal('${service._id}')` : `selectService('${service._id}')`}" style="width: 100px; height: 120px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); position: relative; box-shadow: 0 4px 15px rgba(203, 163, 92, 0.3); border: 2px solid rgba(203, 163, 92, 0.2); cursor: pointer;">
                     <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="console.log('Failed to load service image:', this.src); this.parentElement.outerHTML='<div class=\\'service-icon\\'>${getServiceIcon(service.name)}</div>';">
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); padding: 8px 10px; pointer-events: none;">
                         <div style="color: white; font-size: 10px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">${service.name}</div>
                     </div>
                    </div>` 
-                : `<div class="service-icon">${getServiceIcon(service.name)}</div>`
+                : `<div class="service-icon" onclick="${service.hasVariants ? `openVariantsModal('${service._id}')` : `selectService('${service._id}')`}" style="cursor: pointer;">${getServiceIcon(service.name)}</div>`
             }
             <div class="service-info" onclick="${service.hasVariants ? `openVariantsModal('${service._id}')` : `selectService('${service._id}')`}">
                 <div class="service-name">
