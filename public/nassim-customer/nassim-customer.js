@@ -67,8 +67,8 @@ function handleReferFriend() {
         // Show share options if available
         if (navigator.share) {
             navigator.share({
-                title: 'ناسيم كوافير - حجز سريع',
-                text: `${referrerName} يدعوك لحجز موعد في ناسيم كوافير!`,
+                title: 'نسيم كوافير - حجز سريع',
+                text: `${referrerName} يدعوك لحجز موعد في نسيم كوافير!`,
                 url: quickBookUrl
             }).catch(err => console.log('Share cancelled'));
         }

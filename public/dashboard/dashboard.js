@@ -155,7 +155,7 @@ function showSection(sectionName) {
         appointments: 'المواعيد',
         customers: 'العملاء',
         services: 'الخدمات',
-        employees: 'الموظفين',
+        employees: 'الحلاقين',
         invoices: 'الفواتير',
         subscription: 'الاشتراك',
         settings: 'الإعدادات'
@@ -292,7 +292,7 @@ async function loadEmployeesForForm() {
     }
     
     const select = document.getElementById('appointment-employee');
-    select.innerHTML = '<option value="">اختر الموظف</option>' + 
+    select.innerHTML = '<option value="">اختر الحلاق</option>' + 
         employees.map(e => `<option value="${e._id}">${e.name}</option>`).join('');
 }
 
@@ -609,7 +609,7 @@ async function loadEmployees() {
         employees = data.data;
         const grid = document.getElementById('employees-grid');
         if (data.data.length === 0) {
-            grid.innerHTML = '<p style="text-align: center; color: #6B7280; padding: 40px;">لا يوجد موظفين</p>';
+            grid.innerHTML = '<p style="text-align: center; color: #6B7280; padding: 40px;">لا يوجد حلاقين</p>';
             return;
         }
         
@@ -637,11 +637,11 @@ async function loadEmployees() {
 }
 
 async function deleteEmployee(id) {
-    if (!confirm('هل أنت متأكد من حذف هذا الموظف؟')) return;
+    if (!confirm('هل أنت متأكد من حذف هذا الحلاق؟')) return;
     
     const data = await apiCall(`/users/${id}`, 'DELETE');
     if (data && data.success) {
-        showNotification('تم حذف الموظف', 'success');
+        showNotification('تم حذف الحلاق', 'success');
         loadEmployees();
     }
 }
@@ -880,7 +880,7 @@ function getRoleText(role) {
     const roles = {
         business_owner: 'مالك',
         manager: 'مدير',
-        employee: 'موظف',
+        employee: 'حلاق',
         customer: 'عميل'
     };
     return roles[role] || role;

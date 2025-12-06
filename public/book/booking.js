@@ -135,7 +135,7 @@ async function loadEmployees() {
     } catch (error) {
         console.error('Error loading employees:', error);
         document.getElementById('employees-list').innerHTML = `
-            <p style="text-align: center; color: #EF4444;">حدث خطأ في تحميل الموظفين</p>
+            <p style="text-align: center; color: #EF4444;">حدث خطأ في تحميل الحلاقين</p>
         `;
     }
 }
@@ -145,7 +145,7 @@ function displayEmployees() {
     
     if (employees.length === 0) {
         container.innerHTML = `
-            <p style="text-align: center; color: #6B7280;">لا يوجد موظفين متاحين حالياً</p>
+            <p style="text-align: center; color: #6B7280;">لا يوجد حلاقين متاحين حالياً</p>
         `;
         return;
     }
@@ -285,7 +285,7 @@ function nextStep(step) {
     }
     
     if (step === 4 && !bookingData.employee) {
-        showNotification('يرجى اختيار الموظف', 'error');
+        showNotification('يرجى اختيار الحلاق', 'error');
         return;
     }
     
@@ -375,7 +375,7 @@ function showSuccessModal() {
     document.getElementById('success-details').innerHTML = `
         <p><strong>العميل:</strong> ${bookingData.customerName}</p>
         <p><strong>الخدمة:</strong> ${bookingData.service.name}</p>
-        <p><strong>الموظف:</strong> ${bookingData.employee.name}</p>
+        <p><strong>الحلاق:</strong> ${bookingData.employee.name}</p>
         <p><strong>التاريخ:</strong> ${formatDate(bookingData.date)}</p>
         <p><strong>الوقت:</strong> ${bookingData.time}</p>
         <p><strong>السعر:</strong> ${bookingData.service.price} ريال</p>

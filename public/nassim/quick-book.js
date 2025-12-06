@@ -359,7 +359,7 @@ async function getNassimBusinessId() {
                 const nassim = businesses.find(b => 
                     b.businessName && (
                         b.businessName.toLowerCase().includes('nassim') ||
-                        b.businessName.toLowerCase().includes('ناسيم')
+                        b.businessName.toLowerCase().includes('نسيم')
                     )
                 );
                 if (nassim) {

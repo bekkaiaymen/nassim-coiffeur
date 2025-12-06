@@ -449,7 +449,7 @@ function getRoleText(role) {
         'superadmin': 'مالك المنصة',
         'admin': 'مدير',
         'owner': 'صاحب محل',
-        'employee': 'موظف'
+        'employee': 'حلاق'
     };
     return roleMap[role] || role;
 }
@@ -477,7 +477,7 @@ async function viewTenantDetails(id) {
                   `📍 المدينة: ${tenant.address?.city || '-'}\n\n` +
                   `📊 الاستخدام الشهري:\n` +
                   `المواعيد: ${usage.appointmentsThisMonth || 0} / ${limits.maxAppointmentsPerMonth === -1 ? '∞' : limits.maxAppointmentsPerMonth}\n` +
-                  `الموظفين: ${usage.employees || 0} / ${limits.maxEmployees === -1 ? '∞' : limits.maxEmployees}\n` +
+                  `الحلاقين: ${usage.employees || 0} / ${limits.maxEmployees === -1 ? '∞' : limits.maxEmployees}\n` +
                   `العملاء: ${usage.customers || 0} / ${limits.maxCustomers === -1 ? '∞' : limits.maxCustomers}\n\n` +
                   `💰 الإحصائيات:\n` +
                   `الإيرادات: ${tenant.stats?.totalRevenue || 0} ر.س\n` +

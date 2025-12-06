@@ -288,11 +288,11 @@ async function loadBusinessEmployees(businessId) {
                 `;
             }).join('');
         } else {
-            specialistsList.innerHTML = '<div class="empty-state">لا يوجد موظفين متاحين حالياً</div>';
+            specialistsList.innerHTML = '<div class="empty-state">لا يوجد حلاقين متاحين حالياً</div>';
         }
     } catch (error) {
         console.error('Error loading employees:', error);
-        specialistsList.innerHTML = '<div class="empty-state">خطأ في تحميل الموظفين</div>';
+        specialistsList.innerHTML = '<div class="empty-state">خطأ في تحميل الحلاقين</div>';
     }
 }
 
