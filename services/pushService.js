@@ -167,25 +167,14 @@ async function sendWebPush(subscriptionDoc, payload) {
         console.log(`   📍 Device: ${subscriptionDoc.deviceInfo?.os || 'unknown'}`);
         console.log(`   🔑 Has keys: ${!!subscriptionDoc.keys && !!subscriptionDoc.keys.auth}`);
         
-        // Parse payload to get notification type for topic
-        let notificationType = 'general';
-        try {
-            const parsedPayload = JSON.parse(payload);
-            notificationType = parsedPayload.type || 'general';
-        } catch (e) {
-            // ignore
-        }
-        
         await webpush.sendNotification({
             endpoint: subscriptionDoc.endpoint,
             keys: subscriptionDoc.keys || {}
         }, payload, {
-            TTL: 24 * 60 * 60, // 24 hours - gives time for delivery when device is offline
-            urgency: 'high', // CRITICAL: Ensures Android delivers even when app closed
-            topic: `nassim-${notificationType}` // Allows message collapsing
+            TTL: 24 * 60 * 60 // 24 hours
         });
 
-        console.log(`   ✅ Sent successfully with urgency=high!`);
+        console.log(`   ✅ Sent successfully!`);
         
         subscriptionDoc.lastNotifiedAt = new Date();
         subscriptionDoc.isActive = true;
