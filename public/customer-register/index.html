@@ -2,105 +2,265 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>تسجيل زبون جديد - Nassim Coiffeur</title>
-    <link rel="stylesheet" href="/customer-register/customer-register.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* Custom overrides for simplified view */
-        .progress-container { display: none; }
-        .step-content { display: block !important; }
-        .step-content[data-step="2"], .step-content[data-step="3"] { display: none !important; }
-        .back-link { display: none; }
-        .register-card { max-width: 500px; margin: 20px auto; }
-        .card-header h2 { text-align: center; }
-        .card-header p { text-align: center; }
+        :root {
+            --primary: #CBA35C;
+            --primary-dark: #B8944F;
+            --bg-dark: #0E0E0F;
+            --surface: #1A1A1A;
+            --text-primary: #E9E9E9;
+            --text-secondary: #A7A7A7;
+            --radius: 20px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .register-card {
+            background-color: var(--surface);
+            border-radius: var(--radius);
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .logo-area {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-area h1 {
+            color: var(--primary);
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .logo-area p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 14px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .photo-upload-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .photo-preview {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 2px dashed var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+
+        .photo-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-icon {
+            font-size: 30px;
+            color: var(--primary);
+        }
+
+        .upload-btn {
+            color: var(--primary);
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .password-input {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border: none;
+            border-radius: 12px;
+            color: #000;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-top: 10px;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+        }
+
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .login-link a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: var(--surface);
+            padding: 15px 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            color: var(--text-primary);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .notification.success { border-right: 4px solid #4CAF50; }
+        .notification.error { border-right: 4px solid #f44336; }
+
+        input[type="file"] { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <div class="header" style="justify-content: center;">
-            <div class="logo">
-                <h1>✂️ Nassim Coiffeur</h1>
-            </div>
-        </div>
-
-        <!-- Registration Form -->
         <div class="register-card">
-            <div class="card-header">
-                <h2>🎉 إنشاء حساب جديد</h2>
-                <p>سجل الآن واحجز موعدك في ثوانٍ</p>
+            <div class="logo-area">
+                <h1>✂️ Nassim Coiffeur</h1>
+                <p>أنشئ حسابك واحجز موعدك في ثوانٍ</p>
             </div>
 
-            <!-- Step 1: Personal Information (Only Step) -->
-            <form id="registrationForm" class="registration-form" onsubmit="event.preventDefault(); submitRegistration();">
-                <div class="step-content active" data-step="1">
-                    
-                    <div class="form-group photo-upload-group">
-                        <label>صورة الملف الشخصي (اختياري)</label>
-                        <div class="photo-upload-container">
-                            <div class="photo-preview" id="photoPreview">
-                                <span class="photo-icon">📷</span>
-                                <img id="previewImage" style="display: none;" alt="صورة المعاينة">
-                            </div>
-                            <input type="file" id="profilePhoto" accept="image/*" onchange="previewPhoto(event)">
-                            <label for="profilePhoto" class="upload-btn">اختر صورة</label>
-                        </div>
+            <form id="registrationForm" onsubmit="event.preventDefault(); submitRegistration();">
+                <div class="photo-upload-container">
+                    <div class="photo-preview" id="photoPreview" onclick="document.getElementById('profilePhoto').click()">
+                        <span class="photo-icon"><i class="fas fa-camera"></i></span>
+                        <img id="previewImage" style="display: none;" alt="صورة المعاينة">
                     </div>
+                    <input type="file" id="profilePhoto" accept="image/*" onchange="previewPhoto(event)">
+                    <label for="profilePhoto" class="upload-btn">اختر صورة شخصية</label>
+                </div>
 
-                    <div class="form-group">
-                        <label>الاسم الكامل</label>
-                        <input type="text" id="customerName" name="name" required 
-                               placeholder="أدخل اسمك الكامل">
-                    </div>
+                <div class="form-group">
+                    <label>الاسم الكامل</label>
+                    <input type="text" id="customerName" class="form-input" required placeholder="أدخل اسمك الكامل">
+                </div>
 
-                    <div class="form-group">
-                        <label>رقم الجوال</label>
-                        <input type="tel" id="customerPhone" name="phone" required 
-                               placeholder="05xxxxxxxx" maxlength="10">
-                    </div>
+                <div class="form-group">
+                    <label>رقم الجوال</label>
+                    <input type="tel" id="customerPhone" class="form-input" required placeholder="05xxxxxxxx" maxlength="10">
+                </div>
 
-                    <div class="form-group">
-                        <label>البريد الإلكتروني (اختياري)</label>
-                        <input type="email" id="customerEmail" name="email" 
-                               placeholder="example@email.com">
+                <div class="form-group">
+                    <label>كلمة المرور</label>
+                    <div class="password-input">
+                        <input type="password" id="customerPassword" class="form-input" required placeholder="أدخل كلمة مرور قوية" minlength="6">
+                        <button type="button" class="toggle-password" onclick="togglePassword('customerPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label>كلمة المرور</label>
-                        <div class="password-input">
-                            <input type="password" id="customerPassword" name="password" required 
-                                   placeholder="أدخل كلمة مرور قوية" minlength="6">
-                            <button type="button" class="toggle-password" onclick="togglePassword('customerPassword')">
-                                👁️
-                            </button>
-                        </div>
+                <div class="form-group">
+                    <label>تأكيد كلمة المرور</label>
+                    <div class="password-input">
+                        <input type="password" id="confirmPassword" class="form-input" required placeholder="أعد إدخال كلمة المرور" minlength="6">
+                        <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
+                </div>
 
-                    <div class="form-group">
-                        <label>تأكيد كلمة المرور</label>
-                        <div class="password-input">
-                            <input type="password" id="confirmPassword" name="confirmPassword" required 
-                                   placeholder="أعد إدخال كلمة المرور" minlength="6">
-                            <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword')">
-                                👁️
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary" id="submitBtn">
-                        إنشاء الحساب والدخول ←
-                    </button>
-                    
-                    <div style="text-align: center; margin-top: 15px;">
-                        <a href="/customer-login" style="color: #666; text-decoration: none;">لديك حساب بالفعل؟ تسجيل الدخول</a>
-                    </div>
+                <button type="submit" class="btn-primary" id="submitBtn">
+                    إنشاء الحساب والدخول
+                </button>
+                
+                <div class="login-link">
+                    لديك حساب بالفعل؟ <a href="/customer-login">تسجيل الدخول</a>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Notification -->
     <div id="notification" class="notification"></div>
 
     <script src="/customer-register/customer-register.js"></script>

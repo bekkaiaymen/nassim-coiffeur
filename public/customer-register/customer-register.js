@@ -35,7 +35,6 @@ function togglePassword(inputId) {
 async function submitRegistration() {
     const name = document.getElementById('customerName').value.trim();
     const phone = document.getElementById('customerPhone').value.trim();
-    const email = document.getElementById('customerEmail').value.trim();
     const password = document.getElementById('customerPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     const photoFile = document.getElementById('profilePhoto').files[0];
@@ -73,7 +72,7 @@ async function submitRegistration() {
         const formData = new FormData();
         formData.append('name', name);
         formData.append('phone', cleanPhone.startsWith('5') ? '0' + cleanPhone : cleanPhone);
-        if (email) formData.append('email', email);
+        // Email removed as per request
         formData.append('password', password);
         // Hardcode Nassim Business ID
         formData.append('followedBusinesses', JSON.stringify([NASSIM_BUSINESS_ID]));
