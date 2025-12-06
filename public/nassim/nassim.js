@@ -362,9 +362,8 @@ function displayServices(services) {
         return `
         <div class="service-card">
             ${hasValidImage
-                ? `<div class="service-image" onclick="openImageLightbox('${service.image}', '${service.name}')" style="width: 100px; height: 120px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); cursor: zoom-in; position: relative; box-shadow: 0 4px 15px rgba(203, 163, 92, 0.3); border: 2px solid rgba(203, 163, 92, 0.2);">
+                ? `<div class="service-image" style="width: 100px; height: 120px; border-radius: 15px; overflow: hidden; margin-left: 15px; flex-shrink: 0; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); position: relative; box-shadow: 0 4px 15px rgba(203, 163, 92, 0.3); border: 2px solid rgba(203, 163, 92, 0.2);">
                     <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="console.log('Failed to load service image:', this.src); this.parentElement.outerHTML='<div class=\\'service-icon\\'>${getServiceIcon(service.name)}</div>';">
-                    <div class="zoom-icon" style="position: absolute; top: 8px; right: 8px; background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; pointer-events: none; box-shadow: 0 2px 8px rgba(0,0,0,0.4);">🔍</div>
                     <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%); padding: 8px 10px; pointer-events: none;">
                         <div style="color: white; font-size: 10px; font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,0.8);">${service.name}</div>
                     </div>
@@ -419,9 +418,9 @@ function populateBookingServices(services) {
              data-price-min="${service.priceMin || 0}"
              data-price-max="${service.priceMax || 0}">
             ${hasValidImage
-                ? `<div class="booking-service-image" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `openImageLightbox('${service.image}', '${service.name}')`}" style="position: relative; overflow: hidden;">
+                ? `<div class="booking-service-image" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}" style="position: relative; overflow: hidden;">
                     <img src="${service.image}" alt="${service.name}" style="width: 100%; height: 100%; object-fit: cover;">
-                    <div class="zoom-overlay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(203, 163, 92, 0.95); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; opacity: 0; transition: opacity 0.3s ease;">${service.hasVariants ? '📋' : '🔍'}</div>
+                    ${service.hasVariants ? '<div class="zoom-overlay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(203, 163, 92, 0.95); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; opacity: 0; transition: opacity 0.3s ease;">📋</div>' : ''}
                    </div>` 
                 : `<div class="service-icon" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}">${getServiceIcon(service.name)}</div>`
             }
