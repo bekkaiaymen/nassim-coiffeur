@@ -67,6 +67,67 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// @desc    Get current employee profile
+// @route   GET /api/employees/me
+// @access  Private (Employee)
+router.get('/me', protect, async (req, res) => {
+    try {
+        const employee = await Employee.findById(req.user.id);
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: 'الموظف غير موجود'
+            });
+        }
+        res.json({
+            success: true,
+            data: employee
+        });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في جلب الملف الشخصي'
+        });
+    }
+});
+
+// @desc    Update Employee Schedule
+// @route   PUT /api/employees/schedule
+// @access  Private (Employee)
+router.put('/schedule', protect, async (req, res) => {
+    try {
+        const { workingHours } = req.body;
+        const employeeId = req.user.id;
+
+        const employee = await Employee.findById(employeeId);
+        if (!employee) {
+            return res.status(404).json({
+                success: false,
+                message: 'الموظف غير موجود'
+            });
+        }
+
+        // Validate workingHours structure if needed
+        if (workingHours) {
+            employee.workingHours = workingHours;
+            await employee.save();
+        }
+
+        res.json({
+            success: true,
+            message: 'تم تحديث جدول العمل بنجاح',
+            data: employee.workingHours
+        });
+    } catch (error) {
+        console.error('Update schedule error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'حدث خطأ في تحديث الجدول'
+        });
+    }
+});
+
 // @desc    Check-in Employee (Set attendance)
 // @route   POST /api/employees/check-in
 // @access  Private (Employee)

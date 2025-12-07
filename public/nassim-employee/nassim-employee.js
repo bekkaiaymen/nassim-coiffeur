@@ -39,6 +39,7 @@ async function initEmployeeApp() {
 
     setupForms();
     await loadAttendanceStatus(); // NEW: Load attendance status
+    await loadWeeklySchedule(); // NEW: Load weekly schedule
     await loadServices();
     await loadPendingAppointments();
     await loadConfirmedAppointments();
@@ -1218,4 +1219,148 @@ function renderTimeline(appointments, employees) {
     if (timelineInterval) clearInterval(timelineInterval);
     timelineInterval = setInterval(updateLine, 60000); // Update every minute
 }
+
+// Weekly Schedule Functions
+
+async function loadWeeklySchedule() {
+    try {
+        const response = await fetch(`${API_BASE}/employees/me`, {
+            headers: { 'Authorization': `Bearer ${employeeToken}` }
+        });
+        const data = await response.json();
+        
+        if (data.success && data.data.workingHours) {
+            renderWeeklySchedule(data.data.workingHours);
+        } else {
+            // Default schedule if none exists
+            renderWeeklySchedule(getDefaultSchedule());
+        }
+    } catch (error) {
+        console.error('Error loading schedule:', error);
+        showToast('فشل تحميل الجدول الأسبوعي', 'error');
+    }
+}
+
+function getDefaultSchedule() {
+    const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const schedule = {};
+    days.forEach(day => {
+        schedule[day] = {
+            enabled: day !== 'friday', // Friday off by default
+            start: '09:00',
+            end: '21:00'
+        };
+    });
+    return schedule;
+}
+
+function renderWeeklySchedule(schedule) {
+    const container = document.querySelector('.schedule-grid');
+    if (!container) return;
+    
+    const daysMap = {
+        'sunday': 'الأحد',
+        'monday': 'الاثنين',
+        'tuesday': 'الثلاثاء',
+        'wednesday': 'الأربعاء',
+        'thursday': 'الخميس',
+        'friday': 'الجمعة',
+        'saturday': 'السبت'
+    };
+    
+    // Order: Saturday to Friday
+    const daysOrder = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    
+    container.innerHTML = daysOrder.map(day => {
+        const dayData = schedule[day] || { enabled: true, start: '09:00', end: '21:00' };
+        return `
+            <div class="schedule-day-row" style="display: flex; align-items: center; gap: 10px; background: #2A2A2A; padding: 10px; border-radius: 8px; border: 1px solid #333;">
+                <div style="width: 100px; font-weight: bold; color: #E9E9E9;">
+                    <label class="switch" style="margin-left: 10px; display: inline-block; vertical-align: middle;">
+                        <input type="checkbox" class="day-enabled" data-day="${day}" ${dayData.enabled ? 'checked' : ''} onchange="toggleDayInputs(this)">
+                        <span class="slider round" style="position: relative; display: inline-block; width: 34px; height: 20px; background-color: #ccc; border-radius: 34px; transition: .4s;"></span>
+                    </label>
+                    ${daysMap[day]}
+                </div>
+                <div class="day-inputs ${dayData.enabled ? '' : 'disabled'}" id="inputs-${day}" style="display: flex; gap: 10px; flex: 1; opacity: ${dayData.enabled ? '1' : '0.5'}; pointer-events: ${dayData.enabled ? 'auto' : 'none'}; transition: opacity 0.3s;">
+                    <div style="flex: 1;">
+                        <span style="font-size: 12px; color: #888; display: block;">من</span>
+                        <input type="time" class="form-input day-start" data-day="${day}" value="${dayData.start}" style="padding: 8px; width: 100%; background: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+                    </div>
+                    <div style="flex: 1;">
+                        <span style="font-size: 12px; color: #888; display: block;">إلى</span>
+                        <input type="time" class="form-input day-end" data-day="${day}" value="${dayData.end}" style="padding: 8px; width: 100%; background: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    // Add CSS for switch if not exists
+    if (!document.getElementById('switch-style')) {
+        const style = document.createElement('style');
+        style.id = 'switch-style';
+        style.textContent = `
+            .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+            .switch input { opacity: 0; width: 0; height: 0; }
+            .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; -webkit-transition: .4s; transition: .4s; }
+            .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 4px; bottom: 4px; background-color: white; -webkit-transition: .4s; transition: .4s; border-radius: 50%; }
+            input:checked + .slider { background-color: #CBA35C; }
+            input:focus + .slider { box-shadow: 0 0 1px #CBA35C; }
+            input:checked + .slider:before { -webkit-transform: translateX(14px); -ms-transform: translateX(14px); transform: translateX(14px); }
+            .slider.round { border-radius: 34px; }
+            .slider.round:before { border-radius: 50%; }
+        `;
+        document.head.appendChild(style);
+    }
+}
+
+function toggleDayInputs(checkbox) {
+    const day = checkbox.dataset.day;
+    const inputsDiv = document.getElementById(`inputs-${day}`);
+    if (checkbox.checked) {
+        inputsDiv.style.opacity = '1';
+        inputsDiv.style.pointerEvents = 'auto';
+        inputsDiv.classList.remove('disabled');
+    } else {
+        inputsDiv.style.opacity = '0.5';
+        inputsDiv.style.pointerEvents = 'none';
+        inputsDiv.classList.add('disabled');
+    }
+}
+
+async function saveWeeklySchedule() {
+    const schedule = {};
+    const days = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    
+    days.forEach(day => {
+        const enabled = document.querySelector(`.day-enabled[data-day="${day}"]`).checked;
+        const start = document.querySelector(`.day-start[data-day="${day}"]`).value;
+        const end = document.querySelector(`.day-end[data-day="${day}"]`).value;
+        
+        schedule[day] = { enabled, start, end };
+    });
+    
+    try {
+        const response = await fetch(`${API_BASE}/employees/schedule`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${employeeToken}`
+            },
+            body: JSON.stringify({ workingHours: schedule })
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+            showToast('تم حفظ البرنامج الأسبوعي بنجاح', 'success');
+        } else {
+            showToast(data.message || 'فشل حفظ البرنامج', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving schedule:', error);
+        showToast('حدث خطأ في الاتصال', 'error');
+    }
+}
+
 

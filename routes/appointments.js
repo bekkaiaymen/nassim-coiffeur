@@ -4,6 +4,7 @@ const Appointment = require('../models/Appointment');
 const Customer = require('../models/Customer');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
+const Employee = require('../models/Employee');
 const { protect, ensureTenant, addTenantFilter, checkLimit } = require('../middleware/auth');
 
 // Get customer appointments
@@ -160,14 +161,35 @@ router.get('/available-slots', async (req, res) => {
             });
         }
         
-        // Generate all time slots (9 AM to 9 PM, every 30 mins)
+        // Generate time slots based on working hours
+        let startTotalMinutes = 9 * 60; // Default 09:00
+        let endTotalMinutes = 21 * 60;  // Default 21:00
+
+        if (targetEmployee) {
+             const emp = await Employee.findById(targetEmployee);
+             if (emp && emp.workingHours) {
+                const dateObj = new Date(date);
+                const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                const dayName = days[dateObj.getDay()];
+                const daySchedule = emp.workingHours[dayName];
+                 if (daySchedule) {
+                    if (!daySchedule.enabled) {
+                         return res.json({ success: true, data: [] });
+                    }
+                    const [sH, sM] = daySchedule.start.split(':').map(Number);
+                    const [eH, eM] = daySchedule.end.split(':').map(Number);
+                    startTotalMinutes = sH * 60 + sM;
+                    endTotalMinutes = eH * 60 + eM;
+                 }
+             }
+        }
+
         const allSlots = [];
-        for (let hour = 9; hour <= 21; hour++) {
-            const hourStr = hour.toString().padStart(2, '0');
-            allSlots.push({ time: `${hourStr}:00`, available: true });
-            if (hour < 21) {
-                allSlots.push({ time: `${hourStr}:30`, available: true });
-            }
+        for (let m = startTotalMinutes; m < endTotalMinutes; m += 30) {
+            const h = Math.floor(m / 60);
+            const min = m % 60;
+            const timeStr = `${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+            allSlots.push({ time: timeStr, available: true });
         }
 
         // Mark booked slots as unavailable based on duration overlap
@@ -250,6 +272,50 @@ router.post('/public/book', async (req, res) => {
         const [hours, minutes] = time.split(':').map(Number);
         const startTimeInMinutes = hours * 60 + minutes;
         const endTimeInMinutes = startTimeInMinutes + serviceDuration;
+
+        // --- Working Hours Validation ---
+        const targetEmployeeId = employee || barber;
+        if (targetEmployeeId) {
+            const emp = await Employee.findById(targetEmployeeId);
+            if (emp && emp.workingHours) {
+                const dateObj = new Date(date);
+                const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+                const dayName = days[dateObj.getDay()];
+                const daySchedule = emp.workingHours[dayName];
+                
+                if (daySchedule) {
+                    const daysMap = {
+                        'sunday': 'الأحد',
+                        'monday': 'الاثنين',
+                        'tuesday': 'الثلاثاء',
+                        'wednesday': 'الأربعاء',
+                        'thursday': 'الخميس',
+                        'friday': 'الجمعة',
+                        'saturday': 'السبت'
+                    };
+
+                    if (!daySchedule.enabled) {
+                        return res.status(400).json({ 
+                            success: false, 
+                            message: `عذراً، الحلاق ${emp.name} في إجازة يوم ${daysMap[dayName] || dayName}. يرجى اختيار يوم آخر.` 
+                        });
+                    }
+                    
+                    const [sH, sM] = daySchedule.start.split(':').map(Number);
+                    const [eH, eM] = daySchedule.end.split(':').map(Number);
+                    const startWorkMinutes = sH * 60 + sM;
+                    const endWorkMinutes = eH * 60 + eM;
+                    
+                    // Check if appointment is within working hours
+                    if (startTimeInMinutes < startWorkMinutes || endTimeInMinutes > endWorkMinutes) {
+                         return res.status(400).json({ 
+                            success: false, 
+                            message: `عذراً، هذا الوقت خارج ساعات عمل الحلاق ${emp.name}. ساعات العمل: ${daySchedule.start} - ${daySchedule.end}` 
+                        });
+                    }
+                }
+            }
+        }
         
         // Critical Time Check (Surge Pricing)
         const isCriticalTime = (d, t) => {
