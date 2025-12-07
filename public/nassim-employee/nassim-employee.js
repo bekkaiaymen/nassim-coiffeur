@@ -1562,7 +1562,10 @@ function playNotificationSound() {
 // Notification Logic
 async function checkNotificationStatus() {
     const btn = document.getElementById('notificationBtn');
-    if (!btn) return;
+    if (!btn) {
+        console.warn('Notification button not found');
+        return;
+    }
 
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         console.log('Push notifications not supported');
@@ -1570,20 +1573,110 @@ async function checkNotificationStatus() {
         return;
     }
 
+    console.log('📊 Notification Permission:', Notification.permission);
+
     if (Notification.permission === 'granted') {
         btn.style.display = 'none';
         // Silent update to ensure token is fresh
-        subscribeToPushNotifications(false);
+        setTimeout(() => subscribeToPushNotifications(false), 2000);
     } else if (Notification.permission === 'denied') {
         btn.style.display = 'block';
         btn.innerHTML = '🔕';
-        btn.onclick = () => showToast('يرجى تفعيل الإشعارات من إعدادات المتصفح', 'error');
+        btn.onclick = showPermissionGuide;
     } else {
         // Default - Show button to request permission
         btn.style.display = 'block';
         btn.innerHTML = '🔔';
         btn.onclick = toggleNotifications;
+        // Auto-prompt after 3 seconds if still default
+        setTimeout(() => {
+            if (Notification.permission === 'default') {
+                showNotificationPrompt();
+            }
+        }, 3000);
     }
+}
+
+function showPermissionGuide() {
+    const guide = `
+لتفعيل الإشعارات:
+
+1. افتح إعدادات المتصفح/التطبيق
+2. ابحث عن "الإشعارات" أو "Notifications"
+3. ابحث عن هذا الموقع في القائمة
+4. فعّل خيار "السماح" أو "Allow"
+5. أعد تحميل الصفحة
+    `;
+    alert(guide);
+}
+
+function showNotificationPrompt() {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.8);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+    `;
+    
+    const prompt = document.createElement('div');
+    prompt.style.cssText = `
+        background: #1a1a1a;
+        border: 2px solid #CBA35C;
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 90%;
+        text-align: center;
+        color: #fff;
+    `;
+    
+    prompt.innerHTML = `
+        <div style="font-size: 48px; margin-bottom: 20px;">🔔</div>
+        <h2 style="color: #CBA35C; margin-bottom: 15px;">تفعيل الإشعارات</h2>
+        <p style="color: #ccc; margin-bottom: 25px; line-height: 1.6;">
+            احصل على إشعارات فورية عند حجز موعد جديد<br>
+            حتى لو كان التطبيق مغلقاً
+        </p>
+        <button id="enableNotifBtn" style="
+            background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%);
+            color: #121212;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px;
+        ">تفعيل الآن</button>
+        <button id="cancelNotifBtn" style="
+            background: transparent;
+            color: #888;
+            border: 1px solid #444;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        ">لاحقاً</button>
+    `;
+    
+    overlay.appendChild(prompt);
+    document.body.appendChild(overlay);
+    
+    document.getElementById('enableNotifBtn').onclick = () => {
+        document.body.removeChild(overlay);
+        toggleNotifications();
+    };
+    
+    document.getElementById('cancelNotifBtn').onclick = () => {
+        document.body.removeChild(overlay);
+    };
 }
 
 async function toggleNotifications() {
@@ -1606,27 +1699,42 @@ async function toggleNotifications() {
 // Push Notification Subscription
 async function subscribeToPushNotifications(showUi = false) {
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.error('❌ Push API not supported');
         return;
     }
 
     try {
+        console.log('🔄 Starting push subscription...');
         const registration = await navigator.serviceWorker.ready;
+        console.log('✅ Service Worker ready');
+        
+        // Check existing subscription
+        let subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+            console.log('📌 Existing subscription found, unsubscribing...');
+            await subscription.unsubscribe();
+        }
         
         // Get VAPID Key
+        console.log('🔑 Fetching VAPID key...');
         const response = await fetch(`${API_BASE}/notifications/vapid-public-key`);
         const data = await response.json();
         if (!data.success) throw new Error('Failed to get VAPID key');
+        console.log('✅ VAPID key received');
         
         const convertedVapidKey = urlBase64ToUint8Array(data.publicKey);
 
         // Subscribe
-        const subscription = await registration.pushManager.subscribe({
+        console.log('📝 Subscribing to push...');
+        subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: convertedVapidKey
         });
+        console.log('✅ Push subscription created');
 
         // Send to backend
-        await fetch(`${API_BASE}/employees/subscriptions`, {
+        console.log('📤 Sending subscription to server...');
+        const saveResponse = await fetch(`${API_BASE}/employees/subscriptions`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1637,16 +1745,32 @@ async function subscribeToPushNotifications(showUi = false) {
                 deviceInfo: {
                     os: navigator.platform,
                     browser: navigator.userAgent,
-                    language: navigator.language
+                    language: navigator.language,
+                    timestamp: new Date().toISOString()
                 }
             })
         });
         
-        console.log('✅ Subscribed to push notifications');
-        if (showUi) showToast('أنت الآن مشترك في الإشعارات', 'success');
+        const saveData = await saveResponse.json();
+        if (!saveData.success) throw new Error(saveData.message || 'Failed to save subscription');
+        
+        console.log('✅ Subscription saved to server');
+        if (showUi) {
+            showToast('✅ تم تفعيل الإشعارات بنجاح', 'success');
+            // Test notification
+            setTimeout(() => {
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('صالون نسيم', {
+                        body: 'الإشعارات تعمل بنجاح! 🎉',
+                        icon: '/nassim/logo.jpg'
+                    });
+                }
+            }, 1000);
+        }
     } catch (error) {
         console.error('❌ Push subscription failed:', error);
-        if (showUi) showToast('فشل الاشتراك في الإشعارات: ' + error.message, 'error');
+        console.error('Error details:', error.stack);
+        if (showUi) showToast('⚠️ فشل الاشتراك: ' + error.message, 'error');
     }
 }
 
