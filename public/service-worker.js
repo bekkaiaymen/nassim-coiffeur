@@ -18,7 +18,7 @@ self.addEventListener('install', (event) => {
         return Promise.allSettled(
           ASSETS_TO_CACHE.map(url => 
             cache.add(url).catch(err => {
-              console.warn(\ Failed to cache \:\, err.message);
+              console.warn(`⚠️ Failed to cache ${url}:`, err.message);
               return null;
             })
           )
@@ -82,14 +82,14 @@ self.addEventListener('push', (event) => {
     try {
       data = event.data.json();
     } catch (e) {
-      console.warn(' Push data is not JSON:', e);
-      data = { title: '????? ????', message: event.data.text() };
+      console.warn('⚠️ Push data is not JSON:', e);
+      data = { title: 'إشعار جديد', message: event.data.text() };
     }
   } else {
-    data = { title: '????? ????', message: '???? ????? ???? ?? ????? ????' };
+    data = { title: 'إشعار جديد', message: 'لديك إشعار جديد من صالون نسيم' };
   }
 
-  const title = data.title || '????? ????';
+  const title = data.title || 'صالون نسيم';
   const options = {
     body: data.message || data.body,
     icon: data.icon || '/nassim/logo.jpg',
@@ -98,7 +98,7 @@ self.addEventListener('push', (event) => {
     data: data.data || {},
     requireInteraction: true, // Keeps notification until user interacts
     actions: [
-      { action: 'open', title: '??? ????????' }
+      { action: 'open', title: 'عرض التفاصيل' }
     ]
   };
 
