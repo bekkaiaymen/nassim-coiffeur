@@ -1155,20 +1155,13 @@ function renderTimeline(appointments, employees) {
                 slot.style.width = `${width}px`;
                 
                 // Content
-                const customerPhoto = (appt.customerId && appt.customerId.photo) 
-                    ? appt.customerId.photo 
-                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(appt.customerName)}&background=random&color=fff`;
-
                 slot.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 5px; height: 100%; overflow: hidden; padding: 0 4px;">
-                        <img src="${customerPhoto}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.5);">
-                        <div style="display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
-                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; font-weight: bold; line-height: 1.2;">
-                                ${appt.customerName || 'زبون'}
-                            </div>
-                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; opacity: 0.8; line-height: 1.2;">
-                                ${appt.service}
-                            </div>
+                    <div style="display: flex; flex-direction: column; justify-content: center; height: 100%; overflow: hidden; padding: 0 4px;">
+                        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; font-weight: bold; line-height: 1.2;">
+                            ${appt.customerName || 'زبون'}
+                        </div>
+                        <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; opacity: 0.8; line-height: 1.2;">
+                            ${appt.service}
                         </div>
                     </div>
                 `;
