@@ -49,6 +49,9 @@ async function initEmployeeApp() {
     generateTimeSlots();
     setDefaultDate();
     
+    // Subscribe to Push Notifications
+    subscribeToPushNotifications();
+    
     // Initialize Timeline
     const dateInput = document.getElementById('timelineDate');
     if (dateInput) {
@@ -1556,4 +1559,75 @@ function playNotificationSound() {
     notificationSound.play().catch(e => console.log('Audio play failed (user interaction needed):', e));
 }
 
+
+
+// Push Notification Subscription
+async function subscribeToPushNotifications() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        console.log('Push notifications not supported');
+        return;
+    }
+
+    try {
+        const registration = await navigator.serviceWorker.ready;
+        
+        // Request permission if not granted
+        if (Notification.permission === 'default') {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                console.log('Notification permission denied');
+                return;
+            }
+        }
+        
+        // Get VAPID Key
+        const response = await fetch(`${API_BASE}/notifications/vapid-public-key`);
+        const data = await response.json();
+        if (!data.success) throw new Error('Failed to get VAPID key');
+        
+        const convertedVapidKey = urlBase64ToUint8Array(data.publicKey);
+
+        // Subscribe
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: convertedVapidKey
+        });
+
+        // Send to backend
+        await fetch(`${API_BASE}/employees/subscriptions`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${employeeToken}`
+            },
+            body: JSON.stringify({
+                subscription,
+                deviceInfo: {
+                    os: navigator.platform,
+                    browser: navigator.userAgent,
+                    language: navigator.language
+                }
+            })
+        });
+        
+        console.log('✅ Subscribed to push notifications');
+    } catch (error) {
+        console.error('❌ Push subscription failed:', error);
+    }
+}
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/\-/g, '+')
+        .replace(/_/g, '/');
+
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
 

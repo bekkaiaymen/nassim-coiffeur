@@ -4,8 +4,11 @@ const { queuePushDelivery } = require('../services/pushService');
 const notificationSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
+        ref: 'User'
+    },
+    employee: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Employee'
     },
     customer: {
         type: mongoose.Schema.Types.ObjectId,

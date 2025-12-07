@@ -29,7 +29,7 @@ function getVapidPublicKey() {
     return VAPID_PUBLIC_KEY;
 }
 
-async function savePushSubscription({ subscription, userId, customerId, deviceInfo }) {
+async function savePushSubscription({ subscription, userId, customerId, employeeId, deviceInfo }) {
     if (!subscription?.endpoint) {
         throw new Error('Subscription endpoint is required');
     }
@@ -37,6 +37,7 @@ async function savePushSubscription({ subscription, userId, customerId, deviceIn
     const payload = {
         user: userId,
         customer: customerId,
+        employee: employeeId,
         endpoint: subscription.endpoint,
         keys: subscription.keys || {},
         expirationTime: subscription.expirationTime || null,
@@ -96,16 +97,19 @@ async function queuePushDelivery(notification) {
     try {
         const customerId = notification.customer?._id || notification.customer;
         const userId = notification.user?._id || notification.user;
+        const employeeId = notification.employee?._id || notification.employee;
         
         console.log(`👤 Customer ID: ${customerId}`);
         console.log(`👥 User ID: ${userId}`);
+        console.log(`👨‍💼 Employee ID: ${employeeId}`);
 
         const filters = [];
         if (customerId) filters.push({ customer: customerId });
         if (userId) filters.push({ user: userId });
+        if (employeeId) filters.push({ employee: employeeId });
 
         if (!filters.length) {
-            console.warn('⚠️ No customer or user ID to target');
+            console.warn('⚠️ No customer, user, or employee ID to target');
             return;
         }
         

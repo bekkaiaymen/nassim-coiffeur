@@ -654,6 +654,31 @@ router.post('/public/book', async (req, res) => {
             console.error('❌ Failed to update business usage stats:', usageError);
         }
 
+        // 🔔 Notify Employee (Barber)
+        if (appointment.employee) {
+            try {
+                await Notification.create({
+                    employee: appointment.employee,
+                    business: business,
+                    type: 'booking_confirmed',
+                    title: 'حجز جديد 📅',
+                    message: `حجز جديد: ${customerName || customerDoc.name} - ${time}`,
+                    icon: '📅',
+                    data: {
+                        url: '/nassim-employee',
+                        appointmentId: appointment._id,
+                        customerName: customerName || customerDoc.name,
+                        service: finalServiceName,
+                        time: time,
+                        date: date
+                    }
+                });
+                console.log(`🔔 Notification created for employee: ${appointment.employee}`);
+            } catch (notifError) {
+                console.error('❌ Failed to create employee notification:', notifError);
+            }
+        }
+
         // Return appointment with pending points info
         res.status(201).json({ 
             success: true, 
@@ -1131,6 +1156,29 @@ router.patch('/:id/cancel', protect, ensureTenant, async (req, res) => {
             return res.status(404).json({ success: false, message: 'الموعد غير موجود' });
         }
 
+        // 🔔 Notify Employee (Barber)
+        if (appointment.employee) {
+            try {
+                await Notification.create({
+                    employee: appointment.employee,
+                    business: appointment.business,
+                    type: 'booking_cancelled',
+                    title: 'إلغاء موعد ❌',
+                    message: `تم إلغاء الموعد: ${appointment.customerName} - ${appointment.time}`,
+                    icon: '❌',
+                    data: {
+                        url: '/nassim-employee',
+                        appointmentId: appointment._id,
+                        customerName: appointment.customerName,
+                        time: appointment.time,
+                        date: appointment.date
+                    }
+                });
+            } catch (notifError) {
+                console.error('❌ Failed to create employee notification:', notifError);
+            }
+        }
+
         res.json({ 
             success: true, 
             message: 'تم إلغاء الموعد بنجاح',
@@ -1450,6 +1498,29 @@ router.delete('/:id', async (req, res) => {
 
         if (!appointment) {
             return res.status(404).json({ success: false, message: 'الموعد غير موجود' });
+        }
+
+        // 🔔 Notify Employee (Barber)
+        if (appointment.employee) {
+            try {
+                await Notification.create({
+                    employee: appointment.employee,
+                    business: appointment.business,
+                    type: 'booking_cancelled',
+                    title: 'إلغاء موعد ❌',
+                    message: `تم إلغاء الموعد: ${appointment.customerName} - ${appointment.time}`,
+                    icon: '❌',
+                    data: {
+                        url: '/nassim-employee',
+                        appointmentId: appointment._id,
+                        customerName: appointment.customerName,
+                        time: appointment.time,
+                        date: appointment.date
+                    }
+                });
+            } catch (notifError) {
+                console.error('❌ Failed to create employee notification:', notifError);
+            }
         }
 
         res.json({ success: true, message: 'تم حذف الموعد بنجاح' });

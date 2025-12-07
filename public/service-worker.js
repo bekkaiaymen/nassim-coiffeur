@@ -1,5 +1,5 @@
 // Service Worker for Nassim Coiffeur PWA
-const CACHE_NAME = 'nassim-v1.0.1';
+const CACHE_NAME = 'nassim-v1.0.2';
 const ASSETS_TO_CACHE = [
   '/nassim',
   '/nassim/nassim.css',
@@ -10,16 +10,15 @@ const ASSETS_TO_CACHE = [
 
 // Install Event - Cache assets
 self.addEventListener('install', (event) => {
-  console.log('✅ Service Worker: Installing...');
+  console.log(' Service Worker: Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('✅ Service Worker: Caching assets');
-        // Cache files one by one to handle missing files gracefully
+        console.log(' Service Worker: Caching assets');
         return Promise.allSettled(
           ASSETS_TO_CACHE.map(url => 
             cache.add(url).catch(err => {
-              console.warn(`⚠️ Failed to cache ${url}:`, err.message);
+              console.warn(\ Failed to cache \:\, err.message);
               return null;
             })
           )
@@ -27,8 +26,7 @@ self.addEventListener('install', (event) => {
       })
       .then(() => self.skipWaiting())
       .catch((error) => {
-        console.error('❌ Service Worker: Cache error:', error);
-        // Continue even if caching fails
+        console.error(' Service Worker: Cache error:', error);
         self.skipWaiting();
       })
   );
@@ -36,13 +34,13 @@ self.addEventListener('install', (event) => {
 
 // Activate Event - Clean old caches
 self.addEventListener('activate', (event) => {
-  console.log('✅ Service Worker: Activating...');
+  console.log(' Service Worker: Activating...');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cache) => {
           if (cache !== CACHE_NAME) {
-            console.log('🗑️ Service Worker: Deleting old cache:', cache);
+            console.log(' Service Worker: Deleting old cache:', cache);
             return caches.delete(cache);
           }
         })
@@ -53,59 +51,54 @@ self.addEventListener('activate', (event) => {
 
 // Fetch Event - Network first, fallback to cache
 self.addEventListener('fetch', (event) => {
+  // Skip cross-origin requests
+  if (!event.request.url.startsWith(self.location.origin)) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone response
         const responseClone = response.clone();
-        
-        // Update cache
-        if (event.request.method === 'GET' && event.request.url.startsWith('http')) {
+        if (event.request.method === 'GET') {
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
           });
         }
-        
         return response;
       })
       .catch(() => {
-        // Network failed, try cache
         return caches.match(event.request);
       })
   );
 });
 
-// Background Sync for offline appointments
-self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-appointments') {
-    event.waitUntil(syncAppointments());
-  }
-});
-
-async function syncAppointments() {
-  // Sync pending appointments when back online
-  console.log('🔄 Syncing appointments...');
-}
-
-// Push Notifications
+// Push Event - Handle incoming push notifications
 self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || 'Nassim Coiffeur';
+  console.log(' Service Worker: Push Received');
+  
+  let data = {};
+  if (event.data) {
+    try {
+      data = event.data.json();
+    } catch (e) {
+      console.warn(' Push data is not JSON:', e);
+      data = { title: '????? ????', message: event.data.text() };
+    }
+  } else {
+    data = { title: '????? ????', message: '???? ????? ???? ?? ????? ????' };
+  }
+
+  const title = data.title || '????? ????';
   const options = {
-    body: data.body || 'لديك إشعار جديد',
-    icon: '/public/nassim/logo.jpg',
-    badge: '/public/nassim/logo.jpg',
-    vibrate: [200, 100, 200],
-    data: data,
+    body: data.message || data.body,
+    icon: data.icon || '/nassim/logo.jpg',
+    badge: '/nassim/logo.jpg',
+    vibrate: [100, 50, 100],
+    data: data.data || {},
+    requireInteraction: true, // Keeps notification until user interacts
     actions: [
-      {
-        action: 'view',
-        title: 'عرض'
-      },
-      {
-        action: 'close',
-        title: 'إغلاق'
-      }
+      { action: 'open', title: '??? ????????' }
     ]
   };
 
@@ -114,13 +107,25 @@ self.addEventListener('push', (event) => {
   );
 });
 
-// Notification Click
+// Notification Click Event
 self.addEventListener('notificationclick', (event) => {
+  console.log(' Service Worker: Notification Clicked');
   event.notification.close();
 
-  if (event.action === 'view') {
-    event.waitUntil(
-      clients.openWindow('/nassim')
-    );
-  }
+  const targetUrl = event.notification.data?.url || '/nassim-employee';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Check if there's already a window open
+      for (const client of clientList) {
+        if (client.url.includes(targetUrl) && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // If not, open a new window
+      if (clients.openWindow) {
+        return clients.openWindow(targetUrl);
+      }
+    })
+  );
 });

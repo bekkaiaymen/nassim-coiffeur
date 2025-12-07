@@ -4,6 +4,7 @@ const Employee = require('../models/Employee');
 const Appointment = require('../models/Appointment');
 const { protect, ensureTenant } = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
+const { savePushSubscription } = require('../services/pushService');
 
 // @desc    Employee Login
 // @route   POST /api/employees/login
@@ -654,4 +655,29 @@ router.patch('/reorder', protect, ensureTenant, async (req, res) => {
     }
 });
 
+// @desc    Save push subscription
+// @route   POST /api/employees/subscriptions
+// @access  Private (Employee)
+router.post('/subscriptions', protect, async (req, res) => {
+    try {
+        const { subscription, deviceInfo } = req.body;
+
+        if (!subscription || !subscription.endpoint) {
+            return res.status(400).json({ success: false, message: 'بيانات الاشتراك غير صالحة' });
+        }
+
+        const savedSubscription = await savePushSubscription({
+            subscription,
+            employeeId: req.user._id,
+            deviceInfo
+        });
+
+        res.json({ success: true, data: savedSubscription });
+    } catch (error) {
+        console.error('Save subscription error:', error);
+        res.status(500).json({ success: false, message: 'فشل حفظ الاشتراك' });
+    }
+});
+
 module.exports = router;
+
