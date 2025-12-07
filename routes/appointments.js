@@ -280,6 +280,13 @@ router.post('/public/book', async (req, res) => {
         }
 
         // Calculate End Time
+        if (!time || typeof time !== 'string' || !time.includes(':')) {
+             return res.status(400).json({ 
+                success: false, 
+                message: 'تنسيق الوقت غير صحيح (يجب أن يكون HH:MM)' 
+            });
+        }
+
         const [hours, minutes] = time.split(':').map(Number);
         const startTimeInMinutes = hours * 60 + minutes;
         const endTimeInMinutes = startTimeInMinutes + serviceDuration;
