@@ -27,6 +27,7 @@ function initQuickBook() {
         const today = new Date().toISOString().split('T')[0];
         dateInput.min = today;
         dateInput.value = today;
+        dateInput.defaultValue = today;
     }
 }
 
