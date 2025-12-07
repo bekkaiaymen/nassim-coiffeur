@@ -40,6 +40,7 @@ async function initEmployeeApp() {
     if (!checkAuth()) return;
 
     setupForms();
+    setupNavigation(); // NEW: Setup bottom navigation
     await loadWeeklySchedule(); // NEW: Load weekly schedule
     await loadServices();
     await loadPendingAppointments();
@@ -233,6 +234,56 @@ async function handleCheckOut() {
     } catch (error) {
         console.error('Check-out error:', error);
         showToast(error.message || 'فشل في تسجيل الانصراف', 'error');
+    }
+}
+
+// Navigation Logic
+function setupNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+    const views = document.querySelectorAll('.view-section');
+
+    navItems.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Remove active class from all items
+            navItems.forEach(nav => nav.classList.remove('active'));
+            
+            // Add active class to clicked item
+            // Handle the case where the click is on a child element
+            const clickedItem = e.target.closest('.nav-item');
+            clickedItem.classList.add('active');
+            
+            // Hide all views
+            views.forEach(view => view.style.display = 'none');
+            
+            // Show target view
+            const targetId = clickedItem.dataset.target;
+            const targetView = document.getElementById(targetId);
+            if (targetView) {
+                targetView.style.display = 'block';
+                
+                // Refresh data based on view
+                if (targetId === 'home-view') {
+                    loadPendingAppointments();
+                    loadConfirmedAppointments();
+                } else if (targetId === 'timeline-view') {
+                    loadTimeline();
+                } else if (targetId === 'reviews-view') {
+                    loadCompletedAppointments();
+                } else if (targetId === 'account-view') {
+                    loadWeeklySchedule();
+                }
+            }
+        });
+    });
+}
+
+function handleLogout() {
+    if (confirm('هل أنت متأكد من تسجيل الخروج؟')) {
+        localStorage.removeItem('employeeToken');
+        localStorage.removeItem('employeeData');
+        window.location.reload();
     }
 }
 

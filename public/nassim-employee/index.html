@@ -14,88 +14,70 @@
     <!-- Top Bar -->
     <header class="top-bar">
         <div class="top-bar-left">
-            <h1 class="app-title">✂️ Nassim Barber - لوحة الحلاقين</h1>
+            <h1 class="app-title">✂️ Nassim Barber</h1>
         </div>
         <div class="top-bar-right">
-            <!-- Buttons removed for cleaner interface -->
+            <!-- Status indicator or profile pic could go here -->
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
-        <!-- Weekly Schedule Section -->
-        <section class="employee-section" style="margin-bottom: 30px;">
-            <div class="section-card">
-                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <h2 class="section-title">📅 البرنامج الأسبوعي</h2>
-                        <p class="section-subtitle">حدد أوقات عملك لكل يوم في الأسبوع</p>
+    <main class="main-content" style="padding-bottom: 100px;">
+        
+        <!-- VIEW: HOME (Pending & Confirmed) -->
+        <div id="home-view" class="view-section active">
+            <!-- Pending Appointments Section -->
+            <section class="employee-section" style="margin-bottom: 20px;">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">⏳ طلبات جديدة</h2>
+                        <p class="section-subtitle">مواعيد في انتظار التأكيد</p>
                     </div>
-                    <button onclick="saveWeeklySchedule()" style="background: #CBA35C; color: #000; border: none; padding: 8px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">
-                        💾 حفظ البرنامج
-                    </button>
-                </div>
-                <div id="weeklyScheduleContainer" style="padding: 20px;">
-                    <div class="schedule-grid" style="display: grid; gap: 15px;">
-                        <!-- Days will be injected here by JS -->
+                    <div id="pendingAppointmentsList" class="pending-appointments-list">
+                        <div style="text-align: center; color: #888; padding: 20px;">جاري تحميل المواعيد...</div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- Pending Appointments Section -->
-        <section class="employee-section" style="margin-bottom: 30px;">
-            <div class="section-card">
-                <div class="section-header">
-                    <h2 class="section-title">⏳ مواعيد في انتظار التأكيد</h2>
-                    <p class="section-subtitle">مواعيد مخصصة لك تحتاج إلى تأكيد</p>
-                </div>
-                <div id="pendingAppointmentsList" class="pending-appointments-list">
-                    <!-- Pending appointments will be rendered here -->
-                    <div style="text-align: center; color: #888; padding: 20px;">جاري تحميل المواعيد...</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Confirmed Appointments Section -->
-        <section class="employee-section" style="margin-bottom: 30px;">
-            <div class="section-card">
-                <div class="section-header">
-                    <h2 class="section-title">✅ مواعيد مؤكدة - جاهزة للعمل</h2>
-                    <p class="section-subtitle">المواعيد المؤكدة التي يمكنك إكمالها</p>
-                </div>
-                <div id="confirmedAppointmentsList" class="confirmed-appointments-list">
-                    <!-- Confirmed appointments will be rendered here -->
-                    <div style="text-align: center; color: #888; padding: 20px;">جاري تحميل المواعيد...</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Timeline Section -->
-        <section class="employee-section" style="margin-bottom: 30px;">
-            <div class="section-card">
-                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2 class="section-title">📅 جدول المواعيد (Timeline)</h2>
-                    <input type="date" id="timelineDate" class="form-input" style="width: auto;">
-                </div>
-                <div id="timelineContainer" class="timeline-container">
-                    <!-- Timeline will be rendered here -->
-                    <div style="text-align: center; padding: 20px;">جاري تحميل الجدول...</div>
-                </div>
-            </div>
-        </section>
-
-        <div class="employee-grid">
-            <!-- Quick Add Customer Section -->
+            <!-- Confirmed Appointments Section -->
             <section class="employee-section">
                 <div class="section-card">
                     <div class="section-header">
-                        <h2 class="section-title">⚡ إضافة زبون بسرعة</h2>
-                        <p class="section-subtitle">حجز فوري للموعد الحالي</p>
+                        <h2 class="section-title">✅ مواعيد مؤكدة</h2>
+                        <p class="section-subtitle">جدول عملك اليوم</p>
+                    </div>
+                    <div id="confirmedAppointmentsList" class="confirmed-appointments-list">
+                        <div style="text-align: center; color: #888; padding: 20px;">جاري تحميل المواعيد...</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- VIEW: TIMELINE -->
+        <div id="timeline-view" class="view-section" style="display: none;">
+            <section class="employee-section">
+                <div class="section-card">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 class="section-title">📅 الجدول الزمني</h2>
+                        <input type="date" id="timelineDate" class="form-input" style="width: auto;">
+                    </div>
+                    <div id="timelineContainer" class="timeline-container">
+                        <div style="text-align: center; padding: 20px;">جاري تحميل الجدول...</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- VIEW: QUICK BOOK (Center) -->
+        <div id="quick-book-view" class="view-section" style="display: none;">
+            <section class="employee-section">
+                <div class="section-card">
+                    <div class="section-header">
+                        <h2 class="section-title">⚡ حجز سريع</h2>
+                        <p class="section-subtitle">إضافة زبون جديد فوراً</p>
                     </div>
 
                     <form id="quickAddForm" class="employee-form">
-                        <!-- Hidden fields for defaults -->
                         <input type="hidden" id="customerName" value="زبون سريع">
                         <input type="hidden" id="customerPhone" value="0000000000">
                         <input type="hidden" id="appointmentDate">
@@ -104,13 +86,7 @@
                             <label for="serviceType" class="form-label">نوع الخدمة</label>
                             <select id="serviceType" class="form-input" required>
                                 <option value="">اختر الخدمة</option>
-                                <option value="حلاقة">حلاقة</option>
-                                <option value="حلاقة وتشذيب لحية">حلاقة وتشذيب لحية</option>
-                                <option value="صبغة">صبغة</option>
-                                <option value="حمام مغربي">حمام مغربي</option>
-                                <option value="تشذيب لحية فقط">تشذيب لحية فقط</option>
-                                <option value="قص أطفال">قص أطفال</option>
-                                <option value="أخرى">أخرى</option>
+                                <!-- Options populated by JS -->
                             </select>
                         </div>
 
@@ -120,23 +96,23 @@
                         </div>
 
                         <button type="submit" class="btn-primary">
-                            تأكيد الحجز الفوري
+                            تأكيد الحجز
                         </button>
                     </form>
                 </div>
             </section>
+        </div>
 
-            <!-- Rate Customer Section -->
+        <!-- VIEW: REVIEWS -->
+        <div id="reviews-view" class="view-section" style="display: none;">
             <section class="employee-section">
                 <div class="section-card">
                     <div class="section-header">
-                        <h2 class="section-title">⭐ تقييم الزبائن</h2>
-                        <p class="section-subtitle">قيم الزبائن بعد اكتمال الموعد</p>
+                        <h2 class="section-title">⭐ التقييمات</h2>
+                        <p class="section-subtitle">سجل المواعيد المكتملة والتقييم</p>
                     </div>
 
-                    <!-- Completed Appointments List -->
                     <div id="completedAppointmentsList" class="appointments-list">
-                        <!-- Items will be injected here -->
                         <div style="text-align: center; color: var(--text-secondary); padding: 20px;">جاري تحميل المواعيد المكتملة...</div>
                     </div>
 
@@ -145,9 +121,7 @@
                         <form id="employeeRatingForm" class="employee-form">
                             <input type="hidden" id="ratingAppointmentId">
                             
-                            <div id="selectedAppointmentDisplay">
-                                <!-- Selected appointment details -->
-                            </div>
+                            <div id="selectedAppointmentDisplay"></div>
 
                             <div class="form-group" style="text-align: center;">
                                 <label class="form-label">تقييم العميل</label>
@@ -174,7 +148,57 @@
                 </div>
             </section>
         </div>
+
+        <!-- VIEW: ACCOUNT (Schedule & Logout) -->
+        <div id="account-view" class="view-section" style="display: none;">
+            <section class="employee-section" style="margin-bottom: 20px;">
+                <div class="section-card">
+                    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h2 class="section-title">📅 ساعات العمل</h2>
+                            <p class="section-subtitle">البرنامج الأسبوعي</p>
+                        </div>
+                        <button onclick="saveWeeklySchedule()" class="btn-primary" style="width: auto; padding: 8px 20px;">
+                            💾 حفظ
+                        </button>
+                    </div>
+                    <div id="weeklyScheduleContainer" style="padding: 10px 0;">
+                        <div class="schedule-grid" style="display: grid; gap: 15px;">
+                            <!-- Days will be injected here by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <button onclick="handleLogout()" class="btn-secondary" style="background: rgba(217, 83, 79, 0.1); color: #D9534F; border-color: #D9534F;">
+                تسجيل الخروج
+            </button>
+        </div>
+
     </main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" data-target="home-view">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">الرئيسية</span>
+        </a>
+        <a href="#" class="nav-item" data-target="timeline-view">
+            <span class="nav-icon">📅</span>
+            <span class="nav-label">الجدول</span>
+        </a>
+        <a href="#" class="nav-item fab-container" data-target="quick-book-view">
+            <div class="fab-button">➕</div>
+        </a>
+        <a href="#" class="nav-item" data-target="reviews-view">
+            <span class="nav-icon">⭐</span>
+            <span class="nav-label">التقييمات</span>
+        </a>
+        <a href="#" class="nav-item" data-target="account-view">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">حسابي</span>
+        </a>
+    </nav>
 
     <!-- Login Modal -->
     <div id="loginModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; align-items: center; justify-content: center;">
