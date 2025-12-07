@@ -1898,7 +1898,7 @@ async function submitBooking(e) {
             
             // Show professional confirmation message
             const extraChargeNote = window.paidForVIPSlot ? '\n\n💰 رسوم إضافية: 100 دج (سيتم التحصيل عند الحضور)' : '';
-            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n👤 الحلاق: ${selectedEmployeeName}\n✂️ ${servicesNames}\n💰 ${totalPrice} دج\n⏱ ${totalDuration} دقيقة${extraChargeNote}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ اذا اضطررت لالغاء الحجز يجب ان اكون قبل 30 دقيقه من الموعد`;
+            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${bookingData.time}\n👤 الحلاق: ${selectedEmployeeName}\n✂️ ${servicesNames}\n💰 ${totalPrice} دج${extraChargeNote}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ اذا اضطررت لالغاء الحجز يجب ان اكون قبل 30 دقيقه من الموعد`;
             
             showNotification(confirmationMessage, 'success', 0);
             
