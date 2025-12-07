@@ -214,14 +214,11 @@ router.post('/check-out', protect, async (req, res) => {
 // @access  Public
 router.get('/available', async (req, res) => {
     try {
-        const today = new Date().toISOString().split('T')[0];
-        
+        // Return all active employees (Attendance check removed)
         const employees = await Employee.find({
-            status: 'active',
-            'todayAttendance.isPresent': true,
-            'todayAttendance.date': today
+            status: 'active'
         })
-        .select('name avatar todayAttendance stats')
+        .select('name avatar stats workingHours')
         .sort({ order: 1 });
 
         res.json({

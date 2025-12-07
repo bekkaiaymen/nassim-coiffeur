@@ -6,6 +6,8 @@ let selectedAppointmentId = null;
 let customerRatingValue = 0;
 let servicesCache = [];
 let timeSlots = [];
+let lastPendingAppointmentsIds = null; // Track for notifications
+const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Professional notification sound
 
 // API Base URL
 const API_BASE = '/api';
@@ -731,6 +733,28 @@ async function loadPendingAppointments() {
         const allAppointments = [...appointments, ...flexAppointments];
         console.log('Total appointments:', allAppointments.length);
 
+        // --- Notification Logic ---
+        const currentIds = allAppointments.map(a => a._id);
+        
+        // If we have history (not first load)
+        if (lastPendingAppointmentsIds !== null) {
+            // Find new appointments
+            const newAppointments = allAppointments.filter(a => !lastPendingAppointmentsIds.includes(a._id));
+            
+            if (newAppointments.length > 0) {
+                // Notify for the most recent one (or all, but let's do one to avoid spam)
+                const latest = newAppointments[0];
+                showNotificationBanner(
+                    '🔔 حجز جديد!',
+                    `${latest.customerName} - ${latest.service || 'خدمة'} (${latest.time})`
+                );
+            }
+        }
+        
+        // Update history
+        lastPendingAppointmentsIds = currentIds;
+        // --------------------------
+
         if (allAppointments.length === 0) {
             listContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">لا توجد مواعيد في انتظار التأكيد</div>';
             return;
@@ -1437,6 +1461,48 @@ async function saveWeeklySchedule() {
         console.error('Error saving schedule:', error);
         showToast('حدث خطأ في الاتصال', 'error');
     }
+}
+
+// --- Notification System ---
+
+function showNotificationBanner(title, body, time = 'الآن') {
+    // Remove existing banner
+    const existing = document.querySelector('.notification-banner');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.className = 'notification-banner';
+    banner.innerHTML = `
+        <div class="notification-icon">🔔</div>
+        <div class="notification-content">
+            <div class="notification-title">${title}</div>
+            <div class="notification-body">${body}</div>
+            <div class="notification-time">${time}</div>
+        </div>
+        <button class="notification-close" onclick="this.parentElement.classList.remove('show'); setTimeout(() => this.parentElement.remove(), 500);">✕</button>
+    `;
+
+    document.body.appendChild(banner);
+
+    // Trigger animation
+    requestAnimationFrame(() => {
+        banner.classList.add('show');
+    });
+
+    // Auto hide
+    setTimeout(() => {
+        banner.classList.remove('show');
+        setTimeout(() => banner.remove(), 500);
+    }, 5000);
+    
+    // Play sound
+    playNotificationSound();
+}
+
+function playNotificationSound() {
+    // User interaction is required for audio playback in most browsers.
+    // This will work if the user has interacted with the page (clicked anywhere).
+    notificationSound.play().catch(e => console.log('Audio play failed (user interaction needed):', e));
 }
 
 
