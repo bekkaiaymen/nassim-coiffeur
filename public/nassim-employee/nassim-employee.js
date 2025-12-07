@@ -1100,9 +1100,9 @@ async function loadTimeline() {
             checkOutTime: emp.todayAttendance?.checkOutTime || '21:00'
         }));
 
-        // Filter employees if logged in (show only my timeline)
+        // ALWAYS filter to show only logged-in employee's timeline
         if (employeeData && employeeData.name) {
-            const myEmployee = employees.find(e => e.name === employeeData.name);
+            const myEmployee = employees.find(e => e.name === employeeData.name || e.id === employeeData._id);
             if (myEmployee) {
                 employees = [myEmployee];
             } else {
@@ -1110,6 +1110,10 @@ async function loadTimeline() {
                 container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;"><p style="font-size: 18px; margin-bottom: 10px;">⚠️ لم تسجل حضورك اليوم</p><p style="color: #aaa;">يرجى تسجيل الحضور لعرض الجدول الزمني</p></div>';
                 return;
             }
+        } else {
+            // If no employee data, don't show anything
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;"><p style="font-size: 18px;">يرجى تسجيل الدخول لعرض الجدول الزمني</p></div>';
+            return;
         }
         
         // If no employees are present today
