@@ -1618,19 +1618,34 @@ body::after {
 .nav-item.center {
     background: var(--gradient-primary);
     color: var(--text-dark);
-    padding: 16px;
+    width: 75px;
+    height: 75px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
-    margin-top: -32px;
-    box-shadow: var(--shadow-glow), 0 8px 25px rgba(203, 163, 92, 0.4);
-    border: 4px solid var(--bg-dark);
+    margin-top: -55px;
+    box-shadow: 0 -5px 25px rgba(203, 163, 92, 0.6), 0 10px 30px rgba(0,0,0,0.5);
+    border: 6px solid var(--bg-dark);
+    position: relative;
+    z-index: 101;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.nav-item.center .nav-icon {
+    width: 34px;
+    height: 34px;
+    stroke-width: 2;
 }
 
 .nav-item.center:hover {
-    transform: translateY(-2px) scale(1.05);
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 -8px 30px rgba(203, 163, 92, 0.8), 0 15px 40px rgba(0,0,0,0.6);
 }
 
 .nav-item.center:active {
-    transform: translateY(-1px) scale(0.95);
+    transform: translateY(0) scale(0.95);
 }
 
 .nav-icon {
@@ -6937,5 +6952,60 @@ body.offline::before {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* Enhanced Tour Guide Arrows */
+.tour-arrow-indicator {
+    position: fixed;
+    z-index: 10005;
+    pointer-events: none;
+    animation: bounceArrow 1.5s infinite;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5));
+}
+
+.tour-arrow-indicator svg {
+    width: 60px;
+    height: 60px;
+    fill: #FFD700;
+    stroke: #000;
+    stroke-width: 1px;
+}
+
+.tour-arrow-text {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: #FFD700;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+    white-space: nowrap;
+    border: 1px solid #FFD700;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+}
+
+@keyframes bounceArrow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+.tour-overlay-mask {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10000;
+    pointer-events: none;
+}
+
+.tour-highlight-element {
+    position: relative;
+    z-index: 10001 !important;
+    box-shadow: 0 0 0 4px #FFD700, 0 0 0 1000px rgba(0,0,0,0.7) !important;
+    border-radius: 8px;
+    transition: all 0.3s ease;
 }
 

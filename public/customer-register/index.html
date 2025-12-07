@@ -264,5 +264,106 @@
     <div id="notification" class="notification"></div>
 
     <script src="/customer-register/customer-register.js"></script>
+    <script>
+        // Tour Guide Logic for Register Page
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('tour_step_2_pending') === 'true') {
+                localStorage.removeItem('tour_step_2_pending');
+                
+                // Arrow 2: Point to Name Input
+                const nameInput = document.querySelector('input[type="text"]');
+                if (nameInput) {
+                    showArrow(nameInput, '2. أدخل معلوماتك', 'bottom', () => {
+                        nameInput.addEventListener('focus', () => {
+                            hideArrow();
+                            
+                            // Arrow 3: Point to Register Button
+                            setTimeout(() => {
+                                const submitBtn = document.querySelector('button[type="submit"]');
+                                if (submitBtn) {
+                                    showArrow(submitBtn, '3. حفظ', 'top', () => {
+                                        submitBtn.addEventListener('click', () => {
+                                            hideArrow();
+                                            localStorage.setItem('tour_step_4_pending', 'true');
+                                        }, {once: true});
+                                    });
+                                }
+                            }, 2000);
+                        }, {once: true});
+                    });
+                }
+            }
+        });
+
+        function showArrow(target, text, position = 'top', callback = null) {
+            hideArrow();
+            
+            if (!target) return;
+            
+            target.style.position = 'relative';
+            target.style.zIndex = '1001';
+            target.style.boxShadow = '0 0 0 4px #CBA35C';
+            
+            const arrow = document.createElement('div');
+            arrow.className = 'tour-arrow-indicator';
+            arrow.style.position = 'fixed';
+            arrow.style.zIndex = '1002';
+            arrow.style.color = '#CBA35C';
+            arrow.style.width = '60px';
+            arrow.style.height = '60px';
+            arrow.style.pointerEvents = 'none';
+            
+            arrow.innerHTML = `
+                <div class="tour-arrow-text" style="
+                    position: absolute; 
+                    ${position === 'top' ? 'bottom: 65px' : 'top: 65px'}; 
+                    left: 50%; 
+                    transform: translateX(-50%); 
+                    background: #CBA35C; 
+                    color: #000; 
+                    padding: 5px 10px; 
+                    border-radius: 5px; 
+                    font-weight: bold; 
+                    white-space: nowrap;
+                ">${text}</div>
+                <svg viewBox="0 0 24 24" style="width: 100%; height: 100%; transform: ${position === 'top' ? 'rotate(0deg)' : 'rotate(180deg)'}">
+                    <path d="M12 22L12 2M12 22L5 15M12 22L19 15" stroke="currentColor" stroke-width="2" fill="none" />
+                </svg>
+            `;
+            
+            document.body.appendChild(arrow);
+            
+            const rect = target.getBoundingClientRect();
+            let top, left;
+            
+            left = rect.left + (rect.width / 2) - 30;
+            
+            if (position === 'top') {
+                top = rect.top - 70;
+            } else {
+                top = rect.bottom + 10;
+            }
+            
+            arrow.style.top = `${top}px`;
+            arrow.style.left = `${left}px`;
+            
+            if (callback) callback();
+            
+            target.scrollIntoView({behavior: 'smooth', block: 'center'});
+        }
+        
+        function hideArrow() {
+            const arrow = document.querySelector('.tour-arrow-indicator');
+            if (arrow) arrow.remove();
+            
+            document.querySelectorAll('input, button').forEach(el => {
+                if (el.style.boxShadow === '0 0 0 4px #CBA35C') {
+                    el.style.boxShadow = '';
+                    el.style.zIndex = '';
+                    el.style.position = '';
+                }
+            });
+        }
+    </script>
 </body>
 </html>

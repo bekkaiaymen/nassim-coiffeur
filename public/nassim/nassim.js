@@ -4648,7 +4648,8 @@ const TourGuide = {
         // Step 1: Guest - Guide to Account Creation
         if (!token) {
             if (!localStorage.getItem('tour_guest_seen')) {
-                this.showTooltip('nav-account', 'أنشئ حسابك الآن', 'اضغط هنا وأدخل معلوماتك للاستفادة من كافة المميزات', 'top');
+                // Arrow 1: Create Account
+                this.showTooltip('nav-account', '1. أنشئ حسابك', 'اضغط هنا لإنشاء حساب جديد', 'top');
                 const btn = document.getElementById('nav-account');
                 if(btn) {
                     btn.classList.add('tour-highlight');
@@ -4665,7 +4666,8 @@ const TourGuide = {
             if (!localStorage.getItem('tour_booking_seen')) {
                 // Ensure we are on home page
                 if(document.getElementById('homePage').style.display !== 'none') {
-                    this.showTooltip('nav-booking', 'احجز موعدك', 'اضغط هنا لحجز موعد جديد', 'top');
+                    // Arrow 2: Book Appointment
+                    this.showTooltip('nav-booking', '2. احجز موعدك', 'اضغط هنا لحجز موعد جديد', 'top');
                     const btn = document.getElementById('nav-booking');
                     if(btn) {
                         btn.classList.add('tour-highlight');
@@ -4685,23 +4687,55 @@ const TourGuide = {
     showBookingFormTour: function() {
         const checkModal = setInterval(() => {
             const modal = document.getElementById('bookingModal');
-            if (modal && modal.style.display === 'block') {
+            if (modal && modal.classList.contains('show')) {
                 clearInterval(checkModal);
                 
-                // Highlight Form
-                const form = document.getElementById('bookingForm');
-                if(form) {
-                    this.showTooltip('bookingForm', 'أكمل الحجز', 'املأ المعلومات وأكد موعدك', 'bottom');
-                    
-                    // Remove on submit or close
-                    const closeHandler = () => {
-                        this.hideTooltip();
-                        localStorage.setItem('tour_booking_completed', 'true');
+                // Arrow 3: Select Service
+                this.showTooltip('bookingServicesList', '3. اختر الخدمة', 'اضغط على الخدمة التي تريدها', 'bottom');
+                
+                const servicesList = document.getElementById('bookingServicesList');
+                if(servicesList) {
+                    // Use a one-time click listener on the container to detect service selection
+                    const serviceSelectHandler = (e) => {
+                        // Check if a service card was clicked
+                        if(e.target.closest('.booking-service-card')) {
+                            this.hideTooltip();
+                            servicesList.removeEventListener('click', serviceSelectHandler);
+                            
+                            // Arrow 4: Select Barber
+                            setTimeout(() => {
+                                this.showTooltip('employeeSelect', '4. اختر الحلاق', 'اختر الحلاق المفضل لديك', 'top');
+                                const empSelect = document.getElementById('employeeSelect');
+                                if(empSelect) {
+                                    empSelect.addEventListener('change', () => {
+                                        this.hideTooltip();
+                                        // Arrow 5: Select Time
+                                        setTimeout(() => {
+                                            this.showTooltip('appointmentTime', '5. اختر الوقت', 'حدد الوقت المناسب لك', 'top');
+                                            const timeInput = document.getElementById('appointmentTime');
+                                            if(timeInput) {
+                                                timeInput.addEventListener('change', () => {
+                                                    this.hideTooltip();
+                                                    // Arrow 6: Confirm
+                                                    setTimeout(() => {
+                                                        this.showTooltip('confirmBookingBtn', '6. أكد الحجز', 'اضغط هنا لتأكيد موعدك', 'top');
+                                                        const confirmBtn = document.getElementById('confirmBookingBtn');
+                                                        if(confirmBtn) {
+                                                            confirmBtn.addEventListener('click', () => {
+                                                                this.hideTooltip();
+                                                                localStorage.setItem('tour_booking_completed', 'true');
+                                                            }, {once: true});
+                                                        }
+                                                    }, 500);
+                                                }, {once: true});
+                                            }
+                                        }, 500);
+                                    }, {once: true});
+                                }
+                            }, 500);
+                        }
                     };
-                    
-                    form.addEventListener('submit', closeHandler, {once: true});
-                    const closeBtn = modal.querySelector('.close-btn');
-                    if(closeBtn) closeBtn.addEventListener('click', () => this.hideTooltip(), {once: true});
+                    servicesList.addEventListener('click', serviceSelectHandler);
                 }
             }
         }, 500);
@@ -4713,7 +4747,7 @@ const TourGuide = {
     showTooltip: function(targetId, title, text, position = 'top') {
         this.hideTooltip();
         
-        const target = document.getElementById(targetId);
+        let target = typeof targetId === 'string' ? document.getElementById(targetId) : targetId;
         if (!target) return;
         
         const rect = target.getBoundingClientRect();
@@ -4749,6 +4783,12 @@ const TourGuide = {
         
         tooltip.style.top = `${top}px`;
         tooltip.style.left = `${left}px`;
+        
+        // Scroll to element if needed
+        target.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
+        
+        // Add highlight class
+        target.classList.add('tour-highlight');
     },
     
     hideTooltip: function() {
