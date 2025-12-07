@@ -462,6 +462,18 @@ function setDefaultDate() {
 // Handle Add Customer
 async function handleAddCustomer(event) {
     event.preventDefault();
+    console.log('🚀 Quick Add Customer triggered');
+    
+    // Ensure employee data is loaded
+    if (!employeeData) {
+        const storedData = localStorage.getItem('employeeData');
+        if (storedData) {
+            employeeData = JSON.parse(storedData);
+        } else {
+            showToast('يرجى تسجيل الدخول أولاً', 'error');
+            return;
+        }
+    }
     
     // Fixed: Inputs removed from HTML, use defaults directly
     const name = 'زبون سريع';
@@ -477,17 +489,38 @@ async function handleAddCustomer(event) {
     
     // Handle service selection
     const serviceSelect = document.getElementById('serviceType');
+    if (!serviceSelect) {
+        console.error('Service select not found');
+        return;
+    }
+
     const serviceId = serviceSelect.value;
     
     // Get service name safely
     let serviceName = 'خدمة';
     if (serviceSelect.selectedIndex >= 0) {
-        serviceName = serviceSelect.options[serviceSelect.selectedIndex].text.split(' - ')[0];
+        const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+        if (selectedOption.value) {
+            serviceName = selectedOption.text.split(' - ')[0];
+        }
     }
     
-    if (!time || !serviceId) {
-        showToast('الرجاء اختيار الخدمة والوقت', 'error');
+    if (!time) {
+        showToast('الرجاء اختيار الوقت', 'error');
         return;
+    }
+
+    if (!serviceId) {
+        showToast('الرجاء اختيار الخدمة', 'error');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn ? submitBtn.innerHTML : 'تأكيد الحجز';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'جاري الحجز...';
     }
     
     try {
@@ -500,9 +533,12 @@ async function handleAddCustomer(event) {
             serviceId: serviceId,
             serviceName: serviceName,
             status: 'confirmed', // Set to confirmed so employee can mark as completed
-            employeeId: employeeData ? (employeeData._id || employeeData.id) : null,
-            employeeName: employeeData ? employeeData.name : null
+            employeeId: employeeData._id || employeeData.id,
+            employeeName: employeeData.name,
+            notes: 'حجز سريع من واجهة الموظف'
         };
+
+        console.log('Sending payload:', payload);
 
         const response = await fetch(`${API_BASE}/appointments`, {
             method: 'POST',
@@ -529,16 +565,23 @@ async function handleAddCustomer(event) {
         if (confirmedSection) {
             confirmedSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
             // Highlight the section briefly
-            confirmedSection.parentElement.style.transition = 'box-shadow 0.5s';
-            confirmedSection.parentElement.style.boxShadow = '0 0 20px rgba(39, 174, 96, 0.5)';
-            setTimeout(() => {
-                confirmedSection.parentElement.style.boxShadow = 'none';
-            }, 2000);
+            if (confirmedSection.parentElement) {
+                confirmedSection.parentElement.style.transition = 'box-shadow 0.5s';
+                confirmedSection.parentElement.style.boxShadow = '0 0 20px rgba(39, 174, 96, 0.5)';
+                setTimeout(() => {
+                    confirmedSection.parentElement.style.boxShadow = 'none';
+                }, 2000);
+            }
         }
         
     } catch (error) {
-        console.error('Add error:', error);
+        console.error('Add customer error:', error);
         showToast(error.message || 'حدث خطأ أثناء إضافة الموعد', 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
     }
 }
 
