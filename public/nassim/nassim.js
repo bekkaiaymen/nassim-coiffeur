@@ -1898,9 +1898,9 @@ async function submitBooking(e) {
             
             // Show professional confirmation message
             const extraChargeNote = window.paidForVIPSlot ? '\n\n💰 رسوم إضافية: 100 دج (سيتم التحصيل عند الحضور)' : '';
-            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n✂️ ${servicesNames}\n💰 ${totalPrice} دج\n⏱ ${totalDuration} دقيقة${extraChargeNote}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ يمكنك إلغاء الحجز مجاناً قبل 30 دقيقة من الموعد`;
+            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${selectedTime}\n👤 الحلاق: ${selectedEmployeeName}\n✂️ ${servicesNames}\n💰 ${totalPrice} دج\n⏱ ${totalDuration} دقيقة${extraChargeNote}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ اذا اضطررت لالغاء الحجز يجب ان اكون قبل 30 دقيقه من الموعد`;
             
-            showNotification(confirmationMessage, 'success', 10000);
+            showNotification(confirmationMessage, 'success', 0);
             
             // Pending reward notification disabled per user request
             // const points = data.pendingPoints || 100;
@@ -2788,17 +2788,23 @@ function formatDate(dateString) {
 function showNotification(message, type = 'info', duration = 3000) {
     const notification = document.getElementById('notification');
     if (notification) {
-        // Support multiline messages
-        notification.innerHTML = message.replace(/\n/g, '<br>');
+        // Support multiline messages and add close button
+        const closeBtn = '<span onclick="this.parentElement.classList.remove(\'show\')" style="float:left; cursor:pointer; font-size:24px; font-weight:bold; margin-right:10px; line-height: 20px;">&times;</span>';
+        notification.innerHTML = closeBtn + message.replace(/\n/g, '<br>');
+        
         notification.className = `notification ${type} show`;
         notification.style.whiteSpace = 'pre-wrap';
         notification.style.textAlign = 'right';
         notification.style.maxWidth = '90%';
         notification.style.margin = '0 auto';
+        notification.style.zIndex = '99999'; // Ensure it's on top
         
-        setTimeout(() => {
-            notification.classList.remove('show');
-        }, duration);
+        // Only auto-hide if duration is positive
+        if (duration > 0) {
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
     }
 }
 
