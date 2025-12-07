@@ -7,10 +7,25 @@ let customerRatingValue = 0;
 let servicesCache = [];
 let timeSlots = [];
 let lastPendingAppointmentsIds = null; // Track for notifications
+let lastPendingDataHash = ''; // Track for DOM updates
+let lastConfirmedDataHash = ''; // Track for DOM updates
 const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'); // Professional notification sound
 
 // API Base URL
 const API_BASE = '/api';
+
+// Utility: Debounce
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
 
 // DOM Ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -301,9 +316,11 @@ function setupForms() {
         const timeInput = document.getElementById('appointmentTime');
         const serviceSelect = document.getElementById('serviceType');
         
-        if (dateInput) dateInput.addEventListener('change', checkEmployeeAvailability);
-        if (timeInput) timeInput.addEventListener('change', checkEmployeeAvailability);
-        if (serviceSelect) serviceSelect.addEventListener('change', checkEmployeeAvailability);
+        const debouncedCheck = debounce(checkEmployeeAvailability, 500);
+
+        if (dateInput) dateInput.addEventListener('change', debouncedCheck);
+        if (timeInput) timeInput.addEventListener('change', debouncedCheck);
+        if (serviceSelect) serviceSelect.addEventListener('change', debouncedCheck);
     }
     
     if (ratingForm) {
@@ -785,59 +802,54 @@ async function loadPendingAppointments() {
     try {
         const empId = employeeData ? employeeData._id : null;
         if (!empId) {
-            console.warn('No employee ID found');
+            // Only update if changed
+            if (listContainer.innerHTML.includes('يرجى تسجيل الدخول')) return;
             listContainer.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">يرجى تسجيل الدخول</div>';
             return;
         }
 
-        console.log('Loading pending appointments for employee:', empId);
-
-        // Load appointments assigned to this employee
-        const response = await fetch(`${API_BASE}/appointments?status=pending&employee=${empId}`, {
-            headers: {
-                'Authorization': `Bearer ${employeeToken}`
-            }
-        });
+        // Parallel fetch
+        const [pendingResponse, flexResponse] = await Promise.all([
+            fetch(`${API_BASE}/appointments?status=pending&employee=${empId}`, {
+                headers: { 'Authorization': `Bearer ${employeeToken}` }
+            }),
+            fetch(`${API_BASE}/appointments?status=pending&isFlexibleEmployee=true`, {
+                headers: { 'Authorization': `Bearer ${employeeToken}` }
+            })
+        ]);
         
-        if (response.status === 401) {
+        if (pendingResponse.status === 401) {
             handleUnauthorized();
             return;
         }
         
-        if (!response.ok) throw new Error('فشل في تحميل المواعيد');
-        
-        const result = await response.json();
-        const appointments = result.data || [];
-        console.log('Direct appointments:', appointments.length);
-        
-        // Load flexible appointments (any barber) - always check this
-        const flexResponse = await fetch(`${API_BASE}/appointments?status=pending&isFlexibleEmployee=true`, {
-            headers: {
-                'Authorization': `Bearer ${employeeToken}`
-            }
-        });
-        
+        let appointments = [];
+        if (pendingResponse.ok) {
+            const result = await pendingResponse.json();
+            appointments = result.data || [];
+        }
+
         let flexAppointments = [];
         if (flexResponse.ok) {
             const flexResult = await flexResponse.json();
             flexAppointments = flexResult.data || [];
-            console.log('Flexible appointments:', flexAppointments.length);
         }
 
         // Combine both lists
         const allAppointments = [...appointments, ...flexAppointments];
-        console.log('Total appointments:', allAppointments.length);
+        
+        // Check if data changed to avoid re-render
+        const currentDataHash = JSON.stringify(allAppointments.map(a => ({id: a._id, status: a.status})));
+        if (currentDataHash === lastPendingDataHash) {
+            return; // No changes, skip DOM update
+        }
+        lastPendingDataHash = currentDataHash;
 
         // --- Notification Logic ---
         const currentIds = allAppointments.map(a => a._id);
-        
-        // If we have history (not first load)
         if (lastPendingAppointmentsIds !== null) {
-            // Find new appointments
             const newAppointments = allAppointments.filter(a => !lastPendingAppointmentsIds.includes(a._id));
-            
             if (newAppointments.length > 0) {
-                // Notify for the most recent one (or all, but let's do one to avoid spam)
                 const latest = newAppointments[0];
                 showNotificationBanner(
                     '🔔 حجز جديد!',
@@ -845,8 +857,6 @@ async function loadPendingAppointments() {
                 );
             }
         }
-        
-        // Update history
         lastPendingAppointmentsIds = currentIds;
         // --------------------------
 
@@ -913,12 +923,10 @@ async function loadConfirmedAppointments() {
     try {
         const empId = employeeData ? employeeData._id : null;
         if (!empId) {
-            console.warn('No employee ID found');
+            if (listContainer.innerHTML.includes('يرجى تسجيل الدخول')) return;
             listContainer.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">يرجى تسجيل الدخول</div>';
             return;
         }
-
-        console.log('Loading confirmed appointments for employee:', empId);
 
         // Load confirmed appointments assigned to this employee
         const response = await fetch(`${API_BASE}/appointments?status=confirmed&employee=${empId}`, {
@@ -936,7 +944,13 @@ async function loadConfirmedAppointments() {
         
         const result = await response.json();
         const appointments = result.data || [];
-        console.log('Confirmed appointments:', appointments.length);
+
+        // Check if data changed
+        const currentDataHash = JSON.stringify(appointments.map(a => ({id: a._id, status: a.status})));
+        if (currentDataHash === lastConfirmedDataHash) {
+            return; // No changes
+        }
+        lastConfirmedDataHash = currentDataHash;
 
         if (appointments.length === 0) {
             listContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">لا توجد مواعيد مؤكدة حالياً</div>';
@@ -1114,13 +1128,20 @@ async function loadTimeline() {
     const date = dateInput.value || new Date().toISOString().split('T')[0];
     
     const container = document.getElementById('timelineContainer');
-    container.innerHTML = '<div style="text-align: center; padding: 20px;">جاري تحميل الجدول...</div>';
+    
+    // Only show loading if empty
+    if (!container.innerHTML.trim() || container.innerHTML.includes('جاري تحميل الجدول')) {
+        container.innerHTML = '<div style="text-align: center; padding: 20px;">جاري تحميل الجدول...</div>';
+    }
 
     try {
-        // Get appointments
-        const apptResponse = await fetch(`${API_BASE}/appointments?date=${date}`, {
-            headers: { 'Authorization': `Bearer ${employeeToken}` }
-        });
+        // Parallel fetch for appointments and employees
+        const [apptResponse, empResponse] = await Promise.all([
+            fetch(`${API_BASE}/appointments?date=${date}`, {
+                headers: { 'Authorization': `Bearer ${employeeToken}` }
+            }),
+            fetch(`${API_BASE}/employees/available`)
+        ]);
         
         if (apptResponse.status === 401) {
             handleUnauthorized();
@@ -1130,8 +1151,6 @@ async function loadTimeline() {
         const apptData = await apptResponse.json();
         const appointments = apptData.data || [];
 
-        // Get available employees (those who checked in today)
-        const empResponse = await fetch(`${API_BASE}/employees/available`);
         const empData = await empResponse.json();
         let employees = empData.data || [];
         
