@@ -765,6 +765,10 @@ async function loadPendingAppointments() {
                     <button onclick="confirmAppointment('${apt._id}')" style="flex: 1; background: #27ae60; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
                         ✅ ${isFlexible ? 'قبول وتأكيد' : 'تأكيد'}
                     </button>
+                    ${apt.customerPhone ? `
+                    <a href="tel:${apt.customerPhone}" style="flex: 0.5; background: #3498db; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: flex; align-items: center; justify-content: center;">
+                        📞
+                    </a>` : ''}
                     <button onclick="rejectAppointment('${apt._id}')" style="flex: 0.5; background: #e74c3c; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold;">
                         ❌
                     </button>
@@ -852,6 +856,10 @@ async function loadConfirmedAppointments() {
                     <button onclick="completeAppointment('${apt._id}')" style="flex: 1; background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; box-shadow: 0 2px 8px rgba(39, 174, 96, 0.3); transition: all 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                         ✔️ إكمال الخدمة
                     </button>
+                    ${apt.customerPhone ? `
+                    <a href="tel:${apt.customerPhone}" style="flex: 0.3; background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);">
+                        📞
+                    </a>` : ''}
                 </div>
             `;
             listContainer.appendChild(item);
