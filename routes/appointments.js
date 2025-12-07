@@ -162,8 +162,7 @@ router.get('/available-slots', async (req, res) => {
         }
         
         // Generate time slots based on working hours
-        let startTotalMinutes = 9 * 60; // Default 09:00
-        let endTotalMinutes = 21 * 60;  // Default 21:00
+        let workingIntervals = [{ start: 9 * 60, end: 21 * 60 }]; // Default 9-21
 
         if (targetEmployee) {
              const emp = await Employee.findById(targetEmployee);
@@ -176,21 +175,33 @@ router.get('/available-slots', async (req, res) => {
                     if (!daySchedule.enabled) {
                          return res.json({ success: true, data: [] });
                     }
-                    const [sH, sM] = daySchedule.start.split(':').map(Number);
-                    const [eH, eM] = daySchedule.end.split(':').map(Number);
-                    startTotalMinutes = sH * 60 + sM;
-                    endTotalMinutes = eH * 60 + eM;
+                    
+                    // Handle new shifts format
+                    if (daySchedule.shifts && daySchedule.shifts.length > 0) {
+                        workingIntervals = daySchedule.shifts.map(shift => {
+                            const [sH, sM] = shift.start.split(':').map(Number);
+                            const [eH, eM] = shift.end.split(':').map(Number);
+                            return { start: sH * 60 + sM, end: eH * 60 + eM };
+                        });
+                    } else {
+                        // Fallback to legacy start/end
+                        const [sH, sM] = daySchedule.start.split(':').map(Number);
+                        const [eH, eM] = daySchedule.end.split(':').map(Number);
+                        workingIntervals = [{ start: sH * 60 + sM, end: eH * 60 + eM }];
+                    }
                  }
              }
         }
 
         const allSlots = [];
-        for (let m = startTotalMinutes; m < endTotalMinutes; m += 30) {
-            const h = Math.floor(m / 60);
-            const min = m % 60;
-            const timeStr = `${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
-            allSlots.push({ time: timeStr, available: true });
-        }
+        workingIntervals.forEach(interval => {
+            for (let m = interval.start; m < interval.end; m += 30) {
+                const h = Math.floor(m / 60);
+                const min = m % 60;
+                const timeStr = `${h.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+                allSlots.push({ time: timeStr, available: true });
+            }
+        });
 
         // Mark booked slots as unavailable based on duration overlap
         const requestedDuration = parseInt(req.query.duration) || 30;
@@ -301,16 +312,34 @@ router.post('/public/book', async (req, res) => {
                         });
                     }
                     
-                    const [sH, sM] = daySchedule.start.split(':').map(Number);
-                    const [eH, eM] = daySchedule.end.split(':').map(Number);
-                    const startWorkMinutes = sH * 60 + sM;
-                    const endWorkMinutes = eH * 60 + eM;
+                    let isWithinWorkingHours = false;
+                    let workingHoursStr = '';
+
+                    if (daySchedule.shifts && daySchedule.shifts.length > 0) {
+                        // Check against any shift
+                        isWithinWorkingHours = daySchedule.shifts.some(shift => {
+                            const [sH, sM] = shift.start.split(':').map(Number);
+                            const [eH, eM] = shift.end.split(':').map(Number);
+                            const startWorkMinutes = sH * 60 + sM;
+                            const endWorkMinutes = eH * 60 + eM;
+                            return (startTimeInMinutes >= startWorkMinutes && endTimeInMinutes <= endWorkMinutes);
+                        });
+                        workingHoursStr = daySchedule.shifts.map(s => `${s.start} - ${s.end}`).join(' و ');
+                    } else {
+                        // Legacy check
+                        const [sH, sM] = daySchedule.start.split(':').map(Number);
+                        const [eH, eM] = daySchedule.end.split(':').map(Number);
+                        const startWorkMinutes = sH * 60 + sM;
+                        const endWorkMinutes = eH * 60 + eM;
+                        isWithinWorkingHours = (startTimeInMinutes >= startWorkMinutes && endTimeInMinutes <= endWorkMinutes);
+                        workingHoursStr = `${daySchedule.start} - ${daySchedule.end}`;
+                    }
                     
                     // Check if appointment is within working hours
-                    if (startTimeInMinutes < startWorkMinutes || endTimeInMinutes > endWorkMinutes) {
+                    if (!isWithinWorkingHours) {
                          return res.status(400).json({ 
                             success: false, 
-                            message: `عذراً، هذا الوقت خارج ساعات عمل الحلاق ${emp.name}. ساعات العمل: ${daySchedule.start} - ${daySchedule.end}` 
+                            message: `عذراً، هذا الوقت خارج ساعات عمل الحلاق ${emp.name}. ساعات العمل: ${workingHoursStr}` 
                         });
                     }
                 }

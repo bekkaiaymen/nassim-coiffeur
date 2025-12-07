@@ -73,38 +73,31 @@ const employeeSchema = new mongoose.Schema({
     workingHours: {
         saturday: {
             enabled: { type: Boolean, default: true },
-            start: { type: String, default: '09:00' },
-            end: { type: String, default: '21:00' }
+            shifts: [{ start: { type: String, default: '09:00' }, end: { type: String, default: '21:00' } }]
         },
         sunday: {
             enabled: { type: Boolean, default: true },
-            start: { type: String, default: '09:00' },
-            end: { type: String, default: '21:00' }
+            shifts: [{ start: { type: String, default: '09:00' }, end: { type: String, default: '21:00' } }]
         },
         monday: {
             enabled: { type: Boolean, default: true },
-            start: { type: String, default: '09:00' },
-            end: { type: String, default: '21:00' }
+            shifts: [{ start: { type: String, default: '09:00' }, end: { type: String, default: '21:00' } }]
         },
         tuesday: {
             enabled: { type: Boolean, default: true },
-            start: { type: String, default: '09:00' },
-            end: { type: String, default: '21:00' }
+            shifts: [{ start: { type: String, default: '09:00' }, end: { type: String, default: '21:00' } }]
         },
         wednesday: {
             enabled: { type: Boolean, default: true },
-            start: { type: String, default: '09:00' },
-            end: { type: String, default: '21:00' }
+            shifts: [{ start: { type: String, default: '09:00' }, end: { type: String, default: '21:00' } }]
         },
         thursday: {
             enabled: { type: Boolean, default: true },
-            start: { type: String, default: '09:00' },
-            end: { type: String, default: '21:00' }
+            shifts: [{ start: { type: String, default: '09:00' }, end: { type: String, default: '21:00' } }]
         },
         friday: {
             enabled: { type: Boolean, default: false },
-            start: { type: String, default: '09:00' },
-            end: { type: String, default: '21:00' }
+            shifts: [{ start: { type: String, default: '09:00' }, end: { type: String, default: '21:00' } }]
         }
     },
     

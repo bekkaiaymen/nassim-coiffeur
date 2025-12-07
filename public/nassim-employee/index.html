@@ -23,36 +23,6 @@
 
     <!-- Main Content -->
     <main class="main-content">
-        <!-- Attendance Section (NEW) -->
-        <section class="employee-section" style="margin-bottom: 30px;">
-            <div class="section-card">
-                <div class="section-header">
-                    <h2 class="section-title">🕒 تسجيل الحضور</h2>
-                    <p class="section-subtitle">حدد أوقات عملك اليوم</p>
-                </div>
-                <div id="attendanceSection" style="padding: 20px;">
-                    <div style="display: flex; gap: 15px; align-items: end; margin-bottom: 15px;">
-                        <div style="flex: 1;">
-                            <label style="display: block; margin-bottom: 5px; color: #cba35c; font-weight: bold;">⏰ وقت البدء</label>
-                            <input type="time" id="checkInTime" class="form-input" value="09:00" style="width: 100%;">
-                        </div>
-                        <div style="flex: 1;">
-                            <label style="display: block; margin-bottom: 5px; color: #cba35c; font-weight: bold;">⏰ وقت الانتهاء</label>
-                            <input type="time" id="checkOutTime" class="form-input" value="21:00" style="width: 100%;">
-                        </div>
-                        <div style="flex: 1;">
-                            <button type="button" id="checkInBtn" onclick="handleCheckIn()" style="width: 100%; background: #27ae60; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 16px;">
-                                ✅ تسجيل حضور
-                            </button>
-                        </div>
-                    </div>
-                    <div id="attendanceStatus" style="text-align: center; padding: 15px; background: #2d2d2d; border-radius: 8px; border: 2px solid #444;">
-                        <p style="margin: 0; color: #888;">لم يتم تسجيل الحضور اليوم</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Weekly Schedule Section -->
         <section class="employee-section" style="margin-bottom: 30px;">
             <div class="section-card">

@@ -38,7 +38,6 @@ async function initEmployeeApp() {
     if (!checkAuth()) return;
 
     setupForms();
-    await loadAttendanceStatus(); // NEW: Load attendance status
     await loadWeeklySchedule(); // NEW: Load weekly schedule
     await loadServices();
     await loadPendingAppointments();
@@ -1247,8 +1246,7 @@ function getDefaultSchedule() {
     days.forEach(day => {
         schedule[day] = {
             enabled: day !== 'friday', // Friday off by default
-            start: '09:00',
-            end: '21:00'
+            shifts: [{ start: '09:00', end: '21:00' }]
         };
     });
     return schedule;
@@ -1272,26 +1270,56 @@ function renderWeeklySchedule(schedule) {
     const daysOrder = ['saturday', 'sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
     
     container.innerHTML = daysOrder.map(day => {
-        const dayData = schedule[day] || { enabled: true, start: '09:00', end: '21:00' };
+        // Handle legacy data format (start/end strings) vs new format (shifts array)
+        let dayData = schedule[day] || { enabled: true, shifts: [{ start: '09:00', end: '21:00' }] };
+        
+        // Migration for legacy data
+        if (!dayData.shifts && dayData.start && dayData.end) {
+            dayData.shifts = [{ start: dayData.start, end: dayData.end }];
+        }
+        if (!dayData.shifts) {
+            dayData.shifts = [{ start: '09:00', end: '21:00' }];
+        }
+
+        const statusColor = dayData.enabled ? '#27ae60' : '#c0392b'; // Green or Red
+        const statusText = dayData.enabled ? 'يعمل' : 'لا يعمل';
+
         return `
-            <div class="schedule-day-row" style="display: flex; align-items: center; gap: 10px; background: #2A2A2A; padding: 10px; border-radius: 8px; border: 1px solid #333;">
-                <div style="width: 100px; font-weight: bold; color: #E9E9E9;">
-                    <label class="switch" style="margin-left: 10px; display: inline-block; vertical-align: middle;">
-                        <input type="checkbox" class="day-enabled" data-day="${day}" ${dayData.enabled ? 'checked' : ''} onchange="toggleDayInputs(this)">
-                        <span class="slider round" style="position: relative; display: inline-block; width: 34px; height: 20px; background-color: #ccc; border-radius: 34px; transition: .4s;"></span>
-                    </label>
-                    ${daysMap[day]}
-                </div>
-                <div class="day-inputs ${dayData.enabled ? '' : 'disabled'}" id="inputs-${day}" style="display: flex; gap: 10px; flex: 1; opacity: ${dayData.enabled ? '1' : '0.5'}; pointer-events: ${dayData.enabled ? 'auto' : 'none'}; transition: opacity 0.3s;">
-                    <div style="flex: 1;">
-                        <span style="font-size: 12px; color: #888; display: block;">من</span>
-                        <input type="time" class="form-input day-start" data-day="${day}" value="${dayData.start}" style="padding: 8px; width: 100%; background: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+            <div class="schedule-day-row" style="background: #2A2A2A; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <div style="font-weight: bold; color: #E9E9E9; font-size: 16px;">
+                        ${daysMap[day]}
                     </div>
-                    <div style="flex: 1;">
-                        <span style="font-size: 12px; color: #888; display: block;">إلى</span>
-                        <input type="time" class="form-input day-end" data-day="${day}" value="${dayData.end}" style="padding: 8px; width: 100%; background: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span id="status-text-${day}" style="color: ${statusColor}; font-weight: bold; font-size: 14px;">${statusText}</span>
+                        <label class="switch">
+                            <input type="checkbox" class="day-enabled" data-day="${day}" ${dayData.enabled ? 'checked' : ''} onchange="toggleDayStatus(this)">
+                            <span class="slider round" style="background-color: ${dayData.enabled ? '#27ae60' : '#c0392b'};"></span>
+                        </label>
                     </div>
                 </div>
+                
+                <div id="shifts-container-${day}" class="shifts-container ${dayData.enabled ? '' : 'disabled'}" style="opacity: ${dayData.enabled ? '1' : '0.5'}; pointer-events: ${dayData.enabled ? 'auto' : 'none'}; transition: opacity 0.3s;">
+                    ${dayData.shifts.map((shift, index) => `
+                        <div class="shift-row" style="display: flex; gap: 10px; margin-bottom: 8px; align-items: center;">
+                            <div style="flex: 1;">
+                                <span style="font-size: 12px; color: #888; display: block;">من</span>
+                                <input type="time" class="form-input shift-start" data-day="${day}" value="${shift.start}" style="padding: 8px; width: 100%; background: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+                            </div>
+                            <div style="flex: 1;">
+                                <span style="font-size: 12px; color: #888; display: block;">إلى</span>
+                                <input type="time" class="form-input shift-end" data-day="${day}" value="${shift.end}" style="padding: 8px; width: 100%; background: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+                            </div>
+                            ${index > 0 ? `
+                            <button onclick="removeShift(this)" style="background: #c0392b; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; margin-top: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
+                            ` : `<div style="width: 30px;"></div>`}
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <button onclick="addShift('${day}')" class="add-shift-btn ${dayData.enabled ? '' : 'disabled'}" style="background: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-top: 5px; opacity: ${dayData.enabled ? '1' : '0.5'}; pointer-events: ${dayData.enabled ? 'auto' : 'none'};">
+                    + إضافة فترة عمل
+                </button>
             </div>
         `;
     }).join('');
@@ -1301,13 +1329,13 @@ function renderWeeklySchedule(schedule) {
         const style = document.createElement('style');
         style.id = 'switch-style';
         style.textContent = `
-            .switch { position: relative; display: inline-block; width: 34px; height: 20px; }
+            .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
             .switch input { opacity: 0; width: 0; height: 0; }
             .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; -webkit-transition: .4s; transition: .4s; }
-            .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 4px; bottom: 4px; background-color: white; -webkit-transition: .4s; transition: .4s; border-radius: 50%; }
-            input:checked + .slider { background-color: #CBA35C; }
-            input:focus + .slider { box-shadow: 0 0 1px #CBA35C; }
-            input:checked + .slider:before { -webkit-transform: translateX(14px); -ms-transform: translateX(14px); transform: translateX(14px); }
+            .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; -webkit-transition: .4s; transition: .4s; border-radius: 50%; }
+            input:checked + .slider { background-color: #27ae60; }
+            input:focus + .slider { box-shadow: 0 0 1px #27ae60; }
+            input:checked + .slider:before { -webkit-transform: translateX(26px); -ms-transform: translateX(26px); transform: translateX(26px); }
             .slider.round { border-radius: 34px; }
             .slider.round:before { border-radius: 50%; }
         `;
@@ -1315,18 +1343,57 @@ function renderWeeklySchedule(schedule) {
     }
 }
 
-function toggleDayInputs(checkbox) {
+function toggleDayStatus(checkbox) {
     const day = checkbox.dataset.day;
-    const inputsDiv = document.getElementById(`inputs-${day}`);
+    const shiftsContainer = document.getElementById(`shifts-container-${day}`);
+    const addBtn = checkbox.closest('.schedule-day-row').querySelector('.add-shift-btn');
+    const statusText = document.getElementById(`status-text-${day}`);
+    const slider = checkbox.nextElementSibling;
+
     if (checkbox.checked) {
-        inputsDiv.style.opacity = '1';
-        inputsDiv.style.pointerEvents = 'auto';
-        inputsDiv.classList.remove('disabled');
+        shiftsContainer.style.opacity = '1';
+        shiftsContainer.style.pointerEvents = 'auto';
+        shiftsContainer.classList.remove('disabled');
+        addBtn.style.opacity = '1';
+        addBtn.style.pointerEvents = 'auto';
+        addBtn.classList.remove('disabled');
+        statusText.textContent = 'يعمل';
+        statusText.style.color = '#27ae60';
+        slider.style.backgroundColor = '#27ae60';
     } else {
-        inputsDiv.style.opacity = '0.5';
-        inputsDiv.style.pointerEvents = 'none';
-        inputsDiv.classList.add('disabled');
+        shiftsContainer.style.opacity = '0.5';
+        shiftsContainer.style.pointerEvents = 'none';
+        shiftsContainer.classList.add('disabled');
+        addBtn.style.opacity = '0.5';
+        addBtn.style.pointerEvents = 'none';
+        addBtn.classList.add('disabled');
+        statusText.textContent = 'لا يعمل';
+        statusText.style.color = '#c0392b';
+        slider.style.backgroundColor = '#c0392b';
     }
+}
+
+function addShift(day) {
+    const container = document.getElementById(`shifts-container-${day}`);
+    const div = document.createElement('div');
+    div.className = 'shift-row';
+    div.style.cssText = 'display: flex; gap: 10px; margin-bottom: 8px; align-items: center;';
+    div.innerHTML = `
+        <div style="flex: 1;">
+            <span style="font-size: 12px; color: #888; display: block;">من</span>
+            <input type="time" class="form-input shift-start" data-day="${day}" value="09:00" style="padding: 8px; width: 100%; background: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+        </div>
+        <div style="flex: 1;">
+            <span style="font-size: 12px; color: #888; display: block;">إلى</span>
+            <input type="time" class="form-input shift-end" data-day="${day}" value="13:00" style="padding: 8px; width: 100%; background: #333; border: 1px solid #444; color: white; border-radius: 4px;">
+        </div>
+        <button onclick="removeShift(this)" style="background: #c0392b; color: white; border: none; width: 30px; height: 30px; border-radius: 4px; cursor: pointer; margin-top: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
+    `;
+    container.appendChild(div);
+}
+
+function removeShift(btn) {
+    btn.closest('.shift-row').remove();
 }
 
 async function saveWeeklySchedule() {
@@ -1335,10 +1402,19 @@ async function saveWeeklySchedule() {
     
     days.forEach(day => {
         const enabled = document.querySelector(`.day-enabled[data-day="${day}"]`).checked;
-        const start = document.querySelector(`.day-start[data-day="${day}"]`).value;
-        const end = document.querySelector(`.day-end[data-day="${day}"]`).value;
+        const shiftsContainer = document.getElementById(`shifts-container-${day}`);
+        const shiftRows = shiftsContainer.querySelectorAll('.shift-row');
         
-        schedule[day] = { enabled, start, end };
+        const shifts = [];
+        shiftRows.forEach(row => {
+            const start = row.querySelector('.shift-start').value;
+            const end = row.querySelector('.shift-end').value;
+            if (start && end) {
+                shifts.push({ start, end });
+            }
+        });
+        
+        schedule[day] = { enabled, shifts };
     });
     
     try {
