@@ -24,10 +24,8 @@ function registerServiceWorker() {
         navigator.serviceWorker.register('/service-worker.js')
             .then(registration => {
                 console.log('Service Worker registered with scope:', registration.scope);
-                // Request notification permission
-                if (Notification.permission !== 'granted') {
-                    Notification.requestPermission();
-                }
+                // Check status after registration
+                checkNotificationStatus();
             })
             .catch(error => {
                 console.error('Service Worker registration failed:', error);
@@ -49,8 +47,8 @@ async function initEmployeeApp() {
     generateTimeSlots();
     setDefaultDate();
     
-    // Subscribe to Push Notifications
-    subscribeToPushNotifications();
+    // Check Notification Status
+    checkNotificationStatus();
     
     // Initialize Timeline
     const dateInput = document.getElementById('timelineDate');
@@ -1561,24 +1559,58 @@ function playNotificationSound() {
 
 
 
-// Push Notification Subscription
-async function subscribeToPushNotifications() {
+// Notification Logic
+async function checkNotificationStatus() {
+    const btn = document.getElementById('notificationBtn');
+    if (!btn) return;
+
     if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         console.log('Push notifications not supported');
+        btn.style.display = 'none';
+        return;
+    }
+
+    if (Notification.permission === 'granted') {
+        btn.style.display = 'none';
+        // Silent update to ensure token is fresh
+        subscribeToPushNotifications(false);
+    } else if (Notification.permission === 'denied') {
+        btn.style.display = 'block';
+        btn.innerHTML = '🔕';
+        btn.onclick = () => showToast('يرجى تفعيل الإشعارات من إعدادات المتصفح', 'error');
+    } else {
+        // Default - Show button to request permission
+        btn.style.display = 'block';
+        btn.innerHTML = '🔔';
+        btn.onclick = toggleNotifications;
+    }
+}
+
+async function toggleNotifications() {
+    try {
+        const permission = await Notification.requestPermission();
+        if (permission === 'granted') {
+            showToast('تم تفعيل الإشعارات بنجاح', 'success');
+            await subscribeToPushNotifications(true);
+            checkNotificationStatus();
+        } else {
+            showToast('تم رفض الإذن بالإشعارات', 'error');
+            checkNotificationStatus();
+        }
+    } catch (error) {
+        console.error('Permission request failed', error);
+        showToast('حدث خطأ أثناء طلب الإذن', 'error');
+    }
+}
+
+// Push Notification Subscription
+async function subscribeToPushNotifications(showUi = false) {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
         return;
     }
 
     try {
         const registration = await navigator.serviceWorker.ready;
-        
-        // Request permission if not granted
-        if (Notification.permission === 'default') {
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-                console.log('Notification permission denied');
-                return;
-            }
-        }
         
         // Get VAPID Key
         const response = await fetch(`${API_BASE}/notifications/vapid-public-key`);
@@ -1611,8 +1643,10 @@ async function subscribeToPushNotifications() {
         });
         
         console.log('✅ Subscribed to push notifications');
+        if (showUi) showToast('أنت الآن مشترك في الإشعارات', 'success');
     } catch (error) {
         console.error('❌ Push subscription failed:', error);
+        if (showUi) showToast('فشل الاشتراك في الإشعارات: ' + error.message, 'error');
     }
 }
 
