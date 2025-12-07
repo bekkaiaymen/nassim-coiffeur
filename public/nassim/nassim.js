@@ -2730,6 +2730,14 @@ function updateActiveNav(index) {
 function openBookingModal(addToHistory = true) {
     const modal = document.getElementById('bookingModal');
     if (modal) {
+        // Auto-set date to today if empty
+        const dateInput = document.getElementById('appointmentDate');
+        if (dateInput && !dateInput.value) {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+            console.log(' Date auto-set to today:', today);
+        }
+
         if (addToHistory) {
             history.pushState({ page: 'bookingModal' }, '', '');
         }
@@ -4806,3 +4814,4 @@ const TourGuide = {
 
 
 // Force update
+
