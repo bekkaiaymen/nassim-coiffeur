@@ -539,14 +539,23 @@ async function loadCompletedAppointments() {
             const date = new Date(apt.date);
             const dateStr = date.toLocaleDateString('en-GB');
             
+            const customerPhoto = (apt.customerId && apt.customerId.photo) 
+                ? apt.customerId.photo 
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(apt.customerName)}&background=random&color=fff`;
+
             item.innerHTML = `
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <span style="color: #cba35c; font-weight: bold;">${apt.customerName}</span>
-                    <span style="color: #888; font-size: 12px;">${dateStr}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-size: 13px; color: #ccc;">
-                    <span>${apt.serviceName || 'خدمة'}</span>
-                    <span>${apt.time}</span>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                    <img src="${customerPhoto}" alt="${apt.customerName}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                    <div style="flex: 1;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #cba35c; font-weight: bold;">${apt.customerName}</span>
+                            <span style="color: #888; font-size: 12px;">${dateStr}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 13px; color: #ccc;">
+                            <span>${apt.serviceName || 'خدمة'}</span>
+                            <span>${apt.time}</span>
+                        </div>
+                    </div>
                 </div>
             `;
             listContainer.appendChild(item);
@@ -737,13 +746,19 @@ async function loadPendingAppointments() {
             const date = new Date(apt.date);
             const dateStr = date.toLocaleDateString('ar-DZ');
             
+            const customerPhoto = (apt.customerId && apt.customerId.photo) 
+                ? apt.customerId.photo 
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(apt.customerName)}&background=random&color=fff`;
+
             item.innerHTML = `
                 ${isFlexible ? '<div style="color: #9b59b6; font-weight: bold; font-size: 12px; margin-bottom: 5px;">🎯 حجز مرن - يمكن لأي حلاق تأكيده</div>' : ''}
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px; gap: 12px;">
+                    <img src="${customerPhoto}" alt="${apt.customerName}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #cba35c;">
+                    <div style="flex: 1;">
                         <div style="color: #cba35c; font-weight: bold; font-size: 16px;">${apt.customerName}</div>
                         <div style="color: #aaa; font-size: 13px; margin-top: 3px;">${dateStr} | ${apt.time}</div>
                         <div style="color: #ccc; font-size: 14px; margin-top: 3px;">${apt.service || 'خدمة'} | ${apt.price || 50} دج</div>
+                        ${apt.customerPhone ? `<div style="color: #888; font-size: 12px; margin-top: 2px;">📞 ${apt.customerPhone}</div>` : ''}
                     </div>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -817,11 +832,16 @@ async function loadConfirmedAppointments() {
             // Calculate if appointment is today
             const today = new Date();
             const isToday = date.toDateString() === today.toDateString();
+
+            const customerPhoto = (apt.customerId && apt.customerId.photo) 
+                ? apt.customerId.photo 
+                : `https://ui-avatars.com/api/?name=${encodeURIComponent(apt.customerName)}&background=random&color=fff`;
             
             item.innerHTML = `
                 ${isToday ? '<div style="color: #2ecc71; font-weight: bold; font-size: 12px; margin-bottom: 5px;">📍 موعد اليوم</div>' : ''}
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <div>
+                <div style="display: flex; align-items: center; margin-bottom: 10px; gap: 12px;">
+                    <img src="${customerPhoto}" alt="${apt.customerName}" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #2ecc71;">
+                    <div style="flex: 1;">
                         <div style="color: #2ecc71; font-weight: bold; font-size: 18px;">✅ ${apt.customerName}</div>
                         <div style="color: #aaa; font-size: 13px; margin-top: 3px;">📅 ${dateStr} | ⏰ ${apt.time}</div>
                         <div style="color: #fff; font-size: 14px; margin-top: 5px;">✂️ ${apt.service || 'خدمة'} | 💰 ${apt.price || 50} دج</div>
@@ -1135,9 +1155,23 @@ function renderTimeline(appointments, employees) {
                 slot.style.width = `${width}px`;
                 
                 // Content
-                const content = document.createElement('div');
-                content.textContent = `${appt.customerName || 'زبون'} (${appt.service})`;
-                slot.appendChild(content);
+                const customerPhoto = (appt.customerId && appt.customerId.photo) 
+                    ? appt.customerId.photo 
+                    : `https://ui-avatars.com/api/?name=${encodeURIComponent(appt.customerName)}&background=random&color=fff`;
+
+                slot.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 5px; height: 100%; overflow: hidden; padding: 0 4px;">
+                        <img src="${customerPhoto}" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255,255,255,0.5);">
+                        <div style="display: flex; flex-direction: column; justify-content: center; overflow: hidden;">
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 11px; font-weight: bold; line-height: 1.2;">
+                                ${appt.customerName || 'زبون'}
+                            </div>
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 10px; opacity: 0.8; line-height: 1.2;">
+                                ${appt.service}
+                            </div>
+                        </div>
+                    </div>
+                `;
                 
                 // Tooltip
                 slot.title = `${appt.time} - ${appt.customerName} - ${appt.service} - ${appt.price}DA`;

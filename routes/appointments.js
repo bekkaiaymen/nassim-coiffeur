@@ -655,7 +655,7 @@ router.get('/', protect, ensureTenant, async (req, res) => {
         if (isFlexibleEmployee === 'true') query.isFlexibleEmployee = true;
 
         const appointments = await Appointment.find(query)
-            .populate('customerId', 'name phone')
+            .populate('customerId', 'name phone photo')
             .sort({ date: 1, time: 1 });
 
         res.json({ success: true, count: appointments.length, data: appointments });
