@@ -1498,14 +1498,43 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
 });
 
 // Delete appointment
-router.delete('/:id', protect, ensureTenant, async (req, res) => {
+router.delete('/:id', protect, async (req, res) => {
     try {
-        const query = addTenantFilter(req, { _id: req.params.id });
-        const appointment = await Appointment.findOneAndDelete(query);
+        const appointment = await Appointment.findById(req.params.id);
 
         if (!appointment) {
             return res.status(404).json({ success: false, message: 'الموعد غير موجود' });
         }
+
+        // Authorization Check
+        let isAuthorized = false;
+
+        // 1. Check if user is the customer owning the appointment
+        if (req.user.role === 'customer') {
+            const Customer = require('../models/Customer');
+            const customer = await Customer.findOne({ user: req.user._id });
+            if (customer && appointment.customerId && appointment.customerId.toString() === customer._id.toString()) {
+                isAuthorized = true;
+            }
+        }
+        
+        // 2. Check if user is tenant admin/employee
+        if (!isAuthorized) {
+            const userTenantId = req.user.tenant?._id || req.user.tenant || req.user.business?._id || req.user.business;
+            const appointmentTenantId = appointment.tenant || appointment.business;
+            
+            if (userTenantId && appointmentTenantId && userTenantId.toString() === appointmentTenantId.toString()) {
+                 if (['owner', 'admin', 'manager', 'employee', 'super_admin'].includes(req.user.role)) {
+                     isAuthorized = true;
+                 }
+            }
+        }
+
+        if (!isAuthorized) {
+            return res.status(403).json({ success: false, message: 'غير مصرح لك بحذف هذا الموعد' });
+        }
+
+        await Appointment.findByIdAndDelete(req.params.id);
 
         // 🔔 Notify Employee (Barber)
         if (appointment.employee) {
