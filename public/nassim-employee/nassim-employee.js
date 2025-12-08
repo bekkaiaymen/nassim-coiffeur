@@ -895,6 +895,9 @@ async function loadPendingAppointments() {
                         ✅ ${isFlexible ? 'قبول وتأكيد' : 'تأكيد'}
                     </button>
                     ${apt.customerPhone ? `
+                    <button onclick="sendWhatsAppMessage('${apt.customerPhone}', '${apt.customerName}', '${dateStr}', '${apt.time}', '${apt.service || 'خدمة'}', '${apt.price || 50}')" style="flex: 0.5; background: #25D366; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                        💬
+                    </button>
                     <a href="tel:${apt.customerPhone}" style="flex: 0.5; background: #3498db; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; text-decoration: none; display: flex; align-items: center; justify-content: center;">
                         📞
                     </a>` : ''}
@@ -990,6 +993,9 @@ async function loadConfirmedAppointments() {
                         ✔️ إكمال الخدمة
                     </button>
                     ${apt.customerPhone ? `
+                    <button onclick="sendWhatsAppMessage('${apt.customerPhone}', '${apt.customerName}', '${dateStr}', '${apt.time}', '${apt.service || 'خدمة'}', '${apt.price || 50}')" style="flex: 0.3; background: #25D366; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);">
+                        💬
+                    </button>
                     <a href="tel:${apt.customerPhone}" style="flex: 0.3; background: #3498db; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; text-decoration: none; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);">
                         📞
                     </a>` : ''}
@@ -1097,6 +1103,28 @@ async function rejectAppointment(appointmentId) {
         console.error('Reject error:', error);
         showToast('حدث خطأ أثناء الإلغاء', 'error');
     }
+}
+
+// Send WhatsApp Message
+function sendWhatsAppMessage(phone, customerName, date, time, service, price) {
+    // Clean phone number - remove spaces and special characters
+    const cleanPhone = phone.replace(/[^0-9+]/g, '');
+    
+    // Format message in Arabic
+    const message = `مرحباً ${customerName}! 👋\n\n` +
+                    `✅ تم تأكيد موعدك:\n` +
+                    `📅 التاريخ: ${date}\n` +
+                    `🕐 الوقت: ${time}\n` +
+                    `✂️ الخدمة: ${service}\n` +
+                    `💰 السعر: ${price} دج\n\n` +
+                    `نتطلع لخدمتك! 💈`;
+    
+    // Encode the message for URL
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Open WhatsApp with pre-filled message
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
 }
 
 // Utility Functions
