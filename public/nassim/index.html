@@ -1038,7 +1038,7 @@
     <div id="notificationPanelOverlay" class="panel-overlay" onclick="closeNotificationPanel()"></div>
 
     <script>
-    // Safe caller to avoid undefined function during slow loads
+    // Safe caller with auto-reload of script if missing
     window._callSuggestSafe = function() {
         const btn = document.getElementById('suggestBtn');
         const restoreBtn = () => {
@@ -1050,7 +1050,8 @@
         };
 
         let attempts = 0;
-        const maxAttempts = 15;
+        const maxAttempts = 40; // ~12s total
+        let reloadedScript = false;
 
         const tryCall = () => {
             const fn = window.suggestNearestAppointment || window._suggestNearestAppointmentLegacy;
@@ -1070,11 +1071,26 @@
             btn.style.opacity = '0.6';
         }
 
+        const ensureScript = () => {
+            if (reloadedScript) return;
+            reloadedScript = true;
+            const s = document.createElement('script');
+            s.src = `/nassim/nassim.js?force=${Date.now()}`;
+            s.async = true;
+            document.body.appendChild(s);
+            console.warn('♻️ إعادة تحميل سكربت nassim.js للتأكد من توفر الدالة');
+        };
+
+        ensureScript();
+
         const interval = setInterval(() => {
             attempts += 1;
             if (tryCall()) {
                 clearInterval(interval);
                 return;
+            }
+            if (attempts === 5) {
+                ensureScript();
             }
             if (attempts >= maxAttempts) {
                 clearInterval(interval);
@@ -1084,7 +1100,7 @@
         }, 300);
     };
     </script>
-    <script src="/nassim/nassim.js?v=20251208-004"></script>
+    <script src="/nassim/nassim.js?v=20251208-005"></script>
     <script src="/nassim/ai-wassim.js"></script>
     <script src="/nassim/ai-stylist.js"></script>
 </body>
