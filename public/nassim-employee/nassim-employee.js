@@ -1108,7 +1108,20 @@ async function rejectAppointment(appointmentId) {
 // Send WhatsApp Message
 function sendWhatsAppMessage(phone, customerName, date, time, service, price) {
     // Clean phone number - remove spaces and special characters
-    const cleanPhone = phone.replace(/[^0-9+]/g, '');
+    let cleanPhone = phone.replace(/[^0-9+]/g, '');
+    
+    // Add Algeria country code (+213) if not present
+    if (!cleanPhone.startsWith('+')) {
+        // Remove leading 0 if exists (Algerian numbers start with 0)
+        if (cleanPhone.startsWith('0')) {
+            cleanPhone = cleanPhone.substring(1);
+        }
+        // Add +213 (Algeria)
+        cleanPhone = '213' + cleanPhone;
+    } else {
+        // Remove + sign for wa.me format
+        cleanPhone = cleanPhone.substring(1);
+    }
     
     // Format message in Arabic
     const message = `مرحباً ${customerName}! 👋\n\n` +
