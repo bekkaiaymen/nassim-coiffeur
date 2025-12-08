@@ -1497,7 +1497,7 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
     }
 });
 
-// Delete appointment
+// Delete appointment (Customer Portal - Flexible Authorization)
 router.delete('/:id', protect, async (req, res) => {
     try {
         const appointment = await Appointment.findById(req.params.id);
@@ -1506,19 +1506,40 @@ router.delete('/:id', protect, async (req, res) => {
             return res.status(404).json({ success: false, message: 'الموعد غير موجود' });
         }
 
-        // Authorization Check
+        console.log('🔍 Delete Authorization Check:', {
+            userId: req.user._id,
+            userRole: req.user.role,
+            appointmentId: appointment._id,
+            appointmentPhone: appointment.customerPhone,
+            userPhone: req.user.phone
+        });
+
+        // Authorization Check - Multiple methods to support different customer scenarios
         let isAuthorized = false;
 
-        // 1. Check if user is the customer owning the appointment
+        // Method 1: Check if user is the customer owning the appointment (via Customer model)
         if (req.user.role === 'customer') {
             const Customer = require('../models/Customer');
             const customer = await Customer.findOne({ user: req.user._id });
-            if (customer && appointment.customerId && appointment.customerId.toString() === customer._id.toString()) {
-                isAuthorized = true;
+            
+            if (customer && appointment.customerId) {
+                const customerId = typeof appointment.customerId === 'object' ? appointment.customerId._id : appointment.customerId;
+                if (customerId.toString() === customer._id.toString()) {
+                    isAuthorized = true;
+                    console.log('✅ Authorized: Customer owns appointment (via customerId)');
+                }
             }
         }
         
-        // 2. Check if user is tenant admin/employee
+        // Method 2: Check if user's phone matches appointment phone (for customers without proper linkage)
+        if (!isAuthorized && req.user.phone && appointment.customerPhone) {
+            if (req.user.phone === appointment.customerPhone) {
+                isAuthorized = true;
+                console.log('✅ Authorized: Phone numbers match');
+            }
+        }
+        
+        // Method 3: Check if user is tenant admin/employee
         if (!isAuthorized) {
             const userTenantId = req.user.tenant?._id || req.user.tenant || req.user.business?._id || req.user.business;
             const appointmentTenantId = appointment.tenant || appointment.business;
@@ -1526,15 +1547,18 @@ router.delete('/:id', protect, async (req, res) => {
             if (userTenantId && appointmentTenantId && userTenantId.toString() === appointmentTenantId.toString()) {
                  if (['owner', 'admin', 'manager', 'employee', 'super_admin'].includes(req.user.role)) {
                      isAuthorized = true;
+                     console.log('✅ Authorized: User is staff member of the business');
                  }
             }
         }
 
         if (!isAuthorized) {
+            console.log('❌ Authorization failed');
             return res.status(403).json({ success: false, message: 'غير مصرح لك بحذف هذا الموعد' });
         }
 
         await Appointment.findByIdAndDelete(req.params.id);
+        console.log('✅ Appointment deleted successfully');
 
         // 🔔 Notify Employee (Barber)
         if (appointment.employee) {
