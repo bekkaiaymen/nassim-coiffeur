@@ -34,7 +34,7 @@
     <!-- Preload Critical Script -->
     <script>
         // Define function IMMEDIATELY before any other scripts
-        console.log('🚀 INLINE v010 - Defining Smart Suggest function');
+        console.log('🚀 INLINE v011 - Defining Intelligent Schedule-Based Suggest');
         
         // Helper to get selected services from the page
         function getSelectedServicesFromPage() {
@@ -50,6 +50,73 @@
             }
             
             return [];
+        }
+        
+        // Get employee weekly schedule from API
+        async function getEmployeeSchedule(API_URL, businessId, employeeId) {
+            try {
+                const url = `${API_URL}/employees/${employeeId}`;
+                console.log(`📋 Fetching employee schedule: ${url}`);
+                const response = await fetch(url);
+                if (!response.ok) return null;
+                
+                const result = await response.json();
+                if (result.success && result.data) {
+                    console.log(`✅ Employee schedule loaded:`, result.data.workingHours);
+                    return result.data.workingHours || null;
+                }
+            } catch (error) {
+                console.error('❌ Failed to fetch employee schedule:', error);
+            }
+            return null;
+        }
+        
+        // Find first available slot in employee's working hours
+        function findFirstAvailableInSchedule(schedule, dayOfWeek, currentTime = null) {
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const dayName = days[dayOfWeek];
+            
+            if (!schedule || !schedule[dayName] || !schedule[dayName].enabled) {
+                console.log(`⚠️ Employee not working on ${dayName}`);
+                return null;
+            }
+            
+            const workDay = schedule[dayName];
+            const startTime = workDay.start; // e.g., "09:00"
+            const endTime = workDay.end;     // e.g., "18:00"
+            
+            console.log(`📅 ${dayName}: ${startTime} - ${endTime}`);
+            
+            // If checking today and we have current time, start from next available slot
+            if (currentTime) {
+                const [currentHour, currentMinute] = currentTime.split(':').map(Number);
+                const [startHour, startMinute] = startTime.split(':').map(Number);
+                
+                const currentMinutes = currentHour * 60 + currentMinute;
+                const startMinutes = startHour * 60 + startMinute;
+                
+                // If current time is before work start, return work start time
+                if (currentMinutes < startMinutes) {
+                    return startTime;
+                }
+                
+                // Otherwise, round up to next 30-minute slot
+                const nextSlotMinutes = Math.ceil((currentMinutes + 30) / 30) * 30;
+                const nextHour = Math.floor(nextSlotMinutes / 60);
+                const nextMinute = nextSlotMinutes % 60;
+                
+                const suggestedTime = `${String(nextHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}`;
+                
+                // Check if suggested time is within working hours
+                const [endHour] = endTime.split(':').map(Number);
+                if (nextHour < endHour || (nextHour === endHour && nextMinute === 0)) {
+                    return suggestedTime;
+                }
+                
+                return null; // No time left today
+            }
+            
+            return startTime; // Return start of work day
         }
         
         window.suggestNearestAppointment = async function() {
@@ -97,21 +164,49 @@
                 const now = new Date();
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
+                const currentTime = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
                 const currentTotalMinutes = currentHour * 60 + currentMinute;
-                const maxDaysToCheck = 14; // Increased search range
+                const maxDaysToCheck = 14;
+                
+                // Get employee ID
+                const employeeId = employeeSelect && employeeSelect.value && employeeSelect.value !== 'any' ? employeeSelect.value : '';
+                
+                // Load employee schedule if specific employee selected
+                let employeeSchedule = null;
+                if (employeeId) {
+                    console.log(`👤 Loading schedule for employee: ${employeeId}`);
+                    employeeSchedule = await getEmployeeSchedule(API_URL, NASSIM_BUSINESS_ID, employeeId);
+                }
                 
                 for (let dayOffset = 0; dayOffset < maxDaysToCheck; dayOffset++) {
                     const checkDate = new Date(now);
                     checkDate.setDate(checkDate.getDate() + dayOffset);
                     const dateStr = checkDate.toISOString().split('T')[0];
+                    const dayOfWeek = checkDate.getDay();
+                    const isToday = (dayOffset === 0);
 
-                    const employeeId = employeeSelect && employeeSelect.value && employeeSelect.value !== 'any' ? employeeSelect.value : '';
+                    console.log(`🔍 [Day +${dayOffset}] ${dateStr} (${['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'][dayOfWeek]})`);
+
+                    // If we have employee schedule, check if they work this day
+                    let suggestedStartTime = null;
+                    if (employeeSchedule) {
+                        suggestedStartTime = findFirstAvailableInSchedule(
+                            employeeSchedule, 
+                            dayOfWeek, 
+                            isToday ? currentTime : null
+                        );
+                        
+                        if (!suggestedStartTime) {
+                            console.log(`⏭️ Employee not working on this day, skipping...`);
+                            continue;
+                        }
+                        
+                        console.log(`💡 Suggested start time from schedule: ${suggestedStartTime}`);
+                    }
+
                     let apiUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}`;
                     if (employeeId) {
                         apiUrl += `&employee=${employeeId}`;
-                        console.log(`🔍 [Day +${dayOffset}] Checking ${dateStr} with employee ${employeeId}...`);
-                    } else {
-                        console.log(`🔍 [Day +${dayOffset}] Checking ${dateStr} (all employees)...`);
                     }
                     const response = await fetch(apiUrl);
                     if (!response.ok) {
@@ -132,14 +227,19 @@
                         if (!result.success || !result.data || !Array.isArray(result.data)) continue;
                     }
 
-                    // Filter only available slots and sort by time
-                    const availableSlots = result.data
+                    // Filter available slots
+                    let availableSlots = result.data
                         .filter(s => s.available === true)
                         .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
 
-                    console.log(`   Found ${availableSlots.length} available slots`);
-
-                    const isToday = (dayOffset === 0);
+                    // If we have a suggested start time from schedule, prioritize slots at or after that time
+                    if (suggestedStartTime) {
+                        const suggestedMinutes = timeToMinutes(suggestedStartTime);
+                        availableSlots = availableSlots.filter(s => timeToMinutes(s.time) >= suggestedMinutes);
+                        console.log(`   Filtered to ${availableSlots.length} slots after ${suggestedStartTime}`);
+                    } else {
+                        console.log(`   Found ${availableSlots.length} available slots`);
+                    }
 
                     // Find consecutive slots
                     for (let i = 0; i <= availableSlots.length - slotsNeeded; i++) {
