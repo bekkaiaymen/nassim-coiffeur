@@ -1498,7 +1498,7 @@ router.patch('/:id/complete', protect, ensureTenant, async (req, res) => {
 });
 
 // Delete appointment
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', protect, ensureTenant, async (req, res) => {
     try {
         const query = addTenantFilter(req, { _id: req.params.id });
         const appointment = await Appointment.findOneAndDelete(query);
