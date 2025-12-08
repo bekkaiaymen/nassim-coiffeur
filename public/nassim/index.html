@@ -244,24 +244,24 @@
                     console.log(`   Found ${availableSlots.length} available slots`);
 
                     // For today, suggest IMMEDIATE booking if possible (current time rounded up)
+                    let immediateBookingTime = null;
                     if (isToday && availableSlots.length > 0) {
                         // Calculate immediate next available time (round up to nearest 5 minutes)
                         const immediateMinutes = Math.ceil((currentTotalMinutes + 5) / 5) * 5;
                         const immediateHour = Math.floor(immediateMinutes / 60);
                         const immediateMin = immediateMinutes % 60;
-                        const immediateTime = `${String(immediateHour).padStart(2, '0')}:${String(immediateMin).padStart(2, '0')}`;
+                        immediateBookingTime = `${String(immediateHour).padStart(2, '0')}:${String(immediateMin).padStart(2, '0')}`;
                         
-                        console.log(`⚡ Current time: ${currentTime}, suggesting immediate booking at: ${immediateTime}`);
+                        console.log(`⚡ Current time: ${currentTime}, immediate booking available at: ${immediateBookingTime}`);
                         
-                        // Check if we can book immediately (within next slot's time range)
-                        const firstSlot = availableSlots[0];
-                        const firstSlotMinutes = timeToMinutes(firstSlot.time);
-                        
-                        // If immediate time is before or within the first available slot, use immediate time
-                        if (immediateMinutes < firstSlotMinutes) {
-                            console.log(`✨ Immediate booking possible! Suggesting ${immediateTime} instead of ${firstSlot.time}`);
-                            // Override the slot time with immediate time
-                            firstSlot.time = immediateTime;
+                        // Check if immediate time is within business hours (before first slot means we're during working hours)
+                        const firstSlotMinutes = timeToMinutes(availableSlots[0].time);
+                        if (immediateMinutes >= firstSlotMinutes) {
+                            // Immediate time is after or at first slot, don't use immediate booking
+                            immediateBookingTime = null;
+                            console.log(`⏰ Using regular slot-based booking`);
+                        } else {
+                            console.log(`✨ Immediate booking possible! Will suggest ${immediateBookingTime}`);
                         }
                     }
 
@@ -272,7 +272,44 @@
                         console.log(`   Filtered to ${availableSlots.length} slots after ${suggestedStartTime}`);
                     }
 
-                    // Find consecutive slots
+                    // If immediate booking is available, use it directly without checking slots
+                    if (immediateBookingTime && slotsNeeded === 1) {
+                        console.log(`🚀 Using immediate booking: ${immediateBookingTime}`);
+                        
+                        dateInput.value = dateStr;
+                        timeInput.value = immediateBookingTime;
+                        
+                        // Select employee if needed
+                        if (!employeeId && availableSlots[0]?.employee) {
+                            employeeSelect.value = availableSlots[0].employee;
+                        }
+                        
+                        const changeEvent = new Event('change', { bubbles: true });
+                        dateInput.dispatchEvent(changeEvent);
+                        timeInput.dispatchEvent(changeEvent);
+                        employeeSelect.dispatchEvent(changeEvent);
+
+                        const displayDate = new Date(dateStr).toLocaleDateString('ar-SA', {
+                            weekday: 'long', day: 'numeric', month: 'long'
+                        });
+                        
+                        const employeeName = employeeSelect.options[employeeSelect.selectedIndex]?.text || 'أي حلاق';
+                        const serviceNames = services.map(s => s.name || s.serviceName).join(', ') || 'الخدمات المختارة';
+                        
+                        if (window.showNotification) {
+                            window.showNotification(`⚡ حجز فوري: ${displayDate} الساعة ${immediateBookingTime}`, 'success');
+                        }
+
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = '⚡ تم - حجز فوري';
+                            btn.style.opacity = '1';
+                            setTimeout(() => { btn.innerHTML = '✨ اقترح أقرب موعد'; }, 3000);
+                        }
+                        return;
+                    }
+
+                    // Find consecutive slots (normal flow)
                     for (let i = 0; i <= availableSlots.length - slotsNeeded; i++) {
                         const startSlot = availableSlots[i];
                         const startMinutes = timeToMinutes(startSlot.time);
