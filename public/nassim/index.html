@@ -57,16 +57,24 @@
             try {
                 const url = `${API_URL}/employees/${employeeId}`;
                 console.log(`📋 Fetching employee schedule: ${url}`);
-                const response = await fetch(url);
-                if (!response.ok) return null;
+                
+                // Try with auth token if available
+                const token = localStorage.getItem('customerToken');
+                const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+                
+                const response = await fetch(url, { headers });
+                if (!response.ok) {
+                    console.log('⚠️ Employee schedule not available, will use slot-based search');
+                    return null;
+                }
                 
                 const result = await response.json();
-                if (result.success && result.data) {
+                if (result.success && result.data && result.data.workingHours) {
                     console.log(`✅ Employee schedule loaded:`, result.data.workingHours);
-                    return result.data.workingHours || null;
+                    return result.data.workingHours;
                 }
             } catch (error) {
-                console.error('❌ Failed to fetch employee schedule:', error);
+                console.log('⚠️ Could not load schedule, continuing with slot-based search');
             }
             return null;
         }
@@ -209,6 +217,8 @@
                         apiUrl += `&employee=${employeeId}`;
                     }
                     const response = await fetch(apiUrl);
+                    let result;
+                    
                     if (!response.ok) {
                         // If specific employee fails, try without employee filter
                         if (employeeId) {
@@ -216,14 +226,13 @@
                             const fallbackUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}`;
                             const fallbackResponse = await fetch(fallbackUrl);
                             if (!fallbackResponse.ok) continue;
-                            const fallbackResult = await fallbackResponse.json();
-                            if (!fallbackResult.success || !fallbackResult.data) continue;
-                            result = fallbackResult;
+                            result = await fallbackResponse.json();
+                            if (!result.success || !result.data) continue;
                         } else {
                             continue;
                         }
                     } else {
-                        const result = await response.json();
+                        result = await response.json();
                         if (!result.success || !result.data || !Array.isArray(result.data)) continue;
                     }
 
