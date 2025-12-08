@@ -436,7 +436,7 @@
                 <div class="form-group">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <label class="form-label" style="margin-bottom: 0;">التاريخ *</label>
-                        <button type="button" id="suggestBtn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); transition: all 0.3s ease; display: flex; align-items: center; gap: 4px;">
+                        <button type="button" id="suggestBtn" onclick="window.suggestNearestAppointment()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); transition: all 0.3s ease; display: flex; align-items: center; gap: 4px;">
                             <span>✨</span>
                             <span>اقترح أقرب موعد</span>
                         </button>
@@ -1037,7 +1037,7 @@
     </div>
     <div id="notificationPanelOverlay" class="panel-overlay" onclick="closeNotificationPanel()"></div>
 
-    <script src="/nassim/nassim.js?v=2.1"></script>
+    <script src="/nassim/nassim.js?v=2.2"></script>
     <script src="/nassim/ai-wassim.js"></script>
     <script src="/nassim/ai-stylist.js"></script>
 </body>
