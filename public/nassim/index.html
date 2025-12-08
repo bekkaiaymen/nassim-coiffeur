@@ -252,16 +252,16 @@
                         const immediateMin = immediateMinutes % 60;
                         immediateBookingTime = `${String(immediateHour).padStart(2, '0')}:${String(immediateMin).padStart(2, '0')}`;
                         
-                        console.log(`⚡ Current time: ${currentTime}, immediate booking available at: ${immediateBookingTime}`);
-                        
-                        // Check if immediate time is within business hours (before first slot means we're during working hours)
                         const firstSlotMinutes = timeToMinutes(availableSlots[0].time);
-                        if (immediateMinutes >= firstSlotMinutes) {
-                            // Immediate time is after or at first slot, don't use immediate booking
-                            immediateBookingTime = null;
-                            console.log(`⏰ Using regular slot-based booking`);
+                        console.log(`⚡ Current: ${currentTime} (${currentTotalMinutes}min) → Immediate: ${immediateBookingTime} (${immediateMinutes}min) vs First Slot: ${availableSlots[0].time} (${firstSlotMinutes}min)`);
+                        
+                        // Always use immediate booking if it's earlier than the first slot
+                        if (immediateMinutes < firstSlotMinutes) {
+                            const timeSaved = firstSlotMinutes - immediateMinutes;
+                            console.log(`✨ Immediate booking activated! ${immediateBookingTime} saves ${timeSaved} minutes`);
                         } else {
-                            console.log(`✨ Immediate booking possible! Will suggest ${immediateBookingTime}`);
+                            immediateBookingTime = null;
+                            console.log(`⏰ Using first available slot ${availableSlots[0].time}`);
                         }
                     }
 
