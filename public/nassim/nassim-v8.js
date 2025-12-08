@@ -42,11 +42,13 @@ window.suggestNearestAppointment = async function() {
             
             console.log(`📅 [Suggest] Checking date: ${dateStr} (Day +${dayOffset})`);
 
-            const employeeId = employeeSelect && employeeSelect.value ? employeeSelect.value : '';
+            const employeeId = employeeSelect && employeeSelect.value && employeeSelect.value !== 'any' ? employeeSelect.value : '';
             let apiUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}`;
             if (employeeId) {
                 apiUrl += `&employee=${employeeId}`;
                 console.log(`👤 [Suggest] Filtering by employee: ${employeeId}`);
+            } else {
+                console.log(`👥 [Suggest] Searching all employees`);
             }
 
             console.log(`🌐 [Suggest] Fetching: ${apiUrl}`);

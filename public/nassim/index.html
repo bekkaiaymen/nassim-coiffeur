@@ -105,11 +105,14 @@
                     checkDate.setDate(checkDate.getDate() + dayOffset);
                     const dateStr = checkDate.toISOString().split('T')[0];
 
-                    const employeeId = employeeSelect && employeeSelect.value ? employeeSelect.value : '';
+                    const employeeId = employeeSelect && employeeSelect.value && employeeSelect.value !== 'any' ? employeeSelect.value : '';
                     let apiUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}`;
-                    if (employeeId) apiUrl += `&employee=${employeeId}`;
-
-                    console.log(`🔍 [Day +${dayOffset}] Checking ${dateStr}...`);
+                    if (employeeId) {
+                        apiUrl += `&employee=${employeeId}`;
+                        console.log(`🔍 [Day +${dayOffset}] Checking ${dateStr} with employee ${employeeId}...`);
+                    } else {
+                        console.log(`🔍 [Day +${dayOffset}] Checking ${dateStr} (all employees)...`);
+                    }
                     const response = await fetch(apiUrl);
                     if (!response.ok) continue;
 
