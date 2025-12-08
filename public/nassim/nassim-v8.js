@@ -53,13 +53,26 @@ window.suggestNearestAppointment = async function() {
 
             console.log(`🌐 [Suggest] Fetching: ${apiUrl}`);
             const response = await fetch(apiUrl);
+            let result;
             
             if (!response.ok) {
                 console.warn(`⚠️ [Suggest] API error for ${dateStr}: ${response.status}`);
-                continue;
+                // If specific employee fails, try without employee filter
+                if (employeeId) {
+                    console.log(`🔄 [Suggest] Retrying without employee filter...`);
+                    const fallbackUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}`;
+                    const fallbackResponse = await fetch(fallbackUrl);
+                    if (!fallbackResponse.ok) {
+                        continue;
+                    }
+                    result = await fallbackResponse.json();
+                } else {
+                    continue;
+                }
+            } else {
+                result = await response.json();
             }
 
-            const result = await response.json();
             console.log(`📥 [Suggest] Response for ${dateStr}:`, result);
 
             if (!result.success || !result.data || !Array.isArray(result.data)) {

@@ -114,10 +114,23 @@
                         console.log(`🔍 [Day +${dayOffset}] Checking ${dateStr} (all employees)...`);
                     }
                     const response = await fetch(apiUrl);
-                    if (!response.ok) continue;
-
-                    const result = await response.json();
-                    if (!result.success || !result.data || !Array.isArray(result.data)) continue;
+                    if (!response.ok) {
+                        // If specific employee fails, try without employee filter
+                        if (employeeId) {
+                            console.log(`⚠️ Employee query failed, retrying without employee filter...`);
+                            const fallbackUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}`;
+                            const fallbackResponse = await fetch(fallbackUrl);
+                            if (!fallbackResponse.ok) continue;
+                            const fallbackResult = await fallbackResponse.json();
+                            if (!fallbackResult.success || !fallbackResult.data) continue;
+                            result = fallbackResult;
+                        } else {
+                            continue;
+                        }
+                    } else {
+                        const result = await response.json();
+                        if (!result.success || !result.data || !Array.isArray(result.data)) continue;
+                    }
 
                     // Filter only available slots and sort by time
                     const availableSlots = result.data
