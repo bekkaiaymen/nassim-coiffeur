@@ -2,12 +2,12 @@
 // Version 3.0 - Enhanced Android Notifications Support
 // التطبيق النقال الاحترافي مع دعم الإشعارات حتى عند إغلاق التطبيق
 
-const CACHE_NAME = 'nassim-v3.0';
+const CACHE_NAME = 'nassim-v3.3-fix';
 const urlsToCache = [
     '/nassim/',
     '/nassim/index.html',
     '/nassim/nassim.css',
-    '/nassim/nassim.js',
+    '/nassim/nassim-v8.js',
     '/nassim/favicon.svg',
     '/nassim/logo.jpg'
 ];

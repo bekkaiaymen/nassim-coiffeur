@@ -1,9 +1,9 @@
 // Service Worker for Nassim Coiffeur PWA
-const CACHE_NAME = 'nassim-v1.0.2';
+const CACHE_NAME = 'nassim-v1.0.5-fix';
 const ASSETS_TO_CACHE = [
   '/nassim',
   '/nassim/nassim.css',
-  '/nassim/nassim.js',
+  '/nassim/nassim-v8.js',
   '/nassim/logo.jpg',
   '/manifest.json'
 ];
