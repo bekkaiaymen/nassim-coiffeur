@@ -156,12 +156,21 @@
                             // Found a valid sequence!
                             console.log(`✅ [Suggest] Found sequence starting at ${startSlot.time} on ${dateStr}`);
                             
+                            // Fill the form fields
                             dateInput.value = dateStr;
                             timeInput.value = startSlot.time;
                             
+                            // If no specific employee was selected, select the first available from this slot
+                            if (!employeeId && startSlot.employee) {
+                                employeeSelect.value = startSlot.employee;
+                                console.log(`👤 Auto-selected employee: ${startSlot.employee}`);
+                            }
+                            
+                            // Trigger change events to update the UI
                             const changeEvent = new Event('change', { bubbles: true });
                             dateInput.dispatchEvent(changeEvent);
                             timeInput.dispatchEvent(changeEvent);
+                            employeeSelect.dispatchEvent(changeEvent);
 
                             const displayDate = new Date(dateStr).toLocaleDateString('ar-SA', {
                                 weekday: 'long', day: 'numeric', month: 'long'
@@ -170,12 +179,20 @@
                             const employeeName = employeeSelect.options[employeeSelect.selectedIndex]?.text || 'أي حلاق';
                             const serviceNames = services.map(s => s.name || s.serviceName).join(', ') || 'الخدمات المختارة';
                             
-                            alert(`✅ وجدنا موعداً مناسباً!\n\n📅 التاريخ: ${displayDate}\n⏰ الوقت: ${startSlot.time}\n⏱️ المدة: ${totalDuration} دقيقة\n💈 الخدمات: ${serviceNames}\n👤 الحلاق: ${employeeName}`);
+                            // Show success notification instead of alert
+                            if (window.showNotification) {
+                                window.showNotification(`✅ تم ملء الموعد تلقائياً: ${displayDate} الساعة ${startSlot.time}`, 'success');
+                            }
 
                             if (btn) {
                                 btn.disabled = false;
-                                btn.innerHTML = '✨ اقترح أقرب موعد';
+                                btn.innerHTML = '✅ تم الاقتراح';
                                 btn.style.opacity = '1';
+                                
+                                // Reset button text after 3 seconds
+                                setTimeout(() => {
+                                    btn.innerHTML = '✨ اقترح أقرب موعد';
+                                }, 3000);
                             }
                             return;
                         }

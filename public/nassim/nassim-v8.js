@@ -87,24 +87,42 @@ window.suggestNearestAppointment = async function() {
                 
                 console.log(`✅ [Suggest] Selected slot: ${dateStr} at ${selectedSlot.time}`);
 
+                // Fill the form fields
                 dateInput.value = dateStr;
                 timeInput.value = selectedSlot.time;
 
+                // If no specific employee was selected, select the first available from this slot
+                if (!employeeId && selectedSlot.employee) {
+                    employeeSelect.value = selectedSlot.employee;
+                    console.log(`👤 Auto-selected employee: ${selectedSlot.employee}`);
+                }
+
+                // Trigger change events to update the UI
                 const changeEvent = new Event('change', { bubbles: true });
                 dateInput.dispatchEvent(changeEvent);
                 timeInput.dispatchEvent(changeEvent);
+                employeeSelect.dispatchEvent(changeEvent);
 
                 const displayDate = new Date(dateStr).toLocaleDateString('ar-SA', {
                     weekday: 'long',
                     day: 'numeric',
                     month: 'long'
                 });
-                alert(`✅ أقرب موعد متاح: ${displayDate} الساعة ${selectedSlot.time}`);
+                
+                // Show success notification instead of alert
+                if (window.showNotification) {
+                    window.showNotification(`✅ تم ملء الموعد تلقائياً: ${displayDate} الساعة ${selectedSlot.time}`, 'success');
+                }
 
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = '✨ اقترح أقرب موعد';
+                    btn.innerHTML = '✅ تم الاقتراح';
                     btn.style.opacity = '1';
+                    
+                    // Reset button text after 3 seconds
+                    setTimeout(() => {
+                        btn.innerHTML = '✨ اقترح أقرب موعد';
+                    }, 3000);
                 }
 
                 return;
