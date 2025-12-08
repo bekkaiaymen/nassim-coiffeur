@@ -241,13 +241,35 @@
                         .filter(s => s.available === true)
                         .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
 
+                    console.log(`   Found ${availableSlots.length} available slots`);
+
+                    // For today, suggest IMMEDIATE booking if possible (current time rounded up)
+                    if (isToday && availableSlots.length > 0) {
+                        // Calculate immediate next available time (round up to nearest 5 minutes)
+                        const immediateMinutes = Math.ceil((currentTotalMinutes + 5) / 5) * 5;
+                        const immediateHour = Math.floor(immediateMinutes / 60);
+                        const immediateMin = immediateMinutes % 60;
+                        const immediateTime = `${String(immediateHour).padStart(2, '0')}:${String(immediateMin).padStart(2, '0')}`;
+                        
+                        console.log(`⚡ Current time: ${currentTime}, suggesting immediate booking at: ${immediateTime}`);
+                        
+                        // Check if we can book immediately (within next slot's time range)
+                        const firstSlot = availableSlots[0];
+                        const firstSlotMinutes = timeToMinutes(firstSlot.time);
+                        
+                        // If immediate time is before or within the first available slot, use immediate time
+                        if (immediateMinutes < firstSlotMinutes) {
+                            console.log(`✨ Immediate booking possible! Suggesting ${immediateTime} instead of ${firstSlot.time}`);
+                            // Override the slot time with immediate time
+                            firstSlot.time = immediateTime;
+                        }
+                    }
+
                     // If we have a suggested start time from schedule, prioritize slots at or after that time
                     if (suggestedStartTime) {
                         const suggestedMinutes = timeToMinutes(suggestedStartTime);
                         availableSlots = availableSlots.filter(s => timeToMinutes(s.time) >= suggestedMinutes);
                         console.log(`   Filtered to ${availableSlots.length} slots after ${suggestedStartTime}`);
-                    } else {
-                        console.log(`   Found ${availableSlots.length} available slots`);
                     }
 
                     // Find consecutive slots
@@ -255,7 +277,7 @@
                         const startSlot = availableSlots[i];
                         const startMinutes = timeToMinutes(startSlot.time);
 
-                        // If today, check if start time is in the past
+                        // Skip slots in the past
                         if (isToday && startMinutes <= currentTotalMinutes) continue;
 
                         // Check for sequence
