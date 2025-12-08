@@ -436,7 +436,7 @@
                 <div class="form-group">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <label class="form-label" style="margin-bottom: 0;">التاريخ *</label>
-                        <button type="button" id="suggestBtn" onclick="(window.suggestNearestAppointment || window._suggestNearestAppointmentLegacy || function(){alert('يتم تجهيز الزر، جرّب بعد ثوانٍ');})()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); transition: all 0.3s ease; display: flex; align-items: center; gap: 4px;">
+                        <button type="button" id="suggestBtn" onclick="_callSuggestSafe()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3); transition: all 0.3s ease; display: flex; align-items: center; gap: 4px;">
                             <span>✨</span>
                             <span>اقترح أقرب موعد</span>
                         </button>
@@ -1037,7 +1037,54 @@
     </div>
     <div id="notificationPanelOverlay" class="panel-overlay" onclick="closeNotificationPanel()"></div>
 
-    <script src="/nassim/nassim.js?v=20251208-003"></script>
+    <script>
+    // Safe caller to avoid undefined function during slow loads
+    window._callSuggestSafe = function() {
+        const btn = document.getElementById('suggestBtn');
+        const restoreBtn = () => {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '✨ اقترح أقرب موعد';
+                btn.style.opacity = '1';
+            }
+        };
+
+        let attempts = 0;
+        const maxAttempts = 15;
+
+        const tryCall = () => {
+            const fn = window.suggestNearestAppointment || window._suggestNearestAppointmentLegacy;
+            if (typeof fn === 'function') {
+                restoreBtn();
+                fn();
+                return true;
+            }
+            return false;
+        };
+
+        if (tryCall()) return;
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ جارٍ التجهيز...';
+            btn.style.opacity = '0.6';
+        }
+
+        const interval = setInterval(() => {
+            attempts += 1;
+            if (tryCall()) {
+                clearInterval(interval);
+                return;
+            }
+            if (attempts >= maxAttempts) {
+                clearInterval(interval);
+                restoreBtn();
+                alert('تعذر تجهيز الزر، أعد التحميل');
+            }
+        }, 300);
+    };
+    </script>
+    <script src="/nassim/nassim.js?v=20251208-004"></script>
     <script src="/nassim/ai-wassim.js"></script>
     <script src="/nassim/ai-stylist.js"></script>
 </body>
