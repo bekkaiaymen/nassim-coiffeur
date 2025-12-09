@@ -284,6 +284,9 @@ function showPage(pageName) {
             loadReminderSettings();
             loadRecentReminders();
             break;
+        case 'whatsapp':
+            loadWhatsAppPage();
+            break;
     }
 
     // Close sidebar on mobile
@@ -4350,4 +4353,436 @@ function toggleEditPriceRequired() {
         priceInput.setAttribute('required', 'required');
         requiredLabel.textContent = '*';
     }
+}
+
+// ==================== WhatsApp Notifications Page ====================
+
+// Load WhatsApp Page
+async function loadWhatsAppPage() {
+    try {
+        await loadWhatsAppCounts();
+        await loadMessageTemplates();
+        await loadWhatsAppHistory();
+        await loadCustomerCheckboxList();
+    } catch (error) {
+        console.error('Error loading WhatsApp page:', error);
+        showToast('فشل تحميل صفحة الواتساب', 'error');
+    }
+}
+
+// Load Counts for Quick Send Buttons
+async function loadWhatsAppCounts() {
+    try {
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        // Pending appointments
+        const pending = appointments.filter(apt => apt.status === 'pending');
+        document.getElementById('pendingCount').textContent = `${pending.length} موعد`;
+        
+        // Today's confirmed appointments
+        const todayConfirmed = appointments.filter(apt => {
+            const aptDate = new Date(apt.date);
+            aptDate.setHours(0, 0, 0, 0);
+            return apt.status === 'confirmed' && aptDate.getTime() === today.getTime();
+        });
+        document.getElementById('todayCount').textContent = `${todayConfirmed.length} موعد`;
+        
+        // Tomorrow's confirmed appointments
+        const tomorrowConfirmed = appointments.filter(apt => {
+            const aptDate = new Date(apt.date);
+            aptDate.setHours(0, 0, 0, 0);
+            return apt.status === 'confirmed' && aptDate.getTime() === tomorrow.getTime();
+        });
+        document.getElementById('tomorrowCount').textContent = `${tomorrowConfirmed.length} موعد`;
+        
+        // No-shows (no-show status)
+        const noShows = appointments.filter(apt => apt.status === 'no-show');
+        document.getElementById('noShowCount').textContent = `${noShows.length} عميل`;
+        
+    } catch (error) {
+        console.error('Error loading counts:', error);
+    }
+}
+
+// Send WhatsApp to All Pending
+async function sendWhatsAppToAllPending() {
+    try {
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        const pending = appointments.filter(apt => apt.status === 'pending' && apt.customerPhone);
+        
+        if (pending.length === 0) {
+            showToast('لا توجد مواعيد معلقة', 'info');
+            return;
+        }
+        
+        if (!confirm(`سيتم إرسال ${pending.length} رسالة للمواعيد المعلقة. هل تريد المتابعة؟`)) {
+            return;
+        }
+        
+        let sent = 0;
+        for (const apt of pending) {
+            const message = `مرحباً ${apt.customerName}! 👋\n\n` +
+                          `لديك موعد معلق في صالون نسيم 💈\n` +
+                          `📅 التاريخ: ${formatDate(apt.date)}\n` +
+                          `🕐 الوقت: ${apt.time}\n` +
+                          `✂️ الخدمة: ${apt.service || 'خدمة'}\n\n` +
+                          `يرجى تأكيد الموعد في أقرب وقت ممكن.`;
+            
+            sendWhatsAppMessage(apt.customerPhone, message);
+            sent++;
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+        }
+        
+        showToast(`✅ تم إرسال ${sent} رسالة بنجاح`, 'success');
+        
+    } catch (error) {
+        console.error('Error sending to pending:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
+// Send WhatsApp to Today's Confirmed
+async function sendWhatsAppToTodayConfirmed() {
+    try {
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const todayConfirmed = appointments.filter(apt => {
+            const aptDate = new Date(apt.date);
+            aptDate.setHours(0, 0, 0, 0);
+            return apt.status === 'confirmed' && aptDate.getTime() === today.getTime() && apt.customerPhone;
+        });
+        
+        if (todayConfirmed.length === 0) {
+            showToast('لا توجد مواعيد مؤكدة اليوم', 'info');
+            return;
+        }
+        
+        if (!confirm(`سيتم إرسال ${todayConfirmed.length} رسالة تذكير. هل تريد المتابعة؟`)) {
+            return;
+        }
+        
+        let sent = 0;
+        for (const apt of todayConfirmed) {
+            const message = `مرحباً ${apt.customerName}! 👋\n\n` +
+                          `تذكير: موعدك اليوم في صالون نسيم 💈\n` +
+                          `🕐 الوقت: ${apt.time}\n` +
+                          `✂️ الخدمة: ${apt.service || 'خدمة'}\n` +
+                          `👨‍💼 الحلاق: ${apt.employeeName || 'سيتم التحديد'}\n\n` +
+                          `نتطلع لخدمتك!`;
+            
+            sendWhatsAppMessage(apt.customerPhone, message);
+            sent++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showToast(`✅ تم إرسال ${sent} رسالة بنجاح`, 'success');
+        
+    } catch (error) {
+        console.error('Error sending to today:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
+// Send WhatsApp to Tomorrow's Confirmed
+async function sendWhatsAppToTomorrowConfirmed() {
+    try {
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(0, 0, 0, 0);
+        
+        const tomorrowConfirmed = appointments.filter(apt => {
+            const aptDate = new Date(apt.date);
+            aptDate.setHours(0, 0, 0, 0);
+            return apt.status === 'confirmed' && aptDate.getTime() === tomorrow.getTime() && apt.customerPhone;
+        });
+        
+        if (tomorrowConfirmed.length === 0) {
+            showToast('لا توجد مواعيد مؤكدة غداً', 'info');
+            return;
+        }
+        
+        if (!confirm(`سيتم إرسال ${tomorrowConfirmed.length} رسالة تذكير. هل تريد المتابعة؟`)) {
+            return;
+        }
+        
+        let sent = 0;
+        for (const apt of tomorrowConfirmed) {
+            const message = `مرحباً ${apt.customerName}! 👋\n\n` +
+                          `تذكير: موعدك غداً في صالون نسيم 💈\n` +
+                          `📅 ${formatDate(apt.date)}\n` +
+                          `🕐 الوقت: ${apt.time}\n` +
+                          `✂️ الخدمة: ${apt.service || 'خدمة'}\n` +
+                          `👨‍💼 الحلاق: ${apt.employeeName || 'سيتم التحديد'}\n\n` +
+                          `نراك غداً!`;
+            
+            sendWhatsAppMessage(apt.customerPhone, message);
+            sent++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showToast(`✅ تم إرسال ${sent} رسالة بنجاح`, 'success');
+        
+    } catch (error) {
+        console.error('Error sending to tomorrow:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
+// Send WhatsApp to No-Shows
+async function sendWhatsAppToNoShows() {
+    try {
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        const noShows = appointments.filter(apt => apt.status === 'no-show' && apt.customerPhone);
+        
+        if (noShows.length === 0) {
+            showToast('لا توجد مواعيد متغيبة', 'info');
+            return;
+        }
+        
+        if (!confirm(`سيتم إرسال ${noShows.length} رسالة للمتغيبين. هل تريد المتابعة؟`)) {
+            return;
+        }
+        
+        let sent = 0;
+        for (const apt of noShows) {
+            const message = `مرحباً ${apt.customerName}! 👋\n\n` +
+                          `لاحظنا أنك لم تتمكن من الحضور لموعدك السابق 😔\n` +
+                          `نأمل أن تكون بخير!\n\n` +
+                          `نحن دائماً في انتظارك في صالون نسيم 💈\n` +
+                          `يمكنك حجز موعد جديد متى شئت.\n\n` +
+                          `نتطلع لخدمتك قريباً!`;
+            
+            sendWhatsAppMessage(apt.customerPhone, message);
+            sent++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showToast(`✅ تم إرسال ${sent} رسالة بنجاح`, 'success');
+        
+    } catch (error) {
+        console.error('Error sending to no-shows:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
+// Helper Function: Send WhatsApp Message
+function sendWhatsAppMessage(phone, message) {
+    let cleanPhone = phone.replace(/[^0-9+]/g, '');
+    
+    // Add Algeria country code (+213) if not present
+    if (!cleanPhone.startsWith('+')) {
+        if (cleanPhone.startsWith('0')) {
+            cleanPhone = cleanPhone.substring(1);
+        }
+        cleanPhone = '213' + cleanPhone;
+    } else {
+        cleanPhone = cleanPhone.substring(1);
+    }
+    
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+    window.open(whatsappUrl, '_blank');
+}
+
+// Load Message Templates
+let messageTemplates = [];
+
+async function loadMessageTemplates() {
+    // For now, use default templates (can be expanded to fetch from API)
+    messageTemplates = [
+        {
+            id: 1,
+            name: 'تأكيد موعد',
+            message: 'مرحباً {name}! تم تأكيد موعدك في صالون نسيم 💈\n📅 {date}\n🕐 {time}\n✂️ {service}\nنتطلع لخدمتك!'
+        },
+        {
+            id: 2,
+            name: 'تذكير موعد',
+            message: 'مرحباً {name}! تذكير: موعدك غداً في صالون نسيم 💈\n🕐 {time}\n✂️ {service}\nنراك قريباً!'
+        },
+        {
+            id: 3,
+            name: 'عرض خاص',
+            message: 'مرحباً {name}! 🎉\nعرض خاص لعملائنا المميزين!\n💰 خصم 20% على جميع الخدمات\n📅 صالح حتى نهاية الشهر\nاحجز الآن!'
+        },
+        {
+            id: 4,
+            name: 'تهنئة عيد',
+            message: 'مرحباً {name}! 🎊\nكل عام وأنت بخير!\nيتمنى لك فريق صالون نسيم عيداً سعيداً\n💈'
+        }
+    ];
+    
+    renderMessageTemplates();
+}
+
+function renderMessageTemplates() {
+    const container = document.getElementById('messageTemplatesList');
+    if (!container) return;
+    
+    if (messageTemplates.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #888; padding: 20px;">لا توجد قوالب محفوظة</p>';
+        return;
+    }
+    
+    container.innerHTML = messageTemplates.map(template => `
+        <div style="background: #2A2A2A; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #333;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                <div>
+                    <h4 style="margin: 0 0 8px 0; color: #FDB714; font-size: 16px;">${template.name}</h4>
+                    <p style="margin: 0; color: #ccc; font-size: 14px; white-space: pre-wrap;">${template.message}</p>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-secondary" style="padding: 8px 12px; font-size: 12px;" onclick="useTemplate(${template.id})">استخدام</button>
+                    <button class="btn-danger" style="padding: 8px 12px; font-size: 12px;" onclick="deleteTemplate(${template.id})">حذف</button>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function useTemplate(templateId) {
+    const template = messageTemplates.find(t => t.id === templateId);
+    if (!template) return;
+    
+    document.getElementById('bulkMessage').value = template.message;
+    showToast('تم نسخ القالب للرسالة', 'success');
+    
+    // Scroll to bulk send form
+    document.getElementById('bulkWhatsAppForm').scrollIntoView({ behavior: 'smooth' });
+}
+
+function deleteTemplate(templateId) {
+    if (!confirm('هل تريد حذف هذا القالب؟')) return;
+    
+    messageTemplates = messageTemplates.filter(t => t.id !== templateId);
+    renderMessageTemplates();
+    showToast('تم حذف القالب', 'success');
+}
+
+function addMessageTemplate() {
+    const name = prompt('اسم القالب:');
+    if (!name) return;
+    
+    const message = prompt('نص الرسالة:\n(يمكنك استخدام {name}, {date}, {time}, {service})');
+    if (!message) return;
+    
+    const newTemplate = {
+        id: Date.now(),
+        name: name,
+        message: message
+    };
+    
+    messageTemplates.push(newTemplate);
+    renderMessageTemplates();
+    showToast('تم إضافة القالب بنجاح', 'success');
+}
+
+// Load WhatsApp History
+async function loadWhatsAppHistory() {
+    const container = document.getElementById('whatsappHistoryList');
+    if (!container) return;
+    
+    // Placeholder - can be expanded to fetch from API/localStorage
+    container.innerHTML = `
+        <p style="text-align: center; color: #888; padding: 40px;">
+            سجل الإرسال سيظهر هنا<br>
+            <span style="font-size: 12px;">يتم حفظ سجل الرسائل المرسلة</span>
+        </p>
+    `;
+}
+
+// Load Customer Checkbox List
+async function loadCustomerCheckboxList() {
+    try {
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        
+        // Get unique customers
+        const customersMap = new Map();
+        appointments.forEach(apt => {
+            if (apt.customerPhone && apt.customerName) {
+                customersMap.set(apt.customerPhone, {
+                    name: apt.customerName,
+                    phone: apt.customerPhone
+                });
+            }
+        });
+        
+        const customers = Array.from(customersMap.values());
+        
+        const container = document.getElementById('customerCheckboxList');
+        if (!container) return;
+        
+        if (customers.length === 0) {
+            container.innerHTML = '<p style="color: #888; text-align: center;">لا يوجد عملاء</p>';
+            return;
+        }
+        
+        container.innerHTML = customers.map(customer => `
+            <label style="display: flex; align-items: center; gap: 10px; padding: 8px; background: #222; margin-bottom: 5px; border-radius: 5px; cursor: pointer;">
+                <input type="checkbox" class="customer-checkbox" value="${customer.phone}" data-name="${customer.name}">
+                <span>${customer.name} - ${customer.phone}</span>
+            </label>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading customers:', error);
+    }
+}
+
+function toggleAllCustomers(checkbox) {
+    const checkboxes = document.querySelectorAll('.customer-checkbox');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+}
+
+async function sendBulkWhatsApp(event) {
+    event.preventDefault();
+    
+    const checkboxes = document.querySelectorAll('.customer-checkbox:checked');
+    const message = document.getElementById('bulkMessage').value;
+    
+    if (checkboxes.length === 0) {
+        showToast('يرجى اختيار مستلم واحد على الأقل', 'error');
+        return;
+    }
+    
+    if (!confirm(`سيتم إرسال ${checkboxes.length} رسالة. هل تريد المتابعة؟`)) {
+        return;
+    }
+    
+    let sent = 0;
+    for (const checkbox of checkboxes) {
+        const phone = checkbox.value;
+        const name = checkbox.dataset.name;
+        
+        // Replace {name} placeholder
+        const personalizedMessage = message.replace(/{name}/g, name);
+        
+        sendWhatsAppMessage(phone, personalizedMessage);
+        sent++;
+        await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    
+    showToast(`✅ تم إرسال ${sent} رسالة بنجاح`, 'success');
+    
+    // Reset form
+    document.getElementById('bulkWhatsAppForm').reset();
+    document.getElementById('selectAllCustomers').checked = false;
+}
+
+// Helper: Format Date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ar-DZ', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
 }
