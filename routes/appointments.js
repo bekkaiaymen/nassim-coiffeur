@@ -179,12 +179,12 @@ router.get('/available-slots', async (req, res) => {
                     
                     // Handle new shifts format
                     if (daySchedule.shifts && daySchedule.shifts.length > 0) {
-                        workingIntervals = daySchedule.shifts.map(shift => {
+                        workingIntervals = daySchedule.shifts.filter(shift => shift.start && shift.end).map(shift => {
                             const [sH, sM] = shift.start.split(':').map(Number);
                             const [eH, eM] = shift.end.split(':').map(Number);
                             return { start: sH * 60 + sM, end: eH * 60 + eM };
                         });
-                    } else {
+                    } else if (daySchedule.start && daySchedule.end) {
                         // Fallback to legacy start/end
                         const [sH, sM] = daySchedule.start.split(':').map(Number);
                         const [eH, eM] = daySchedule.end.split(':').map(Number);
@@ -896,7 +896,6 @@ router.post('/', protect, ensureTenant, checkLimit('appointments'), async (req, 
         const dayAppointments = await Appointment.find(conflictQuery);
         
         const hasConflict = dayAppointments.some(apt => {
-            if (!apt.time || typeof apt.time !== 'string') return false;
             const [aptH, aptM] = apt.time.split(':').map(Number);
             const aptStart = aptH * 60 + aptM;
             const aptDuration = apt.duration || 30;
