@@ -219,12 +219,20 @@
         <div id="appointmentsPage" class="page">
             <div class="page-header">
                 <h2 class="page-title">إدارة المواعيد</h2>
-                <button class="btn-primary" onclick="openAddAppointmentModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    موعد جديد
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-success" onclick="sendAppointmentsUpdate()" title="إرسال آخر المواعيد للحلاقين">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        💬 إرسال للحلاقين
+                    </button>
+                    <button class="btn-primary" onclick="openAddAppointmentModal()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        موعد جديد
+                    </button>
+                </div>
             </div>
 
             <!-- Filters and Sorting -->
@@ -497,12 +505,20 @@
         <div id="employeesPage" class="page">
             <div class="page-header">
                 <h2 class="page-title">إدارة الموظفين</h2>
-                <button class="btn-primary" onclick="openAddEmployeeModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    موظف جديد
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-success" onclick="sendEmployeesUpdate()" title="إرسال معلومات الموظفين الجدد للعملاء">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        💬 إعلان للعملاء
+                    </button>
+                    <button class="btn-primary" onclick="openAddEmployeeModal()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        موظف جديد
+                    </button>
+                </div>
             </div>
 
             <div class="employees-grid" id="employeesList"></div>
@@ -513,6 +529,12 @@
             <div class="page-header">
                 <h2 class="page-title">إدارة الخدمات</h2>
                 <div style="display: flex; gap: 12px;">
+                    <button class="btn-success" onclick="sendServicesUpdate()" title="إرسال الخدمات الجديدة للعملاء">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        💬 إعلان للعملاء
+                    </button>
                     <button class="btn-primary" onclick="openAddServiceModal()">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
@@ -532,12 +554,20 @@
         <div id="postsPage" class="page">
             <div class="page-header">
                 <h2 class="page-title">إدارة الأخبار والإعلانات</h2>
-                <button class="btn-primary" onclick="openAddPostModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    منشور جديد
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-success" onclick="sendPostsUpdate()" title="إرسال آخر الأخبار للعملاء">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        💬 نشر للعملاء
+                    </button>
+                    <button class="btn-primary" onclick="openAddPostModal()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        منشور جديد
+                    </button>
+                </div>
             </div>
 
             <div class="posts-grid" id="postsList"></div>
@@ -547,12 +577,20 @@
         <div id="rewardsPage" class="page">
             <div class="page-header">
                 <h2 class="page-title">إدارة المكافآت</h2>
-                <button class="btn-primary" onclick="openAddRewardModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    مكافأة جديدة
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-success" onclick="sendRewardsUpdate()" title="إرسال المكافآت الجديدة للعملاء">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        💬 إعلان للعملاء
+                    </button>
+                    <button class="btn-primary" onclick="openAddRewardModal()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        مكافأة جديدة
+                    </button>
+                </div>
             </div>
 
             <div class="rewards-grid" id="rewardsList"></div>
@@ -562,12 +600,20 @@
         <div id="productsPage" class="page">
             <div class="page-header">
                 <h2 class="page-title">إدارة المنتجات</h2>
-                <button class="btn-primary" onclick="openAddProductModal()">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    منتج جديد
-                </button>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-success" onclick="sendProductsUpdate()" title="إرسال المنتجات الجديدة للعملاء">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                        </svg>
+                        💬 إعلان للعملاء
+                    </button>
+                    <button class="btn-primary" onclick="openAddProductModal()">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        منتج جديد
+                    </button>
+                </div>
             </div>
 
             <div class="products-grid" id="productsList"></div>

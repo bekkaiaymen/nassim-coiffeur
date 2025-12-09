@@ -4786,3 +4786,363 @@ function formatDate(dateString) {
         day: 'numeric' 
     });
 }
+
+// ==================== Send Updates Functions ====================
+
+// Send Appointments Update to Barbers
+async function sendAppointmentsUpdate() {
+    try {
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        const employees = await fetchEmployeesData({ useCache: false });
+        
+        // Get pending appointments
+        const pending = appointments.filter(apt => apt.status === 'pending');
+        
+        if (pending.length === 0) {
+            showToast('لا توجد مواعيد معلقة لإرسالها', 'info');
+            return;
+        }
+        
+        // Get employee phone numbers
+        const employeePhones = employees.filter(emp => emp.phone).map(emp => emp.phone);
+        
+        if (employeePhones.length === 0) {
+            showToast('لا توجد أرقام هواتف للموظفين', 'error');
+            return;
+        }
+        
+        if (!confirm(`سيتم إرسال ${pending.length} موعد معلق إلى ${employeePhones.length} حلاق. هل تريد المتابعة؟`)) {
+            return;
+        }
+        
+        // Send to each barber
+        for (const phone of employeePhones) {
+            let message = `🔔 مرحباً! لديك مواعيد جديدة معلقة:\n\n`;
+            
+            pending.slice(0, 5).forEach((apt, index) => {
+                message += `${index + 1}. ${apt.customerName}\n`;
+                message += `   📅 ${formatDate(apt.date)} - ${apt.time}\n`;
+                message += `   ✂️ ${apt.service || 'خدمة'}\n`;
+                message += `   💰 ${apt.price || 50} دج\n\n`;
+            });
+            
+            if (pending.length > 5) {
+                message += `... و ${pending.length - 5} مواعيد أخرى\n\n`;
+            }
+            
+            message += `يرجى تأكيد المواعيد في أقرب وقت! 💈`;
+            
+            sendWhatsAppMessage(phone, message);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showToast(`✅ تم إرسال المواعيد إلى ${employeePhones.length} حلاق`, 'success');
+        
+    } catch (error) {
+        console.error('Error sending appointments update:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
+// Send Employees Update to Customers
+async function sendEmployeesUpdate() {
+    try {
+        const employees = await fetchEmployeesData({ useCache: false });
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        
+        // Get unique customer phones
+        const customersMap = new Map();
+        appointments.forEach(apt => {
+            if (apt.customerPhone && apt.customerName) {
+                customersMap.set(apt.customerPhone, apt.customerName);
+            }
+        });
+        
+        const customers = Array.from(customersMap);
+        
+        if (customers.length === 0) {
+            showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
+            return;
+        }
+        
+        if (!confirm(`سيتم إرسال معلومات الموظفين إلى ${customers.length} عميل. هل تريد المتابعة؟`)) {
+            return;
+        }
+        
+        let message = `🎉 أخبار سارة من صالون نسيم! 💈\n\n`;
+        message += `فريقنا من الحلاقين المحترفين:\n\n`;
+        
+        employees.forEach((emp, index) => {
+            message += `${index + 1}. ${emp.name}\n`;
+            if (emp.specialty) message += `   ⭐ ${emp.specialty}\n`;
+        });
+        
+        message += `\nاحجز موعدك الآن! 🔥`;
+        
+        let sent = 0;
+        for (const [phone, name] of customers) {
+            const personalizedMsg = message.replace(/صالون نسيم/g, `صالون نسيم يا ${name}`);
+            sendWhatsAppMessage(phone, personalizedMsg);
+            sent++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showToast(`✅ تم إرسال الإعلان إلى ${sent} عميل`, 'success');
+        
+    } catch (error) {
+        console.error('Error sending employees update:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
+// Send Services Update to Customers
+async function sendServicesUpdate() {
+    try {
+        const services = await fetchServicesData({ useCache: false });
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        
+        // Get unique customer phones
+        const customersMap = new Map();
+        appointments.forEach(apt => {
+            if (apt.customerPhone && apt.customerName) {
+                customersMap.set(apt.customerPhone, apt.customerName);
+            }
+        });
+        
+        const customers = Array.from(customersMap);
+        
+        if (customers.length === 0) {
+            showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
+            return;
+        }
+        
+        // Get latest 5 services (non-product items)
+        const latestServices = services
+            .filter(s => !isProductItem(s))
+            .slice(0, 5);
+        
+        if (latestServices.length === 0) {
+            showToast('لا توجد خدمات لإرسالها', 'info');
+            return;
+        }
+        
+        if (!confirm(`سيتم إرسال ${latestServices.length} خدمة إلى ${customers.length} عميل. هل تريد المتابعة؟`)) {
+            return;
+        }
+        
+        let message = `✨ خدمات جديدة في صالون نسيم! 💈\n\n`;
+        
+        latestServices.forEach((service, index) => {
+            message += `${index + 1}. ${service.name}\n`;
+            if (service.price) message += `   💰 ${service.price} دج\n`;
+            if (service.duration) message += `   ⏱️ ${service.duration} دقيقة\n`;
+            message += `\n`;
+        });
+        
+        message += `احجز الآن! 🔥`;
+        
+        let sent = 0;
+        for (const [phone, name] of customers) {
+            const personalizedMsg = `مرحباً ${name}! 👋\n\n` + message;
+            sendWhatsAppMessage(phone, personalizedMsg);
+            sent++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showToast(`✅ تم إرسال الخدمات إلى ${sent} عميل`, 'success');
+        
+    } catch (error) {
+        console.error('Error sending services update:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
+// Send Posts Update to Customers
+async function sendPostsUpdate() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/posts?business=${NASSIM_BUSINESS_ID}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        const posts = Array.isArray(result) ? result : (result.data || []);
+        
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        
+        // Get unique customer phones
+        const customersMap = new Map();
+        appointments.forEach(apt => {
+            if (apt.customerPhone && apt.customerName) {
+                customersMap.set(apt.customerPhone, apt.customerName);
+            }
+        });
+        
+        const customers = Array.from(customersMap);
+        
+        if (customers.length === 0) {
+            showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
+            return;
+        }
+        
+        // Get latest post
+        const latestPost = posts[0];
+        
+        if (!latestPost) {
+            showToast('لا توجد أخبار لإرسالها', 'info');
+            return;
+        }
+        
+        if (!confirm(`سيتم إرسال آخر خبر إلى ${customers.length} عميل. هل تريد المتابعة؟`)) {
+            return;
+        }
+        
+        let message = `📢 خبر جديد من صالون نسيم! 💈\n\n`;
+        message += `${latestPost.title}\n\n`;
+        if (latestPost.content) {
+            message += `${latestPost.content.substring(0, 200)}${latestPost.content.length > 200 ? '...' : ''}\n\n`;
+        }
+        message += `تابعنا للمزيد! 🔥`;
+        
+        let sent = 0;
+        for (const [phone, name] of customers) {
+            const personalizedMsg = `مرحباً ${name}! 👋\n\n` + message;
+            sendWhatsAppMessage(phone, personalizedMsg);
+            sent++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showToast(`✅ تم إرسال الخبر إلى ${sent} عميل`, 'success');
+        
+    } catch (error) {
+        console.error('Error sending posts update:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
+// Send Rewards Update to Customers
+async function sendRewardsUpdate() {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/rewards?business=${NASSIM_BUSINESS_ID}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        const result = await response.json();
+        const rewards = Array.isArray(result) ? result : (result.data || []);
+        
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        
+        // Get unique customer phones
+        const customersMap = new Map();
+        appointments.forEach(apt => {
+            if (apt.customerPhone && apt.customerName) {
+                customersMap.set(apt.customerPhone, apt.customerName);
+            }
+        });
+        
+        const customers = Array.from(customersMap);
+        
+        if (customers.length === 0) {
+            showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
+            return;
+        }
+        
+        // Get active rewards
+        const activeRewards = rewards.filter(r => r.isActive !== false).slice(0, 5);
+        
+        if (activeRewards.length === 0) {
+            showToast('لا توجد مكافآت نشطة لإرسالها', 'info');
+            return;
+        }
+        
+        if (!confirm(`سيتم إرسال ${activeRewards.length} مكافأة إلى ${customers.length} عميل. هل تريد المتابعة؟`)) {
+            return;
+        }
+        
+        let message = `🎁 مكافآت جديدة في صالون نسيم! 💈\n\n`;
+        
+        activeRewards.forEach((reward, index) => {
+            message += `${index + 1}. ${reward.title || reward.name}\n`;
+            if (reward.description) message += `   ${reward.description}\n`;
+            if (reward.pointsRequired) message += `   🏆 ${reward.pointsRequired} نقطة\n`;
+            message += `\n`;
+        });
+        
+        message += `احجز الآن واجمع النقاط! 🔥`;
+        
+        let sent = 0;
+        for (const [phone, name] of customers) {
+            const personalizedMsg = `مرحباً ${name}! 👋\n\n` + message;
+            sendWhatsAppMessage(phone, personalizedMsg);
+            sent++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showToast(`✅ تم إرسال المكافآت إلى ${sent} عميل`, 'success');
+        
+    } catch (error) {
+        console.error('Error sending rewards update:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
+// Send Products Update to Customers
+async function sendProductsUpdate() {
+    try {
+        const services = await fetchServicesData({ useCache: false });
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        
+        // Get unique customer phones
+        const customersMap = new Map();
+        appointments.forEach(apt => {
+            if (apt.customerPhone && apt.customerName) {
+                customersMap.set(apt.customerPhone, apt.customerName);
+            }
+        });
+        
+        const customers = Array.from(customersMap);
+        
+        if (customers.length === 0) {
+            showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
+            return;
+        }
+        
+        // Get products only
+        const products = services.filter(s => isProductItem(s)).slice(0, 5);
+        
+        if (products.length === 0) {
+            showToast('لا توجد منتجات لإرسالها', 'info');
+            return;
+        }
+        
+        if (!confirm(`سيتم إرسال ${products.length} منتج إلى ${customers.length} عميل. هل تريد المتابعة؟`)) {
+            return;
+        }
+        
+        let message = `🛍️ منتجات جديدة في صالون نسيم! 💈\n\n`;
+        
+        products.forEach((product, index) => {
+            message += `${index + 1}. ${product.name}\n`;
+            if (product.price) message += `   💰 ${product.price} دج\n`;
+            if (product.description) message += `   📝 ${product.description}\n`;
+            message += `\n`;
+        });
+        
+        message += `تسوق الآن! 🛒`;
+        
+        let sent = 0;
+        for (const [phone, name] of customers) {
+            const personalizedMsg = `مرحباً ${name}! 👋\n\n` + message;
+            sendWhatsAppMessage(phone, personalizedMsg);
+            sent++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        showToast(`✅ تم إرسال المنتجات إلى ${sent} عميل`, 'success');
+        
+    } catch (error) {
+        console.error('Error sending products update:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
