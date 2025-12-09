@@ -34,7 +34,7 @@
     <!-- Preload Critical Script -->
     <script>
         // Define function IMMEDIATELY before any other scripts
-        console.log('🚀 INLINE v011 - Defining Intelligent Schedule-Based Suggest');
+        console.log('🚀 INLINE v012 - Professional Smart Suggest with Full Validation');
         
         // Helper to get selected services from the page
         function getSelectedServicesFromPage() {
@@ -73,58 +73,87 @@
                     console.log(`✅ Employee schedule loaded:`, result.data.workingHours);
                     return result.data.workingHours;
                 }
+                if (result.data && result.data.workingHours) {
+                    return result.data.workingHours;
+                }
+                if (result.workingHours) {
+                    return result.workingHours;
+                }
             } catch (error) {
                 console.log('⚠️ Could not load schedule, continuing with slot-based search');
             }
             return null;
         }
         
-        // Find first available slot in employee's working hours
-        function findFirstAvailableInSchedule(schedule, dayOfWeek, currentTime = null) {
+        // Find working hours for a specific day
+        function getWorkingHoursForDay(schedule, dayOfWeek) {
             const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
             const dayName = days[dayOfWeek];
+            const arabicDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
             
-            if (!schedule || !schedule[dayName] || !schedule[dayName].enabled) {
-                console.log(`⚠️ Employee not working on ${dayName}`);
-                return null;
+            if (!schedule || !schedule[dayName]) {
+                return { enabled: false, dayNameAr: arabicDays[dayOfWeek] };
             }
             
-            const workDay = schedule[dayName];
-            const startTime = workDay.start; // e.g., "09:00"
-            const endTime = workDay.end;     // e.g., "18:00"
+            const daySchedule = schedule[dayName];
+            return {
+                enabled: daySchedule.enabled !== false,
+                start: daySchedule.start,
+                end: daySchedule.end,
+                shifts: daySchedule.shifts,
+                dayNameAr: arabicDays[dayOfWeek]
+            };
+        }
+        
+        // Check if time is within working hours
+        function isTimeWithinWorkingHours(timeStr, workingHours, duration = 30) {
+            if (!workingHours || !workingHours.enabled) return false;
+            if (!timeStr) return false;
             
-            console.log(`📅 ${dayName}: ${startTime} - ${endTime}`);
+            const [h, m] = timeStr.split(':').map(Number);
+            const startMinutes = h * 60 + m;
+            const endMinutes = startMinutes + duration;
             
-            // If checking today and we have current time, start from next available slot
-            if (currentTime) {
-                const [currentHour, currentMinute] = currentTime.split(':').map(Number);
-                const [startHour, startMinute] = startTime.split(':').map(Number);
-                
-                const currentMinutes = currentHour * 60 + currentMinute;
-                const startMinutes = startHour * 60 + startMinute;
-                
-                // If current time is before work start, return work start time
-                if (currentMinutes < startMinutes) {
-                    return startTime;
-                }
-                
-                // Otherwise, round up to next 30-minute slot
-                const nextSlotMinutes = Math.ceil((currentMinutes + 30) / 30) * 30;
-                const nextHour = Math.floor(nextSlotMinutes / 60);
-                const nextMinute = nextSlotMinutes % 60;
-                
-                const suggestedTime = `${String(nextHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}`;
-                
-                // Check if suggested time is within working hours
-                const [endHour] = endTime.split(':').map(Number);
-                if (nextHour < endHour || (nextHour === endHour && nextMinute === 0)) {
-                    return suggestedTime;
-                }
-                
-                return null; // No time left today
+            // Check shifts if available
+            if (workingHours.shifts && workingHours.shifts.length > 0) {
+                return workingHours.shifts.some(shift => {
+                    if (!shift.start || !shift.end) return false;
+                    const [sH, sM] = shift.start.split(':').map(Number);
+                    const [eH, eM] = shift.end.split(':').map(Number);
+                    const shiftStart = sH * 60 + sM;
+                    const shiftEnd = eH * 60 + eM;
+                    return startMinutes >= shiftStart && endMinutes <= shiftEnd;
+                });
             }
             
-            return startTime; // Return start of work day
+            // Legacy format
+            if (workingHours.start && workingHours.end) {
+                const [sH, sM] = workingHours.start.split(':').map(Number);
+                const [eH, eM] = workingHours.end.split(':').map(Number);
+                const workStart = sH * 60 + sM;
+                const workEnd = eH * 60 + eM;
+                return startMinutes >= workStart && endMinutes <= workEnd;
+            }
+            
+            return true; // No hours defined, allow
+        }
+        
+        // Get working hours string for display
+        function getWorkingHoursString(workingHours) {
+            if (!workingHours) return 'غير محدد';
+            
+            if (workingHours.shifts && workingHours.shifts.length > 0) {
+                return workingHours.shifts
+                    .filter(s => s.start && s.end)
+                    .map(s => `${s.start} - ${s.end}`)
+                    .join(' و ');
+            }
+            
+            if (workingHours.start && workingHours.end) {
+                return `${workingHours.start} - ${workingHours.end}`;
+            }
+            
+            return 'غير محدد';
         }
         
         window.suggestNearestAppointment = async function() {
@@ -133,37 +162,57 @@
                 : 'https://nassim-coiffeur.onrender.com/api';
             const NASSIM_BUSINESS_ID = '69259331651b1babc1eb83dc';
             
-            console.log('🚀 [Suggest] Smart Function called');
+            console.log('🚀 [Suggest] Professional Smart Function v2 called');
             
             const dateInput = document.getElementById('appointmentDate');
             const timeInput = document.getElementById('appointmentTime');
             const employeeSelect = document.getElementById('employeeSelect');
             const btn = document.getElementById('suggestBtn');
 
+            // التحقق من وجود العناصر الأساسية
             if (!dateInput || !timeInput) {
                 console.error('❌ [Suggest] Required form elements not found');
-                alert('خطأ: لم يتم العثور على حقول النموذج');
+                if (window.showNotification) {
+                    window.showNotification('❌ خطأ: لم يتم العثور على حقول النموذج', 'error');
+                } else {
+                    alert('خطأ: لم يتم العثور على حقول النموذج');
+                }
                 return;
             }
 
-            // Wait a bit for nassimState to be available
+            // انتظار تحميل البيانات
             await new Promise(resolve => setTimeout(resolve, 100));
 
-            // 1. Calculate Required Duration
+            // 1. الحصول على الخدمات المختارة ومدتها
             const services = getSelectedServicesFromPage();
             const totalDuration = services.reduce((sum, s) => sum + (s.duration || 30), 0) || 30;
             const slotsNeeded = Math.ceil(totalDuration / 30);
             
-            console.log(`⏱️ [Suggest] Selected services:`, services);
-            console.log(`⏱️ [Suggest] Required Duration: ${totalDuration}min (${slotsNeeded} slots)`);
+            console.log(`⏱️ [Suggest] الخدمات المختارة:`, services);
+            console.log(`⏱️ [Suggest] المدة المطلوبة: ${totalDuration} دقيقة (${slotsNeeded} فترات)`);
 
+            // 2. الحصول على التاريخ المحدد أو تاريخ اليوم
+            let selectedDate = dateInput.value;
+            if (!selectedDate) {
+                selectedDate = new Date().toISOString().split('T')[0];
+                dateInput.value = selectedDate;
+            }
+            
+            // 3. الحصول على الحلاق المحدد
+            const employeeId = employeeSelect && employeeSelect.value && employeeSelect.value !== 'any' && employeeSelect.value !== '' ? employeeSelect.value : '';
+            const employeeName = employeeSelect?.options[employeeSelect.selectedIndex]?.text || '';
+            
+            console.log(`👤 [Suggest] الحلاق المحدد: ${employeeName || 'أي حلاق'} (${employeeId || 'none'})`);
+
+            // تغيير حالة الزر
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = `⏳ نبحث عن ${totalDuration} دقيقة...`;
+                btn.innerHTML = `⏳ جاري البحث...`;
                 btn.style.opacity = '0.6';
             }
 
             const timeToMinutes = (timeStr) => {
+                if (!timeStr || typeof timeStr !== 'string') return 0;
                 const [h, m] = timeStr.split(':').map(Number);
                 return h * 60 + m;
             };
@@ -172,152 +221,100 @@
                 const now = new Date();
                 const currentHour = now.getHours();
                 const currentMinute = now.getMinutes();
-                const currentTime = `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`;
                 const currentTotalMinutes = currentHour * 60 + currentMinute;
-                const maxDaysToCheck = 14;
                 
-                // Get employee ID
-                const employeeId = employeeSelect && employeeSelect.value && employeeSelect.value !== 'any' ? employeeSelect.value : '';
-                
-                // Load employee schedule if specific employee selected
+                // 4. إذا تم اختيار حلاق معين، تحقق من جدوله
                 let employeeSchedule = null;
                 if (employeeId) {
-                    console.log(`👤 Loading schedule for employee: ${employeeId}`);
+                    console.log(`📋 جاري تحميل جدول الحلاق...`);
                     employeeSchedule = await getEmployeeSchedule(API_URL, NASSIM_BUSINESS_ID, employeeId);
+                    
+                    if (employeeSchedule) {
+                        // التحقق من اليوم المحدد
+                        const checkDate = new Date(selectedDate);
+                        const dayOfWeek = checkDate.getDay();
+                        const workingHours = getWorkingHoursForDay(employeeSchedule, dayOfWeek);
+                        
+                        console.log(`📅 ساعات عمل يوم ${workingHours.dayNameAr}:`, workingHours);
+                        
+                        // إذا كان الحلاق لا يعمل في هذا اليوم
+                        if (!workingHours.enabled) {
+                            if (btn) {
+                                btn.disabled = false;
+                                btn.innerHTML = '✨ اقترح أقرب موعد';
+                                btn.style.opacity = '1';
+                            }
+                            
+                            if (window.showNotification) {
+                                window.showNotification(`⛔ الحلاق ${employeeName} لا يعمل يوم ${workingHours.dayNameAr}\n\n💡 يرجى اختيار يوم آخر أو حلاق آخر`, 'error', 6000);
+                            } else {
+                                alert(`الحلاق ${employeeName} لا يعمل يوم ${workingHours.dayNameAr}\n\nيرجى اختيار يوم آخر أو حلاق آخر`);
+                            }
+                            return;
+                        }
+                    }
                 }
                 
+                // 5. البحث في التاريخ المحدد أولاً، ثم الأيام التالية
+                const startDate = new Date(selectedDate);
+                const maxDaysToCheck = 14;
+                
                 for (let dayOffset = 0; dayOffset < maxDaysToCheck; dayOffset++) {
-                    const checkDate = new Date(now);
+                    const checkDate = new Date(startDate);
                     checkDate.setDate(checkDate.getDate() + dayOffset);
                     const dateStr = checkDate.toISOString().split('T')[0];
                     const dayOfWeek = checkDate.getDay();
-                    const isToday = (dayOffset === 0);
+                    const isToday = (dateStr === new Date().toISOString().split('T')[0]);
+                    const arabicDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 
-                    console.log(`🔍 [Day +${dayOffset}] ${dateStr} (${['أحد', 'إثنين', 'ثلاثاء', 'أربعاء', 'خميس', 'جمعة', 'سبت'][dayOfWeek]})`);
+                    console.log(`🔍 [يوم +${dayOffset}] ${dateStr} (${arabicDays[dayOfWeek]})`);
 
-                    // If we have employee schedule, check if they work this day
-                    let suggestedStartTime = null;
+                    // التحقق من جدول الحلاق لهذا اليوم
                     if (employeeSchedule) {
-                        suggestedStartTime = findFirstAvailableInSchedule(
-                            employeeSchedule, 
-                            dayOfWeek, 
-                            isToday ? currentTime : null
-                        );
+                        const workingHours = getWorkingHoursForDay(employeeSchedule, dayOfWeek);
                         
-                        if (!suggestedStartTime) {
-                            console.log(`⏭️ Employee not working on this day, skipping...`);
+                        if (!workingHours.enabled) {
+                            console.log(`⏭️ الحلاق لا يعمل يوم ${workingHours.dayNameAr}، ننتقل لليوم التالي...`);
                             continue;
                         }
-                        
-                        console.log(`💡 Suggested start time from schedule: ${suggestedStartTime}`);
                     }
 
-                    let apiUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}`;
+                    // جلب الفترات المتاحة من السيرفر
+                    let apiUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}&duration=${totalDuration}`;
                     if (employeeId) {
                         apiUrl += `&employee=${employeeId}`;
                     }
-                    const response = await fetch(apiUrl);
-                    let result;
                     
+                    const response = await fetch(apiUrl);
                     if (!response.ok) {
-                        // If specific employee fails, try without employee filter
-                        if (employeeId) {
-                            console.log(`⚠️ Employee query failed, retrying without employee filter...`);
-                            const fallbackUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}`;
-                            const fallbackResponse = await fetch(fallbackUrl);
-                            if (!fallbackResponse.ok) continue;
-                            result = await fallbackResponse.json();
-                            if (!result.success || !result.data) continue;
-                        } else {
-                            continue;
-                        }
-                    } else {
-                        result = await response.json();
-                        if (!result.success || !result.data || !Array.isArray(result.data)) continue;
+                        console.log(`⚠️ فشل جلب البيانات لـ ${dateStr}`);
+                        continue;
+                    }
+                    
+                    const result = await response.json();
+                    if (!result.success || !result.data || !Array.isArray(result.data)) {
+                        continue;
                     }
 
-                    // Filter available slots
+                    // فلترة الفترات المتاحة
                     let availableSlots = result.data
                         .filter(s => s.available === true)
                         .sort((a, b) => timeToMinutes(a.time) - timeToMinutes(b.time));
 
-                    console.log(`   Found ${availableSlots.length} available slots`);
+                    console.log(`   وجدنا ${availableSlots.length} فترة متاحة`);
 
-                    // For today, suggest IMMEDIATE booking if possible (current time rounded up)
-                    let immediateBookingTime = null;
-                    if (isToday && availableSlots.length > 0) {
-                        // Calculate immediate next available time (round up to nearest 5 minutes)
-                        const immediateMinutes = Math.ceil((currentTotalMinutes + 5) / 5) * 5;
-                        const immediateHour = Math.floor(immediateMinutes / 60);
-                        const immediateMin = immediateMinutes % 60;
-                        immediateBookingTime = `${String(immediateHour).padStart(2, '0')}:${String(immediateMin).padStart(2, '0')}`;
-                        
-                        const firstSlotMinutes = timeToMinutes(availableSlots[0].time);
-                        console.log(`⚡ Current: ${currentTime} (${currentTotalMinutes}min) → Immediate: ${immediateBookingTime} (${immediateMinutes}min) vs First Slot: ${availableSlots[0].time} (${firstSlotMinutes}min)`);
-                        
-                        // Always use immediate booking if it's earlier than the first slot
-                        if (immediateMinutes < firstSlotMinutes) {
-                            const timeSaved = firstSlotMinutes - immediateMinutes;
-                            console.log(`✨ Immediate booking activated! ${immediateBookingTime} saves ${timeSaved} minutes`);
-                        } else {
-                            immediateBookingTime = null;
-                            console.log(`⏰ Using first available slot ${availableSlots[0].time}`);
-                        }
+                    // إذا كان اليوم الحالي، تخطي الفترات الماضية
+                    if (isToday) {
+                        availableSlots = availableSlots.filter(s => timeToMinutes(s.time) > currentTotalMinutes);
+                        console.log(`   بعد استبعاد الفترات الماضية: ${availableSlots.length} فترة`);
                     }
 
-                    // If we have a suggested start time from schedule, prioritize slots at or after that time
-                    if (suggestedStartTime) {
-                        const suggestedMinutes = timeToMinutes(suggestedStartTime);
-                        availableSlots = availableSlots.filter(s => timeToMinutes(s.time) >= suggestedMinutes);
-                        console.log(`   Filtered to ${availableSlots.length} slots after ${suggestedStartTime}`);
-                    }
-
-                    // If immediate booking is available, use it directly without checking slots
-                    if (immediateBookingTime && slotsNeeded === 1) {
-                        console.log(`🚀 Using immediate booking: ${immediateBookingTime}`);
-                        
-                        dateInput.value = dateStr;
-                        timeInput.value = immediateBookingTime;
-                        
-                        // Select employee if needed
-                        if (!employeeId && availableSlots[0]?.employee) {
-                            employeeSelect.value = availableSlots[0].employee;
-                        }
-                        
-                        const changeEvent = new Event('change', { bubbles: true });
-                        dateInput.dispatchEvent(changeEvent);
-                        timeInput.dispatchEvent(changeEvent);
-                        employeeSelect.dispatchEvent(changeEvent);
-
-                        const displayDate = new Date(dateStr).toLocaleDateString('ar-SA', {
-                            weekday: 'long', day: 'numeric', month: 'long'
-                        });
-                        
-                        const employeeName = employeeSelect.options[employeeSelect.selectedIndex]?.text || 'أي حلاق';
-                        const serviceNames = services.map(s => s.name || s.serviceName).join(', ') || 'الخدمات المختارة';
-                        
-                        if (window.showNotification) {
-                            window.showNotification(`⚡ حجز فوري: ${displayDate} الساعة ${immediateBookingTime}`, 'success');
-                        }
-
-                        if (btn) {
-                            btn.disabled = false;
-                            btn.innerHTML = '⚡ تم - حجز فوري';
-                            btn.style.opacity = '1';
-                            setTimeout(() => { btn.innerHTML = '✨ اقترح أقرب موعد'; }, 3000);
-                        }
-                        return;
-                    }
-
-                    // Find consecutive slots (normal flow)
+                    // البحث عن فترات متتالية للخدمة
                     for (let i = 0; i <= availableSlots.length - slotsNeeded; i++) {
                         const startSlot = availableSlots[i];
                         const startMinutes = timeToMinutes(startSlot.time);
 
-                        // Skip slots in the past
-                        if (isToday && startMinutes <= currentTotalMinutes) continue;
-
-                        // Check for sequence
+                        // التحقق من توفر فترات متتالية
                         let isSequenceAvailable = true;
                         for (let j = 1; j < slotsNeeded; j++) {
                             const nextSlot = availableSlots[i + j];
@@ -334,56 +331,68 @@
                         }
 
                         if (isSequenceAvailable) {
-                            // Found a valid sequence!
-                            console.log(`✅ [Suggest] Found sequence starting at ${startSlot.time} on ${dateStr}`);
+                            // وجدنا موعداً مناسباً!
+                            console.log(`✅ وجدنا موعد: ${startSlot.time} في ${dateStr}`);
                             
-                            // Fill the form fields
+                            // ملء الحقول
                             dateInput.value = dateStr;
                             timeInput.value = startSlot.time;
                             
-                            // If no specific employee was selected, select the first available from this slot
-                            if (!employeeId && startSlot.employee) {
-                                employeeSelect.value = startSlot.employee;
-                                console.log(`👤 Auto-selected employee: ${startSlot.employee}`);
-                            }
-                            
-                            // Trigger change events to update the UI
+                            // إطلاق أحداث التغيير
                             const changeEvent = new Event('change', { bubbles: true });
                             dateInput.dispatchEvent(changeEvent);
                             timeInput.dispatchEvent(changeEvent);
-                            employeeSelect.dispatchEvent(changeEvent);
+
+                            // اختيار الوقت في time slots إذا موجودة
+                            if (window.selectTimeSlot) {
+                                window.selectTimeSlot(startSlot.time);
+                            }
 
                             const displayDate = new Date(dateStr).toLocaleDateString('ar-SA', {
                                 weekday: 'long', day: 'numeric', month: 'long'
                             });
                             
-                            const employeeName = employeeSelect.options[employeeSelect.selectedIndex]?.text || 'أي حلاق';
-                            const serviceNames = services.map(s => s.name || s.serviceName).join(', ') || 'الخدمات المختارة';
+                            const selectedEmpName = employeeSelect?.options[employeeSelect.selectedIndex]?.text || 'أي حلاق';
+                            const serviceNames = services.map(s => s.name || s.serviceName).join(' + ') || 'الخدمات المختارة';
                             
-                            // Show success notification instead of alert
+                            // عرض رسالة النجاح
                             if (window.showNotification) {
-                                window.showNotification(`✅ تم ملء الموعد تلقائياً: ${displayDate} الساعة ${startSlot.time}`, 'success');
+                                window.showNotification(
+                                    `✅ تم اقتراح موعد!\n\n📅 ${displayDate}\n⏰ الساعة ${startSlot.time}\n👤 ${selectedEmpName}\n✂️ ${serviceNames}\n⏱️ المدة: ${totalDuration} دقيقة`, 
+                                    'success', 
+                                    6000
+                                );
                             }
 
                             if (btn) {
                                 btn.disabled = false;
                                 btn.innerHTML = '✅ تم الاقتراح';
                                 btn.style.opacity = '1';
-                                
-                                // Reset button text after 3 seconds
-                                setTimeout(() => {
-                                    btn.innerHTML = '✨ اقترح أقرب موعد';
-                                }, 3000);
+                                setTimeout(() => { btn.innerHTML = '✨ اقترح أقرب موعد'; }, 3000);
                             }
                             return;
                         }
                     }
                 }
 
-                alert(`عذراً، لم نجد فترة متصلة شاغرة لمدة ${totalDuration} دقيقة في الأسبوعين القادمين.\nيرجى المحاولة لاحقاً أو تقسيم الخدمات.`);
+                // لم نجد أي موعد متاح
+                if (window.showNotification) {
+                    window.showNotification(
+                        `😔 عذراً، لم نجد فترة متاحة لمدة ${totalDuration} دقيقة\n\n💡 حاول:\n- اختيار حلاق آخر\n- تقليل عدد الخدمات\n- البحث في تاريخ آخر`, 
+                        'error', 
+                        8000
+                    );
+                } else {
+                    alert(`عذراً، لم نجد فترة متصلة شاغرة لمدة ${totalDuration} دقيقة في الأسبوعين القادمين.\nيرجى المحاولة لاحقاً أو تقسيم الخدمات.`);
+                }
+                
             } catch (error) {
-                console.error('❌ [Suggest] Error:', error);
-                alert('حدث خطأ أثناء البحث عن موعد');
+                console.error('❌ [Suggest] خطأ:', error);
+                if (window.showNotification) {
+                    window.showNotification('❌ حدث خطأ أثناء البحث عن موعد\n\nيرجى المحاولة مرة أخرى', 'error', 5000);
+                } else {
+                    alert('حدث خطأ أثناء البحث عن موعد');
+                }
             } finally {
                 if (btn) {
                     btn.disabled = false;
@@ -392,7 +401,7 @@
                 }
             }
         };
-        console.log('✅ Smart Function defined inline at:', new Date().toISOString());
+        console.log('✅ Smart Function v2 defined at:', new Date().toISOString());
     </script>
 </head>
 <body>
