@@ -1855,6 +1855,15 @@ async function submitBooking(e) {
     // Check if booking is for a package
     const isPackageBooking = selectedServices.length === 1 && selectedServices[0].isPackage;
     
+    // Prepare service IDs and names
+    const serviceIds = isPackageBooking 
+        ? selectedServices[0].packageServices.map(s => s.id) 
+        : selectedServices.map(s => s.id);
+    
+    const serviceName = selectedServices.map(s => s.name).join(' + ');
+    const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+    const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
+    
     const bookingData = {
         business: NASSIM_BUSINESS_ID,
         customer: customerData._id,
@@ -1862,17 +1871,22 @@ async function submitBooking(e) {
         customerPhone: customerData.phone,
         paidVIPSlot: window.paidForVIPSlot || false,
         extraCharge: window.paidForVIPSlot ? 100 : 0,
-        services: isPackageBooking ? selectedServices[0].packageServices.map(s => s.id) : selectedServices.map(s => s.id),
-        service: isPackageBooking ? selectedServices[0].id : selectedServices[0].id,
-        serviceName: selectedServices.map(s => s.name).join(' + '),
+        serviceId: serviceIds[0], // Primary service (required by backend)
+        services: serviceIds, // All services array
+        service: serviceName, // Service name for display
+        serviceName: serviceName,
+        price: totalPrice,
+        duration: totalDuration,
         employee: selectedEmployee === 'any' ? null : selectedEmployee,
+        employeeId: selectedEmployee === 'any' ? null : selectedEmployee,
+        employeeName: selectedEmployee === 'any' ? 'أي حلاق متاح' : selectedEmployeeName,
         isFlexibleEmployee: selectedEmployee === 'any', // Flag for any available barber
         date: selectedDate,
         time: selectedTime,
         dateTime: dateTime,
         notes: document.getElementById('appointmentNotes')?.value || '',
-        totalPrice: selectedServices.reduce((sum, s) => sum + s.price, 0),
-        totalDuration: selectedServices.reduce((sum, s) => sum + s.duration, 0)
+        totalPrice: totalPrice,
+        totalDuration: totalDuration
     };
     
     console.log('Booking data:', bookingData);
