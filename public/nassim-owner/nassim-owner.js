@@ -5261,26 +5261,60 @@ function copyForWhatsAppBroadcastList() {
     const phones = recipients.map(r => {
         let p = r.phone.replace(/[^0-9]/g, '');
         if (p.startsWith('0')) p = '213' + p.substring(1);
+        if (!p.startsWith('213')) p = '213' + p;
         return '+' + p;
     });
+    
+    const cleanMessage = message.replace(/{name}/g, 'عميلنا الكريم');
     
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.id = 'copyBroadcastModal';
     modal.innerHTML = `
-        <div class="modal" style="max-width: 500px;">
+        <div class="modal" style="max-width: 550px;">
             <div class="modal-header">
-                <h3 class="modal-title">📋 نسخ للبث</h3>
+                <h3 class="modal-title">📋 نسخ للبث في واتساب</h3>
                 <button class="modal-close" onclick="document.getElementById('copyBroadcastModal').remove()">&times;</button>
             </div>
             <div class="modal-body">
-                <h4 style="color: #FDB714;">📱 الأرقام (${phones.length})</h4>
-                <textarea id="broadcastPhonesList" readonly style="width: 100%; height: 80px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px; font-size: 11px;">${phones.join('\n')}</textarea>
-                <button onclick="document.getElementById('broadcastPhonesList').select(); document.execCommand('copy'); showToast('تم نسخ الأرقام!', 'success');" style="margin: 10px 0 20px; padding: 8px 15px; background: #25D366; border: none; border-radius: 5px; color: white; cursor: pointer;">📋 نسخ الأرقام</button>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #FDB714; margin-bottom: 10px;">1️⃣ الأرقام (${phones.length})</h4>
+                    <p style="color: #888; font-size: 12px; margin-bottom: 5px;">انسخ الأرقام وأضفها لجهات الاتصال أو قائمة البث</p>
+                    <textarea id="phonesList" readonly style="width: 100%; height: 100px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px; font-family: monospace; font-size: 12px; resize: none;">${phones.join('\n')}</textarea>
+                    <button onclick="document.getElementById('phonesList').select(); document.execCommand('copy'); showToast('تم نسخ الأرقام!', 'success');" style="margin-top: 10px; padding: 8px 20px; background: #25D366; border: none; border-radius: 5px; color: white; cursor: pointer; width: 100%;">
+                        📋 نسخ الأرقام
+                    </button>
+                </div>
                 
-                <h4 style="color: #FDB714;">✉️ الرسالة</h4>
-                <textarea id="broadcastMsgText" readonly style="width: 100%; height: 100px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px;">${message.replace(/{name}/g, 'عميلنا الكريم')}</textarea>
-                <button onclick="document.getElementById('broadcastMsgText').select(); document.execCommand('copy'); showToast('تم نسخ الرسالة!', 'success');" style="margin-top: 10px; padding: 8px 15px; background: #25D366; border: none; border-radius: 5px; color: white; cursor: pointer;">📋 نسخ الرسالة</button>
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color: #FDB714; margin-bottom: 10px;">2️⃣ الرسالة</h4>
+                    <textarea id="messageText" readonly style="width: 100%; height: 120px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px; resize: none;">${cleanMessage}</textarea>
+                    <button onclick="document.getElementById('messageText').select(); document.execCommand('copy'); showToast('تم نسخ الرسالة!', 'success');" style="margin-top: 10px; padding: 8px 20px; background: #25D366; border: none; border-radius: 5px; color: white; cursor: pointer; width: 100%;">
+                        📋 نسخ الرسالة
+                    </button>
+                </div>
+                
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <h4 style="color: #FDB714; margin-bottom: 10px;">3️⃣ فتح واتساب</h4>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <a href="https://web.whatsapp.com" target="_blank" style="padding: 10px 20px; background: #25D366; border-radius: 5px; color: white; text-decoration: none; display: inline-block;">
+                            💻 واتساب ويب
+                        </a>
+                        <a href="whatsapp://" style="padding: 10px 20px; background: #25D366; border-radius: 5px; color: white; text-decoration: none; display: inline-block;">
+                            📱 تطبيق واتساب
+                        </a>
+                    </div>
+                </div>
+
+                <div style="padding: 15px; background: #2A2A2A; border-radius: 8px; border: 1px solid #333;">
+                    <h4 style="margin: 0 0 10px 0; color: #FDB714;">📖 خطوات إنشاء قائمة بث:</h4>
+                    <ol style="margin: 0; padding-right: 20px; color: #aaa; font-size: 13px; line-height: 1.8;">
+                        <li>افتح واتساب > اضغط على النقاط الثلاث (⋮)</li>
+                        <li>اختر "بث جديد" أو "New broadcast"</li>
+                        <li>أضف الأرقام المنسوخة (يجب أن تكون محفوظة في جهات الاتصال)</li>
+                        <li>الصق الرسالة وأرسلها</li>
+                    </ol>
+                </div>
             </div>
         </div>
     `;
