@@ -144,6 +144,7 @@ router.get('/available-slots', async (req, res) => {
             const checkEnd = checkStart + checkDuration;
             
             const conflict = appointments.find(apt => {
+                if (!apt.time || typeof apt.time !== 'string') return false;
                 const [aptH, aptM] = apt.time.split(':').map(Number);
                 const aptStart = aptH * 60 + aptM;
                 const aptDuration = apt.duration || 30;
@@ -212,6 +213,7 @@ router.get('/available-slots', async (req, res) => {
             const slotEnd = slotStart + requestedDuration; // Use requested duration
 
             const isBlocked = appointments.some(apt => {
+                if (!apt.time || typeof apt.time !== 'string') return false;
                 const [aptH, aptM] = apt.time.split(':').map(Number);
                 const aptStart = aptH * 60 + aptM;
                 const aptDuration = apt.duration || 30;
@@ -894,6 +896,7 @@ router.post('/', protect, ensureTenant, checkLimit('appointments'), async (req, 
         const dayAppointments = await Appointment.find(conflictQuery);
         
         const hasConflict = dayAppointments.some(apt => {
+            if (!apt.time || typeof apt.time !== 'string') return false;
             const [aptH, aptM] = apt.time.split(':').map(Number);
             const aptStart = aptH * 60 + aptM;
             const aptDuration = apt.duration || 30;
