@@ -1899,12 +1899,17 @@ async function submitBooking(e) {
         employeeName: selectedEmployee === 'any' ? 'أي حلاق متاح' : selectedEmployeeName,
         isFlexibleEmployee: selectedEmployee === 'any', // Flag for any available barber
         date: selectedDate,
-        time: selectedTime,
+        time: selectedTime, // Ensure this is "HH:MM" format
         dateTime: dateTime,
         notes: document.getElementById('appointmentNotes')?.value || '',
         totalPrice: totalPrice,
         totalDuration: totalDuration
     };
+    
+    // Ensure time is a string and not undefined
+    if (typeof bookingData.time !== 'string') {
+        bookingData.time = String(selectedTime);
+    }
     
     console.log('📦 Booking data:', bookingData);
     console.log('✅ All fields validated');
