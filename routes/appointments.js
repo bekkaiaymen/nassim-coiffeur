@@ -355,6 +355,7 @@ router.post('/public/book', async (req, res) => {
         
         // Critical Time Check (Surge Pricing)
         const isCriticalTime = (d, t) => {
+            if (!t || typeof t !== 'string') return false;
             const dateObj = new Date(d);
             const day = dateObj.getDay(); // 0=Sun, 4=Thu, 5=Fri
             const [h, m] = t.split(':').map(Number);
@@ -393,6 +394,7 @@ router.post('/public/book', async (req, res) => {
         const dayAppointments = await Appointment.find(conflictQuery);
 
         const hasConflict = dayAppointments.some(appt => {
+            if (!appt.time || typeof appt.time !== 'string') return false;
             const [apptH, apptM] = appt.time.split(':').map(Number);
             const apptStart = apptH * 60 + apptM;
             const apptDuration = appt.duration || 30; // Use stored duration or default
