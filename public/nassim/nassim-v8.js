@@ -1785,16 +1785,26 @@ async function submitBooking(e) {
     }
     
     const selectedDate = document.getElementById('appointmentDate').value;
-    const timeInput = document.getElementById('appointmentTime').value;
+    const timeInput = document.getElementById('appointmentTime')?.value || '';
     
-    if (!selectedDate || !timeInput) {
-        showNotification('اختر التاريخ والوقت', 'error');
+    if (!selectedDate) {
+        showNotification('الرجاء اختيار التاريخ', 'error');
         return;
     }
     
     // استخدام الوقت من input أو من time slot إذا كان محدد
     const selectedTime = selectedTimeSlot || timeInput;
+    
+    if (!selectedTime) {
+        showNotification('الرجاء اختيار الوقت', 'error');
+        return;
+    }
+    
     const dateTime = `${selectedDate}T${selectedTime}:00`;
+    
+    console.log('📅 Selected Date:', selectedDate);
+    console.log('⏰ Selected Time:', selectedTime);
+    console.log('📆 DateTime:', dateTime);
     
     if (!customerData) {
         showNotification('الرجاء تسجيل الدخول', 'error');
@@ -1864,11 +1874,18 @@ async function submitBooking(e) {
     const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
     const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
     
+    // Validate all required fields before creating booking data
+    if (!selectedDate || !selectedTime || !serviceIds.length) {
+        showNotification('البيانات غير مكتملة. يرجى المحاولة مرة أخرى', 'error');
+        console.error('Missing required fields:', { selectedDate, selectedTime, serviceIds });
+        return;
+    }
+    
     const bookingData = {
         business: NASSIM_BUSINESS_ID,
         customer: customerData._id,
         customerName: customerData.name,
-        customerPhone: customerData.phone,
+        customerPhone: customerData.phone || '',
         paidVIPSlot: window.paidForVIPSlot || false,
         extraCharge: window.paidForVIPSlot ? 100 : 0,
         serviceId: serviceIds[0], // Primary service (required by backend)
@@ -1889,7 +1906,8 @@ async function submitBooking(e) {
         totalDuration: totalDuration
     };
     
-    console.log('Booking data:', bookingData);
+    console.log('📦 Booking data:', bookingData);
+    console.log('✅ All fields validated');
     
     try {
         const response = await fetch(`${API_URL}/appointments/public/book`, {
