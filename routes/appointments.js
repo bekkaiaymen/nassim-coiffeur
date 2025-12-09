@@ -327,14 +327,15 @@ router.post('/public/book', async (req, res) => {
                     if (daySchedule.shifts && daySchedule.shifts.length > 0) {
                         // Check against any shift
                         isWithinWorkingHours = daySchedule.shifts.some(shift => {
+                            if (!shift.start || !shift.end) return false;
                             const [sH, sM] = shift.start.split(':').map(Number);
                             const [eH, eM] = shift.end.split(':').map(Number);
                             const startWorkMinutes = sH * 60 + sM;
                             const endWorkMinutes = eH * 60 + eM;
                             return (startTimeInMinutes >= startWorkMinutes && endTimeInMinutes <= endWorkMinutes);
                         });
-                        workingHoursStr = daySchedule.shifts.map(s => `${s.start} - ${s.end}`).join(' و ');
-                    } else {
+                        workingHoursStr = daySchedule.shifts.filter(s => s.start && s.end).map(s => `${s.start} - ${s.end}`).join(' و ');
+                    } else if (daySchedule.start && daySchedule.end) {
                         // Legacy check
                         const [sH, sM] = daySchedule.start.split(':').map(Number);
                         const [eH, eM] = daySchedule.end.split(':').map(Number);
@@ -342,6 +343,10 @@ router.post('/public/book', async (req, res) => {
                         const endWorkMinutes = eH * 60 + eM;
                         isWithinWorkingHours = (startTimeInMinutes >= startWorkMinutes && endTimeInMinutes <= endWorkMinutes);
                         workingHoursStr = `${daySchedule.start} - ${daySchedule.end}`;
+                    } else {
+                        // No working hours defined, allow booking
+                        isWithinWorkingHours = true;
+                        workingHoursStr = 'غير محدد';
                     }
                     
                     // Check if appointment is within working hours
