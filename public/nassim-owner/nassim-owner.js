@@ -5105,10 +5105,14 @@ function showBroadcastOptionsModal(recipients, message) {
                 </div>
                 
                 ${isLargeGroup ? `
-                <button id="btnOneClickBroadcast" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); margin-bottom: 15px; transition: transform 0.2s;">
-                    <span style="display: block; font-size: 24px; margin-bottom: 5px;">📋</span>
-                    إنشاء قائمة بث (ضغطة واحدة)
-                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9; margin-top: 5px;">ينسخ الأرقام ويفتح واتساب فوراً</div>
+                <button id="btnOneClickBroadcastApp" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); margin-bottom: 10px; transition: transform 0.2s;">
+                    <span style="display: block; font-size: 24px; margin-bottom: 5px;">🖥️</span>
+                    فتح تطبيق واتساب (Desktop App)
+                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9; margin-top: 5px;">ينسخ الأرقام ويفتح التطبيق فوراً</div>
+                </button>
+                
+                <button id="btnOneClickBroadcastWeb" style="width: 100%; padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 14px; margin-bottom: 15px;">
+                    🌐 أو استخدم واتساب ويب (Browser)
                 </button>
                 ` : `
                 <button id="btnSequential" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #FDB714, #E5A00D); border: none; border-radius: 10px; color: #1A1A1A; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(253, 183, 20, 0.4); margin-bottom: 15px;">
@@ -5135,14 +5139,17 @@ function showBroadcastOptionsModal(recipients, message) {
     document.body.appendChild(modal);
     
     // Setup Event Listeners
-    const btnOneClick = document.getElementById('btnOneClickBroadcast');
-    if (btnOneClick) btnOneClick.onclick = () => executeOneClickBroadcast();
+    const btnApp = document.getElementById('btnOneClickBroadcastApp');
+    if (btnApp) btnApp.onclick = () => executeOneClickBroadcast('app');
+
+    const btnWeb = document.getElementById('btnOneClickBroadcastWeb');
+    if (btnWeb) btnWeb.onclick = () => executeOneClickBroadcast('web');
     
     const btnSeq = document.getElementById('btnSequential');
     if (btnSeq) btnSeq.onclick = () => startBroadcastSend('sequential');
 
     const btnOneClickSmall = document.getElementById('btnOneClickBroadcastSmall');
-    if (btnOneClickSmall) btnOneClickSmall.onclick = () => executeOneClickBroadcast();
+    if (btnOneClickSmall) btnOneClickSmall.onclick = () => executeOneClickBroadcast('app');
 
     const btnSeqSmall = document.getElementById('btnSequentialSmall');
     if (btnSeqSmall) btnSeqSmall.onclick = () => startBroadcastSend('sequential');
@@ -5154,7 +5161,7 @@ function closeBroadcastOptionsModal() {
 }
 
 // تنفيذ عملية البث بضغطة واحدة (نسخ + فتح)
-function executeOneClickBroadcast() {
+function executeOneClickBroadcast(platform = 'web') {
     const recipients = window._broadcastRecipients;
     const message = window._broadcastMessage;
     closeBroadcastOptionsModal();
@@ -5186,15 +5193,21 @@ function executeOneClickBroadcast() {
     }
     document.body.removeChild(dummy);
     
-    // 3. Open WhatsApp
-    window.open('https://web.whatsapp.com', '_blank');
+    // 3. Open WhatsApp (App or Web)
+    if (platform === 'app') {
+        // Try to open desktop app
+        window.location.href = 'whatsapp://';
+    } else {
+        window.open('https://web.whatsapp.com', '_blank');
+    }
 
     // 4. Show "Copy Message" Modal immediately so it's ready when they switch back
-    showCopyMessageModal(message);
+    showCopyMessageModal(message, platform);
 }
 
-function showCopyMessageModal(message) {
+function showCopyMessageModal(message, platform) {
     const cleanMessage = message.replace(/{name}/g, 'عميلنا الكريم');
+    const isApp = platform === 'app';
     
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -5206,9 +5219,13 @@ function showCopyMessageModal(message) {
                 <button class="modal-close" onclick="document.getElementById('copyMessageModal').remove()">&times;</button>
             </div>
             <div class="modal-body" style="text-align: center;">
-                <div style="background: #2A2A2A; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #aaa;">
-                    1. في واتساب: أنشئ "قائمة بث" وألصق الأرقام.<br>
-                    2. انسخ الرسالة من هنا وأرسلها.
+                <div style="background: #2A2A2A; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #fff; text-align: right; line-height: 1.6;">
+                    <strong>💡 التعليمات (${isApp ? 'تطبيق الكمبيوتر' : 'واتساب ويب'}):</strong><br>
+                    1. ${isApp ? 'سيفتح التطبيق الآن.' : 'سيفتح الموقع الآن.'}<br>
+                    2. اضغط على القائمة (⋮) واختر <strong>"بث جديد" (New Broadcast)</strong>.<br>
+                    3. <strong>الصق (Paste)</strong> الأرقام التي نسخناها لك.<br>
+                    4. عد لهذه النافذة وانسخ الرسالة أدناه.<br>
+                    5. أرسل الرسالة للقائمة.
                 </div>
                 
                 <textarea id="msgToCopy" readonly style="width: 100%; height: 120px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px; margin-bottom: 15px; resize: none;">${cleanMessage}</textarea>
