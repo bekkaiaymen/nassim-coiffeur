@@ -1763,6 +1763,107 @@ function selectTimeSlot(time) {
     updateBookingSummary();
 }
 
+// التحقق من ساعات عمل الحلاق وتعارض المواعيد
+async function validateBookingAvailability(employeeId, date, time, duration) {
+    try {
+        // 1. جلب بيانات الحلاق مع ساعات العمل
+        const empResponse = await fetch(`${API_URL}/employees/${employeeId}`);
+        if (!empResponse.ok) {
+            return { valid: true, message: '' }; // السماح بالحجز إذا فشل جلب البيانات
+        }
+        const empData = await empResponse.json();
+        const employee = empData.data || empData;
+        
+        if (!employee) {
+            return { valid: true, message: '' };
+        }
+        
+        // 2. التحقق من ساعات العمل
+        if (employee.workingHours) {
+            const dateObj = new Date(date);
+            const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+            const dayName = days[dateObj.getDay()];
+            const daySchedule = employee.workingHours[dayName];
+            
+            const daysMap = {
+                'sunday': 'الأحد',
+                'monday': 'الاثنين', 
+                'tuesday': 'الثلاثاء',
+                'wednesday': 'الأربعاء',
+                'thursday': 'الخميس',
+                'friday': 'الجمعة',
+                'saturday': 'السبت'
+            };
+            
+            if (daySchedule) {
+                // التحقق إذا كان في إجازة
+                if (!daySchedule.enabled) {
+                    return {
+                        valid: false,
+                        message: `⛔ عذراً، الحلاق ${employee.name} في إجازة يوم ${daysMap[dayName]}.\n\nيرجى اختيار يوم آخر أو حلاق آخر.`
+                    };
+                }
+                
+                // حساب وقت الموعد بالدقائق
+                const [h, m] = time.split(':').map(Number);
+                const startMinutes = h * 60 + m;
+                const endMinutes = startMinutes + (duration || 30);
+                
+                let isWithinWorkingHours = false;
+                let workingHoursStr = '';
+                
+                if (daySchedule.shifts && daySchedule.shifts.length > 0) {
+                    // التحقق من الفترات المتعددة
+                    isWithinWorkingHours = daySchedule.shifts.some(shift => {
+                        if (!shift.start || !shift.end) return false;
+                        const [sH, sM] = shift.start.split(':').map(Number);
+                        const [eH, eM] = shift.end.split(':').map(Number);
+                        const startWork = sH * 60 + sM;
+                        const endWork = eH * 60 + eM;
+                        return (startMinutes >= startWork && endMinutes <= endWork);
+                    });
+                    workingHoursStr = daySchedule.shifts.filter(s => s.start && s.end).map(s => `${s.start} - ${s.end}`).join(' و ');
+                } else if (daySchedule.start && daySchedule.end) {
+                    // النظام القديم
+                    const [sH, sM] = daySchedule.start.split(':').map(Number);
+                    const [eH, eM] = daySchedule.end.split(':').map(Number);
+                    const startWork = sH * 60 + sM;
+                    const endWork = eH * 60 + eM;
+                    isWithinWorkingHours = (startMinutes >= startWork && endMinutes <= endWork);
+                    workingHoursStr = `${daySchedule.start} - ${daySchedule.end}`;
+                } else {
+                    // لا توجد ساعات عمل محددة - السماح
+                    isWithinWorkingHours = true;
+                }
+                
+                if (!isWithinWorkingHours && workingHoursStr) {
+                    return {
+                        valid: false,
+                        message: `⏰ عذراً، الوقت ${time} خارج ساعات عمل الحلاق ${employee.name}.\n\n📅 ساعات العمل يوم ${daysMap[dayName]}: ${workingHoursStr}\n\nيرجى اختيار وقت ضمن ساعات العمل.`
+                    };
+                }
+            }
+        }
+        
+        // 3. التحقق من تعارض المواعيد
+        const slotsResponse = await fetch(`${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${date}&employee=${employeeId}&checkTime=${time}&duration=${duration || 30}`);
+        if (slotsResponse.ok) {
+            const slotsData = await slotsResponse.json();
+            if (slotsData.success && slotsData.available === false) {
+                return {
+                    valid: false,
+                    message: `🚫 عذراً، الوقت ${time} محجوز مسبقاً لدى الحلاق ${employee.name}.\n\nيرجى اختيار وقت آخر.`
+                };
+            }
+        }
+        
+        return { valid: true, message: '' };
+    } catch (error) {
+        console.error('Error validating booking:', error);
+        return { valid: true, message: '' }; // السماح بالحجز في حالة الخطأ
+    }
+}
+
 // Submit Booking
 async function submitBooking(e) {
     e.preventDefault();
@@ -1840,9 +1941,22 @@ async function submitBooking(e) {
     const selectedEmployee = document.getElementById('employeeSelect').value;
     const selectedEmployeeName = document.getElementById('employeeSelect').selectedOptions[0]?.text;
     
+    // حساب مدة الخدمة الإجمالية
+    const totalDuration = selectedServices.reduce((sum, s) => sum + (s.duration || 30), 0);
+    
     // If "any" is selected, skip employee availability check (booking will be pending for all barbers)
     if (selectedEmployee !== 'any') {
-        // Check employee availability
+        // إظهار رسالة التحميل
+        showNotification('⏳ جاري التحقق من توفر الموعد...', 'info', 2000);
+        
+        // التحقق الشامل من ساعات العمل وتعارض المواعيد
+        const validation = await validateBookingAvailability(selectedEmployee, selectedDate, selectedTime, totalDuration);
+        if (!validation.valid) {
+            showNotification(validation.message, 'error', 8000);
+            return;
+        }
+        
+        // Check employee availability (present today)
         try {
             const availableResponse = await fetch(`${API_URL}/employees/available`);
             if (availableResponse.ok) {
