@@ -4753,28 +4753,14 @@ async function sendBulkWhatsApp(event) {
         return;
     }
     
-    if (!confirm(`سيتم إرسال ${checkboxes.length} رسالة. هل تريد المتابعة؟`)) {
-        return;
-    }
+    // جمع بيانات المستلمين
+    const recipients = Array.from(checkboxes).map(cb => ({
+        phone: cb.value,
+        name: cb.dataset.name
+    }));
     
-    let sent = 0;
-    for (const checkbox of checkboxes) {
-        const phone = checkbox.value;
-        const name = checkbox.dataset.name;
-        
-        // Replace {name} placeholder
-        const personalizedMessage = message.replace(/{name}/g, name);
-        
-        sendWhatsAppMessage(phone, personalizedMessage);
-        sent++;
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    }
-    
-    showToast(`✅ تم إرسال ${sent} رسالة بنجاح`, 'success');
-    
-    // Reset form
-    document.getElementById('bulkWhatsAppForm').reset();
-    document.getElementById('selectAllCustomers').checked = false;
+    // عرض نافذة خيارات البث
+    showBroadcastOptionsModal(recipients, message);
 }
 
 // Helper: Format Date
@@ -5145,4 +5131,158 @@ async function sendProductsUpdate() {
         console.error('Error sending products update:', error);
         showToast('حدث خطأ أثناء الإرسال', 'error');
     }
+}
+
+// ==================== WhatsApp Broadcast System ====================
+
+// إظهار نافذة خيارات البث
+function showBroadcastOptionsModal(recipients, message) {
+    window._broadcastRecipients = recipients;
+    window._broadcastMessage = message;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'broadcastOptionsModal';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">📢 خيارات البث - ${recipients.length} مستلم</h3>
+                <button class="modal-close" onclick="closeBroadcastOptionsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <p style="color: #ccc; margin-bottom: 15px;">اختر طريقة الإرسال:</p>
+                </div>
+                
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <button id="btnSequential" style="padding: 20px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 16px;">
+                        <span style="font-size: 24px;">📲</span>
+                        <div><strong>إرسال تسلسلي</strong><br><span style="font-size: 12px; opacity: 0.9;">فتح كل محادثة واحدة تلو الأخرى</span></div>
+                    </button>
+                    
+                    <button id="btnCopyBroadcast" style="padding: 20px; background: linear-gradient(135deg, #FDB714, #E5A00D); border: none; border-radius: 10px; color: #1A1A1A; cursor: pointer; font-size: 16px;">
+                        <span style="font-size: 24px;">📋</span>
+                        <div><strong>نسخ للبث في واتساب</strong><br><span style="font-size: 12px; opacity: 0.8;">نسخ الأرقام والرسالة</span></div>
+                    </button>
+                    
+                    <button id="btnParallel" style="padding: 20px; background: linear-gradient(135deg, #4A4A4A, #333); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 16px;">
+                        <span style="font-size: 24px;">⚡</span>
+                        <div><strong>إرسال سريع</strong><br><span style="font-size: 12px; opacity: 0.9;">فتح جميع المحادثات دفعة واحدة</span></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    document.getElementById('btnSequential').onclick = () => startBroadcastSend('sequential');
+    document.getElementById('btnCopyBroadcast').onclick = () => copyForWhatsAppBroadcastList();
+    document.getElementById('btnParallel').onclick = () => startBroadcastSend('parallel');
+}
+
+function closeBroadcastOptionsModal() {
+    const modal = document.getElementById('broadcastOptionsModal');
+    if (modal) modal.remove();
+}
+
+async function startBroadcastSend(mode) {
+    const recipients = window._broadcastRecipients;
+    const message = window._broadcastMessage;
+    closeBroadcastOptionsModal();
+    
+    if (mode === 'parallel') {
+        if (!confirm(`سيتم فتح ${recipients.length} نافذة. متابعة؟`)) return;
+        for (const r of recipients) {
+            sendWhatsAppMessage(r.phone, message.replace(/{name}/g, r.name));
+        }
+        showToast(`✅ تم فتح ${recipients.length} محادثة`, 'success');
+    } else {
+        showBroadcastProgress(recipients, message);
+    }
+}
+
+function showBroadcastProgress(recipients, message) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'broadcastProgressModal';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header"><h3 class="modal-title">📤 جاري الإرسال...</h3></div>
+            <div class="modal-body" style="text-align: center;">
+                <div style="background: #333; border-radius: 10px; height: 20px; margin-bottom: 10px;">
+                    <div id="broadcastProgressBar" style="background: #25D366; height: 100%; width: 0%; transition: width 0.3s; border-radius: 10px;"></div>
+                </div>
+                <p id="broadcastProgressText" style="color: #ccc;">0 / ${recipients.length}</p>
+                <div id="broadcastCurrentName" style="padding: 10px; background: #2A2A2A; border-radius: 8px; margin: 15px 0; color: #FDB714;">...</div>
+                <button id="broadcastPauseBtn" style="padding: 10px 20px; background: #ff4444; border: none; border-radius: 8px; color: white; cursor: pointer;">⏸️ إيقاف</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    window._broadcastPaused = false;
+    document.getElementById('broadcastPauseBtn').onclick = () => {
+        window._broadcastPaused = !window._broadcastPaused;
+        document.getElementById('broadcastPauseBtn').innerHTML = window._broadcastPaused ? '▶️ متابعة' : '⏸️ إيقاف';
+        document.getElementById('broadcastPauseBtn').style.background = window._broadcastPaused ? '#25D366' : '#ff4444';
+    };
+    
+    runBroadcast(recipients, message);
+}
+
+async function runBroadcast(recipients, message) {
+    for (let i = 0; i < recipients.length; i++) {
+        while (window._broadcastPaused) await new Promise(r => setTimeout(r, 500));
+        
+        const r = recipients[i];
+        document.getElementById('broadcastCurrentName').textContent = r.name;
+        sendWhatsAppMessage(r.phone, message.replace(/{name}/g, r.name));
+        
+        const pct = ((i + 1) / recipients.length) * 100;
+        document.getElementById('broadcastProgressBar').style.width = pct + '%';
+        document.getElementById('broadcastProgressText').textContent = `${i + 1} / ${recipients.length}`;
+        
+        if (i < recipients.length - 1) await new Promise(r => setTimeout(r, 2000));
+    }
+    
+    document.getElementById('broadcastProgressModal').querySelector('.modal-body').innerHTML = `
+        <div style="font-size: 50px; margin-bottom: 15px;">✅</div>
+        <h3 style="color: #25D366;">اكتمل البث!</h3>
+        <p style="color: #ccc;">تم إرسال ${recipients.length} رسالة</p>
+        <button onclick="document.getElementById('broadcastProgressModal').remove()" style="margin-top: 15px; padding: 10px 30px; background: #FDB714; border: none; border-radius: 8px; color: #1A1A1A; cursor: pointer;">إغلاق</button>
+    `;
+}
+
+function copyForWhatsAppBroadcastList() {
+    const recipients = window._broadcastRecipients;
+    const message = window._broadcastMessage;
+    closeBroadcastOptionsModal();
+    
+    const phones = recipients.map(r => {
+        let p = r.phone.replace(/[^0-9]/g, '');
+        if (p.startsWith('0')) p = '213' + p.substring(1);
+        return '+' + p;
+    });
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'copyBroadcastModal';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">📋 نسخ للبث</h3>
+                <button class="modal-close" onclick="document.getElementById('copyBroadcastModal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h4 style="color: #FDB714;">📱 الأرقام (${phones.length})</h4>
+                <textarea id="broadcastPhonesList" readonly style="width: 100%; height: 80px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px; font-size: 11px;">${phones.join('\n')}</textarea>
+                <button onclick="document.getElementById('broadcastPhonesList').select(); document.execCommand('copy'); showToast('تم نسخ الأرقام!', 'success');" style="margin: 10px 0 20px; padding: 8px 15px; background: #25D366; border: none; border-radius: 5px; color: white; cursor: pointer;">📋 نسخ الأرقام</button>
+                
+                <h4 style="color: #FDB714;">✉️ الرسالة</h4>
+                <textarea id="broadcastMsgText" readonly style="width: 100%; height: 100px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px;">${message.replace(/{name}/g, 'عميلنا الكريم')}</textarea>
+                <button onclick="document.getElementById('broadcastMsgText').select(); document.execCommand('copy'); showToast('تم نسخ الرسالة!', 'success');" style="margin-top: 10px; padding: 8px 15px; background: #25D366; border: none; border-radius: 5px; color: white; cursor: pointer;">📋 نسخ الرسالة</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
 }
