@@ -1986,7 +1986,7 @@ async function submitBooking(e) {
     
     const serviceName = selectedServices.map(s => s.name).join(' + ');
     const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
-    const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
+    // totalDuration already calculated above for validation
     
     // Validate all required fields before creating booking data
     if (!selectedDate || !selectedTime || !serviceIds.length) {
@@ -2043,13 +2043,13 @@ async function submitBooking(e) {
         if (response.ok && data.success) {
             // Get booking details for confirmation message
             const servicesNames = selectedServices.map(s => s.name).join(' + ');
-            const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
-            const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
-            const selectedDate = document.getElementById('appointmentDate').value;
-            const selectedTime = document.getElementById('timeSlots').querySelector('.time-slot.selected')?.textContent;
+            const confirmTotalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
+            const confirmTotalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
+            const confirmSelectedDate = document.getElementById('appointmentDate').value;
+            const confirmSelectedTime = document.getElementById('timeSlots').querySelector('.time-slot.selected')?.textContent;
             
             // Format date in Arabic
-            const dateObj = new Date(selectedDate);
+            const dateObj = new Date(confirmSelectedDate);
             const formattedDate = dateObj.toLocaleDateString('ar-DZ', { 
                 weekday: 'long', 
                 year: 'numeric', 
@@ -2059,7 +2059,7 @@ async function submitBooking(e) {
             
             // Show professional confirmation message
             const extraChargeNote = window.paidForVIPSlot ? '\n\n💰 رسوم إضافية: 100 دج (سيتم التحصيل عند الحضور)' : '';
-            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${bookingData.time}\n👤 الحلاق: ${selectedEmployeeName}\n✂️ ${servicesNames}\n💰 ${totalPrice} دج${extraChargeNote}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ اذا اضطررت لالغاء الحجز يجب ان اكون قبل 30 دقيقه من الموعد`;
+            const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${bookingData.time}\n👤 الحلاق: ${selectedEmployeeName}\n✂️ ${servicesNames}\n💰 ${confirmTotalPrice} دج${extraChargeNote}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ اذا اضطررت لالغاء الحجز يجب ان اكون قبل 30 دقيقه من الموعد`;
             
             showNotification(confirmationMessage, 'success', 0);
             
