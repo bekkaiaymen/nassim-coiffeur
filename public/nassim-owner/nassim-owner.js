@@ -5075,10 +5075,14 @@ async function sendProductsUpdate() {
 
 // ==================== WhatsApp Broadcast System ====================
 
-// إظهار نافذة خيارات البث
+// إظهار نافذة خيارات البث الذكية
 function showBroadcastOptionsModal(recipients, message) {
     window._broadcastRecipients = recipients;
     window._broadcastMessage = message;
+    
+    // Smart Decision: If few users, suggest Auto-Send (Sequential)
+    // If many users, suggest Broadcast List
+    const isLargeGroup = recipients.length > 10;
     
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
@@ -5086,43 +5090,140 @@ function showBroadcastOptionsModal(recipients, message) {
     modal.innerHTML = `
         <div class="modal" style="max-width: 500px;">
             <div class="modal-header">
-                <h3 class="modal-title">📢 خيارات البث - ${recipients.length} مستلم</h3>
+                <h3 class="modal-title">📢 إرسال لـ ${recipients.length} عميل</h3>
                 <button class="modal-close" onclick="closeBroadcastOptionsModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <p style="color: #ccc; margin-bottom: 15px;">اختر طريقة الإرسال:</p>
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <div style="font-size: 40px; margin-bottom: 10px;">🚀</div>
+                    <h4 style="color: #fff; margin-bottom: 5px;">جاهز للإرسال!</h4>
+                    <p style="color: #888; font-size: 13px;">
+                        ${isLargeGroup 
+                            ? 'العدد كبير: ننصح باستخدام قائمة البث (Broadcast List)' 
+                            : 'العدد قليل: يمكننا إرسالها تلقائياً واحداً تلو الآخر'}
+                    </p>
                 </div>
                 
-                <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <button id="btnCopyBroadcast" style="padding: 25px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 18px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); transform: scale(1.02);">
-                        <span style="font-size: 28px;">📢</span>
-                        <div><strong>إرسال عبر قائمة بث (دفعة واحدة)</strong><br><span style="font-size: 13px; opacity: 0.9;">أسرع طريقة - حتى 256 مستلم</span></div>
-                    </button>
+                ${isLargeGroup ? `
+                <button id="btnOneClickBroadcast" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); margin-bottom: 15px; transition: transform 0.2s;">
+                    <span style="display: block; font-size: 24px; margin-bottom: 5px;">📋</span>
+                    إنشاء قائمة بث (ضغطة واحدة)
+                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9; margin-top: 5px;">ينسخ الأرقام ويفتح واتساب فوراً</div>
+                </button>
+                ` : `
+                <button id="btnSequential" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #FDB714, #E5A00D); border: none; border-radius: 10px; color: #1A1A1A; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(253, 183, 20, 0.4); margin-bottom: 15px;">
+                    <span style="display: block; font-size: 24px; margin-bottom: 5px;">📲</span>
+                    إرسال تلقائي (واحد تلو الآخر)
+                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9; margin-top: 5px;">سيقوم النظام بفتح المحادثات لك</div>
+                </button>
+                `}
 
-                    <button id="btnSequential" style="padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 15px;">
-                        <span style="font-size: 20px;">📲</span>
-                        <div><strong>إرسال فردي (تلقائي)</strong><br><span style="font-size: 11px; opacity: 0.7;">يفتح المحادثات واحدة تلو الأخرى</span></div>
+                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                    ${isLargeGroup ? `
+                    <button id="btnSequentialSmall" style="background: #2A2A2A; border: 1px solid #444; color: #ccc; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px;">
+                        أو أرسل فردياً (تلقائي)
                     </button>
-                    
-                    <button id="btnParallel" style="padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 15px;">
-                        <span style="font-size: 20px;">⚡</span>
-                        <div><strong>إرسال سريع (نوافذ متعددة)</strong><br><span style="font-size: 11px; opacity: 0.7;">قد يسبب بطء المتصفح</span></div>
+                    ` : `
+                    <button id="btnOneClickBroadcastSmall" style="background: #2A2A2A; border: 1px solid #444; color: #ccc; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px;">
+                        استخدم قائمة بث
                     </button>
+                    `}
                 </div>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
     
-    document.getElementById('btnSequential').onclick = () => startBroadcastSend('sequential');
-    document.getElementById('btnCopyBroadcast').onclick = () => copyForWhatsAppBroadcastList();
-    document.getElementById('btnParallel').onclick = () => startBroadcastSend('parallel');
+    // Setup Event Listeners
+    const btnOneClick = document.getElementById('btnOneClickBroadcast');
+    if (btnOneClick) btnOneClick.onclick = () => executeOneClickBroadcast();
+    
+    const btnSeq = document.getElementById('btnSequential');
+    if (btnSeq) btnSeq.onclick = () => startBroadcastSend('sequential');
+
+    const btnOneClickSmall = document.getElementById('btnOneClickBroadcastSmall');
+    if (btnOneClickSmall) btnOneClickSmall.onclick = () => executeOneClickBroadcast();
+
+    const btnSeqSmall = document.getElementById('btnSequentialSmall');
+    if (btnSeqSmall) btnSeqSmall.onclick = () => startBroadcastSend('sequential');
 }
 
 function closeBroadcastOptionsModal() {
     const modal = document.getElementById('broadcastOptionsModal');
     if (modal) modal.remove();
+}
+
+// تنفيذ عملية البث بضغطة واحدة (نسخ + فتح)
+function executeOneClickBroadcast() {
+    const recipients = window._broadcastRecipients;
+    const message = window._broadcastMessage;
+    closeBroadcastOptionsModal();
+
+    // 1. Prepare Phones
+    let phones = recipients.map(r => {
+        let p = r.phone.replace(/[^0-9]/g, '');
+        if (p.startsWith('0')) p = '213' + p.substring(1);
+        if (!p.startsWith('213')) p = '213' + p;
+        return '+' + p;
+    });
+    
+    // Limit to 256
+    if (phones.length > 256) {
+        showToast('⚠️ تم تحديد أول 256 رقم فقط (حد واتساب)', 'warning');
+        phones = phones.slice(0, 256);
+    }
+
+    // 2. Copy Phones to Clipboard
+    const dummy = document.createElement('textarea');
+    dummy.value = phones.join('\n');
+    document.body.appendChild(dummy);
+    dummy.select();
+    try {
+        document.execCommand('copy');
+        showToast('✅ تم نسخ الأرقام! أنشئ قائمة بث وألصقها', 'success');
+    } catch (err) {
+        showToast('❌ فشل النسخ التلقائي', 'error');
+    }
+    document.body.removeChild(dummy);
+    
+    // 3. Open WhatsApp
+    window.open('https://web.whatsapp.com', '_blank');
+
+    // 4. Show "Copy Message" Modal immediately so it's ready when they switch back
+    showCopyMessageModal(message);
+}
+
+function showCopyMessageModal(message) {
+    const cleanMessage = message.replace(/{name}/g, 'عميلنا الكريم');
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'copyMessageModal';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 400px; border: 2px solid #25D366;">
+            <div class="modal-header">
+                <h3 class="modal-title">الخطوة 2: نسخ الرسالة</h3>
+                <button class="modal-close" onclick="document.getElementById('copyMessageModal').remove()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <div style="background: #2A2A2A; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; color: #aaa;">
+                    1. في واتساب: أنشئ "قائمة بث" وألصق الأرقام.<br>
+                    2. انسخ الرسالة من هنا وأرسلها.
+                </div>
+                
+                <textarea id="msgToCopy" readonly style="width: 100%; height: 120px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px; margin-bottom: 15px; resize: none;">${cleanMessage}</textarea>
+                
+                <button onclick="document.getElementById('msgToCopy').select(); document.execCommand('copy'); showToast('تم نسخ الرسالة!', 'success');" style="width: 100%; padding: 15px; background: #FDB714; border: none; border-radius: 8px; color: #1A1A1A; font-weight: bold; cursor: pointer; font-size: 16px;">
+                    📋 نسخ الرسالة
+                </button>
+                
+                <button onclick="document.getElementById('copyMessageModal').remove()" style="margin-top: 10px; background: none; border: none; color: #888; cursor: pointer; text-decoration: underline;">
+                    إغلاق
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
 }
 
 async function startBroadcastSend(mode) {
