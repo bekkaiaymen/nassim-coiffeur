@@ -4844,14 +4844,10 @@ async function sendEmployeesUpdate() {
             }
         });
         
-        const customers = Array.from(customersMap);
+        const recipients = Array.from(customersMap).map(([phone, name]) => ({ phone, name }));
         
-        if (customers.length === 0) {
+        if (recipients.length === 0) {
             showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
-            return;
-        }
-        
-        if (!confirm(`سيتم إرسال معلومات الموظفين إلى ${customers.length} عميل. هل تريد المتابعة؟`)) {
             return;
         }
         
@@ -4865,15 +4861,7 @@ async function sendEmployeesUpdate() {
         
         message += `\nاحجز موعدك الآن! 🔥`;
         
-        let sent = 0;
-        for (const [phone, name] of customers) {
-            const personalizedMsg = message.replace(/صالون نسيم/g, `صالون نسيم يا ${name}`);
-            sendWhatsAppMessage(phone, personalizedMsg);
-            sent++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        showToast(`✅ تم إرسال الإعلان إلى ${sent} عميل`, 'success');
+        showBroadcastOptionsModal(recipients, message.replace(/صالون نسيم/g, `صالون نسيم يا {name}`));
         
     } catch (error) {
         console.error('Error sending employees update:', error);
@@ -4895,9 +4883,9 @@ async function sendServicesUpdate() {
             }
         });
         
-        const customers = Array.from(customersMap);
+        const recipients = Array.from(customersMap).map(([phone, name]) => ({ phone, name }));
         
-        if (customers.length === 0) {
+        if (recipients.length === 0) {
             showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
             return;
         }
@@ -4912,10 +4900,6 @@ async function sendServicesUpdate() {
             return;
         }
         
-        if (!confirm(`سيتم إرسال ${latestServices.length} خدمة إلى ${customers.length} عميل. هل تريد المتابعة؟`)) {
-            return;
-        }
-        
         let message = `✨ خدمات جديدة في صالون نسيم! 💈\n\n`;
         
         latestServices.forEach((service, index) => {
@@ -4927,15 +4911,7 @@ async function sendServicesUpdate() {
         
         message += `احجز الآن! 🔥`;
         
-        let sent = 0;
-        for (const [phone, name] of customers) {
-            const personalizedMsg = `مرحباً ${name}! 👋\n\n` + message;
-            sendWhatsAppMessage(phone, personalizedMsg);
-            sent++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        showToast(`✅ تم إرسال الخدمات إلى ${sent} عميل`, 'success');
+        showBroadcastOptionsModal(recipients, `مرحباً {name}! 👋\n\n` + message);
         
     } catch (error) {
         console.error('Error sending services update:', error);
@@ -4964,9 +4940,9 @@ async function sendPostsUpdate() {
             }
         });
         
-        const customers = Array.from(customersMap);
+        const recipients = Array.from(customersMap).map(([phone, name]) => ({ phone, name }));
         
-        if (customers.length === 0) {
+        if (recipients.length === 0) {
             showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
             return;
         }
@@ -4979,10 +4955,6 @@ async function sendPostsUpdate() {
             return;
         }
         
-        if (!confirm(`سيتم إرسال آخر خبر إلى ${customers.length} عميل. هل تريد المتابعة؟`)) {
-            return;
-        }
-        
         let message = `📢 خبر جديد من صالون نسيم! 💈\n\n`;
         message += `${latestPost.title}\n\n`;
         if (latestPost.content) {
@@ -4990,15 +4962,7 @@ async function sendPostsUpdate() {
         }
         message += `تابعنا للمزيد! 🔥`;
         
-        let sent = 0;
-        for (const [phone, name] of customers) {
-            const personalizedMsg = `مرحباً ${name}! 👋\n\n` + message;
-            sendWhatsAppMessage(phone, personalizedMsg);
-            sent++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        showToast(`✅ تم إرسال الخبر إلى ${sent} عميل`, 'success');
+        showBroadcastOptionsModal(recipients, `مرحباً {name}! 👋\n\n` + message);
         
     } catch (error) {
         console.error('Error sending posts update:', error);
@@ -5027,9 +4991,9 @@ async function sendRewardsUpdate() {
             }
         });
         
-        const customers = Array.from(customersMap);
+        const recipients = Array.from(customersMap).map(([phone, name]) => ({ phone, name }));
         
-        if (customers.length === 0) {
+        if (recipients.length === 0) {
             showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
             return;
         }
@@ -5039,10 +5003,6 @@ async function sendRewardsUpdate() {
         
         if (activeRewards.length === 0) {
             showToast('لا توجد مكافآت نشطة لإرسالها', 'info');
-            return;
-        }
-        
-        if (!confirm(`سيتم إرسال ${activeRewards.length} مكافأة إلى ${customers.length} عميل. هل تريد المتابعة؟`)) {
             return;
         }
         
@@ -5057,15 +5017,7 @@ async function sendRewardsUpdate() {
         
         message += `احجز الآن واجمع النقاط! 🔥`;
         
-        let sent = 0;
-        for (const [phone, name] of customers) {
-            const personalizedMsg = `مرحباً ${name}! 👋\n\n` + message;
-            sendWhatsAppMessage(phone, personalizedMsg);
-            sent++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        showToast(`✅ تم إرسال المكافآت إلى ${sent} عميل`, 'success');
+        showBroadcastOptionsModal(recipients, `مرحباً {name}! 👋\n\n` + message);
         
     } catch (error) {
         console.error('Error sending rewards update:', error);
@@ -5087,9 +5039,9 @@ async function sendProductsUpdate() {
             }
         });
         
-        const customers = Array.from(customersMap);
+        const recipients = Array.from(customersMap).map(([phone, name]) => ({ phone, name }));
         
-        if (customers.length === 0) {
+        if (recipients.length === 0) {
             showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
             return;
         }
@@ -5099,10 +5051,6 @@ async function sendProductsUpdate() {
         
         if (products.length === 0) {
             showToast('لا توجد منتجات لإرسالها', 'info');
-            return;
-        }
-        
-        if (!confirm(`سيتم إرسال ${products.length} منتج إلى ${customers.length} عميل. هل تريد المتابعة؟`)) {
             return;
         }
         
@@ -5117,15 +5065,7 @@ async function sendProductsUpdate() {
         
         message += `تسوق الآن! 🛒`;
         
-        let sent = 0;
-        for (const [phone, name] of customers) {
-            const personalizedMsg = `مرحباً ${name}! 👋\n\n` + message;
-            sendWhatsAppMessage(phone, personalizedMsg);
-            sent++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
-        showToast(`✅ تم إرسال المنتجات إلى ${sent} عميل`, 'success');
+        showBroadcastOptionsModal(recipients, `مرحباً {name}! 👋\n\n` + message);
         
     } catch (error) {
         console.error('Error sending products update:', error);
@@ -5155,19 +5095,19 @@ function showBroadcastOptionsModal(recipients, message) {
                 </div>
                 
                 <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <button id="btnSequential" style="padding: 20px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 16px;">
-                        <span style="font-size: 24px;">📲</span>
-                        <div><strong>إرسال تسلسلي</strong><br><span style="font-size: 12px; opacity: 0.9;">فتح كل محادثة واحدة تلو الأخرى</span></div>
+                    <button id="btnCopyBroadcast" style="padding: 25px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 18px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3); transform: scale(1.02);">
+                        <span style="font-size: 28px;">📢</span>
+                        <div><strong>إرسال عبر قائمة بث (دفعة واحدة)</strong><br><span style="font-size: 13px; opacity: 0.9;">أسرع طريقة - حتى 256 مستلم</span></div>
+                    </button>
+
+                    <button id="btnSequential" style="padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 15px;">
+                        <span style="font-size: 20px;">📲</span>
+                        <div><strong>إرسال فردي (تلقائي)</strong><br><span style="font-size: 11px; opacity: 0.7;">يفتح المحادثات واحدة تلو الأخرى</span></div>
                     </button>
                     
-                    <button id="btnCopyBroadcast" style="padding: 20px; background: linear-gradient(135deg, #FDB714, #E5A00D); border: none; border-radius: 10px; color: #1A1A1A; cursor: pointer; font-size: 16px;">
-                        <span style="font-size: 24px;">📋</span>
-                        <div><strong>نسخ للبث في واتساب</strong><br><span style="font-size: 12px; opacity: 0.8;">نسخ الأرقام والرسالة</span></div>
-                    </button>
-                    
-                    <button id="btnParallel" style="padding: 20px; background: linear-gradient(135deg, #4A4A4A, #333); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 16px;">
-                        <span style="font-size: 24px;">⚡</span>
-                        <div><strong>إرسال سريع</strong><br><span style="font-size: 12px; opacity: 0.9;">فتح جميع المحادثات دفعة واحدة</span></div>
+                    <button id="btnParallel" style="padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 15px;">
+                        <span style="font-size: 20px;">⚡</span>
+                        <div><strong>إرسال سريع (نوافذ متعددة)</strong><br><span style="font-size: 11px; opacity: 0.7;">قد يسبب بطء المتصفح</span></div>
                     </button>
                 </div>
             </div>
@@ -5254,10 +5194,16 @@ async function runBroadcast(recipients, message) {
 }
 
 function copyForWhatsAppBroadcastList() {
-    const recipients = window._broadcastRecipients;
+    let recipients = window._broadcastRecipients;
     const message = window._broadcastMessage;
     closeBroadcastOptionsModal();
     
+    // Limit to 256 for Broadcast List
+    if (recipients.length > 256) {
+        showToast(`⚠️ تم تحديد أول 256 مستلم فقط (حد واتساب)`, 'warning');
+        recipients = recipients.slice(0, 256);
+    }
+
     const phones = recipients.map(r => {
         let p = r.phone.replace(/[^0-9]/g, '');
         if (p.startsWith('0')) p = '213' + p.substring(1);
@@ -5273,50 +5219,52 @@ function copyForWhatsAppBroadcastList() {
     modal.innerHTML = `
         <div class="modal" style="max-width: 550px;">
             <div class="modal-header">
-                <h3 class="modal-title">📋 نسخ للبث في واتساب</h3>
+                <h3 class="modal-title">📢 إنشاء قائمة بث (Broadcast)</h3>
                 <button class="modal-close" onclick="document.getElementById('copyBroadcastModal').remove()">&times;</button>
             </div>
             <div class="modal-body">
-                <div style="margin-bottom: 20px;">
-                    <h4 style="color: #FDB714; margin-bottom: 10px;">1️⃣ الأرقام (${phones.length})</h4>
-                    <p style="color: #888; font-size: 12px; margin-bottom: 5px;">انسخ الأرقام وأضفها لجهات الاتصال أو قائمة البث</p>
-                    <textarea id="phonesList" readonly style="width: 100%; height: 100px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px; font-family: monospace; font-size: 12px; resize: none;">${phones.join('\n')}</textarea>
-                    <button onclick="document.getElementById('phonesList').select(); document.execCommand('copy'); showToast('تم نسخ الأرقام!', 'success');" style="margin-top: 10px; padding: 8px 20px; background: #25D366; border: none; border-radius: 5px; color: white; cursor: pointer; width: 100%;">
-                        📋 نسخ الأرقام
-                    </button>
-                </div>
-                
-                <div style="margin-bottom: 20px;">
-                    <h4 style="color: #FDB714; margin-bottom: 10px;">2️⃣ الرسالة</h4>
-                    <textarea id="messageText" readonly style="width: 100%; height: 120px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px; resize: none;">${cleanMessage}</textarea>
-                    <button onclick="document.getElementById('messageText').select(); document.execCommand('copy'); showToast('تم نسخ الرسالة!', 'success');" style="margin-top: 10px; padding: 8px 20px; background: #25D366; border: none; border-radius: 5px; color: white; cursor: pointer; width: 100%;">
-                        📋 نسخ الرسالة
-                    </button>
-                </div>
-                
-                <div style="margin-bottom: 20px; text-align: center;">
-                    <h4 style="color: #FDB714; margin-bottom: 10px;">3️⃣ فتح واتساب</h4>
-                    <div style="display: flex; gap: 10px; justify-content: center;">
-                        <a href="https://web.whatsapp.com" target="_blank" style="padding: 10px 20px; background: #25D366; border-radius: 5px; color: white; text-decoration: none; display: inline-block;">
-                            💻 واتساب ويب
-                        </a>
-                        <a href="whatsapp://" style="padding: 10px 20px; background: #25D366; border-radius: 5px; color: white; text-decoration: none; display: inline-block;">
-                            📱 تطبيق واتساب
-                        </a>
-                    </div>
+                <div style="background: #2A2A2A; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #25D366;">
+                    <p style="margin: 0; color: #fff; font-size: 14px;">
+                        <strong>💡 طريقة الاستخدام:</strong><br>
+                        1. انسخ الأرقام وأنشئ "قائمة بث جديدة" في واتساب.<br>
+                        2. انسخ الرسالة وأرسلها للقائمة.<br>
+                        <span style="color: #888; font-size: 12px;">(هذه الطريقة ترسل للجميع بضغطة واحدة!)</span>
+                    </p>
                 </div>
 
-                <div style="padding: 15px; background: #2A2A2A; border-radius: 8px; border: 1px solid #333;">
-                    <h4 style="margin: 0 0 10px 0; color: #FDB714;">📖 خطوات إنشاء قائمة بث:</h4>
-                    <ol style="margin: 0; padding-right: 20px; color: #aaa; font-size: 13px; line-height: 1.8;">
-                        <li>افتح واتساب > اضغط على النقاط الثلاث (⋮)</li>
-                        <li>اختر "بث جديد" أو "New broadcast"</li>
-                        <li>أضف الأرقام المنسوخة (يجب أن تكون محفوظة في جهات الاتصال)</li>
-                        <li>الصق الرسالة وأرسلها</li>
-                    </ol>
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="color: #FDB714; margin: 0;">1️⃣ الأرقام (${phones.length})</h4>
+                        <button onclick="document.getElementById('phonesList').select(); document.execCommand('copy'); showToast('تم نسخ الأرقام!', 'success');" style="padding: 5px 15px; background: #25D366; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 12px;">
+                            📋 نسخ الكل
+                        </button>
+                    </div>
+                    <textarea id="phonesList" readonly style="width: 100%; height: 80px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px; font-family: monospace; font-size: 12px; resize: none;">${phones.join('\n')}</textarea>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="color: #FDB714; margin: 0;">2️⃣ الرسالة</h4>
+                        <button onclick="document.getElementById('messageText').select(); document.execCommand('copy'); showToast('تم نسخ الرسالة!', 'success');" style="padding: 5px 15px; background: #25D366; border: none; border-radius: 4px; color: white; cursor: pointer; font-size: 12px;">
+                            📋 نسخ الرسالة
+                        </button>
+                    </div>
+                    <textarea id="messageText" readonly style="width: 100%; height: 100px; background: #1a1a1a; border: 1px solid #333; border-radius: 8px; color: #ccc; padding: 10px; resize: none;">${cleanMessage}</textarea>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #333;">
+                    <a href="https://web.whatsapp.com" target="_blank" style="padding: 12px 30px; background: #25D366; border-radius: 25px; color: white; text-decoration: none; display: inline-block; font-weight: bold; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.3);">
+                        🚀 فتح واتساب ويب
+                    </a>
                 </div>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
+    
+    // Auto-select phones for convenience
+    setTimeout(() => {
+        const phonesList = document.getElementById('phonesList');
+        if(phonesList) phonesList.select();
+    }, 500);
 }
