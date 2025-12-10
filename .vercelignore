@@ -1,0 +1,10 @@
+node_modules
+server.js
+routes
+models
+services
+middleware
+seed.js
+.env
+auth_info_baileys
+*.log
