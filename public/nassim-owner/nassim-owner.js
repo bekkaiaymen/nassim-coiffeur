@@ -1484,6 +1484,11 @@ async function submitAddService() {
         showToast('تمت إضافة الخدمة بنجاح', 'success');
         closeModal();
         loadServices();
+        
+        // Show notification prompt for new service
+        if (result.newItem) {
+            showNewItemNotificationPrompt('service', result.data);
+        }
 
     } catch (error) {
         console.error('Error adding service:', error);

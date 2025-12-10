@@ -109,7 +109,8 @@ router.post('/', protect, ensureTenant, async (req, res) => {
         res.status(201).json({ 
             success: true, 
             message: 'تم إضافة الخدمة بنجاح',
-            data: service 
+            data: service,
+            newItem: true // Flag to show notification prompt
         });
     } catch (error) {
         console.error('Error creating service:', error);
