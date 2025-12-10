@@ -38,4 +38,14 @@ router.post('/logout', async (req, res) => {
     }
 });
 
+// Reset Session (Hard Reset)
+router.post('/reset', async (req, res) => {
+    try {
+        await whatsappService.reset();
+        res.json({ success: true, message: 'Session reset successfully. Please wait for new QR code.' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to reset session' });
+    }
+});
+
 module.exports = router;

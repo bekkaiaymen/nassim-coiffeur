@@ -44,3 +44,5 @@ coverage/
 
 # Optional
 .cache/
+# WhatsApp Session
+.wwebjs_auth/

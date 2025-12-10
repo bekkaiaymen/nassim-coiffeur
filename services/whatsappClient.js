@@ -34,7 +34,15 @@ const initializeClient = async () => {
         const chromePath = getChromePath();
         const puppeteerConfig = {
             headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox']
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--no-first-run',
+                '--no-zygote',
+                '--disable-gpu'
+            ]
         };
 
         if (chromePath) {
@@ -48,7 +56,11 @@ const initializeClient = async () => {
             authStrategy: new LocalAuth({
                 clientId: 'nassim-bot'
             }),
-            puppeteer: puppeteerConfig
+            puppeteer: puppeteerConfig,
+            webVersionCache: {
+                type: 'remote',
+                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
+            }
         });
 
         client.on('qr', async (qr) => {
@@ -128,18 +140,49 @@ const sendMessage = async (phone, message) => {
 
 const logout = async () => {
     if (client) {
-        await client.logout();
+        try {
+            await client.logout();
+        } catch (e) {
+            console.error('Logout error:', e);
+        }
         isReady = false;
         qrCodeData = null;
         isInitializing = false;
         // Re-init to allow new login
-        initializeClient();
+        setTimeout(initializeClient, 1000);
     }
+};
+
+const reset = async () => {
+    console.log('🔄 Resetting WhatsApp Client...');
+    if (client) {
+        try {
+            await client.destroy();
+        } catch (e) { console.error('Destroy error:', e); }
+    }
+    
+    isReady = false;
+    qrCodeData = null;
+    isInitializing = false;
+    
+    // Try to delete session folder
+    const sessionPath = './.wwebjs_auth/session-nassim-bot';
+    if (fs.existsSync(sessionPath)) {
+        try {
+            fs.rmSync(sessionPath, { recursive: true, force: true });
+            console.log('🗑️ Session data cleared');
+        } catch (e) {
+            console.error('Failed to clear session data:', e);
+        }
+    }
+    
+    initializeClient();
 };
 
 module.exports = {
     initializeClient,
     getStatus,
     sendMessage,
-    logout
+    logout,
+    reset
 };
