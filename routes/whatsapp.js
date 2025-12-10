@@ -1,9 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const whatsappService = require('../services/whatsappClient');
+const whatsappService = require('../services/baileysClient');
 
-// Initialize client when this route is first loaded (or you can do it in server.js)
-// We'll do it here to lazy load
+// Initialize Baileys client
 whatsappService.initializeClient();
 
 // Get Status & QR
