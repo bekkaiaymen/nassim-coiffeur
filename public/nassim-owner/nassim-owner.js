@@ -1486,14 +1486,15 @@ async function submitAddService() {
 
         if (!response.ok) throw new Error('Failed to add service');
 
+        const result = await response.json();
+        const newService = result.data || result;
+        
         showToast('تمت إضافة الخدمة بنجاح', 'success');
         closeModal();
         loadServices();
         
         // Show notification prompt for new service
-        if (result.newItem) {
-            showNewItemNotificationPrompt('service', result.data);
-        }
+        showNewItemNotificationPrompt('service', newService);
 
     } catch (error) {
         console.error('Error adding service:', error);
