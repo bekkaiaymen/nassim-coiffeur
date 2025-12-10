@@ -54,10 +54,12 @@ const initializeClient = async () => {
 
         client = new Client({
             authStrategy: new LocalAuth({
-                clientId: 'nassim-bot-v2', // New session ID to force clean slate
+                clientId: 'nassim-bot-v3', // Fresh session
                 dataPath: './.wwebjs_auth'
             }),
             puppeteer: puppeteerConfig,
+            qrMaxRetries: 3,
+            restartOnAuthFail: true,
             // Use a specific stable version
             webVersionCache: {
                 type: 'remote',
@@ -69,8 +71,19 @@ const initializeClient = async () => {
             console.log('⏳ Loading:', percent, '%', message);
         });
 
+        let qrRetries = 0;
+        const MAX_QR_RETRIES = 3;
+        
         client.on('qr', async (qr) => {
-            console.log('📱 QR Code received');
+            qrRetries++;
+            console.log(`📱 QR Code received (attempt ${qrRetries}/${MAX_QR_RETRIES})`);
+            
+            if (qrRetries > MAX_QR_RETRIES) {
+                console.error('❌ Too many QR code attempts. Resetting...');
+                await reset();
+                return;
+            }
+            
             try {
                 qrCodeData = await qrcode.toDataURL(qr);
             } catch (err) {
@@ -82,6 +95,7 @@ const initializeClient = async () => {
             console.log('✅ WhatsApp Client is ready!');
             isReady = true;
             qrCodeData = null;
+            isInitializing = false;
         });
 
         client.on('authenticated', () => {
@@ -170,19 +184,34 @@ const reset = async () => {
     isReady = false;
     qrCodeData = null;
     isInitializing = false;
+    client = null;
     
-    // Try to delete session folder
-    const sessionPath = './.wwebjs_auth/session-nassim-bot';
-    if (fs.existsSync(sessionPath)) {
+    // Delete ALL session folders
+    const authDir = './.wwebjs_auth';
+    if (fs.existsSync(authDir)) {
         try {
-            fs.rmSync(sessionPath, { recursive: true, force: true });
-            console.log('🗑️ Session data cleared');
+            fs.rmSync(authDir, { recursive: true, force: true });
+            console.log('🗑️ All session data cleared');
         } catch (e) {
             console.error('Failed to clear session data:', e);
         }
     }
     
-    initializeClient();
+    // Also clear cache
+    const cacheDir = './.wwebjs_cache';
+    if (fs.existsSync(cacheDir)) {
+        try {
+            fs.rmSync(cacheDir, { recursive: true, force: true });
+            console.log('🗑️ Cache cleared');
+        } catch (e) {
+            console.error('Failed to clear cache:', e);
+        }
+    }
+    
+    // Wait before reinitializing
+    setTimeout(() => {
+        initializeClient();
+    }, 3000);
 };
 
 module.exports = {

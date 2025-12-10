@@ -5146,16 +5146,15 @@ async function startServerBroadcast() {
     // Check Status
     try {
         showToast('جاري التحقق من اتصال واتساب...', 'info');
-        const response = await fetch('/api/whatsapp/status');
+        const response = await fetch('/api/whatsapp/status?t=' + Date.now());
         const status = await response.json();
 
         if (!status.isReady) {
             if (status.qrCode) {
                 showWhatsAppQRModal(status.qrCode);
             } else {
-                showToast('جاري تهيئة واتساب... يرجى الانتظار والمحاولة مرة أخرى', 'warning');
-                // Trigger init if not started
-                fetch('/api/whatsapp/status'); 
+                // If initializing, show a loading modal instead of just a toast
+                showInitializingModal();
             }
             return;
         }
@@ -5167,6 +5166,68 @@ async function startServerBroadcast() {
         console.error('WhatsApp Status Error:', error);
         showToast('فشل الاتصال بخدمة واتساب', 'error');
     }
+}
+
+function showInitializingModal() {
+    if (document.getElementById('initializingModal')) return;
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'initializingModal';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h3 class="modal-title">⏳ جاري تهيئة واتساب...</h3>
+            </div>
+            <div class="modal-body">
+                <div style="font-size: 40px; margin-bottom: 20px;">🔄</div>
+                <p style="color: #ccc; margin-bottom: 20px;">جاري تشغيل المتصفح وتجهيز رمز QR.<br>يرجى الانتظار...</p>
+                <div style="background: #333; height: 4px; border-radius: 2px; overflow: hidden;">
+                    <div style="background: #007bff; height: 100%; width: 50%; animation: progress 1s infinite linear;"></div>
+                </div>
+                <style>@keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }</style>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Poll for status every 2 seconds
+    const checkInterval = setInterval(async () => {
+        try {
+            const response = await fetch('/api/whatsapp/status?t=' + Date.now());
+            const status = await response.json();
+            
+            if (status.qrCode || status.isReady) {
+                clearInterval(checkInterval);
+                document.getElementById('initializingModal').remove();
+                startServerBroadcast(); // Retry
+            }
+        } catch (e) {
+            console.error('Polling error', e);
+        }
+    }, 2000);
+    
+    // Timeout after 30 seconds
+    setTimeout(() => {
+        clearInterval(checkInterval);
+        const m = document.getElementById('initializingModal');
+        if (m) {
+            m.innerHTML = `
+                <div class="modal" style="max-width: 400px; text-align: center;">
+                    <div class="modal-header"><h3 class="modal-title">⚠️ استغرق الأمر وقتاً طويلاً</h3></div>
+                    <div class="modal-body">
+                        <p style="color: #ccc;">يبدو أن هناك مشكلة في تشغيل واتساب.</p>
+                        <button onclick="resetWhatsAppSession(); this.closest('.modal-overlay').remove()" style="margin-top: 10px; padding: 10px 20px; background: #ff4444; border: none; border-radius: 5px; color: white; cursor: pointer;">
+                            🔄 إعادة ضبط المصنع
+                        </button>
+                        <button onclick="this.closest('.modal-overlay').remove()" style="margin-top: 10px; padding: 10px 20px; background: #333; border: none; border-radius: 5px; color: white; cursor: pointer;">
+                            إغلاق
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    }, 30000);
 }
 
 function showWhatsAppQRModal(qrCodeUrl) {
