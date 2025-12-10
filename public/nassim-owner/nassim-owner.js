@@ -5098,25 +5098,29 @@ function showBroadcastOptionsModal(recipients, message) {
                     <p style="color: #888; font-size: 13px;">اختر الطريقة المناسبة لك:</p>
                 </div>
                 
-                <button id="btnServerAuto" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #007bff, #0056b3); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4); margin-bottom: 15px; transition: transform 0.2s;">
-                    <span style="display: block; font-size: 24px; margin-bottom: 5px;">🤖</span>
-                    إرسال تلقائي بالكامل (Server Bot)
-                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9; margin-top: 5px;">يرسل مباشرة بدون فتح نوافذ (يتطلب ربط واتساب)</div>
+                <button id="btnDesktopAutoSend" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); margin-bottom: 15px; transition: transform 0.2s;">
+                    <span style="display: block; font-size: 24px; margin-bottom: 5px;">💻</span>
+                    إرسال عبر التطبيق المفتوح (موصى به)
+                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9; margin-top: 5px;">يستخدم تطبيق WhatsApp Desktop المفتوح مباشرة</div>
                 </button>
 
                 <div style="border-top: 1px solid #333; margin: 15px 0; padding-top: 15px;">
-                    <p style="color: #aaa; font-size: 12px; margin-bottom: 10px; text-align: center;">أو الطرق اليدوية:</p>
+                    <p style="color: #aaa; font-size: 12px; margin-bottom: 10px; text-align: center;">طرق أخرى:</p>
+                    
+                    <button id="btnServerAuto" style="width: 100%; padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <span>🤖</span> Server Bot (يتطلب ربط جديد)
+                    </button>
                     
                     <button id="btnOneClickBroadcastApp" style="width: 100%; padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                        <span>🖥️</span> فتح تطبيق واتساب (قائمة بث)
+                        <span>🖥️</span> قائمة بث (تطبيق)
                     </button>
                     
                     <button id="btnOneClickBroadcastWeb" style="width: 100%; padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                        <span>🌐</span> فتح واتساب ويب (قائمة بث)
+                        <span>🌐</span> قائمة بث (ويب)
                     </button>
 
                     <button id="btnSequential" style="width: 100%; padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                        <span>📲</span> إرسال فردي (نوافذ متتالية)
+                        <span>📲</span> إرسال فردي (نوافذ)
                     </button>
                 </div>
             </div>
@@ -5125,6 +5129,7 @@ function showBroadcastOptionsModal(recipients, message) {
     document.body.appendChild(modal);
     
     // Setup Event Listeners
+    document.getElementById('btnDesktopAutoSend').onclick = () => startDesktopAutoSend();
     document.getElementById('btnServerAuto').onclick = () => startServerBroadcast();
     document.getElementById('btnOneClickBroadcastApp').onclick = () => executeOneClickBroadcast('app');
     document.getElementById('btnOneClickBroadcastWeb').onclick = () => executeOneClickBroadcast('web');
@@ -5134,6 +5139,131 @@ function showBroadcastOptionsModal(recipients, message) {
 function closeBroadcastOptionsModal() {
     const modal = document.getElementById('broadcastOptionsModal');
     if (modal) modal.remove();
+}
+
+// ==================== Desktop App Auto Send ====================
+async function startDesktopAutoSend() {
+    const recipients = window._broadcastRecipients;
+    const message = window._broadcastMessage;
+    closeBroadcastOptionsModal();
+    
+    showDesktopAutoSendModal(recipients, message);
+}
+
+function showDesktopAutoSendModal(recipients, message) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'desktopAutoSendModal';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 class="modal-title">💻 إرسال عبر WhatsApp Desktop</h3>
+                <button class="modal-close" onclick="document.getElementById('desktopAutoSendModal').remove()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <div style="font-size: 50px; margin-bottom: 15px;">📱</div>
+                <h4 style="color: #25D366; margin-bottom: 10px;">جاهز للإرسال!</h4>
+                <p style="color: #ccc; margin-bottom: 20px;">سيتم فتح ${recipients.length} محادثة في تطبيق WhatsApp Desktop تلقائياً</p>
+                
+                <div style="background: #2A2A2A; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: right;">
+                    <strong style="color: #FDB714;">💡 كيف يعمل:</strong><br>
+                    <div style="color: #aaa; font-size: 13px; margin-top: 8px; line-height: 1.6;">
+                        1️⃣ سيفتح تطبيق WhatsApp Desktop تلقائياً<br>
+                        2️⃣ ستظهر المحادثات واحدة تلو الأخرى<br>
+                        3️⃣ ستجد الرسالة جاهزة للإرسال<br>
+                        4️⃣ فقط اضغط Enter أو زر الإرسال ✅
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    <label style="color: #ccc;">تأخير بين الرسائل:</label>
+                    <select id="desktopDelay" style="padding: 8px; border-radius: 5px; background: #1a1a1a; color: white; border: 1px solid #444;">
+                        <option value="2000">2 ثانية</option>
+                        <option value="3000" selected>3 ثوان</option>
+                        <option value="5000">5 ثوان</option>
+                        <option value="8000">8 ثوان</option>
+                    </select>
+                </div>
+
+                <button onclick="executeDesktopAutoSend()" style="width: 100%; padding: 15px; background: #25D366; border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 16px; margin-bottom: 10px;">
+                    🚀 ابدأ الإرسال التلقائي
+                </button>
+                
+                <button onclick="document.getElementById('desktopAutoSendModal').remove()" style="background: none; border: none; color: #888; cursor: pointer; text-decoration: underline;">
+                    إلغاء
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+async function executeDesktopAutoSend() {
+    const recipients = window._broadcastRecipients;
+    const message = window._broadcastMessage;
+    const delay = parseInt(document.getElementById('desktopDelay').value);
+    
+    document.getElementById('desktopAutoSendModal').remove();
+    
+    // Show progress modal
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'desktopProgressModal';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header"><h3 class="modal-title">📤 جاري فتح المحادثات...</h3></div>
+            <div class="modal-body" style="text-align: center;">
+                <div style="background: #333; border-radius: 10px; height: 20px; margin-bottom: 10px;">
+                    <div id="desktopProgressBar" style="background: #25D366; height: 100%; width: 0%; transition: width 0.3s; border-radius: 10px;"></div>
+                </div>
+                <p id="desktopProgressText" style="color: #ccc;">0 / ${recipients.length}</p>
+                <div id="desktopCurrentName" style="padding: 10px; background: #2A2A2A; border-radius: 8px; margin: 15px 0; color: #FDB714;">...</div>
+                <p style="color: #888; font-size: 12px;">تأكد من أن تطبيق WhatsApp Desktop مفتوح</p>
+                <button id="desktopPauseBtn" style="padding: 10px 20px; background: #ff4444; border: none; border-radius: 8px; color: white; cursor: pointer; margin-top: 10px;">⏸️ إيقاف</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    window._desktopPaused = false;
+    document.getElementById('desktopPauseBtn').onclick = () => {
+        window._desktopPaused = !window._desktopPaused;
+        document.getElementById('desktopPauseBtn').innerHTML = window._desktopPaused ? '▶️ متابعة' : '⏸️ إيقاف';
+        document.getElementById('desktopPauseBtn').style.background = window._desktopPaused ? '#25D366' : '#ff4444';
+    };
+    
+    // Start sending
+    for (let i = 0; i < recipients.length; i++) {
+        while (window._desktopPaused) await new Promise(r => setTimeout(r, 500));
+        
+        const r = recipients[i];
+        const personalizedMsg = message.replace(/{name}/g, r.name);
+        
+        document.getElementById('desktopCurrentName').textContent = r.name;
+        
+        // Format phone number
+        let phone = r.phone.replace(/[^0-9]/g, '');
+        if (phone.startsWith('0')) phone = '213' + phone.substring(1);
+        if (!phone.startsWith('213')) phone = '213' + phone;
+        
+        // Open WhatsApp Desktop with message
+        const whatsappUrl = `whatsapp://send?phone=${phone}&text=${encodeURIComponent(personalizedMsg)}`;
+        window.location.href = whatsappUrl;
+        
+        const pct = ((i + 1) / recipients.length) * 100;
+        document.getElementById('desktopProgressBar').style.width = pct + '%';
+        document.getElementById('desktopProgressText').textContent = `${i + 1} / ${recipients.length}`;
+        
+        if (i < recipients.length - 1) await new Promise(r => setTimeout(r, delay));
+    }
+    
+    document.getElementById('desktopProgressModal').querySelector('.modal-body').innerHTML = `
+        <div style="font-size: 50px; margin-bottom: 15px;">✅</div>
+        <h3 style="color: #25D366;">تم فتح جميع المحادثات!</h3>
+        <p style="color: #ccc;">تم فتح ${recipients.length} محادثة في WhatsApp Desktop</p>
+        <p style="color: #888; font-size: 13px; margin-top: 10px;">يمكنك الآن مراجعة الرسائل وإرسالها</p>
+        <button onclick="document.getElementById('desktopProgressModal').remove()" style="margin-top: 15px; padding: 10px 30px; background: #FDB714; border: none; border-radius: 8px; color: #1A1A1A; cursor: pointer;">إغلاق</button>
+    `;
 }
 
 // ==================== Server-Side Auto Broadcast ====================
