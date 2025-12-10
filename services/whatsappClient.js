@@ -1,10 +1,28 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode');
+const fs = require('fs');
 
 let client;
 let qrCodeData = null;
 let isReady = false;
 let isInitializing = false;
+
+// Helper to find Chrome path on Windows
+const getChromePath = () => {
+    const paths = [
+        'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+        'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+        'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
+    ];
+    
+    for (const path of paths) {
+        if (fs.existsSync(path)) {
+            return path;
+        }
+    }
+    return null;
+};
 
 const initializeClient = async () => {
     if (isInitializing || isReady) return;
@@ -13,14 +31,24 @@ const initializeClient = async () => {
     console.log('🔄 Initializing WhatsApp Client...');
 
     try {
+        const chromePath = getChromePath();
+        const puppeteerConfig = {
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        };
+
+        if (chromePath) {
+            console.log(`ℹ️ Using System Browser: ${chromePath}`);
+            puppeteerConfig.executablePath = chromePath;
+        } else {
+            console.warn('⚠️ No system browser found. Puppeteer might fail if Chromium is not downloaded.');
+        }
+
         client = new Client({
             authStrategy: new LocalAuth({
                 clientId: 'nassim-bot'
             }),
-            puppeteer: {
-                headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox']
-            }
+            puppeteer: puppeteerConfig
         });
 
         client.on('qr', async (qr) => {
