@@ -127,10 +127,7 @@ const getStatus = () => {
 };
 
 const sendMessage = async (phone, message) => {
-    if (!isReady) throw new Error('WhatsApp client is not ready');
-
     // Format phone number
-    // Remove non-digits
     let cleanPhone = phone.replace(/[^0-9]/g, '');
     
     // Handle Algerian numbers
@@ -141,8 +138,41 @@ const sendMessage = async (phone, message) => {
         cleanPhone = '213' + cleanPhone;
     }
 
-    const chatId = `${cleanPhone}@c.us`;
+    // Use desktop app if available, fallback to web client
+    if (process.platform === 'win32') {
+        // Try WhatsApp Desktop first
+        try {
+            const { exec } = require('child_process');
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `whatsapp://send?phone=${cleanPhone}&text=${encodedMessage}`;
+            
+            return new Promise((resolve, reject) => {
+                exec(`start "" "${whatsappUrl}"`, (error) => {
+                    if (error) {
+                        console.log('Desktop app not available, using web client...');
+                        // Fallback to web client
+                        if (!isReady) {
+                            reject(new Error('WhatsApp web client is not ready and desktop app failed'));
+                        } else {
+                            client.sendMessage(`${cleanPhone}@c.us`, message)
+                                .then(resolve)
+                                .catch(reject);
+                        }
+                    } else {
+                        // Give app time to open and send
+                        setTimeout(() => resolve({ success: true, method: 'desktop' }), 2000);
+                    }
+                });
+            });
+        } catch (error) {
+            console.error('Error with desktop app:', error);
+        }
+    }
 
+    // Fallback: use web client
+    if (!isReady) throw new Error('WhatsApp client is not ready');
+    
+    const chatId = `${cleanPhone}@c.us`;
     try {
         const response = await client.sendMessage(chatId, message);
         return response;
