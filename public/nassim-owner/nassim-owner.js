@@ -5290,12 +5290,19 @@ async function resetWhatsAppSession() {
 
 async function checkWhatsAppStatus() {
     try {
-        const response = await fetch('/api/whatsapp/status');
+        const response = await fetch('/api/whatsapp/status?t=' + Date.now());
         const status = await response.json();
-        if (status.isReady) {
+        if (status.isReady || status.isAuthenticated) {
             document.getElementById('whatsappQRModal').remove();
-            showToast('✅ تم الربط بنجاح!', 'success');
-            startServerBroadcast(); // Retry sending
+            showToast('✅ تم الربط بنجاح! جاري المزامنة...', 'success');
+            // Wait a bit for syncing to complete
+            setTimeout(() => {
+                startServerBroadcast();
+            }, 3000);
+        } else if (!status.qrCode) {
+            showToast('جاري المزامنة... يرجى الانتظار', 'info');
+            // Keep polling
+            setTimeout(checkWhatsAppStatus, 2000);
         } else {
             showToast('لم يتم الربط بعد، حاول مرة أخرى', 'warning');
         }

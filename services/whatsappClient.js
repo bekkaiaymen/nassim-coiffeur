@@ -93,15 +93,18 @@ const initializeClient = async () => {
             }
         });
 
-        client.on('ready', () => {
-            console.log('✅ WhatsApp Client is ready!');
-            isReady = true;
-            qrCodeData = null;
+        client.on('authenticated', () => {
+            console.log('🔐 WhatsApp Authenticated - Syncing data...');
+            qrCodeData = null; // Clear QR immediately on authentication
+            isReady = true; // Set ready immediately after authentication
             isInitializing = false;
         });
 
-        client.on('authenticated', () => {
-            console.log('🔐 WhatsApp Authenticated');
+        client.on('ready', () => {
+            console.log('✅ WhatsApp Client is fully ready!');
+            isReady = true;
+            qrCodeData = null;
+            isInitializing = false;
         });
 
         client.on('auth_failure', msg => {
@@ -129,8 +132,9 @@ const initializeClient = async () => {
 
 const getStatus = () => {
     return {
-        isReady,
-        qrCode: qrCodeData
+        isReady: isReady,
+        qrCode: qrCodeData,
+        isAuthenticated: isReady && !qrCodeData
     };
 };
 
