@@ -1982,7 +1982,8 @@ function openAddPostModal() {
                 <select class="form-input" name="type" required>
                     <option value="announcement">إعلان</option>
                     <option value="offer">عرض خاص</option>
-                    <option value="update">تحديث</option>
+                    <option value="news">أخبار</option>
+                    <option value="tip">نصيحة</option>
                 </select>
             </div>
             
@@ -2103,7 +2104,8 @@ async function editPost(postId) {
                     <select class="form-input" name="type" required>
                         <option value="announcement" ${post.type === 'announcement' ? 'selected' : ''}>إعلان</option>
                         <option value="offer" ${post.type === 'offer' ? 'selected' : ''}>عرض خاص</option>
-                        <option value="update" ${post.type === 'update' ? 'selected' : ''}>تحديث</option>
+                        <option value="news" ${post.type === 'news' ? 'selected' : ''}>أخبار</option>
+                        <option value="tip" ${post.type === 'tip' ? 'selected' : ''}>نصيحة</option>
                     </select>
                 </div>
                 
@@ -3134,7 +3136,8 @@ function getPostTypeText(type) {
     const texts = {
         announcement: '📢 إعلان',
         offer: '🎉 عرض خاص',
-        update: '📝 تحديث'
+        news: '📰 أخبار',
+        tip: '💡 نصيحة'
     };
     return texts[type] || type;
 }
