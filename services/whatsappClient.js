@@ -54,18 +54,14 @@ const initializeClient = async () => {
 
         client = new Client({
             authStrategy: new LocalAuth({
-                clientId: 'nassim-bot-windows', // Explicit Windows session
+                clientId: 'nassim-final', // Fresh session
                 dataPath: './.wwebjs_auth'
             }),
             puppeteer: puppeteerConfig,
-            restartOnAuthFail: true,
+            restartOnAuthFail: false,
             // Force Windows User Agent
-            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            // Use a specific stable version
-            webVersionCache: {
-                type: 'remote',
-                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
-            }
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+            // Let it auto-detect version
         });
 
         client.on('loading_screen', (percent, message) => {
@@ -127,7 +123,10 @@ const getStatus = () => {
 };
 
 const sendMessage = async (phone, message) => {
+    if (!isReady) throw new Error('WhatsApp client is not ready');
+
     // Format phone number
+    // Remove non-digits
     let cleanPhone = phone.replace(/[^0-9]/g, '');
     
     // Handle Algerian numbers
@@ -138,41 +137,8 @@ const sendMessage = async (phone, message) => {
         cleanPhone = '213' + cleanPhone;
     }
 
-    // Use desktop app if available, fallback to web client
-    if (process.platform === 'win32') {
-        // Try WhatsApp Desktop first
-        try {
-            const { exec } = require('child_process');
-            const encodedMessage = encodeURIComponent(message);
-            const whatsappUrl = `whatsapp://send?phone=${cleanPhone}&text=${encodedMessage}`;
-            
-            return new Promise((resolve, reject) => {
-                exec(`start "" "${whatsappUrl}"`, (error) => {
-                    if (error) {
-                        console.log('Desktop app not available, using web client...');
-                        // Fallback to web client
-                        if (!isReady) {
-                            reject(new Error('WhatsApp web client is not ready and desktop app failed'));
-                        } else {
-                            client.sendMessage(`${cleanPhone}@c.us`, message)
-                                .then(resolve)
-                                .catch(reject);
-                        }
-                    } else {
-                        // Give app time to open and send
-                        setTimeout(() => resolve({ success: true, method: 'desktop' }), 2000);
-                    }
-                });
-            });
-        } catch (error) {
-            console.error('Error with desktop app:', error);
-        }
-    }
-
-    // Fallback: use web client
-    if (!isReady) throw new Error('WhatsApp client is not ready');
-    
     const chatId = `${cleanPhone}@c.us`;
+
     try {
         const response = await client.sendMessage(chatId, message);
         return response;
