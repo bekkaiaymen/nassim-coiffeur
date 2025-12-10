@@ -8,3 +8,5 @@ seed.js
 .env
 auth_info_baileys
 *.log
+package.json
+package-lock.json
