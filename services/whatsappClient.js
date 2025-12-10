@@ -41,7 +41,8 @@ const initializeClient = async () => {
                 '--disable-accelerated-2d-canvas',
                 '--no-first-run',
                 '--no-zygote',
-                '--disable-gpu'
+                '--disable-gpu',
+                '--disable-features=site-per-process'
             ]
         };
 
@@ -54,12 +55,13 @@ const initializeClient = async () => {
 
         client = new Client({
             authStrategy: new LocalAuth({
-                clientId: 'nassim-bot'
+                clientId: 'nassim-bot',
+                dataPath: './.wwebjs_auth'
             }),
             puppeteer: puppeteerConfig,
             webVersionCache: {
                 type: 'remote',
-                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
+                remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2410.1.html',
             }
         });
 

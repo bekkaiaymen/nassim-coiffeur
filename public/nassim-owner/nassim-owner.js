@@ -5192,10 +5192,39 @@ function showWhatsAppQRModal(qrCodeUrl) {
                 <button onclick="checkWhatsAppStatus()" style="margin-top: 20px; padding: 10px 30px; background: #25D366; border: none; border-radius: 5px; color: white; cursor: pointer;">
                     تم المسح، تحقق الآن
                 </button>
+                
+                <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 15px;">
+                    <p style="color: #999; font-size: 11px; margin-bottom: 10px;">هل تواجه مشاكل في الربط؟</p>
+                    <button onclick="resetWhatsAppSession()" style="padding: 8px 20px; background: #ff4444; border: none; border-radius: 5px; color: white; cursor: pointer; font-size: 12px;">
+                        🔄 إعادة ضبط المصنع (Hard Reset)
+                    </button>
+                </div>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
+}
+
+async function resetWhatsAppSession() {
+    if (!confirm('هل أنت متأكد؟ سيتم حذف جميع بيانات الجلسة وإعادة تشغيل البوت. هذا قد يحل مشاكل الربط.')) return;
+    
+    try {
+        showToast('جاري إعادة الضبط...', 'info');
+        const response = await fetch('/api/whatsapp/reset', { method: 'POST' });
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast('تمت إعادة الضبط بنجاح! انتظر قليلاً...', 'success');
+            document.getElementById('whatsappQRModal').remove();
+            // Wait for server to restart/reinit
+            setTimeout(() => startServerBroadcast(), 5000);
+        } else {
+            showToast('فشل إعادة الضبط: ' + result.error, 'error');
+        }
+    } catch (error) {
+        console.error('Reset error:', error);
+        showToast('خطأ في الاتصال', 'error');
+    }
 }
 
 async function checkWhatsAppStatus() {
