@@ -5276,7 +5276,8 @@ async function resetWhatsAppSession() {
         
         if (result.success) {
             showToast('تمت إعادة الضبط بنجاح! انتظر قليلاً...', 'success');
-            document.getElementById('whatsappQRModal').remove();
+            const modal = document.getElementById('whatsappQRModal');
+            if (modal) modal.remove();
             // Wait for server to restart/reinit
             setTimeout(() => startServerBroadcast(), 5000);
         } else {
