@@ -5219,8 +5219,8 @@ async function sendServiceNotificationDirectly(itemType, itemData) {
             message += `\n\n🖼️ الصورة:\n${itemData.image}`;
         }
         
-        // استخدام WhatsApp Desktop للإرسال التلقائي
-        await startDesktopAutoSendDirect(recipients, message);
+        // استخدام Baileys للإرسال التلقائي الكامل
+        await startBaileysAutoSend(recipients, message);
         
     } catch (error) {
         console.error('Error sending notification:', error);
@@ -5228,13 +5228,23 @@ async function sendServiceNotificationDirectly(itemType, itemData) {
     }
 }
 
-// دالة الإرسال التلقائي عبر WhatsApp Desktop
-async function startDesktopAutoSendDirect(recipients, message) {
+// دالة الإرسال التلقائي عبر Baileys (بدون تدخل يدوي)
+async function startBaileysAutoSend(recipients, message) {
     try {
-        showToast(`جاري فتح WhatsApp Desktop وإرسال ${recipients.length} رسالة...`, 'info');
+        // التحقق من حالة Baileys أولاً
+        const statusResponse = await fetch(`${API_URL}/api/whatsapp/status`);
+        const status = await statusResponse.json();
+        
+        // إذا لم يكن متصل، عرض QR Code
+        if (!status.isReady) {
+            await showBaileysQRModal();
+            return;
+        }
+        
+        showToast(`جاري إرسال ${recipients.length} رسالة تلقائياً...`, 'info');
         
         // عرض شاشة التقدم
-        showDesktopAutoSendProgress(recipients.length);
+        showBaileysAutoSendProgress(recipients.length);
         
         let successCount = 0;
         let failedCount = 0;
@@ -5243,77 +5253,130 @@ async function startDesktopAutoSendDirect(recipients, message) {
             const recipient = recipients[i];
             const personalizedMessage = message.replace(/{name}/g, recipient.name);
             
-            // تنظيف رقم الهاتف
-            let cleanPhone = recipient.phone.replace(/[^0-9+]/g, '');
-            if (!cleanPhone.startsWith('+')) {
-                if (cleanPhone.startsWith('0')) {
-                    cleanPhone = '+213' + cleanPhone.substring(1);
-                } else if (!cleanPhone.startsWith('213')) {
-                    cleanPhone = '+213' + cleanPhone;
-                } else {
-                    cleanPhone = '+' + cleanPhone;
-                }
-            }
-            
-            // فتح WhatsApp Desktop مع الرسالة
-            const encodedMessage = encodeURIComponent(personalizedMessage);
-            const whatsappUrl = `whatsapp://send?phone=${cleanPhone}&text=${encodedMessage}`;
-            
             try {
-                // فتح الرابط في WhatsApp Desktop
-                window.location.href = whatsappUrl;
+                // إرسال الرسالة عبر Baileys API
+                const response = await fetch(`${API_URL}/api/whatsapp/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: recipient.phone,
+                        message: personalizedMessage
+                    })
+                });
                 
-                successCount++;
-                updateDesktopAutoSendProgress(i + 1, recipients.length, successCount, failedCount);
+                if (response.ok) {
+                    successCount++;
+                } else {
+                    failedCount++;
+                    console.error(`Failed to send to ${recipient.name}`);
+                }
                 
-                // انتظار 3 ثواني قبل الرسالة التالية
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                updateBaileysAutoSendProgress(i + 1, recipients.length, successCount, failedCount);
+                
+                // انتظار ثانية واحدة بين الرسائل لتجنب الحظر
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
             } catch (error) {
                 failedCount++;
-                console.error(`Failed to open WhatsApp for ${recipient.name}:`, error);
+                console.error(`Error sending to ${recipient.name}:`, error);
             }
         }
         
         // إغلاق شاشة التقدم وعرض النتيجة
-        showDesktopAutoSendComplete(successCount, failedCount);
+        showBaileysAutoSendComplete(successCount, failedCount);
         
     } catch (error) {
-        console.error('Desktop auto send error:', error);
+        console.error('Baileys auto send error:', error);
         showToast('حدث خطأ: ' + error.message, 'error');
-        document.getElementById('desktopAutoSendProgress')?.remove();
+        document.getElementById('baileysAutoSendProgress')?.remove();
     }
 }
 
-// عرض شاشة تقدم WhatsApp Desktop
-function showDesktopAutoSendProgress(totalCount) {
+// عرض نافذة QR Code لـ Baileys
+async function showBaileysQRModal() {
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
-    modal.id = 'desktopAutoSendProgress';
+    modal.id = 'baileysQRModal';
     modal.style.zIndex = '10001';
     modal.innerHTML = `
         <div class="modal" style="max-width: 500px; text-align: center;">
             <div class="modal-header" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white;">
-                <h3 class="modal-title">📱 جاري الإرسال عبر WhatsApp Desktop</h3>
+                <h3 class="modal-title">📱 مسح QR Code للاتصال</h3>
             </div>
             <div class="modal-body" style="padding: 30px;">
-                <div style="font-size: 60px; margin-bottom: 20px;">💬</div>
+                <div id="qrCodeContainer" style="background: white; padding: 20px; border-radius: 10px; margin: 20px auto; display: inline-block;">
+                    <div style="font-size: 40px;">⏳</div>
+                    <p style="color: #333; margin-top: 10px;">جاري تحميل QR Code...</p>
+                </div>
+                <p style="color: #FDB714; font-size: 14px; background: #2A2A2A; padding: 15px; border-radius: 8px;">
+                    📱 افتح WhatsApp على هاتفك<br>
+                    ⚙️ اذهب إلى الإعدادات > الأجهزة المرتبطة<br>
+                    📸 امسح QR Code أعلاه
+                </p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // تحديث QR Code كل ثانية
+    const updateQR = async () => {
+        try {
+            const response = await fetch(`${API_URL}/api/whatsapp/status`);
+            const status = await response.json();
+            
+            if (status.qrCode) {
+                document.getElementById('qrCodeContainer').innerHTML = `
+                    <img src="${status.qrCode}" alt="QR Code" style="width: 250px; height: 250px;">
+                `;
+            } else if (status.isReady) {
+                document.getElementById('baileysQRModal')?.remove();
+                showToast('تم الاتصال بنجاح! 🎉', 'success');
+                return true;
+            }
+        } catch (error) {
+            console.error('Error fetching QR:', error);
+        }
+        return false;
+    };
+    
+    // تحديث كل ثانية
+    const interval = setInterval(async () => {
+        const connected = await updateQR();
+        if (connected) clearInterval(interval);
+    }, 1000);
+    
+    updateQR();
+}
+
+// عرض شاشة تقدم Baileys
+function showBaileysAutoSendProgress(totalCount) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'baileysAutoSendProgress';
+    modal.style.zIndex = '10001';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 500px; text-align: center;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white;">
+                <h3 class="modal-title">📱 جاري الإرسال التلقائي</h3>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <div style="font-size: 60px; margin-bottom: 20px;">🚀</div>
                 <div style="background: #2A2A2A; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
                     <div style="font-size: 24px; color: #25D366; font-weight: bold; margin-bottom: 10px;">
-                        <span id="desktopSentCount">0</span> / <span id="desktopTotalCount">${totalCount}</span>
+                        <span id="baileysSentCount">0</span> / <span id="baileysTotalCount">${totalCount}</span>
                     </div>
                     <div style="background: #1a1a1a; height: 20px; border-radius: 10px; overflow: hidden; margin: 15px 0;">
-                        <div id="desktopProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #25D366, #128C7E); transition: width 0.3s;"></div>
+                        <div id="baileysProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #25D366, #128C7E); transition: width 0.3s;"></div>
                     </div>
                     <div style="color: #ccc; font-size: 14px;">
-                        <span style="color: #25D366;">✓ نجح: <span id="desktopSuccessCount">0</span></span>
+                        <span style="color: #25D366;">✓ نجح: <span id="baileysSuccessCount">0</span></span>
                         <span style="margin: 0 15px;">|</span>
-                        <span style="color: #FF6B6B;">✗ فشل: <span id="desktopFailedCount">0</span></span>
+                        <span style="color: #FF6B6B;">✗ فشل: <span id="baileysFailedCount">0</span></span>
                     </div>
                 </div>
                 <p style="color: #FDB714; font-size: 14px; background: #2A2A2A; padding: 15px; border-radius: 8px;">
-                    ⚡ يتم فتح WhatsApp Desktop تلقائياً<br>
-                    لا تغلق التطبيق حتى انتهاء الإرسال
+                    ⚡ يتم الإرسال تلقائياً بدون تدخل يدوي<br>
+                    انتظر حتى انتهاء العملية...
                 </p>
             </div>
         </div>
@@ -5321,12 +5384,12 @@ function showDesktopAutoSendProgress(totalCount) {
     document.body.appendChild(modal);
 }
 
-// تحديث تقدم WhatsApp Desktop
-function updateDesktopAutoSendProgress(sent, total, success, failed) {
-    const sentCountEl = document.getElementById('desktopSentCount');
-    const successCountEl = document.getElementById('desktopSuccessCount');
-    const failedCountEl = document.getElementById('desktopFailedCount');
-    const progressBar = document.getElementById('desktopProgressBar');
+// تحديث تقدم Baileys
+function updateBaileysAutoSendProgress(sent, total, success, failed) {
+    const sentCountEl = document.getElementById('baileysSentCount');
+    const successCountEl = document.getElementById('baileysSuccessCount');
+    const failedCountEl = document.getElementById('baileysFailedCount');
+    const progressBar = document.getElementById('baileysProgressBar');
     
     if (sentCountEl) sentCountEl.textContent = sent;
     if (successCountEl) successCountEl.textContent = success;
@@ -5338,13 +5401,13 @@ function updateDesktopAutoSendProgress(sent, total, success, failed) {
     }
 }
 
-// عرض نتائج WhatsApp Desktop
-function showDesktopAutoSendComplete(successCount, failedCount) {
-    document.getElementById('desktopAutoSendProgress')?.remove();
+// عرض نتائج Baileys
+function showBaileysAutoSendComplete(successCount, failedCount) {
+    document.getElementById('baileysAutoSendProgress')?.remove();
     
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
-    modal.id = 'desktopAutoSendComplete';
+    modal.id = 'baileysAutoSendComplete';
     modal.style.zIndex = '10001';
     modal.innerHTML = `
         <div class="modal" style="max-width: 450px; text-align: center;">
@@ -5362,7 +5425,7 @@ function showDesktopAutoSendComplete(successCount, failedCount) {
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
                         <div style="background: #1a1a1a; padding: 15px; border-radius: 8px;">
                             <div style="font-size: 32px; color: #25D366; font-weight: bold;">${successCount}</div>
-                            <div style="color: #ccc; font-size: 14px; margin-top: 5px;">تم فتح WhatsApp</div>
+                            <div style="color: #ccc; font-size: 14px; margin-top: 5px;">تم الإرسال</div>
                         </div>
                         <div style="background: #1a1a1a; padding: 15px; border-radius: 8px;">
                             <div style="font-size: 32px; color: #FF6B6B; font-weight: bold;">${failedCount}</div>
@@ -5370,11 +5433,10 @@ function showDesktopAutoSendComplete(successCount, failedCount) {
                         </div>
                     </div>
                 </div>
-                <p style="color: #FDB714; font-size: 13px; background: #2A2A2A; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
-                    💡 تم فتح WhatsApp Desktop لكل رقم<br>
-                    تأكد من إرسال الرسائل يدوياً
+                <p style="color: #25D366; font-size: 13px; background: #2A2A2A; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                    ✅ تم إرسال جميع الرسائل تلقائياً!
                 </p>
-                <button onclick="document.getElementById('desktopAutoSendComplete').remove()" 
+                <button onclick="document.getElementById('baileysAutoSendComplete').remove()" 
                     style="width: 100%; padding: 15px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 16px;">
                     إغلاق
                 </button>
@@ -5385,7 +5447,7 @@ function showDesktopAutoSendComplete(successCount, failedCount) {
     
     // إغلاق تلقائي بعد 10 ثوانٍ
     setTimeout(() => {
-        document.getElementById('desktopAutoSendComplete')?.remove();
+        document.getElementById('baileysAutoSendComplete')?.remove();
     }, 10000);
 }
 
