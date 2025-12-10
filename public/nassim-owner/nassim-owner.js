@@ -806,10 +806,10 @@ async function submitAddEmployee() {
         
         showToast('تمت إضافة الموظف بنجاح', 'success');
         closeModal();
-        loadEmployees();
+        await loadEmployees();
         
-        // إظهار إشعار الموظف الجديد
-        showNewItemNotificationPrompt('employee', newEmployee);
+        // إرسال إعلان تلقائي عبر WhatsApp مباشرة
+        await sendServiceNotificationDirectly('employee', newEmployee);
 
     } catch (error) {
         console.error('Error adding employee:', error);
@@ -1491,10 +1491,10 @@ async function submitAddService() {
         
         showToast('تمت إضافة الخدمة بنجاح', 'success');
         closeModal();
-        loadServices();
+        await loadServices();
         
-        // Show notification prompt for new service
-        showNewItemNotificationPrompt('service', newService);
+        // إرسال إعلان تلقائي عبر WhatsApp مباشرة
+        await sendServiceNotificationDirectly('service', newService);
 
     } catch (error) {
         console.error('Error adding service:', error);
@@ -2371,10 +2371,10 @@ async function submitAddReward() {
         
         showToast('تمت إضافة المكافأة بنجاح', 'success');
         closeModal();
-        loadRewards();
+        await loadRewards();
         
-        // إظهار إشعار المكافأة الجديدة
-        showNewItemNotificationPrompt('reward', newReward);
+        // إرسال إعلان تلقائي عبر WhatsApp مباشرة
+        await sendServiceNotificationDirectly('reward', newReward);
 
     } catch (error) {
         console.error('Error adding reward:', error);
@@ -2720,10 +2720,10 @@ async function submitAddProduct() {
         showToast('تم إضافة المنتج بنجاح', 'success');
         selectedProductImage = null;
         closeModal();
-        loadProducts();
+        await loadProducts();
         
-        // إظهار إشعار المنتج الجديد
-        showNewItemNotificationPrompt('product', newProduct);
+        // إرسال إعلان تلقائي عبر WhatsApp مباشرة
+        await sendServiceNotificationDirectly('product', newProduct);
 
     } catch (error) {
         console.error('Error adding product:', error);
@@ -5188,6 +5188,46 @@ function getNotificationMessage(itemType, itemData) {
     }
 }
 
+// إرسال إعلان مباشر للخدمة الجديدة (بدون نافذة سؤال)
+async function sendServiceNotificationDirectly(itemType, itemData) {
+    try {
+        // Get all customers
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        const customersMap = new Map();
+        appointments.forEach(apt => {
+            if (apt.customerPhone && apt.customerName) {
+                customersMap.set(apt.customerPhone, apt.customerName);
+            }
+        });
+        
+        const recipients = Array.from(customersMap).map(([phone, name]) => ({ phone, name }));
+        
+        if (recipients.length === 0) {
+            showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
+            return;
+        }
+        
+        // إنشاء رسالة مع صورة ورابط التطبيق
+        const appLink = 'https://nassim-coiffeur.onrender.com';
+        let message = `مرحباً {name}! 👋\n\n`;
+        message += `${getNotificationMessage(itemType, itemData).replace(/<br>/g, '\n').replace(/<strong>/g, '**').replace(/<\/strong>/g, '**')}\n\n`;
+        message += `📱 تصفح التطبيق وحجز موعدك الآن:\n${appLink}\n\n`;
+        message += `💈 صالون نسيم - أفضل خدمة حلاقة في المدينة`;
+        
+        // إذا كانت هناك صورة، أضفها
+        if (itemData.image) {
+            message = `${itemData.image}\n\n${message}`;
+        }
+        
+        // إرسال تلقائي مباشر عبر Server Bot (Baileys)
+        await startAutoNotificationBroadcast(recipients, message);
+        
+    } catch (error) {
+        console.error('Error sending notification:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
 async function sendNewItemNotification(itemType, itemData) {
     try {
         document.getElementById('newItemNotificationModal').remove();
@@ -5208,7 +5248,16 @@ async function sendNewItemNotification(itemType, itemData) {
             return;
         }
         
-        const message = `مرحباً {name}! 👋\n\n${getNotificationMessage(itemType, itemData).replace(/<br>/g, '\n').replace(/<strong>/g, '').replace(/<\/strong>/g, '')}`;
+        const appLink = 'https://nassim-coiffeur.onrender.com';
+        let message = `مرحباً {name}! 👋\n\n`;
+        message += `${getNotificationMessage(itemType, itemData).replace(/<br>/g, '\n').replace(/<strong>/g, '**').replace(/<\/strong>/g, '**')}\n\n`;
+        message += `📱 تصفح التطبيق وحجز موعدك الآن:\n${appLink}\n\n`;
+        message += `💈 صالون نسيم - أفضل خدمة حلاقة في المدينة`;
+        
+        // إذا كانت هناك صورة، أضفها
+        if (itemData.image) {
+            message = `${itemData.image}\n\n${message}`;
+        }
         
         // إرسال تلقائي مباشر عبر Server Bot (Baileys)
         await startAutoNotificationBroadcast(recipients, message);
