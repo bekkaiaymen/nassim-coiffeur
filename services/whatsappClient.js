@@ -54,12 +54,14 @@ const initializeClient = async () => {
 
         client = new Client({
             authStrategy: new LocalAuth({
-                clientId: 'nassim-bot-v3', // Fresh session
+                clientId: 'nassim-bot-windows', // Explicit Windows session
                 dataPath: './.wwebjs_auth'
             }),
             puppeteer: puppeteerConfig,
             qrMaxRetries: 3,
             restartOnAuthFail: true,
+            // Force Windows User Agent
+            userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             // Use a specific stable version
             webVersionCache: {
                 type: 'remote',
