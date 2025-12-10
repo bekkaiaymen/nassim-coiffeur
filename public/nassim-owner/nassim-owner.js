@@ -5080,8 +5080,6 @@ function showBroadcastOptionsModal(recipients, message) {
     window._broadcastRecipients = recipients;
     window._broadcastMessage = message;
     
-    // Smart Decision: If few users, suggest Auto-Send (Sequential)
-    // If many users, suggest Broadcast List
     const isLargeGroup = recipients.length > 10;
     
     const modal = document.createElement('div');
@@ -5097,41 +5095,29 @@ function showBroadcastOptionsModal(recipients, message) {
                 <div style="text-align: center; margin-bottom: 25px;">
                     <div style="font-size: 40px; margin-bottom: 10px;">🚀</div>
                     <h4 style="color: #fff; margin-bottom: 5px;">جاهز للإرسال!</h4>
-                    <p style="color: #888; font-size: 13px;">
-                        ${isLargeGroup 
-                            ? 'العدد كبير: ننصح باستخدام قائمة البث (Broadcast List)' 
-                            : 'العدد قليل: يمكننا إرسالها تلقائياً واحداً تلو الآخر'}
-                    </p>
+                    <p style="color: #888; font-size: 13px;">اختر الطريقة المناسبة لك:</p>
                 </div>
                 
-                ${isLargeGroup ? `
-                <button id="btnOneClickBroadcastApp" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); margin-bottom: 10px; transition: transform 0.2s;">
-                    <span style="display: block; font-size: 24px; margin-bottom: 5px;">🖥️</span>
-                    فتح تطبيق واتساب (Desktop App)
-                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9; margin-top: 5px;">ينسخ الأرقام ويفتح التطبيق فوراً</div>
+                <button id="btnServerAuto" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #007bff, #0056b3); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4); margin-bottom: 15px; transition: transform 0.2s;">
+                    <span style="display: block; font-size: 24px; margin-bottom: 5px;">🤖</span>
+                    إرسال تلقائي بالكامل (Server Bot)
+                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9; margin-top: 5px;">يرسل مباشرة بدون فتح نوافذ (يتطلب ربط واتساب)</div>
                 </button>
-                
-                <button id="btnOneClickBroadcastWeb" style="width: 100%; padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 14px; margin-bottom: 15px;">
-                    🌐 أو استخدم واتساب ويب (Browser)
-                </button>
-                ` : `
-                <button id="btnSequential" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #FDB714, #E5A00D); border: none; border-radius: 10px; color: #1A1A1A; cursor: pointer; font-size: 18px; font-weight: bold; box-shadow: 0 4px 15px rgba(253, 183, 20, 0.4); margin-bottom: 15px;">
-                    <span style="display: block; font-size: 24px; margin-bottom: 5px;">📲</span>
-                    إرسال تلقائي (واحد تلو الآخر)
-                    <div style="font-size: 12px; font-weight: normal; opacity: 0.9; margin-top: 5px;">سيقوم النظام بفتح المحادثات لك</div>
-                </button>
-                `}
 
-                <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
-                    ${isLargeGroup ? `
-                    <button id="btnSequentialSmall" style="background: #2A2A2A; border: 1px solid #444; color: #ccc; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px;">
-                        أو أرسل فردياً (تلقائي)
+                <div style="border-top: 1px solid #333; margin: 15px 0; padding-top: 15px;">
+                    <p style="color: #aaa; font-size: 12px; margin-bottom: 10px; text-align: center;">أو الطرق اليدوية:</p>
+                    
+                    <button id="btnOneClickBroadcastApp" style="width: 100%; padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <span>🖥️</span> فتح تطبيق واتساب (قائمة بث)
                     </button>
-                    ` : `
-                    <button id="btnOneClickBroadcastSmall" style="background: #2A2A2A; border: 1px solid #444; color: #ccc; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px;">
-                        استخدم قائمة بث
+                    
+                    <button id="btnOneClickBroadcastWeb" style="width: 100%; padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <span>🌐</span> فتح واتساب ويب (قائمة بث)
                     </button>
-                    `}
+
+                    <button id="btnSequential" style="width: 100%; padding: 15px; background: #2A2A2A; border: 1px solid #444; border-radius: 10px; color: #ccc; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                        <span>📲</span> إرسال فردي (نوافذ متتالية)
+                    </button>
                 </div>
             </div>
         </div>
@@ -5139,25 +5125,173 @@ function showBroadcastOptionsModal(recipients, message) {
     document.body.appendChild(modal);
     
     // Setup Event Listeners
-    const btnApp = document.getElementById('btnOneClickBroadcastApp');
-    if (btnApp) btnApp.onclick = () => executeOneClickBroadcast('app');
-
-    const btnWeb = document.getElementById('btnOneClickBroadcastWeb');
-    if (btnWeb) btnWeb.onclick = () => executeOneClickBroadcast('web');
-    
-    const btnSeq = document.getElementById('btnSequential');
-    if (btnSeq) btnSeq.onclick = () => startBroadcastSend('sequential');
-
-    const btnOneClickSmall = document.getElementById('btnOneClickBroadcastSmall');
-    if (btnOneClickSmall) btnOneClickSmall.onclick = () => executeOneClickBroadcast('app');
-
-    const btnSeqSmall = document.getElementById('btnSequentialSmall');
-    if (btnSeqSmall) btnSeqSmall.onclick = () => startBroadcastSend('sequential');
+    document.getElementById('btnServerAuto').onclick = () => startServerBroadcast();
+    document.getElementById('btnOneClickBroadcastApp').onclick = () => executeOneClickBroadcast('app');
+    document.getElementById('btnOneClickBroadcastWeb').onclick = () => executeOneClickBroadcast('web');
+    document.getElementById('btnSequential').onclick = () => startBroadcastSend('sequential');
 }
 
 function closeBroadcastOptionsModal() {
     const modal = document.getElementById('broadcastOptionsModal');
     if (modal) modal.remove();
+}
+
+// ==================== Server-Side Auto Broadcast ====================
+
+async function startServerBroadcast() {
+    const recipients = window._broadcastRecipients;
+    const message = window._broadcastMessage;
+    closeBroadcastOptionsModal();
+
+    // Check Status
+    try {
+        showToast('جاري التحقق من اتصال واتساب...', 'info');
+        const response = await fetch('/api/whatsapp/status');
+        const status = await response.json();
+
+        if (!status.isReady) {
+            if (status.qrCode) {
+                showWhatsAppQRModal(status.qrCode);
+            } else {
+                showToast('جاري تهيئة واتساب... يرجى الانتظار والمحاولة مرة أخرى', 'warning');
+                // Trigger init if not started
+                fetch('/api/whatsapp/status'); 
+            }
+            return;
+        }
+
+        // Ready to send
+        showServerBroadcastProgress(recipients, message);
+
+    } catch (error) {
+        console.error('WhatsApp Status Error:', error);
+        showToast('فشل الاتصال بخدمة واتساب', 'error');
+    }
+}
+
+function showWhatsAppQRModal(qrCodeUrl) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'whatsappQRModal';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 400px; text-align: center;">
+            <div class="modal-header">
+                <h3 class="modal-title">📱 ربط واتساب</h3>
+                <button class="modal-close" onclick="document.getElementById('whatsappQRModal').remove()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: #ccc; margin-bottom: 20px;">امسح الرمز لربط واتساب بالخادم للإرسال التلقائي</p>
+                <div style="background: white; padding: 20px; display: inline-block; border-radius: 10px;">
+                    <img src="${qrCodeUrl}" style="width: 250px; height: 250px;">
+                </div>
+                <p style="color: #888; font-size: 12px; margin-top: 15px;">
+                    1. افتح واتساب على هاتفك<br>
+                    2. اذهب للإعدادات > الأجهزة المرتبطة<br>
+                    3. امسح الرمز أعلاه
+                </p>
+                <button onclick="checkWhatsAppStatus()" style="margin-top: 20px; padding: 10px 30px; background: #25D366; border: none; border-radius: 5px; color: white; cursor: pointer;">
+                    تم المسح، تحقق الآن
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+async function checkWhatsAppStatus() {
+    try {
+        const response = await fetch('/api/whatsapp/status');
+        const status = await response.json();
+        if (status.isReady) {
+            document.getElementById('whatsappQRModal').remove();
+            showToast('✅ تم الربط بنجاح!', 'success');
+            startServerBroadcast(); // Retry sending
+        } else {
+            showToast('لم يتم الربط بعد، حاول مرة أخرى', 'warning');
+        }
+    } catch (e) {
+        showToast('خطأ في التحقق', 'error');
+    }
+}
+
+function showServerBroadcastProgress(recipients, message) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'serverBroadcastProgressModal';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header"><h3 class="modal-title">🤖 جاري الإرسال التلقائي...</h3></div>
+            <div class="modal-body" style="text-align: center;">
+                <div style="background: #333; border-radius: 10px; height: 20px; margin-bottom: 10px;">
+                    <div id="serverBroadcastProgressBar" style="background: #007bff; height: 100%; width: 0%; transition: width 0.3s; border-radius: 10px;"></div>
+                </div>
+                <p id="serverBroadcastProgressText" style="color: #ccc;">0 / ${recipients.length}</p>
+                <div id="serverBroadcastCurrentName" style="padding: 10px; background: #2A2A2A; border-radius: 8px; margin: 15px 0; color: #fff;">...</div>
+                <div id="serverBroadcastLog" style="height: 100px; overflow-y: auto; background: #111; color: #aaa; font-size: 11px; text-align: left; padding: 5px; border-radius: 5px;"></div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    runServerBroadcast(recipients, message);
+}
+
+async function runServerBroadcast(recipients, message) {
+    const log = document.getElementById('serverBroadcastLog');
+    const addLog = (msg) => {
+        log.innerHTML += `<div>${msg}</div>`;
+        log.scrollTop = log.scrollHeight;
+    };
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < recipients.length; i++) {
+        const r = recipients[i];
+        document.getElementById('serverBroadcastCurrentName').textContent = `جاري الإرسال لـ: ${r.name}`;
+        
+        try {
+            const personalizedMsg = message.replace(/{name}/g, r.name);
+            
+            const response = await fetch('/api/whatsapp/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone: r.phone,
+                    message: personalizedMsg
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (response.ok) {
+                addLog(`✅ ${r.name}: تم الإرسال`);
+                successCount++;
+            } else {
+                addLog(`❌ ${r.name}: فشل (${result.error})`);
+                failCount++;
+            }
+            
+        } catch (error) {
+            addLog(`❌ ${r.name}: خطأ في الشبكة`);
+            failCount++;
+        }
+        
+        const pct = ((i + 1) / recipients.length) * 100;
+        document.getElementById('serverBroadcastProgressBar').style.width = pct + '%';
+        document.getElementById('serverBroadcastProgressText').textContent = `${i + 1} / ${recipients.length}`;
+        
+        // Random delay to avoid ban (2-5 seconds)
+        const delay = Math.floor(Math.random() * 3000) + 2000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+    }
+    
+    document.getElementById('serverBroadcastProgressModal').querySelector('.modal-body').innerHTML = `
+        <div style="font-size: 50px; margin-bottom: 15px;">✅</div>
+        <h3 style="color: #25D366;">اكتملت المهمة!</h3>
+        <p style="color: #ccc;">نجاح: ${successCount} | فشل: ${failCount}</p>
+        <button onclick="document.getElementById('serverBroadcastProgressModal').remove()" style="margin-top: 15px; padding: 10px 30px; background: #FDB714; border: none; border-radius: 8px; color: #1A1A1A; cursor: pointer;">إغلاق</button>
+    `;
 }
 
 // تنفيذ عملية البث بضغطة واحدة (نسخ + فتح)
