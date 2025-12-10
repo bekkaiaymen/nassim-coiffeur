@@ -802,9 +802,14 @@ async function submitAddEmployee() {
             throw new Error(data.message || 'Failed to add employee');
         }
 
+        const newEmployee = data.data || data;
+        
         showToast('تمت إضافة الموظف بنجاح', 'success');
         closeModal();
         loadEmployees();
+        
+        // إظهار إشعار الموظف الجديد
+        showNewItemNotificationPrompt('employee', newEmployee);
 
     } catch (error) {
         console.error('Error adding employee:', error);
@@ -2358,9 +2363,15 @@ async function submitAddReward() {
 
         if (!response.ok) throw new Error('Failed to add reward');
 
+        const result = await response.json();
+        const newReward = result.data || result;
+        
         showToast('تمت إضافة المكافأة بنجاح', 'success');
         closeModal();
         loadRewards();
+        
+        // إظهار إشعار المكافأة الجديدة
+        showNewItemNotificationPrompt('reward', newReward);
 
     } catch (error) {
         console.error('Error adding reward:', error);
@@ -2700,10 +2711,16 @@ async function submitAddProduct() {
 
         if (!response.ok) throw new Error('Failed to add product');
 
+        const result = await response.json();
+        const newProduct = result.data || result;
+        
         showToast('تم إضافة المنتج بنجاح', 'success');
         selectedProductImage = null;
         closeModal();
         loadProducts();
+        
+        // إظهار إشعار المنتج الجديد
+        showNewItemNotificationPrompt('product', newProduct);
 
     } catch (error) {
         console.error('Error adding product:', error);
@@ -5076,6 +5093,341 @@ async function sendProductsUpdate() {
         console.error('Error sending products update:', error);
         showToast('حدث خطأ أثناء الإرسال', 'error');
     }
+}
+
+// ==================== New Item Notification System ====================
+
+function showNewItemNotificationPrompt(itemType, itemData) {
+    const itemNames = {
+        'service': 'الخدمة',
+        'employee': 'الموظف',
+        'reward': 'المكافأة',
+        'product': 'المنتج'
+    };
+    
+    const itemName = itemNames[itemType] || 'العنصر';
+    const displayName = itemData.name || itemData.title || 'الجديد';
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'newItemNotificationModal';
+    modal.style.zIndex = '10000';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 500px; animation: slideDown 0.3s ease-out;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white;">
+                <h3 class="modal-title">🎉 ${itemName} الجديد: ${displayName}</h3>
+                <button class="modal-close" onclick="document.getElementById('newItemNotificationModal').remove()">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 30px;">
+                <div style="font-size: 60px; margin-bottom: 20px;">📢</div>
+                <h3 style="color: #25D366; margin-bottom: 15px;">هل تريد إعلام العملاء؟</h3>
+                <p style="color: #ccc; margin-bottom: 25px; line-height: 1.6;">
+                    سيتم إرسال إعلان تلقائي لجميع عملائك<br>
+                    لإخبارهم عن <strong style="color: #FDB714;">${displayName}</strong> الجديد!
+                </p>
+                
+                <div style="background: #2A2A2A; padding: 20px; border-radius: 10px; margin-bottom: 25px; text-align: right;">
+                    <strong style="color: #FDB714;">📝 معاينة الرسالة:</strong>
+                    <div id="notificationPreview" style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-top: 10px; color: #ddd; font-size: 14px; line-height: 1.8;">
+                        مرحباً {name}! 👋<br><br>
+                        ${getNotificationMessage(itemType, itemData)}
+                    </div>
+                </div>
+
+                <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 2px solid #25D366;">
+                    <p style="color: #25D366; margin: 0; font-size: 14px; font-weight: bold;">
+                        ⚡ إرسال تلقائي 100%
+                    </p>
+                    <p style="color: #ccc; margin: 5px 0 0 0; font-size: 12px;">
+                        فقط اضغط الزر، ولن تحتاج لفتح WhatsApp أو الضغط على أي شيء!
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: center;">
+                    <button onclick="sendNewItemNotification('${itemType}', ${JSON.stringify(itemData).replace(/"/g, '&quot;')})" style="flex: 1; padding: 15px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 16px;">
+                        ⚡ إرسال تلقائي للعملاء
+                    </button>
+                    <button onclick="document.getElementById('newItemNotificationModal').remove()" style="flex: 1; padding: 15px; background: #333; border: none; border-radius: 8px; color: #ccc; cursor: pointer; font-size: 16px;">
+                        ❌ لا، شكراً
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function getNotificationMessage(itemType, itemData) {
+    switch(itemType) {
+        case 'service':
+            return `✨ خدمة جديدة: <strong>${itemData.name}</strong><br>
+                    ${itemData.description ? `📝 ${itemData.description}<br>` : ''}
+                    💰 السعر: ${itemData.price} دج<br>
+                    ⏱️ المدة: ${itemData.duration} دقيقة<br><br>
+                    احجز الآن! 🔥`;
+        case 'employee':
+            return `👨‍💼 موظف جديد انضم لفريقنا: <strong>${itemData.name}</strong><br>
+                    ${itemData.specialization ? `🎯 التخصص: ${itemData.specialization}<br>` : ''}
+                    احجز معه الآن! 💈`;
+        case 'reward':
+            return `🎁 مكافأة جديدة: <strong>${itemData.title || itemData.name}</strong><br>
+                    ${itemData.description ? `📝 ${itemData.description}<br>` : ''}
+                    ${itemData.pointsCost ? `🏆 النقاط المطلوبة: ${itemData.pointsCost}<br>` : ''}
+                    اجمع النقاط واحصل عليها! 🔥`;
+        case 'product':
+            return `🛍️ منتج جديد: <strong>${itemData.name}</strong><br>
+                    ${itemData.description ? `📝 ${itemData.description}<br>` : ''}
+                    💰 السعر: ${itemData.pointsCost || itemData.price} دج<br><br>
+                    تسوق الآن! 🛒`;
+        default:
+            return `🎉 جديد في صالون نسيم: <strong>${itemData.name || itemData.title}</strong>`;
+    }
+}
+
+async function sendNewItemNotification(itemType, itemData) {
+    try {
+        document.getElementById('newItemNotificationModal').remove();
+        
+        // Get all customers
+        const appointments = await fetchBusinessAppointments({ useCache: false });
+        const customersMap = new Map();
+        appointments.forEach(apt => {
+            if (apt.customerPhone && apt.customerName) {
+                customersMap.set(apt.customerPhone, apt.customerName);
+            }
+        });
+        
+        const recipients = Array.from(customersMap).map(([phone, name]) => ({ phone, name }));
+        
+        if (recipients.length === 0) {
+            showToast('لا يوجد عملاء لإرسال الإعلان لهم', 'info');
+            return;
+        }
+        
+        const message = `مرحباً {name}! 👋\n\n${getNotificationMessage(itemType, itemData).replace(/<br>/g, '\n').replace(/<strong>/g, '').replace(/<\/strong>/g, '')}`;
+        
+        // إرسال تلقائي مباشر عبر Server Bot (Baileys)
+        await startAutoNotificationBroadcast(recipients, message);
+        
+    } catch (error) {
+        console.error('Error sending notification:', error);
+        showToast('حدث خطأ أثناء الإرسال', 'error');
+    }
+}
+
+// دالة الإرسال التلقائي الكامل
+async function startAutoNotificationBroadcast(recipients, message) {
+    try {
+        // عرض شاشة التقدم
+        showAutoNotificationProgress(recipients.length);
+        
+        // التحقق من حالة WhatsApp
+        showToast('جاري التحقق من اتصال WhatsApp...', 'info');
+        const statusResponse = await fetch(`${API_URL}/whatsapp/status`);
+        const statusData = await statusResponse.json();
+        
+        if (!statusData.connected) {
+            // إذا لم يكن متصل، عرض QR Code
+            showAutoQRModal();
+            
+            // الانتظار حتى الاتصال
+            let connected = false;
+            let attempts = 0;
+            while (!connected && attempts < 30) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                const checkResponse = await fetch(`${API_URL}/whatsapp/status`);
+                const checkData = await checkResponse.json();
+                
+                if (checkData.connected) {
+                    connected = true;
+                    document.getElementById('autoQRModal')?.remove();
+                    showToast('تم الاتصال بنجاح! جاري الإرسال...', 'success');
+                }
+                attempts++;
+            }
+            
+            if (!connected) {
+                throw new Error('فشل الاتصال بـ WhatsApp');
+            }
+        }
+        
+        // بدء الإرسال التلقائي
+        let successCount = 0;
+        let failedCount = 0;
+        
+        for (let i = 0; i < recipients.length; i++) {
+            const recipient = recipients[i];
+            const personalizedMessage = message.replace(/{name}/g, recipient.name);
+            
+            try {
+                const response = await fetch(`${API_URL}/whatsapp/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: recipient.phone,
+                        message: personalizedMessage
+                    })
+                });
+                
+                if (response.ok) {
+                    successCount++;
+                    updateAutoNotificationProgress(i + 1, recipients.length, successCount, failedCount);
+                } else {
+                    failedCount++;
+                    console.error(`Failed to send to ${recipient.name}:`, await response.text());
+                }
+                
+                // تأخير قصير بين الرسائل
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+            } catch (error) {
+                failedCount++;
+                console.error(`Error sending to ${recipient.name}:`, error);
+            }
+        }
+        
+        // عرض النتائج النهائية
+        showAutoNotificationComplete(successCount, failedCount);
+        
+    } catch (error) {
+        console.error('Auto notification error:', error);
+        showToast('حدث خطأ: ' + error.message, 'error');
+        document.getElementById('autoNotificationProgress')?.remove();
+        document.getElementById('autoQRModal')?.remove();
+    }
+}
+
+// عرض شاشة التقدم للإرسال التلقائي
+function showAutoNotificationProgress(totalCount) {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'autoNotificationProgress';
+    modal.style.zIndex = '10001';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 500px; text-align: center;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white;">
+                <h3 class="modal-title">📤 جاري الإرسال التلقائي</h3>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <div style="font-size: 60px; margin-bottom: 20px;">📱</div>
+                <div style="background: #2A2A2A; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="font-size: 24px; color: #25D366; font-weight: bold; margin-bottom: 10px;">
+                        <span id="sentCount">0</span> / <span id="totalCount">${totalCount}</span>
+                    </div>
+                    <div style="background: #1a1a1a; height: 20px; border-radius: 10px; overflow: hidden; margin: 15px 0;">
+                        <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #25D366, #128C7E); transition: width 0.3s;"></div>
+                    </div>
+                    <div style="color: #ccc; font-size: 14px;">
+                        <span style="color: #25D366;">✓ نجح: <span id="successCount">0</span></span>
+                        <span style="margin: 0 15px;">|</span>
+                        <span style="color: #FF6B6B;">✗ فشل: <span id="failedCount">0</span></span>
+                    </div>
+                </div>
+                <p style="color: #888; font-size: 14px;">
+                    يرجى عدم إغلاق هذه النافذة حتى انتهاء الإرسال
+                </p>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+// تحديث تقدم الإرسال
+function updateAutoNotificationProgress(sent, total, success, failed) {
+    document.getElementById('sentCount').textContent = sent;
+    document.getElementById('successCount').textContent = success;
+    document.getElementById('failedCount').textContent = failed;
+    
+    const percentage = (sent / total) * 100;
+    document.getElementById('progressBar').style.width = percentage + '%';
+}
+
+// عرض QR Code للاتصال التلقائي
+function showAutoQRModal() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'autoQRModal';
+    modal.style.zIndex = '10002';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white;">
+                <h3 class="modal-title">📱 امسح رمز QR للاتصال</h3>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <div style="font-size: 16px; color: #ccc; margin-bottom: 20px;">
+                    امسح الرمز بتطبيق WhatsApp على هاتفك:
+                </div>
+                <div id="autoQRCode" style="background: white; padding: 20px; border-radius: 10px; display: inline-block;">
+                    <div style="width: 256px; height: 256px; background: #f0f0f0; display: flex; align-items: center; justify-content: center; color: #666;">
+                        جاري التحميل...
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: #2A2A2A; border-radius: 8px;">
+                    <p style="color: #FDB714; font-size: 14px; margin: 0;">
+                        ⚡ بعد المسح، سيتم الإرسال تلقائياً دون أي تدخل!
+                    </p>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // طلب QR Code جديد
+    fetch(`${API_URL}/whatsapp/status`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.qr) {
+                document.getElementById('autoQRCode').innerHTML = `<img src="${data.qr}" alt="QR Code" style="width: 256px; height: 256px;">`;
+            }
+        })
+        .catch(error => console.error('Error fetching QR:', error));
+}
+
+// عرض نتائج الإرسال النهائية
+function showAutoNotificationComplete(successCount, failedCount) {
+    document.getElementById('autoNotificationProgress')?.remove();
+    
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.id = 'autoNotificationComplete';
+    modal.style.zIndex = '10001';
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #25D366, #128C7E); color: white;">
+                <h3 class="modal-title">✅ اكتمل الإرسال</h3>
+            </div>
+            <div class="modal-body" style="padding: 30px;">
+                <div style="font-size: 70px; margin-bottom: 20px;">
+                    ${failedCount === 0 ? '🎉' : '✅'}
+                </div>
+                <h3 style="color: #25D366; margin-bottom: 20px;">
+                    ${failedCount === 0 ? 'تم الإرسال بنجاح!' : 'اكتمل الإرسال'}
+                </h3>
+                <div style="background: #2A2A2A; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: center;">
+                        <div style="background: #1a1a1a; padding: 15px; border-radius: 8px;">
+                            <div style="font-size: 32px; color: #25D366; font-weight: bold;">${successCount}</div>
+                            <div style="color: #ccc; font-size: 14px; margin-top: 5px;">رسالة ناجحة</div>
+                        </div>
+                        <div style="background: #1a1a1a; padding: 15px; border-radius: 8px;">
+                            <div style="font-size: 32px; color: #FF6B6B; font-weight: bold;">${failedCount}</div>
+                            <div style="color: #ccc; font-size: 14px; margin-top: 5px;">رسالة فاشلة</div>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="document.getElementById('autoNotificationComplete').remove()" 
+                    style="width: 100%; padding: 15px; background: linear-gradient(135deg, #25D366, #128C7E); border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; font-size: 16px;">
+                    إغلاق
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // إغلاق تلقائي بعد 5 ثوانٍ
+    setTimeout(() => {
+        document.getElementById('autoNotificationComplete')?.remove();
+    }, 5000);
 }
 
 // ==================== WhatsApp Broadcast System ====================
