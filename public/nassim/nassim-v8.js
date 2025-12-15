@@ -3364,7 +3364,20 @@ window.addEventListener('beforeinstallprompt', (e) => {
     showInstallCTA();
 });
 
+// Force show install button on mobile devices even if event didn't fire (e.g. iOS)
+document.addEventListener('DOMContentLoaded', () => {
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (isMobile) {
+        setTimeout(() => {
+            showInstallPrompt();
+        }, 3000);
+    }
+});
+
 function showInstallPrompt() {
+    // Avoid duplicates
+    if (document.querySelector('.install-app-btn')) return;
+
     const installBtn = document.createElement('button');
     installBtn.className = 'install-app-btn';
     installBtn.innerHTML = `
@@ -3375,23 +3388,27 @@ function showInstallPrompt() {
     `;
     installBtn.onclick = async () => {
         console.log('🖱️ Install button clicked');
-        if (deferredPrompt) {
-            console.log('🚀 Triggering install prompt');
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`ℹ️ User choice: ${outcome}`);
-            
-            if (outcome === 'accepted') {
-                showNotification('⏳ جاري تثبيت تطبيق على جهازك', 'success');
+        try {
+            if (deferredPrompt) {
+                console.log('🚀 Triggering install prompt');
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`ℹ️ User choice: ${outcome}`);
+                
+                if (outcome === 'accepted') {
+                    showNotification('⏳ جاري تثبيت تطبيق على جهازك', 'success');
+                } else {
+                    showNotification('ℹ️ يمكنك التثبيت لاحقاً من قائمة المتصفح', 'info');
+                }
+                
+                deferredPrompt = null;
+                installBtn.remove();
             } else {
-                showNotification('ℹ️ يمكنك التثبيت لاحقاً من قائمة المتصفح', 'info');
+                console.log('⚠️ No deferred prompt available, showing manual instructions');
+                showManualInstallInstructions();
             }
-            
-            deferredPrompt = null;
-            installBtn.remove();
-        } else {
-            console.log('⚠️ No deferred prompt available, showing manual instructions');
-            // Show manual installation instructions
+        } catch (error) {
+            console.error('❌ Install prompt error:', error);
             showManualInstallInstructions();
         }
     };
@@ -3402,7 +3419,7 @@ function showInstallPrompt() {
         if (header && !document.querySelector('.install-app-btn')) {
             header.appendChild(installBtn);
         }
-    }, 3000);
+    }, 1000);
 }
 
 function showInstallCTA(options = {}) {
