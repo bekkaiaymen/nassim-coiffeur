@@ -3378,7 +3378,7 @@ function showInstallPrompt() {
             const { outcome } = await deferredPrompt.userChoice;
             
             if (outcome === 'accepted') {
-                showNotification('✅ تم بنجاح! التطبيق مثبت على هاتفك', 'success');
+                showNotification('⏳ جاري تثبيت تطبيق على جهازك', 'success');
             } else {
                 showNotification('ℹ️ يمكنك التثبيت لاحقاً من قائمة المتصفح', 'info');
             }
@@ -3420,7 +3420,7 @@ async function promptPWAInstall() {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-        showNotification('✅ التطبيق مثبت على جهازك', 'success');
+        showNotification('⏳ جاري تثبيت تطبيق على جهازك', 'success');
         const container = document.getElementById('installPromptContainer');
         if (container) {
             container.classList.add('hidden');
