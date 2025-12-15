@@ -3354,11 +3354,12 @@ async function triggerBackgroundSync() {
 // Install Prompt
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
-    // Don't prevent default - let browser show banner
-    // e.preventDefault();
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
     deferredPrompt = e;
+    console.log('✅ PWA Install Prompt captured');
     
-    // Optionally show custom install button
+    // Show custom install button
     showInstallPrompt();
     showInstallCTA();
 });
@@ -3373,9 +3374,12 @@ function showInstallPrompt() {
         <span>ثبت التطبيق</span>
     `;
     installBtn.onclick = async () => {
+        console.log('🖱️ Install button clicked');
         if (deferredPrompt) {
+            console.log('🚀 Triggering install prompt');
             deferredPrompt.prompt();
             const { outcome } = await deferredPrompt.userChoice;
+            console.log(`ℹ️ User choice: ${outcome}`);
             
             if (outcome === 'accepted') {
                 showNotification('⏳ جاري تثبيت تطبيق على جهازك', 'success');
@@ -3386,6 +3390,7 @@ function showInstallPrompt() {
             deferredPrompt = null;
             installBtn.remove();
         } else {
+            console.log('⚠️ No deferred prompt available, showing manual instructions');
             // Show manual installation instructions
             showManualInstallInstructions();
         }
