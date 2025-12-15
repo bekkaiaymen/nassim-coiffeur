@@ -542,11 +542,11 @@
 
         window.addEventListener('beforeinstallprompt', (event) => {
             deferredPrompt = event;
-            showInstallCTA();
+            // showInstallCTA(); // Disabled on landing page
         });
 
         if (isiOSDevice && !isInStandalone) {
-            setTimeout(() => showInstallCTA(true), 1500);
+            // setTimeout(() => showInstallCTA(true), 1500); // Disabled on landing page
         }
 
         function showInstallCTA(forceInstructions = false) {
