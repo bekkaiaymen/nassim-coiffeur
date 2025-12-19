@@ -7046,3 +7046,22 @@ body.offline::before {
     font-size: 20px;
 }
 
+
+/* Social Media Icons in Quick Actions */
+.quick-action.social-icon {
+    text-decoration: none;
+    color: inherit;
+}
+
+.quick-action.social-icon .quick-action-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    transition: transform 0.2s;
+}
+
+.quick-action.social-icon:active .quick-action-icon {
+    transform: scale(0.9);
+}
+
