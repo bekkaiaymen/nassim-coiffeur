@@ -7009,3 +7009,40 @@ body.offline::before {
     transition: all 0.3s ease;
 }
 
+
+/* Social Media Modal Styles */
+.social-link-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    border-radius: 12px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 16px;
+    transition: transform 0.2s;
+}
+
+.social-link-btn:active {
+    transform: scale(0.98);
+}
+
+.social-link-btn.facebook {
+    background: #1877F2;
+}
+
+.social-link-btn.instagram {
+    background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+}
+
+.social-link-btn.tiktok {
+    background: #000000;
+    border: 1px solid #333;
+}
+
+.social-link-btn i {
+    font-size: 20px;
+}
+
