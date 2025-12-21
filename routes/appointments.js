@@ -123,9 +123,15 @@ router.get('/available-slots', async (req, res) => {
             });
         }
         
+        const queryDate = new Date(date);
+        const startOfDay = new Date(queryDate);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date(queryDate);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+
         const query = {
             business: business,
-            date: new Date(date),
+            date: { $gte: startOfDay, $lte: endOfDay },
             status: { $ne: 'cancelled' }
         };
         
@@ -344,9 +350,11 @@ router.post('/public/book', async (req, res) => {
                         isWithinWorkingHours = (startTimeInMinutes >= startWorkMinutes && endTimeInMinutes <= endWorkMinutes);
                         workingHoursStr = `${daySchedule.start} - ${daySchedule.end}`;
                     } else {
-                        // No working hours defined, allow booking
-                        isWithinWorkingHours = true;
-                        workingHoursStr = 'غير محدد';
+                        // No working hours defined, use default 09:00 - 21:00
+                        const startWorkMinutes = 9 * 60;
+                        const endWorkMinutes = 21 * 60;
+                        isWithinWorkingHours = (startTimeInMinutes >= startWorkMinutes && endTimeInMinutes <= endWorkMinutes);
+                        workingHoursStr = '09:00 - 21:00';
                     }
                     
                     // Check if appointment is within working hours
@@ -384,17 +392,22 @@ router.post('/public/book', async (req, res) => {
         }
 
         // Advanced Conflict Check (Overlap) - Check for specific employee
+        const queryDate = new Date(date);
+        const startOfDay = new Date(queryDate);
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date(queryDate);
+        endOfDay.setUTCHours(23, 59, 59, 999);
+
         const conflictQuery = {
             business: business,
-            date: new Date(date),
+            date: { $gte: startOfDay, $lte: endOfDay },
             status: { $nin: ['cancelled', 'no-show'] }
         };
         
         // If employee is specified, check only their schedule
-        if (employee) {
-            conflictQuery.employee = employee;
-        } else if (barber) {
-            conflictQuery.barber = barber;
+        const targetEmployeeId = employee || barber;
+        if (targetEmployeeId) {
+            conflictQuery.$or = [{ employee: targetEmployeeId }, { barber: targetEmployeeId }];
         }
         // If isFlexibleEmployee is true, we don't check conflicts (will be handled after confirmation)
 
@@ -411,7 +424,7 @@ router.post('/public/book', async (req, res) => {
             return (startTimeInMinutes < apptEnd) && (endTimeInMinutes > apptStart);
         });
 
-        if (hasConflict && !isFlexibleEmployee) {
+        if (hasConflict && (!isFlexibleEmployee || employee || barber)) {
             return res.status(400).json({ 
                 success: false, 
                 message: 'هذا الموعد محجوز بالفعل لدى هذا الحلاق. يرجى اختيار وقت آخر أو حلاق آخر' 
