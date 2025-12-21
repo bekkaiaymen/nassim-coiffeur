@@ -395,7 +395,7 @@ function displayServices(services) {
                 </div>
                 <div class="service-description">${service.description || ''}</div>
                 <div class="service-meta">
-                    <span class="service-duration">⏱ ${service.duration} دقيقة</span>
+                    <!-- <span class="service-duration">⏱ ${service.duration} دقيقة</span> -->
                     ${service.hasVariants ? '<span style="color: #4CAF50; font-size: 12px; margin-right: 10px;">👆 اضغط للتفاصيل</span>' : ''}
                 </div>
             </div>
@@ -447,7 +447,7 @@ function populateBookingServices(services) {
                 ${service.hasVariants ? '<br><small style="color: #4CAF50; font-size: 11px;">👆 أنواع متعددة</small>' : ''}
             </div>
             <div class="service-meta" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}">
-                <span class="service-duration">⏱ ${service.duration} دقيقة</span>
+                <!-- <span class="service-duration">⏱ ${service.duration} دقيقة</span> -->
             </div>
         </div>
         `;
@@ -545,7 +545,7 @@ function openVariantsModal(serviceId) {
                             </div>
                         </div>
                         <div style="color: #A7A7A7; font-size: 13px;">
-                            ⏱ ${variant.duration} دقيقة
+                            <!-- ⏱ ${variant.duration} دقيقة -->
                         </div>
                     </div>
                 </div>
@@ -703,7 +703,7 @@ function openVariantsModalInBooking(serviceId) {
                             </div>
                         </div>
                         <div style="color: #A7A7A7; font-size: 13px;">
-                            ⏱ ${variant.duration} دقيقة
+                            <!-- ⏱ ${variant.duration} دقيقة -->
                         </div>
                     </div>
                 </div>
@@ -838,7 +838,7 @@ function updateBookingSummary() {
 
     // Update summary with prices shown
     document.getElementById('servicesCount').textContent = selectedServices.length;
-    document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
+    // document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
     document.getElementById('totalPrice').innerHTML = priceLabel;
     document.getElementById('totalPrice').style.display = 'block';
 }

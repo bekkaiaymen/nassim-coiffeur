@@ -17,7 +17,7 @@ const getBusinessContext = (business) => {
 - ساعات العمل: ${business.workingHours || 'من 9 صباحاً إلى 9 مساءً'}
 
 الخدمات المتوفرة:
-${business.services?.map(s => `- ${s.name}: ${s.price} ريال (${s.duration} دقيقة)`).join('\n') || '- لا توجد خدمات محددة'}
+${business.services?.map(s => `- ${s.name}: ${s.price} ريال`).join('\n') || '- لا توجد خدمات محددة'}
 
 الموظفين:
 ${business.employees?.map(e => `- ${e.name}: ${e.specialty || 'حلاق'}`).join('\n') || '- لا يوجد موظفين محددين'}

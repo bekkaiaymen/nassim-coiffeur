@@ -585,7 +585,7 @@ function populateServiceSelect() {
                 ${hasVariants ? '<span style="font-size:0.8em; color:#3498db; display:block;">(اضغط للاختيارات)</span>' : ''}
             </div>
             <div class="service-meta">
-                <span class="service-duration">⏱ ${service.duration} دقيقة</span>
+                <!-- <span class="service-duration">⏱ ${service.duration} دقيقة</span> -->
                 <span class="service-price" style="margin-right: auto; font-weight: bold; color: #2ecc71;">${service.price} دج</span>
             </div>
         </div>
@@ -670,7 +670,7 @@ function showVariantsModal(serviceId) {
              style="padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
             <div>
                 <div style="font-weight: bold;">${variant.name}</div>
-                <div style="font-size: 0.9em; color: #666;">${variant.duration} دقيقة</div>
+                <!-- <div style="font-size: 0.9em; color: #666;">${variant.duration} دقيقة</div> -->
             </div>
             <div style="font-weight: bold; color: #2ecc71;">${variant.price} دج</div>
         </div>
@@ -882,7 +882,7 @@ function updateBookingSummary() {
     
     // Update summary
     document.getElementById('servicesCount').textContent = selectedServices.length;
-    document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
+    // document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
     document.getElementById('totalPrice').textContent = totalPrice + ' دج';
     
     updateConfirmButton();
