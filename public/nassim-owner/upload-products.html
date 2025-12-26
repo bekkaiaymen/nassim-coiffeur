@@ -819,16 +819,31 @@
                 
                 updateProgress(70, 'جاري استخراج المنتجات...');
                 
-                // Debug: Show first 500 chars
-                console.log('--- PDF Raw Text Preview (First 500 chars) ---');
-                console.log(fullText.substring(0, 500));
-                console.log('---------------------------------------------');
+                // Debug: Show PDF text details
+                console.log('='.repeat(60));
+                console.log('PDF TEXT ANALYSIS');
+                console.log('='.repeat(60));
+                console.log('Total Text Length:', fullText.length);
+                console.log('Total Lines:', fullText.split('\n').length);
+                console.log('\n--- First 1000 characters ---');
+                console.log(fullText.substring(0, 1000));
+                console.log('\n--- Last 500 characters ---');
+                console.log(fullText.substring(Math.max(0, fullText.length - 500)));
+                console.log('='.repeat(60));
                 
                 extractedProducts = extractProducts(fullText);
                 
+                console.log(`\n📊 Standard Extraction Result: ${extractedProducts.length} products`);
+                
                 if (extractedProducts.length === 0) {
-                    console.warn('No products found with standard extraction. Trying fallback mode...');
+                    console.warn('⚠️ No products found with standard extraction. Trying fallback mode...');
                     extractedProducts = extractProductsFallback(fullText);
+                    console.log(`📊 Fallback Extraction Result: ${extractedProducts.length} products`);
+                }
+                
+                if (extractedProducts.length === 0) {
+                    console.error('❌ NO PRODUCTS EXTRACTED! Please check the PDF format.');
+                    alert('⚠️ لم يتم العثور على أي منتجات في الملف.\n\nالرجاء التحقق من:\n1. تنسيق PDF (يجب أن يحتوي على نص وليس صور فقط)\n2. وجود أسعار بجانب أسماء المنتجات\n3. افتح Console (F12) لرؤية التفاصيل');
                 }
 
                 // Check if user wants images from PDF
@@ -939,21 +954,33 @@
         }
 
         function extractProducts(text) {
-            console.log('--- Starting Product Extraction ---');
-            const lines = text.split('\n').filter(line => line.trim().length > 0);
+            console.log('\n🔍 --- Starting Standard Product Extraction ---');
+            const allLines = text.split('\n');
+            const lines = allLines.filter(line => line.trim().length > 0);
+            console.log(`Total lines in PDF: ${allLines.length}`);
+            console.log(`Non-empty lines: ${lines.length}`);
+            
             const products = [];
+            let skippedCount = 0;
+            let processedCount = 0;
             
             for (let line of lines) {
                 line = line.trim();
-                console.log('Processing line:', line);
+                processedCount++;
                 
-                // Skip headers and short lines
-                if (line.length < 3 || 
-                    line.toLowerCase().includes('product') || 
-                    line.toLowerCase().includes('price') ||
-                    line.toLowerCase().includes('page') ||
-                    line.toLowerCase().includes('total')) {
-                    console.log('Skipped (header/short)');
+                // More lenient skip criteria
+                const lineLower = line.toLowerCase();
+                if (line.length < 3) {
+                    skippedCount++;
+                    continue;
+                }
+                
+                // Skip obvious headers only
+                if (lineLower === 'product' || lineLower === 'price' || 
+                    lineLower === 'page' || lineLower === 'total' ||
+                    lineLower.startsWith('page ') || lineLower.includes('©') ||
+                    /^\d+\/\d+\/\d+$/.test(line)) { // Skip dates
+                    skippedCount++;
                     continue;
                 }
                 
@@ -986,9 +1013,8 @@
                     const priceStr = match[2].replace(',', '.');
                     const price = parseFloat(priceStr);
                     
-                    console.log(`Found match: Name="${name}", Price=${price}`);
-                    
                     if (name.length > 2 && price > 0 && price < 1000000) {
+                        console.log(`✅ Valid match: "${name}" = ${price} DZD`);
                         const category = detectCategory(name);
                         const sellingPrice = useSmartPricing 
                             ? calculateSmartSellingPrice(price, category)
@@ -1006,13 +1032,19 @@
                             imageBlob: null
                         });
                     } else {
-                        console.log('Skipped (invalid name length or price range)');
+                        console.log(`❌ Invalid: name.length=${name.length}, price=${price} (outside valid range)`);
                     }
                 } else {
-                    console.log('No match found');
+                    if (line.includes('\d') || /\d/.test(line)) {
+                        console.log(`⚠️ Contains number but no match: "${line.substring(0, 60)}..."`);
+                    }
                 }
             }
-            console.log(`--- Extraction Complete. Found ${products.length} products ---`);
+            console.log('\n📊 --- Extraction Complete ---');
+            console.log(`Processed: ${processedCount} lines`);
+            console.log(`Skipped: ${skippedCount} lines`);
+            console.log(`Products Found: ${products.length}`);
+            console.log('='.repeat(60));
             return products;
         }
         
