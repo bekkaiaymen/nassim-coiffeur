@@ -453,73 +453,71 @@
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 
-                updateProgress(20, `جاري استخراج النص والصور من ${pdf.numPages} صفحة...`);
+                updateProgress(30, `جاري استخراج النص من ${pdf.numPages} صفحة...`);
                 
                 let fullText = '';
                 extractedImages = [];
                 
+                // Extract text only first (faster and safer)
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
-                    
-                    // Extract text
                     const textContent = await page.getTextContent();
                     const pageText = textContent.items.map(item => item.str).join(' ');
                     fullText += pageText + '\n';
                     
-                    // Extract images
-                    const ops = await page.getOperatorList();
-                    for (let j = 0; j < ops.fnArray.length; j++) {
-                        if (ops.fnArray[j] === pdfjsLib.OPS.paintImageXObject || 
-                            ops.fnArray[j] === pdfjsLib.OPS.paintInlineImageXObject ||
-                            ops.fnArray[j] === pdfjsLib.OPS.paintJpegXObject) {
-                            try {
-                                const imageName = ops.argsArray[j][0];
-                                const image = await page.objs.get(imageName);
-                                
-                                if (image && image.width && image.height) {
-                                    // Create canvas to extract image data
-                                    const canvas = document.createElement('canvas');
-                                    canvas.width = image.width;
-                                    canvas.height = image.height;
-                                    const ctx = canvas.getContext('2d');
-                                    
-                                    // Draw image data
-                                    const imgData = ctx.createImageData(image.width, image.height);
-                                    imgData.data.set(image.data);
-                                    ctx.putImageData(imgData, 0, 0);
-                                    
-                                    // Convert to blob
-                                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-                                    
-                                    if (blob && blob.size > 5000) { // Only images > 5KB (filter out icons/logos)
-                                        extractedImages.push({
-                                            blob: blob,
-                                            url: URL.createObjectURL(blob),
-                                            pageNum: i
-                                        });
-                                    }
-                                }
-                            } catch (imgError) {
-                                console.log('Could not extract image:', imgError);
-                            }
-                        }
-                    }
-                    
-                    updateProgress(20 + (i / pdf.numPages * 40), `معالجة صفحة ${i} من ${pdf.numPages}...`);
+                    updateProgress(30 + (i / pdf.numPages * 40), `معالجة صفحة ${i} من ${pdf.numPages}...`);
                 }
                 
-                updateProgress(65, `تم استخراج ${extractedImages.length} صورة. جاري استخراج المنتجات...`);
+                updateProgress(70, 'جاري استخراج المنتجات...');
                 
                 extractedProducts = extractProducts(fullText);
                 
-                // Match images to products (simple: assign in order if available)
-                if (extractedImages.length > 0) {
-                    const imageSource = document.querySelector('input[name="imageSource"]:checked').value;
-                    if (imageSource === 'pdf') {
+                // Check if user wants images from PDF
+                const imageSource = document.querySelector('input[name="imageSource"]:checked').value;
+                
+                if (imageSource === 'pdf') {
+                    updateProgress(75, 'جاري استخراج الصور من PDF...');
+                    
+                    try {
+                        // Extract images more efficiently (limit to reasonable number)
+                        const maxImages = Math.min(pdf.numPages * 2, 20); // Max 20 images
+                        
+                        for (let i = 1; i <= pdf.numPages && extractedImages.length < maxImages; i++) {
+                            const page = await pdf.getPage(i);
+                            
+                            // Render page to canvas (simpler approach)
+                            const viewport = page.getViewport({ scale: 0.5 }); // Reduced scale for memory
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+                            
+                            await page.render({ canvasContext: context, viewport: viewport }).promise;
+                            
+                            // Convert to blob (smaller size)
+                            const blob = await new Promise(resolve => 
+                                canvas.toBlob(resolve, 'image/jpeg', 0.7)
+                            );
+                            
+                            if (blob && blob.size > 5000) {
+                                extractedImages.push({
+                                    blob: blob,
+                                    url: URL.createObjectURL(blob),
+                                    pageNum: i
+                                });
+                            }
+                            
+                            updateProgress(75 + (i / pdf.numPages * 15), `استخراج صور ${i}/${pdf.numPages}...`);
+                        }
+                        
+                        // Match images to products
                         for (let i = 0; i < Math.min(extractedProducts.length, extractedImages.length); i++) {
                             extractedProducts[i].imageBlob = extractedImages[i].blob;
                             extractedProducts[i].imageUrl = extractedImages[i].url;
                         }
+                    } catch (imgError) {
+                        console.warn('Image extraction failed, continuing without images:', imgError);
+                        // Continue without images if extraction fails
                     }
                 }
                 
@@ -532,7 +530,8 @@
                 
             } catch (error) {
                 console.error('Error processing PDF:', error);
-                showError('حدث خطأ في معالجة ملف PDF. تأكد من أن الملف صحيح.');
+                hideProgress();
+                showError('حدث خطأ في معالجة ملف PDF. جرب ملف أصغر أو اختر "بدون صور".');
             }
         }
         
