@@ -290,133 +290,30 @@
                     </label>
                     
                     <div id="smartPricingConfig" style="background: #f5f5f5; padding: 15px; border-radius: 10px; margin-top: 10px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                             <h4 style="color: #333; font-size: 14px; margin: 0;">⚙️ تخصيص نطاقات التسعير الذكي</h4>
-                            <button onclick="resetSmartPricing()" style="background: #ff9800; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                                إعادة تعيين
-                            </button>
-                        </div>
-                        
-                        <div style="display: grid; gap: 12px;">
-                            <!-- Range 1 -->
-                            <div style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid #4CAF50;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <label style="font-size: 13px; color: #555; font-weight: bold;">أقل من:</label>
-                                    <input type="number" id="range1_max" value="200" min="50" max="500" step="50"
-                                           style="width: 100px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"
-                                           onchange="updateSmartPricingPreview()"> دج
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <label style="font-size: 13px; color: #666;">هامش الربح:</label>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <input type="range" id="range1_margin" value="90" min="20" max="150" step="5"
-                                               style="width: 120px;" oninput="updateSmartPricingPreview()">
-                                        <span id="range1_display" style="font-weight: bold; color: #4CAF50; min-width: 50px;">90%</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Range 2 -->
-                            <div style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid #2196F3;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <label style="font-size: 13px; color: #555; font-weight: bold;">
-                                        <span id="range2_min_display">200</span> - 
-                                        <input type="number" id="range2_max" value="500" min="300" max="1000" step="100"
-                                               style="width: 100px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"
-                                               onchange="updateSmartPricingPreview()"> دج
-                                    </label>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <label style="font-size: 13px; color: #666;">هامش الربح:</label>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <input type="range" id="range2_margin" value="60" min="20" max="120" step="5"
-                                               style="width: 120px;" oninput="updateSmartPricingPreview()">
-                                        <span id="range2_display" style="font-weight: bold; color: #2196F3; min-width: 50px;">60%</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Range 3 -->
-                            <div style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid #FF9800;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <label style="font-size: 13px; color: #555; font-weight: bold;">
-                                        <span id="range3_min_display">500</span> - 
-                                        <input type="number" id="range3_max" value="1000" min="800" max="2000" step="100"
-                                               style="width: 100px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"
-                                               onchange="updateSmartPricingPreview()"> دج
-                                    </label>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <label style="font-size: 13px; color: #666;">هامش الربح:</label>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <input type="range" id="range3_margin" value="45" min="20" max="100" step="5"
-                                               style="width: 120px;" oninput="updateSmartPricingPreview()">
-                                        <span id="range3_display" style="font-weight: bold; color: #FF9800; min-width: 50px;">45%</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Range 4 -->
-                            <div style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid #9C27B0;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <label style="font-size: 13px; color: #555; font-weight: bold;">
-                                        <span id="range4_min_display">1000</span> - 
-                                        <input type="number" id="range4_max" value="2000" min="1500" max="5000" step="500"
-                                               style="width: 100px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"
-                                               onchange="updateSmartPricingPreview()"> دج
-                                    </label>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <label style="font-size: 13px; color: #666;">هامش الربح:</label>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <input type="range" id="range4_margin" value="35" min="15" max="80" step="5"
-                                               style="width: 120px;" oninput="updateSmartPricingPreview()">
-                                        <span id="range4_display" style="font-weight: bold; color: #9C27B0; min-width: 50px;">35%</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Range 5 -->
-                            <div style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid #607D8B;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <label style="font-size: 13px; color: #555; font-weight: bold;">
-                                        <span id="range5_min_display">2000</span> - 
-                                        <input type="number" id="range5_max" value="5000" min="3000" max="10000" step="1000"
-                                               style="width: 100px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"
-                                               onchange="updateSmartPricingPreview()"> دج
-                                    </label>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <label style="font-size: 13px; color: #666;">هامش الربح:</label>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <input type="range" id="range5_margin" value="27" min="15" max="60" step="3"
-                                               style="width: 120px;" oninput="updateSmartPricingPreview()">
-                                        <span id="range5_display" style="font-weight: bold; color: #607D8B; min-width: 50px;">27%</span>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <!-- Range 6 -->
-                            <div style="background: white; padding: 12px; border-radius: 8px; border-left: 4px solid #795548;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                                    <label style="font-size: 13px; color: #555; font-weight: bold;">
-                                        أكثر من: <span id="range6_min_display">5000</span> دج
-                                    </label>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <label style="font-size: 13px; color: #666;">هامش الربح:</label>
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <input type="range" id="range6_margin" value="22" min="10" max="50" step="2"
-                                               style="width: 120px;" oninput="updateSmartPricingPreview()">
-                                        <span id="range6_display" style="font-weight: bold; color: #795548; min-width: 50px;">22%</span>
-                                    </div>
-                                </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="addPriceRange()" style="background: #4CAF50; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                                    ➕ إضافة نطاق
+                                </button>
+                                <button onclick="resetSmartPricing()" style="background: #ff9800; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                                    🔄 إعادة تعيين
+                                </button>
                             </div>
                         </div>
                         
-                        <div style="background: #e3f2fd; padding: 12px; border-radius: 8px; margin-top: 12px; font-size: 12px; color: #1976d2;">
-                            <strong>💡 معاينة:</strong><br>
-                            <span id="pricingPreview"></span>
+                        <div id="priceRangesContainer" style="display: grid; gap: 12px;">
+                            <!-- Ranges will be dynamically generated -->
+                        </div>
+                        
+                        <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <strong style="color: #1976d2; font-size: 13px;">💡 معاينة مباشرة:</strong>
+                                <button onclick="testPricing()" style="background: #2196F3; color: white; border: none; padding: 5px 10px; border-radius: 5px; font-size: 11px; cursor: pointer;">
+                                    اختبار سعر
+                                </button>
+                            </div>
+                            <div id="pricingPreview" style="font-size: 12px; color: #1565c0; line-height: 1.8;"></div>
                         </div>
                     </div>
                 </div>
@@ -545,7 +442,15 @@
         let extractedProducts = [];
         let extractedImages = [];
         let profitMargin = 0.3; // Default 30%
-        let useSmartPricing = false;
+        let useSmartPricing = true;
+        let priceRanges = [
+            { min: 0, max: 200, margin: 90, color: '#4CAF50' },
+            { min: 200, max: 500, margin: 60, color: '#2196F3' },
+            { min: 500, max: 1000, margin: 45, color: '#FF9800' },
+            { min: 1000, max: 2000, margin: 35, color: '#9C27B0' },
+            { min: 2000, max: 5000, margin: 27, color: '#607D8B' },
+            { min: 5000, max: Infinity, margin: 22, color: '#795548' }
+        ];
         
         // PDF.js setup
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
