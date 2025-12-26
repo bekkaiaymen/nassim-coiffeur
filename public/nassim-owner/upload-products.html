@@ -457,93 +457,167 @@
         
         // Smart pricing algorithm - different margins for different price ranges
         function calculateSmartSellingPrice(purchasePrice) {
-            const ranges = getSmartPricingRanges();
-            
-            for (let range of ranges) {
-                if (purchasePrice < range.max || range.max === Infinity) {
+            for (let range of priceRanges) {
+                if (purchasePrice >= range.min && (purchasePrice < range.max || range.max === Infinity)) {
                     return Math.round(purchasePrice * (1 + range.margin / 100));
                 }
             }
-            
-            // Fallback
             return Math.round(purchasePrice * 1.3);
         }
         
-        // Get current smart pricing configuration
-        function getSmartPricingRanges() {
-            return [
-                { max: parseInt(document.getElementById('range1_max').value), margin: parseInt(document.getElementById('range1_margin').value) },
-                { max: parseInt(document.getElementById('range2_max').value), margin: parseInt(document.getElementById('range2_margin').value) },
-                { max: parseInt(document.getElementById('range3_max').value), margin: parseInt(document.getElementById('range3_margin').value) },
-                { max: parseInt(document.getElementById('range4_max').value), margin: parseInt(document.getElementById('range4_margin').value) },
-                { max: parseInt(document.getElementById('range5_max').value), margin: parseInt(document.getElementById('range5_margin').value) },
-                { max: Infinity, margin: parseInt(document.getElementById('range6_margin').value) }
-            ];
+        function renderPriceRanges() {
+            const container = document.getElementById('priceRangesContainer');
+            container.innerHTML = '';
+            
+            priceRanges.forEach((range, index) => {
+                const isLast = index === priceRanges.length - 1;
+                
+                const div = document.createElement('div');
+                div.className = 'price-range-item';
+                div.style.borderLeft = `4px solid ${range.color}`;
+                div.style.background = '#f8f9fa';
+                div.style.padding = '10px';
+                div.style.borderRadius = '4px';
+                div.style.display = 'flex';
+                div.style.alignItems = 'center';
+                div.style.gap = '10px';
+                
+                div.innerHTML = `
+                    <div style="flex: 1; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-weight: bold; color: #555; min-width: 80px;">
+                            ${range.min} - ${isLast ? '∞' : range.max} دج
+                        </span>
+                        
+                        ${!isLast ? `
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            <span style="font-size: 12px; color: #777;">الحد الأقصى:</span>
+                            <input type="number" value="${range.max}" 
+                                   onchange="updateRangeValue(${index}, 'max', this.value)"
+                                   style="width: 70px; padding: 4px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        ` : ''}
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 12px; color: #777;">الربح:</span>
+                        <input type="range" min="5" max="200" value="${range.margin}" 
+                               oninput="updateRangeValue(${index}, 'margin', this.value)"
+                               style="width: 100px;">
+                        <span style="font-weight: bold; color: ${range.color}; min-width: 40px; text-align: left;">
+                            ${range.margin}%
+                        </span>
+                        
+                        ${!isLast ? `
+                        <button onclick="removePriceRange(${index})" 
+                                style="background: none; border: none; color: #ff5252; cursor: pointer; font-size: 18px; padding: 0 5px;">
+                            ×
+                        </button>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
         }
-        
-        // Update smart pricing preview
-        function updateSmartPricingPreview() {
-            // Update displays
-            document.getElementById('range1_display').textContent = document.getElementById('range1_margin').value + '%';
-            document.getElementById('range2_display').textContent = document.getElementById('range2_margin').value + '%';
-            document.getElementById('range3_display').textContent = document.getElementById('range3_margin').value + '%';
-            document.getElementById('range4_display').textContent = document.getElementById('range4_margin').value + '%';
-            document.getElementById('range5_display').textContent = document.getElementById('range5_margin').value + '%';
-            document.getElementById('range6_display').textContent = document.getElementById('range6_margin').value + '%';
+
+        function addPriceRange() {
+            const lastRange = priceRanges[priceRanges.length - 1];
+            const secondLast = priceRanges.length > 1 ? priceRanges[priceRanges.length - 2] : null;
             
-            // Update range boundaries
-            const r1 = parseInt(document.getElementById('range1_max').value);
-            const r2 = parseInt(document.getElementById('range2_max').value);
-            const r3 = parseInt(document.getElementById('range3_max').value);
-            const r4 = parseInt(document.getElementById('range4_max').value);
-            const r5 = parseInt(document.getElementById('range5_max').value);
-            
-            document.getElementById('range2_min_display').textContent = r1;
-            document.getElementById('range3_min_display').textContent = r2;
-            const config = document.getElementById('smartPricingConfig');
-            const manual = document.getElementById('manualMarginSection');
-            const slider = document.getElementById('profitMargin');
-            const display = document.getElementById('profitMarginDisplay');
-            
-            if (useSmartPricing) {
-                config.style.display = 'block';
-                manual.style.opacity = '0.5';
-                slider.disabled = true;
-                slider.style.opacity = '0.5';
-                display.style.color = '#999';
-            } else {
-                config.style.display = 'none';
-                manual.style.opacity = '1';
-                slider.disabled = false;
-                slider.style.opacity = '1';
-                display.style.color = '#f57c00';
+            let newMin = 0;
+            if (secondLast) {
+                newMin = secondLast.max;
             }
             
-            updateProfitMarginDisplay();
+            const newMax = lastRange.min + 1000;
+            
+            const newRange = {
+                min: lastRange.min,
+                max: newMax,
+                margin: lastRange.margin + 5,
+                color: getRandomColor()
+            };
+            
+            lastRange.min = newMax;
+            priceRanges.splice(priceRanges.length - 1, 0, newRange);
+            renderPriceRanges();
+        }
+
+        function removePriceRange(index) {
+            if (index >= priceRanges.length - 1) return;
+            
+            const rangeToRemove = priceRanges[index];
+            const nextRange = priceRanges[index + 1];
+            
+            nextRange.min = rangeToRemove.min;
+            
+            priceRanges.splice(index, 1);
+            renderPriceRanges();
+        }
+
+        function updateRangeValue(index, field, value) {
+            value = parseInt(value);
+            if (isNaN(value)) return;
+            
+            if (field === 'margin') {
+                priceRanges[index].margin = value;
+                renderPriceRanges();
+            } else if (field === 'max') {
+                if (value <= priceRanges[index].min) {
+                    alert('الحد الأقصى يجب أن يكون أكبر من الحد الأدنى');
+                    renderPriceRanges();
+                    return;
+                }
+                
+                priceRanges[index].max = value;
+                if (index + 1 < priceRanges.length) {
+                    priceRanges[index + 1].min = value;
+                }
+                renderPriceRanges();
+            }
+        }
+
+        function getRandomColor() {
+            const colors = ['#E91E63', '#9C27B0', '#673AB7', '#3F51B5', '#2196F3', '#009688', '#4CAF50', '#FFC107', '#FF9800', '#FF5722'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function resetSmartPricing() {
+            priceRanges = [
+                { min: 0, max: 200, margin: 90, color: '#4CAF50' },
+                { min: 200, max: 500, margin: 60, color: '#2196F3' },
+                { min: 500, max: 1000, margin: 45, color: '#FF9800' },
+                { min: 1000, max: 2000, margin: 35, color: '#9C27B0' },
+                { min: 2000, max: 5000, margin: 27, color: '#607D8B' },
+                { min: 5000, max: Infinity, margin: 22, color: '#795548' }
+            ];
+            renderPriceRanges();
+        }
+
+        function testPricing() {
+            const price = prompt('أدخل سعر الشراء للاختبار (دج):');
+            if (price) {
+                const p = parseFloat(price);
+                const selling = calculateSmartSellingPrice(p);
+                const profit = selling - p;
+                const margin = ((profit / p) * 100).toFixed(1);
+                
+                const range = priceRanges.find(r => p >= r.min && (p < r.max || r.max === Infinity));
+                
+                document.getElementById('pricingPreview').innerHTML = `
+                    سعر الشراء: <strong>${p} دج</strong><br>
+                    النطاق: <strong>${range.min} - ${range.max === Infinity ? '∞' : range.max}</strong> (هامش ${range.margin}%)<br>
+                    سعر البيع المقترح: <strong style="color: #2e7d32; font-size: 14px;">${selling} دج</strong><br>
+                    الربح الصافي: <strong>${profit} دج</strong> (${margin}%)
+                `;
+            }
         }
         
-        // Show/hide internet image warning
-        document.addEventListener('DOMContentLoaded', () => {
-            const radios = document.querySelectorAll('input[name="imageSource"]');
-            radios.forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    const warning = document.getElementById('imageWarning');
-                    warning.style.display = e.target.value === 'internet' ? 'block' : 'none';
-                });
-            });
-            
-            // Initialize smart pricing UI
-            renderPriceRanges();
-        });
-        
-        // Update profit margin display
         function updateProfitMarginDisplay() {
             const margin = document.getElementById('profitMargin').value;
             profitMargin = margin / 100;
             document.getElementById('profitMarginDisplay').textContent = margin + '%';
             document.getElementById('profitMarginCalc').textContent = margin;
             
-            // Recalculate if products already extracted
             if (extractedProducts.length > 0) {
                 extractedProducts = extractedProducts.map(p => ({
                     ...p,
@@ -555,13 +629,6 @@
             }
         }
         
-        // Toggle smart pricing
-        function toggleSmartPricing() {
-            useSmartPricing = document.getElementById('smartPricing').checked;
-            updateProfitMarginDisplay();
-        }
-        
-        // Show/hide internet image warning
         document.addEventListener('DOMContentLoaded', () => {
             const radios = document.querySelectorAll('input[name="imageSource"]');
             radios.forEach(radio => {
@@ -570,9 +637,10 @@
                     warning.style.display = e.target.value === 'internet' ? 'block' : 'none';
                 });
             });
+            
+            renderPriceRanges();
         });
         
-        // Upload area events
         const uploadArea = document.getElementById('uploadArea');
         const fileInput = document.getElementById('pdfFile');
         
@@ -734,39 +802,21 @@
             for (let line of lines) {
                 line = line.trim();
                 
-                // Skip headers and short lines
                 if (line.length < 3 || 
                     line.toLowerCase().includes('product') || 
                     line.toLowerCase().includes('price') ||
-                    lineconst sellingPrice = useSmartPricing 
-                            ? calculateSmartSellingPrice(price)
-                            : Math.round(price * (1 + profitMargin));
-                        
-                        products.push({
-                            name: name,
-                            purchasePrice: price,
-                            sellingPrice: sellingPrice
+                    line.toLowerCase().includes('page')) {
+                    continue;
+                }
                 
-                // Try different patterns
                 let match = line.match(/^(.+?)\s*\|\s*(\d+(?:\.\d+)?)/);
                 
-                if (!match) {
-                    match = line.match(/^(.+?)\s*-\s*(\d+(?:\.\d+)?)/);
-                }
-                
-                if (!match) {
-                    match = line.match(/^(.+?):\s*(\d+(?:\.\d+)?)/);
-                }
-                
-                if (!match) {
-                    match = line.match(/^(.+?)\s+(\d+(?:\.\d+)?)$/);
-                }
-                
+                if (!match) match = line.match(/^(.+?)\s*-\s*(\d+(?:\.\d+)?)/);
+                if (!match) match = line.match(/^(.+?):\s*(\d+(?:\.\d+)?)/);
+                if (!match) match = line.match(/^(.+?)\s+(\d+(?:\.\d+)?)$/);
                 if (!match) {
                     match = line.match(/^(\d+(?:\.\d+)?)\s+(.+)$/);
-                    if (match) {
-                        match = [match[0], match[2], match[1]];
-                    }
+                    if (match) match = [match[0], match[2], match[1]];
                 }
                 
                 if (match) {
@@ -774,10 +824,14 @@
                     const price = parseFloat(match[2]);
                     
                     if (name.length > 2 && price > 0 && price < 100000) {
+                        const sellingPrice = useSmartPricing 
+                            ? calculateSmartSellingPrice(price)
+                            : Math.round(price * (1 + profitMargin));
+
                         products.push({
                             name: name,
                             purchasePrice: price,
-                            sellingPrice: Math.round(price * (1 + profitMargin)),
+                            sellingPrice: sellingPrice,
                             description: `${name} - منتج أصلي`,
                             category: detectCategory(name),
                             inStock: true,
@@ -788,7 +842,36 @@
                     }
                 }
             }
-            {
+            return products;
+        }
+        
+        function detectCategory(name) {
+            const nameLower = name.toLowerCase();
+            if (nameLower.includes('شامبو') || nameLower.includes('shampoo')) return 'hair-care';
+            if (nameLower.includes('زيت') || nameLower.includes('oil')) return 'beard-care';
+            if (nameLower.includes('جل') || nameLower.includes('gel') || nameLower.includes('wax')) return 'styling';
+            if (nameLower.includes('ماكينة') || nameLower.includes('machine') || nameLower.includes('clipper')) return 'tools';
+            if (nameLower.includes('مقص') || nameLower.includes('scissors')) return 'tools';
+            if (nameLower.includes('فرشاة') || nameLower.includes('brush')) return 'tools';
+            return 'other';
+        }
+        
+        function getCategoryLabel(category) {
+            const labels = {
+                'hair-care': 'عناية بالشعر',
+                'beard-care': 'عناية باللحية',
+                'styling': 'تصفيف',
+                'tools': 'أدوات',
+                'other': 'أخرى'
+            };
+            return labels[category] || category;
+        }
+        
+        function displayProducts(products) {
+            document.getElementById('productCount').textContent = products.length;
+            
+            const tbody = document.getElementById('productsTableBody');
+            tbody.innerHTML = products.map((p, i) => {
                 const profit = p.sellingPrice - p.purchasePrice;
                 const margin = ((profit / p.purchasePrice) * 100).toFixed(0);
                 
@@ -811,43 +894,7 @@
                     </td>
                 </tr>
                 `;
-            }f (nameLower.includes('ماكينة') || nameLower.includes('machine') || nameLower.includes('clipper')) return 'tools';
-            if (nameLower.includes('مقص') || nameLower.includes('scissors')) return 'tools';
-            if (nameLower.includes('فرشاة') || nameLower.includes('brush')) return 'tools';
-            
-            return 'other';
-        }
-        
-        function getCategoryLabel(category) {
-            const labels = {
-                'hair-care': 'عناية بالشعر',
-                'beard-care': 'عناية باللحية',
-                'styling': 'تصفيف',
-                'tools': 'أدوات',
-                'other': 'أخرى'
-            };
-            return labels[category] || category;
-        }
-        
-        function displayProducts(products) {
-            document.getElementById('productCount').textContent = products.length;
-            
-            const tbody = document.getElementById('productsTableBody');
-            tbody.innerHTML = products.map((p, i) => `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td>
-                        ${p.imageUrl 
-                            ? `<img src="${p.imageUrl}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">` 
-                            : '<div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📦</div>'}
-                    </td>
-                    <td>${p.name}</td>
-                    <td><span class="category-badge category-${p.category}">${getCategoryLabel(p.category)}</span></td>
-                    <td>${p.purchasePrice} دج</td>
-                    <td>${p.sellingPrice} دج</td>
-                    <td style="color: #4CAF50; font-weight: bold;">${p.sellingPrice - p.purchasePrice} دج</td>
-                </tr>
-            `).join('');
+            }).join('');
             
             document.getElementById('productsPreview').style.display = 'block';
         }
