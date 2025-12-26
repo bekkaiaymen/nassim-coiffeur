@@ -89,6 +89,8 @@ const settingsRoutes = require('./routes/settings');
 const uploadRoutes = require('./routes/upload');
 const cleanupRoutes = require('./routes/cleanup');
 const whatsappRoutes = require('./routes/whatsapp'); // WhatsApp Route
+const productRoutes = require('./routes/products'); // Products Route
+const uploadImageRoutes = require('./routes/upload-image'); // Image Upload Route
 
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/invoices', invoiceRoutes);
@@ -117,6 +119,8 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/cleanup', cleanupRoutes);
 app.use('/api/whatsapp', whatsappRoutes); // Mount WhatsApp Route
+app.use('/api/products', productRoutes); // Mount Products Route
+app.use('/api/upload-image', uploadImageRoutes); // Mount Image Upload Route
 
 // Serve frontend pages
 app.get('/', (req, res) => {

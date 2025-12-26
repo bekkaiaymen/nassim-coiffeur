@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رفع منتجات من PDF - Nassim Owner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #CBA35C;
+            border-radius: 15px;
+            padding: 60px 30px;
+            text-align: center;
+            background: #f9f9f9;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+        
+        .upload-area:hover {
+            background: #fff8e7;
+            border-color: #D4AF37;
+        }
+        
+        .upload-area.dragover {
+            background: #fff8e7;
+            border-color: #D4AF37;
+            transform: scale(1.02);
+        }
+        
+        .upload-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+        
+        .upload-area p {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .info-box h4 {
+            color: #1976D2;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .info-box ul {
+            list-style: none;
+            padding-right: 0;
+        }
+        
+        .info-box li {
+            color: #555;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+        
+        .info-box li::before {
+            content: "✓ ";
+            color: #4CAF50;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .progress-area {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 40px;
+            background: #e0e0e0;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            width: 0%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .products-preview {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .products-preview h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        
+        .products-table th,
+        .products-table td {
+            padding: 12px;
+            text-align: right;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .products-table th {
+            background: #f5f5f5;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .products-table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .category-hair-care { background: #e3f2fd; color: #1976D2; }
+        .category-beard-care { background: #fff3e0; color: #f57c00; }
+        .category-styling { background: #f3e5f5; color: #7b1fa2; }
+        .category-tools { background: #e8f5e9; color: #388e3c; }
+        .category-other { background: #e0e0e0; color: #616161; }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #CBA35C 0%, #D4AF37 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(203, 163, 92, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛍️ رفع منتجات من PDF</h1>
+            <p>ارفع ملف PDF يحتوي على قائمة المنتجات والأسعار</p>
+        </div>
+        
+        <div class="content">
+            <div class="info-box">
+                <h4>📋 الصيغ المدعومة في ملف PDF:</h4>
+                <ul>
+                    <li>اسم المنتج | السعر (مثال: شامبو للشعر | 500)</li>
+                    <li>اسم المنتج - السعر (مثال: جل تصفيف - 350)</li>
+                    <li>اسم المنتج: السعر (مثال: زيت لحية: 800)</li>
+                    <li>اسم المنتج السعر (مثال: كريم الشعر 450)</li>
+                </ul>
+            </div>
+            
+            <div class="settings-box" style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+                <h4 style="color: #f57c00; margin-bottom: 15px; font-size: 16px;">⚙️ إعدادات الأسعار والصور</h4>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; color: #555; font-weight: bold;">
+                        💰 هامش الربح على سعر البيع:
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <input type="range" id="profitMargin" min="10" max="100" value="30" 
+                               style="flex: 1; cursor: pointer;" oninput="updateProfitMarginDisplay()">
+                        <span id="profitMarginDisplay" style="font-size: 24px; font-weight: bold; color: #f57c00; min-width: 60px;">30%</span>
+                    </div>
+                    <p style="font-size: 12px; color: #666; margin-top: 5px;">
+                        سعر البيع = سعر الشراء × (1 + <span id="profitMarginCalc">30</span>%)
+                    </p>
+                </div>
+                
+                <div style="border-top: 1px solid #ffe0b2; padding-top: 15px; margin-top: 15px;">
+                    <label style="display: block; margin-bottom: 10px; color: #555; font-weight: bold;">
+                        🖼️ إضافة صور المنتجات:
+                    </label>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="imageSource" value="pdf" checked style="margin-left: 8px;">
+                            <span>استخراج الصور من PDF (أوتوماتيكي 100%)</span>
+                        </label>
+                        
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="imageSource" value="internet" style="margin-left: 8px;">
+                            <span>البحث عن صور احترافية من الإنترنت (قد لا تكون دقيقة)</span>
+                        </label>
+                        
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input type="radio" name="imageSource" value="none" style="margin-left: 8px;">
+                            <span>بدون صور (يمكن إضافتها لاحقاً)</span>
+                        </label>
+                    </div>
+                    
+                    <div id="imageWarning" style="display: none; background: #fff9c4; border: 1px solid #fbc02d; padding: 10px; border-radius: 5px; margin-top: 10px; font-size: 12px; color: #f57f17;">
+                        ⚠️ تحذير: البحث من الإنترنت قد يجلب صوراً لمنتجات مشابهة وليست نفس المنتجات. يُفضل مراجعة الصور قبل الرفع.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <h3>اضغط هنا أو اسحب ملف PDF</h3>
+                <p>سيتم استخراج جميع المنتجات تلقائياً</p>
+                <input type="file" id="pdfFile" accept=".pdf">
+            </div>
+            
+            <div class="progress-area" id="progressArea">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill">0%</div>
+                </div>
+                <div class="status-message info" id="statusMessage">
+                    جاري معالجة الملف...
+                </div>
+            </div>
+            
+            <div class="products-preview" id="productsPreview">
+                <h3>📦 المنتجات المستخرجة (<span id="productCount">0</span>)</h3>
+                <div style="overflow-x: auto;">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>صورة</th>
+                                <th>اسم المنتج</th>
+                                <th>الفئة</th>
+                                <th>سعر الشراء</th>
+                                <th>سعر البيع</th>
+                                <th>الربح</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-primary" id="uploadBtn" onclick="uploadProducts()">
+                        ✅ رفع المنتجات إلى المتجر
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetUpload()">
+                        🔄 ملف جديد
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        const API_URL = window.location.hostname === 'localhost'
+            ? 'http://localhost:3000/api'
+            : 'https://nassim-coiffeur.onrender.com/api';
+        const NASSIM_BUSINESS_ID = '69259331651b1babc1eb83dc';
+        
+        let extractedProducts = [];
+        let extractedImages = [];
+        let profitMargin = 0.3; // Default 30%
+        
+        // PDF.js setup
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        // Update profit margin display
+        function updateProfitMarginDisplay() {
+            const margin = document.getElementById('profitMargin').value;
+            profitMargin = margin / 100;
+            document.getElementById('profitMarginDisplay').textContent = margin + '%';
+            document.getElementById('profitMarginCalc').textContent = margin;
+            
+            // Recalculate if products already extracted
+            if (extractedProducts.length > 0) {
+                extractedProducts = extractedProducts.map(p => ({
+                    ...p,
+                    sellingPrice: Math.round(p.purchasePrice * (1 + profitMargin))
+                }));
+                displayProducts(extractedProducts);
+            }
+        }
+        
+        // Show/hide internet image warning
+        document.addEventListener('DOMContentLoaded', () => {
+            const radios = document.querySelectorAll('input[name="imageSource"]');
+            radios.forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const warning = document.getElementById('imageWarning');
+                    warning.style.display = e.target.value === 'internet' ? 'block' : 'none';
+                });
+            });
+        });
+        
+        // Upload area events
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('pdfFile');
+        
+        uploadArea.addEventListener('click', () => fileInput.click());
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type === 'application/pdf') {
+                handlePDFFile(files[0]);
+            } else {
+                alert('الرجاء رفع ملف PDF فقط');
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handlePDFFile(e.target.files[0]);
+            }
+        });
+        
+        async function handlePDFFile(file) {
+            showProgress();
+            updateProgress(10, 'جاري قراءة ملف PDF...');
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                
+                updateProgress(20, `جاري استخراج النص والصور من ${pdf.numPages} صفحة...`);
+                
+                let fullText = '';
+                extractedImages = [];
+                
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    
+                    // Extract text
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n';
+                    
+                    // Extract images
+                    const ops = await page.getOperatorList();
+                    for (let j = 0; j < ops.fnArray.length; j++) {
+                        if (ops.fnArray[j] === pdfjsLib.OPS.paintImageXObject || 
+                            ops.fnArray[j] === pdfjsLib.OPS.paintInlineImageXObject ||
+                            ops.fnArray[j] === pdfjsLib.OPS.paintJpegXObject) {
+                            try {
+                                const imageName = ops.argsArray[j][0];
+                                const image = await page.objs.get(imageName);
+                                
+                                if (image && image.width && image.height) {
+                                    // Create canvas to extract image data
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = image.width;
+                                    canvas.height = image.height;
+                                    const ctx = canvas.getContext('2d');
+                                    
+                                    // Draw image data
+                                    const imgData = ctx.createImageData(image.width, image.height);
+                                    imgData.data.set(image.data);
+                                    ctx.putImageData(imgData, 0, 0);
+                                    
+                                    // Convert to blob
+                                    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+                                    
+                                    if (blob && blob.size > 5000) { // Only images > 5KB (filter out icons/logos)
+                                        extractedImages.push({
+                                            blob: blob,
+                                            url: URL.createObjectURL(blob),
+                                            pageNum: i
+                                        });
+                                    }
+                                }
+                            } catch (imgError) {
+                                console.log('Could not extract image:', imgError);
+                            }
+                        }
+                    }
+                    
+                    updateProgress(20 + (i / pdf.numPages * 40), `معالجة صفحة ${i} من ${pdf.numPages}...`);
+                }
+                
+                updateProgress(65, `تم استخراج ${extractedImages.length} صورة. جاري استخراج المنتجات...`);
+                
+                extractedProducts = extractProducts(fullText);
+                
+                // Match images to products (simple: assign in order if available)
+                if (extractedImages.length > 0) {
+                    const imageSource = document.querySelector('input[name="imageSource"]:checked').value;
+                    if (imageSource === 'pdf') {
+                        for (let i = 0; i < Math.min(extractedProducts.length, extractedImages.length); i++) {
+                            extractedProducts[i].imageBlob = extractedImages[i].blob;
+                            extractedProducts[i].imageUrl = extractedImages[i].url;
+                        }
+                    }
+                }
+                
+                updateProgress(100, `تم استخراج ${extractedProducts.length} منتج و ${extractedImages.length} صورة بنجاح!`);
+                
+                setTimeout(() => {
+                    hideProgress();
+                    displayProducts(extractedProducts);
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error processing PDF:', error);
+                showError('حدث خطأ في معالجة ملف PDF. تأكد من أن الملف صحيح.');
+            }
+        }
+        
+        function extractProducts(text) {
+            const lines = text.split('\n').filter(line => line.trim().length > 0);
+            const products = [];
+            
+            for (let line of lines) {
+                line = line.trim();
+                
+                // Skip headers and short lines
+                if (line.length < 3 || 
+                    line.toLowerCase().includes('product') || 
+                    line.toLowerCase().includes('price') ||
+                    line.toLowerCase().includes('منتج') ||
+                    line.toLowerCase().includes('سعر')) {
+                    continue;
+                }
+                
+                // Try different patterns
+                let match = line.match(/^(.+?)\s*\|\s*(\d+(?:\.\d+)?)/);
+                
+                if (!match) {
+                    match = line.match(/^(.+?)\s*-\s*(\d+(?:\.\d+)?)/);
+                }
+                
+                if (!match) {
+                    match = line.match(/^(.+?):\s*(\d+(?:\.\d+)?)/);
+                }
+                
+                if (!match) {
+                    match = line.match(/^(.+?)\s+(\d+(?:\.\d+)?)$/);
+                }
+                
+                if (!match) {
+                    match = line.match(/^(\d+(?:\.\d+)?)\s+(.+)$/);
+                    if (match) {
+                        match = [match[0], match[2], match[1]];
+                    }
+                }
+                
+                if (match) {
+                    const name = match[1].trim();
+                    const price = parseFloat(match[2]);
+                    
+                    if (name.length > 2 && price > 0 && price < 100000) {
+                        products.push({
+                            name: name,
+                            purchasePrice: price,
+                            sellingPrice: Math.round(price * (1 + profitMargin)),
+                            description: `${name} - منتج أصلي`,
+                            category: detectCategory(name),
+                            inStock: true,
+                            stockQuantity: 10,
+                            imageUrl: null,
+                            imageBlob: null
+                        });
+                    }
+                }
+            }
+            
+            return products;
+        }
+        
+        function detectCategory(name) {
+            const nameLower = name.toLowerCase();
+            
+            if (nameLower.includes('شامبو') || nameLower.includes('shampoo')) return 'hair-care';
+            if (nameLower.includes('زيت') || nameLower.includes('oil')) return 'hair-care';
+            if (nameLower.includes('كريم') || nameLower.includes('cream')) return 'hair-care';
+            if (nameLower.includes('جل') || nameLower.includes('gel')) return 'styling';
+            if (nameLower.includes('واكس') || nameLower.includes('wax')) return 'styling';
+            if (nameLower.includes('بومادة') || nameLower.includes('pomade')) return 'styling';
+            if (nameLower.includes('لحية') || nameLower.includes('beard')) return 'beard-care';
+            if (nameLower.includes('ماكينة') || nameLower.includes('machine') || nameLower.includes('clipper')) return 'tools';
+            if (nameLower.includes('مقص') || nameLower.includes('scissors')) return 'tools';
+            if (nameLower.includes('فرشاة') || nameLower.includes('brush')) return 'tools';
+            
+            return 'other';
+        }
+        
+        function getCategoryLabel(category) {
+            const labels = {
+                'hair-care': 'عناية بالشعر',
+                'beard-care': 'عناية باللحية',
+                'styling': 'تصفيف',
+                'tools': 'أدوات',
+                'other': 'أخرى'
+            };
+            return labels[category] || category;
+        }
+        
+        function displayProducts(products) {
+            document.getElementById('productCount').textContent = products.length;
+            
+            const tbody = document.getElementById('productsTableBody');
+            tbody.innerHTML = products.map((p, i) => `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>
+                        ${p.imageUrl 
+                            ? `<img src="${p.imageUrl}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">` 
+                            : '<div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📦</div>'}
+                    </td>
+                    <td>${p.name}</td>
+                    <td><span class="category-badge category-${p.category}">${getCategoryLabel(p.category)}</span></td>
+                    <td>${p.purchasePrice} دج</td>
+                    <td>${p.sellingPrice} دج</td>
+                    <td style="color: #4CAF50; font-weight: bold;">${p.sellingPrice - p.purchasePrice} دج</td>
+                </tr>
+            `).join('');
+            
+            document.getElementById('productsPreview').style.display = 'block';
+        }
+        
+        async function uploadProducts() {
+            if (extractedProducts.length === 0) {
+                alert('لا توجد منتجات لرفعها');
+                return;
+            }
+            
+            const btn = document.getElementById('uploadBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ جاري الرفع...';
+            
+            showProgress();
+            
+            try {
+                const token = localStorage.getItem('ownerToken') || localStorage.getItem('token');
+                const imageSource = document.querySelector('input[name="imageSource"]:checked').value;
+                
+                let successCount = 0;
+                let errorCount = 0;
+                
+                for (let i = 0; i < extractedProducts.length; i++) {
+                    const product = extractedProducts[i];
+                    
+                    updateProgress(
+                        (i / extractedProducts.length) * 100,
+                        `جاري رفع ${i + 1} من ${extractedProducts.length}...`
+                    );
+                    
+                    try {
+                        let imageUrl = null;
+                        
+                        // Handle image upload based on selected option
+                        if (imageSource === 'pdf' && product.imageBlob) {
+                            // Upload image from PDF to Cloudinary
+                            const formData = new FormData();
+                            formData.append('image', product.imageBlob, `${product.name}.jpg`);
+                            
+                            const imgResponse = await fetch(`${API_URL}/upload-image`, {
+                                method: 'POST',
+                                headers: {
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: formData
+                            });
+                            
+                            if (imgResponse.ok) {
+                                const imgData = await imgResponse.json();
+                                imageUrl = imgData.url;
+                            }
+                        } else if (imageSource === 'internet') {
+                            // Search for image on internet
+                            const searchResponse = await fetch(`${API_URL}/upload-image/search`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({ productName: product.name })
+                            });
+                            
+                            if (searchResponse.ok) {
+                                const searchData = await searchResponse.json();
+                                if (searchData.success) {
+                                    imageUrl = searchData.url;
+                                }
+                            }
+                        }
+                        
+                        // Upload product with image URL
+                        const response = await fetch(`${API_URL}/products`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                ...product,
+                                business: NASSIM_BUSINESS_ID,
+                                image: imageUrl,
+                                imageBlob: undefined, // Remove blob before sending
+                                imageUrl: undefined
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            successCount++;
+                        } else {
+                            errorCount++;
+                        }
+                    } catch (error) {
+                        console.error('Error uploading product:', error);
+                        errorCount++;
+                    }
+                }
+                
+                updateProgress(100, '✅ اكتمل!');
+                
+                setTimeout(() => {
+                    hideProgress();
+                    alert(`✅ تم بنجاح: ${successCount}\n❌ فشل: ${errorCount}\n📊 الإجمالي: ${extractedProducts.length}`);
+                    
+                    if (successCount > 0) {
+                        resetUpload();
+                    } else {
+                        btn.disabled = false;
+                        btn.textContent = '✅ رفع المنتجات إلى المتجر';
+                    }
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Error uploading products:', error);
+                hideProgress();
+                showError('حدث خطأ أثناء رفع المنتجات');
+                btn.disabled = false;
+                btn.textContent = '✅ رفع المنتجات إلى المتجر';
+            }
+        }
+        
+        function resetUpload() {
+            extractedProducts = [];
+            document.getElementById('pdfFile').value = '';
+            document.getElementById('productsPreview').style.display = 'none';
+            document.getElementById('uploadBtn').disabled = false;
+            document.getElementById('uploadBtn').textContent = '✅ رفع المنتجات إلى المتجر';
+        }
+        
+        function showProgress() {
+            document.getElementById('progressArea').style.display = 'block';
+        }
+        
+        function hideProgress() {
+            document.getElementById('progressArea').style.display = 'none';
+        }
+        
+        function updateProgress(percent, message) {
+            const fill = document.getElementById('progressFill');
+            fill.style.width = percent + '%';
+            fill.textContent = Math.round(percent) + '%';
+            
+            const statusMsg = document.getElementById('statusMessage');
+            statusMsg.textContent = message;
+            statusMsg.className = 'status-message info';
+        }
+        
+        function showError(message) {
+            const statusMsg = document.getElementById('statusMessage');
+            statusMsg.textContent = message;
+            statusMsg.className = 'status-message error';
+        }
+    </script>
+</body>
+</html>
