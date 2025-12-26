@@ -306,6 +306,19 @@
                             <!-- Ranges will be dynamically generated -->
                         </div>
                         
+                        <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <h4 style="margin: 0; color: #555; font-size: 14px;">🏷️ استثناءات الفئات (تتجاوز نطاقات السعر):</h4>
+                                <button onclick="toggleCategoryMargins()" style="background: none; border: none; color: #2196F3; cursor: pointer; font-size: 12px;">
+                                    إظهار/إخفاء
+                                </button>
+                            </div>
+                            
+                            <div id="categoryMarginsContainer" style="display: none; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">
+                                <!-- Category margins will be generated here -->
+                            </div>
+                        </div>
+                        
                         <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-top: 15px;">
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                                 <strong style="color: #1976d2; font-size: 13px;">💡 معاينة مباشرة:</strong>
@@ -452,11 +465,25 @@
             { min: 5000, max: Infinity, margin: 22, color: '#795548' }
         ];
         
+        let categoryMargins = {
+            'phone-accessories': { margin: 50, active: true },
+            'hair-care': { margin: 30, active: false },
+            'beard-care': { margin: 30, active: false },
+            'styling': { margin: 35, active: false },
+            'tools': { margin: 25, active: false },
+            'other': { margin: 30, active: false }
+        };
+        
         // PDF.js setup
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
         
         // Smart pricing algorithm - different margins for different price ranges
-        function calculateSmartSellingPrice(purchasePrice) {
+        function calculateSmartSellingPrice(purchasePrice, category = null) {
+            // Check category override first
+            if (category && categoryMargins[category] && categoryMargins[category].active) {
+                return Math.round(purchasePrice * (1 + categoryMargins[category].margin / 100));
+            }
+            
             for (let range of priceRanges) {
                 if (purchasePrice >= range.min && (purchasePrice < range.max || range.max === Infinity)) {
                     return Math.round(purchasePrice * (1 + range.margin / 100));
@@ -517,6 +544,68 @@
                 `;
                 container.appendChild(div);
             });
+            
+            renderCategoryMargins();
+        }
+        
+        function renderCategoryMargins() {
+            const container = document.getElementById('categoryMarginsContainer');
+            container.innerHTML = '';
+            
+            const labels = {
+                'phone-accessories': '📱 اكسسوارات الهواتف',
+                'hair-care': '🧴 عناية بالشعر',
+                'beard-care': '🧔 عناية باللحية',
+                'styling': '💇 تصفيف',
+                'tools': '✂️ أدوات',
+                'other': '📦 أخرى'
+            };
+            
+            Object.keys(categoryMargins).forEach(cat => {
+                const config = categoryMargins[cat];
+                const div = document.createElement('div');
+                div.style.background = config.active ? '#e8f5e9' : '#f5f5f5';
+                div.style.padding = '8px';
+                div.style.borderRadius = '4px';
+                div.style.border = config.active ? '1px solid #4CAF50' : '1px solid #ddd';
+                
+                div.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <label style="font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 5px; cursor: pointer;">
+                            <input type="checkbox" ${config.active ? 'checked' : ''} 
+                                   onchange="toggleCategoryActive('${cat}', this.checked)">
+                            ${labels[cat] || cat}
+                        </label>
+                        <span style="font-size: 12px; font-weight: bold; color: ${config.active ? '#2e7d32' : '#999'}">
+                            ${config.margin}%
+                        </span>
+                    </div>
+                    <input type="range" min="5" max="200" value="${config.margin}" 
+                           ${!config.active ? 'disabled' : ''}
+                           oninput="updateCategoryMargin('${cat}', this.value)"
+                           style="width: 100%; opacity: ${config.active ? '1' : '0.5'}">
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        function toggleCategoryMargins() {
+            const container = document.getElementById('categoryMarginsContainer');
+            container.style.display = container.style.display === 'none' ? 'grid' : 'none';
+        }
+        
+        function toggleCategoryActive(category, isActive) {
+            if (categoryMargins[category]) {
+                categoryMargins[category].active = isActive;
+                renderCategoryMargins();
+            }
+        }
+        
+        function updateCategoryMargin(category, value) {
+            if (categoryMargins[category]) {
+                categoryMargins[category].margin = parseInt(value);
+                renderCategoryMargins();
+            }
         }
 
         function addPriceRange() {
@@ -846,8 +935,9 @@
                     console.log(`Found match: Name="${name}", Price=${price}`);
                     
                     if (name.length > 2 && price > 0 && price < 1000000) {
+                        const category = detectCategory(name);
                         const sellingPrice = useSmartPricing 
-                            ? calculateSmartSellingPrice(price)
+                            ? calculateSmartSellingPrice(price, category)
                             : Math.round(price * (1 + profitMargin));
 
                         products.push({
@@ -855,7 +945,7 @@
                             purchasePrice: price,
                             sellingPrice: sellingPrice,
                             description: `${name} - منتج أصلي`,
-                            category: detectCategory(name),
+                            category: category,
                             inStock: true,
                             stockQuantity: 10,
                             imageUrl: null,
