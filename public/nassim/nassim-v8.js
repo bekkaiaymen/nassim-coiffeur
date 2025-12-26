@@ -32,6 +32,7 @@ const PRODUCT_CATEGORY_LABELS = {
     'beard-care': 'عناية باللحية',
     'styling': 'تصفيف',
     'tools': 'أدوات',
+    'phone-accessories': 'اكسسوارات الهواتف',
     'other': 'أخرى'
 };
 

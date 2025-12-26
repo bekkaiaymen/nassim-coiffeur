@@ -796,34 +796,56 @@
         }
         
         function extractProducts(text) {
+            console.log('--- Starting Product Extraction ---');
             const lines = text.split('\n').filter(line => line.trim().length > 0);
             const products = [];
             
             for (let line of lines) {
                 line = line.trim();
+                console.log('Processing line:', line);
                 
+                // Skip headers and short lines
                 if (line.length < 3 || 
                     line.toLowerCase().includes('product') || 
                     line.toLowerCase().includes('price') ||
-                    line.toLowerCase().includes('page')) {
+                    line.toLowerCase().includes('page') ||
+                    line.toLowerCase().includes('total')) {
+                    console.log('Skipped (header/short)');
                     continue;
                 }
                 
-                let match = line.match(/^(.+?)\s*\|\s*(\d+(?:\.\d+)?)/);
+                let match = null;
                 
-                if (!match) match = line.match(/^(.+?)\s*-\s*(\d+(?:\.\d+)?)/);
-                if (!match) match = line.match(/^(.+?):\s*(\d+(?:\.\d+)?)/);
-                if (!match) match = line.match(/^(.+?)\s+(\d+(?:\.\d+)?)$/);
+                // Pattern 1: Name | Price
+                match = line.match(/^(.+?)\s*\|\s*(\d+(?:[.,]\d+)?)/);
+                
+                // Pattern 2: Name - Price
+                if (!match) match = line.match(/^(.+?)\s*-\s*(\d+(?:[.,]\d+)?)/);
+                
+                // Pattern 3: Name : Price
+                if (!match) match = line.match(/^(.+?):\s*(\d+(?:[.,]\d+)?)/);
+                
+                // Pattern 4: Name ... Price (dots)
+                if (!match) match = line.match(/^(.+?)\.{2,}\s*(\d+(?:[.,]\d+)?)/);
+                
+                // Pattern 5: Name Price (end of line)
+                if (!match) match = line.match(/^(.+?)\s+(\d+(?:[.,]\d+)?)$/);
+                
+                // Pattern 6: Price Name (start of line)
                 if (!match) {
-                    match = line.match(/^(\d+(?:\.\d+)?)\s+(.+)$/);
-                    if (match) match = [match[0], match[2], match[1]];
+                    match = line.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/);
+                    if (match) match = [match[0], match[2], match[1]]; // Swap to Name, Price
                 }
                 
                 if (match) {
                     const name = match[1].trim();
-                    const price = parseFloat(match[2]);
+                    // Fix price format (replace comma with dot)
+                    const priceStr = match[2].replace(',', '.');
+                    const price = parseFloat(priceStr);
                     
-                    if (name.length > 2 && price > 0 && price < 100000) {
+                    console.log(`Found match: Name="${name}", Price=${price}`);
+                    
+                    if (name.length > 2 && price > 0 && price < 1000000) {
                         const sellingPrice = useSmartPricing 
                             ? calculateSmartSellingPrice(price)
                             : Math.round(price * (1 + profitMargin));
@@ -839,14 +861,32 @@
                             imageUrl: null,
                             imageBlob: null
                         });
+                    } else {
+                        console.log('Skipped (invalid name length or price range)');
                     }
+                } else {
+                    console.log('No match found');
                 }
             }
+            console.log(`--- Extraction Complete. Found ${products.length} products ---`);
             return products;
         }
         
         function detectCategory(name) {
             const nameLower = name.toLowerCase();
+            
+            // Phone Accessories
+            if (nameLower.includes('cable') || nameLower.includes('câble') || nameLower.includes('chargeur') || nameLower.includes('charger') || 
+                nameLower.includes('ecouteur') || nameLower.includes('écouteur') || nameLower.includes('kit') || nameLower.includes('bluetooth') || 
+                nameLower.includes('airpods') || nameLower.includes('iphone') || nameLower.includes('samsung') || nameLower.includes('redmi') || 
+                nameLower.includes('case') || nameLower.includes('pochette') || nameLower.includes('cover') || nameLower.includes('incassable') || 
+                nameLower.includes('verre') || nameLower.includes('glass') || nameLower.includes('support') || nameLower.includes('holder') || 
+                nameLower.includes('ring') || nameLower.includes('light') || nameLower.includes('trepied') || nameLower.includes('tripod') ||
+                nameLower.includes('usb') || nameLower.includes('type-c') || nameLower.includes('lightning') || nameLower.includes('power bank') ||
+                nameLower.includes('batterie') || nameLower.includes('battery')) {
+                return 'phone-accessories';
+            }
+
             if (nameLower.includes('شامبو') || nameLower.includes('shampoo')) return 'hair-care';
             if (nameLower.includes('زيت') || nameLower.includes('oil')) return 'beard-care';
             if (nameLower.includes('جل') || nameLower.includes('gel') || nameLower.includes('wax')) return 'styling';
@@ -862,6 +902,7 @@
                 'beard-care': 'عناية باللحية',
                 'styling': 'تصفيف',
                 'tools': 'أدوات',
+                'phone-accessories': 'اكسسوارات الهواتف',
                 'other': 'أخرى'
             };
             return labels[category] || category;
