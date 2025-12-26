@@ -34,6 +34,18 @@
     --topbar-height: 64px;
 }
 
+/* Animation for PDF upload button */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 15px rgba(203, 163, 92, 0.3);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(203, 163, 92, 0.5);
+    }
+}
+
 /* ==================== New Owner Interfaces ==================== */
 .timeline-header {
     display: flex;
