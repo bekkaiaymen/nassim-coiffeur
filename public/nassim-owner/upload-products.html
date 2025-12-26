@@ -819,8 +819,18 @@
                 
                 updateProgress(70, 'جاري استخراج المنتجات...');
                 
+                // Debug: Show first 500 chars
+                console.log('--- PDF Raw Text Preview (First 500 chars) ---');
+                console.log(fullText.substring(0, 500));
+                console.log('---------------------------------------------');
+                
                 extractedProducts = extractProducts(fullText);
                 
+                if (extractedProducts.length === 0) {
+                    console.warn('No products found with standard extraction. Trying fallback mode...');
+                    extractedProducts = extractProductsFallback(fullText);
+                }
+
                 // Check if user wants images from PDF
                 const imageSource = document.querySelector('input[name="imageSource"]:checked').value;
                 
@@ -884,6 +894,50 @@
             }
         }
         
+        function extractProductsFallback(text) {
+            console.log('--- Starting Fallback Extraction ---');
+            const lines = text.split('\n').filter(line => line.trim().length > 0);
+            const products = [];
+            
+            for (let line of lines) {
+                line = line.trim();
+                
+                // Very loose pattern: Just look for any number at the end of the line
+                // Example: "Some Product Name 1200" or "Some Product Name 1200.00"
+                const match = line.match(/^(.+?)\s+(\d+(?:[.,]\d+)?)$/);
+                
+                if (match) {
+                    const name = match[1].trim();
+                    const priceStr = match[2].replace(',', '.');
+                    const price = parseFloat(priceStr);
+                    
+                    // Basic validation to avoid page numbers or dates
+                    if (name.length > 3 && price > 10 && price < 1000000 && !name.includes('Page') && !name.includes('Total')) {
+                        console.log(`Fallback match: Name="${name}", Price=${price}`);
+                        
+                        const category = detectCategory(name);
+                        const sellingPrice = useSmartPricing 
+                            ? calculateSmartSellingPrice(price, category)
+                            : Math.round(price * (1 + profitMargin));
+
+                        products.push({
+                            name: name,
+                            purchasePrice: price,
+                            sellingPrice: sellingPrice,
+                            description: `${name} - منتج أصلي`,
+                            category: category,
+                            inStock: true,
+                            stockQuantity: 10,
+                            imageUrl: null,
+                            imageBlob: null
+                        });
+                    }
+                }
+            }
+            console.log(`--- Fallback Extraction Complete. Found ${products.length} products ---`);
+            return products;
+        }
+
         function extractProducts(text) {
             console.log('--- Starting Product Extraction ---');
             const lines = text.split('\n').filter(line => line.trim().length > 0);
