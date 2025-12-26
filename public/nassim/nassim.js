@@ -1,4 +1,132 @@
-// Nassim Customer Portal - Professional JavaScript
+// === CRITICAL: Define this function FIRST before anything else ===
+console.log('🚀 nassim.js v006 STARTING EXECUTION - FORCE UPDATE');
+window.suggestNearestAppointment = async function() {
+    const API_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000/api'
+        : 'https://nassim-coiffeur.onrender.com/api';
+    const NASSIM_BUSINESS_ID = '69259331651b1babc1eb83dc';
+    
+    console.log('🚀 [Suggest] Function called');
+    
+    const dateInput = document.getElementById('appointmentDate');
+    const timeInput = document.getElementById('appointmentTime');
+    const employeeSelect = document.getElementById('employeeSelect');
+    const btn = document.getElementById('suggestBtn');
+
+    if (!dateInput || !timeInput) {
+        console.error('❌ [Suggest] Required form elements not found');
+        alert('خطأ: لم يتم العثور على حقول النموذج');
+        return;
+    }
+
+    console.log('✅ [Suggest] Form elements found');
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ جاري البحث...';
+        btn.style.opacity = '0.6';
+    }
+
+    try {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const maxDaysToCheck = 7;
+        
+        console.log(`🔍 [Suggest] Starting search from ${now.toISOString()}`);
+
+        for (let dayOffset = 0; dayOffset < maxDaysToCheck; dayOffset++) {
+            const checkDate = new Date(now);
+            checkDate.setDate(checkDate.getDate() + dayOffset);
+            const dateStr = checkDate.toISOString().split('T')[0];
+            
+            console.log(`📅 [Suggest] Checking date: ${dateStr} (Day +${dayOffset})`);
+
+            const employeeId = employeeSelect && employeeSelect.value ? employeeSelect.value : '';
+            let apiUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}`;
+            if (employeeId) {
+                apiUrl += `&employee=${employeeId}`;
+                console.log(`👤 [Suggest] Filtering by employee: ${employeeId}`);
+            }
+
+            console.log(`🌐 [Suggest] Fetching: ${apiUrl}`);
+            const response = await fetch(apiUrl);
+            
+            if (!response.ok) {
+                console.warn(`⚠️ [Suggest] API error for ${dateStr}: ${response.status}`);
+                continue;
+            }
+
+            const result = await response.json();
+            console.log(`📥 [Suggest] Response for ${dateStr}:`, result);
+
+            if (!result.success || !result.data || !Array.isArray(result.data)) {
+                console.warn(`⚠️ [Suggest] Invalid data format for ${dateStr}`);
+                continue;
+            }
+
+            const isToday = (dayOffset === 0);
+            const availableSlots = result.data.filter(slot => {
+                if (slot.available !== true) return false;
+
+                if (isToday) {
+                    const [slotHour, slotMinute] = slot.time.split(':').map(Number);
+                    if (slotHour < currentHour) return false;
+                    if (slotHour === currentHour && slotMinute <= currentMinute) return false;
+                }
+
+                return true;
+            });
+
+            console.log(`✨ [Suggest] Found ${availableSlots.length} available slots for ${dateStr}`);
+
+            if (availableSlots.length > 0) {
+                const selectedSlot = availableSlots[0];
+                
+                console.log(`✅ [Suggest] Selected slot: ${dateStr} at ${selectedSlot.time}`);
+
+                dateInput.value = dateStr;
+                timeInput.value = selectedSlot.time;
+
+                const changeEvent = new Event('change', { bubbles: true });
+                dateInput.dispatchEvent(changeEvent);
+                timeInput.dispatchEvent(changeEvent);
+
+                const displayDate = new Date(dateStr).toLocaleDateString('ar-SA', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long'
+                });
+                alert(`✅ أقرب موعد متاح: ${displayDate} الساعة ${selectedSlot.time}`);
+
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '✨ اقترح أقرب موعد';
+                    btn.style.opacity = '1';
+                }
+
+                return;
+            }
+        }
+
+        console.warn('❌ [Suggest] No available slots found');
+        alert('عذراً، لا توجد مواعيد متاحة في الأيام القادمة');
+
+    } catch (error) {
+        console.error('❌ [Suggest] Error:', error);
+        alert('حدث خطأ أثناء البحث عن موعد');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '✨ اقترح أقرب موعد';
+            btn.style.opacity = '1';
+        }
+        console.log('🏁 [Suggest] Function completed');
+    }
+};
+console.log('✅ suggestNearestAppointment defined at:', new Date().toISOString());
+
+// Nassim Customer Portal - Professional JavaScript (Updated v1.5)
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/api'
     : 'https://nassim-coiffeur.onrender.com/api';
@@ -12,6 +140,141 @@ let selectedServices = []; // Array to track multiple selected services
 let lastAppointmentStatuses = {}; // Track appointment statuses to detect confirmations
 const PUSH_SUBSCRIPTION_FLAG = 'nassimPushSubscribed';
 let pushSubscription = null;
+
+// (Old function location - now moved to top)
+window._suggestNearestAppointmentLegacy = async function() {
+    console.log('🚀 [Suggest] Function called');
+    
+    const dateInput = document.getElementById('appointmentDate');
+    const timeInput = document.getElementById('appointmentTime');
+    const employeeSelect = document.getElementById('employeeSelect');
+    const btn = document.getElementById('suggestBtn');
+
+    // Validate elements exist
+    if (!dateInput || !timeInput) {
+        console.error('❌ [Suggest] Required form elements not found');
+        showNotification('خطأ: لم يتم العثور على حقول النموذج', 'error');
+        return;
+    }
+
+    console.log('✅ [Suggest] Form elements found');
+
+    // Update button state
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ جاري البحث...';
+        btn.style.opacity = '0.6';
+    }
+
+    try {
+        const now = new Date();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const maxDaysToCheck = 7; // Check next 7 days
+        
+        console.log(`🔍 [Suggest] Starting search from ${now.toISOString()}`);
+
+        for (let dayOffset = 0; dayOffset < maxDaysToCheck; dayOffset++) {
+            const checkDate = new Date(now);
+            checkDate.setDate(checkDate.getDate() + dayOffset);
+            const dateStr = checkDate.toISOString().split('T')[0];
+            
+            console.log(`📅 [Suggest] Checking date: ${dateStr} (Day +${dayOffset})`);
+
+            // Build API URL
+            const employeeId = employeeSelect && employeeSelect.value ? employeeSelect.value : '';
+            let apiUrl = `${API_URL}/appointments/available-slots?business=${NASSIM_BUSINESS_ID}&date=${dateStr}`;
+            if (employeeId) {
+                apiUrl += `&employee=${employeeId}`;
+                console.log(`👤 [Suggest] Filtering by employee: ${employeeId}`);
+            }
+
+            // Fetch available slots
+            console.log(`🌐 [Suggest] Fetching: ${apiUrl}`);
+            const response = await fetch(apiUrl);
+            
+            if (!response.ok) {
+                console.warn(`⚠️ [Suggest] API error for ${dateStr}: ${response.status}`);
+                continue;
+            }
+
+            const result = await response.json();
+            console.log(`📥 [Suggest] Response for ${dateStr}:`, result);
+
+            if (!result.success || !result.data || !Array.isArray(result.data)) {
+                console.warn(`⚠️ [Suggest] Invalid data format for ${dateStr}`);
+                continue;
+            }
+
+            // Filter available slots
+            const isToday = (dayOffset === 0);
+            const availableSlots = result.data.filter(slot => {
+                // Must be marked as available
+                if (slot.available !== true) return false;
+
+                // For today, skip past times
+                if (isToday) {
+                    const [slotHour, slotMinute] = slot.time.split(':').map(Number);
+                    if (slotHour < currentHour) return false;
+                    if (slotHour === currentHour && slotMinute <= currentMinute) return false;
+                }
+
+                return true;
+            });
+
+            console.log(`✨ [Suggest] Found ${availableSlots.length} available slots for ${dateStr}`);
+
+            if (availableSlots.length > 0) {
+                // Success! Use the first available slot
+                const selectedSlot = availableSlots[0];
+                
+                console.log(`✅ [Suggest] Selected slot: ${dateStr} at ${selectedSlot.time}`);
+
+                // Set form values
+                dateInput.value = dateStr;
+                timeInput.value = selectedSlot.time;
+
+                // Trigger change events to update UI
+                const changeEvent = new Event('change', { bubbles: true });
+                dateInput.dispatchEvent(changeEvent);
+                timeInput.dispatchEvent(changeEvent);
+
+                // Show success notification
+                const displayDate = new Date(dateStr).toLocaleDateString('ar-SA', {
+                    weekday: 'long',
+                    day: 'numeric',
+                    month: 'long'
+                });
+                showNotification(`✅ أقرب موعد متاح: ${displayDate} الساعة ${selectedSlot.time}`, 'success');
+
+                // Restore button
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '✨ اقترح أقرب موعد';
+                    btn.style.opacity = '1';
+                }
+
+                return; // Exit successfully
+            }
+        }
+
+        // No slots found after checking all days
+        console.warn('❌ [Suggest] No available slots found in the next 7 days');
+        showNotification('عذراً، لا توجد مواعيد متاحة في الأيام القادمة. يرجى المحاولة لاحقاً', 'error');
+
+    } catch (error) {
+        console.error('❌ [Suggest] Error:', error);
+        showNotification('حدث خطأ أثناء البحث عن موعد. يرجى المحاولة مرة أخرى', 'error');
+    } finally {
+        // Always restore button state
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '✨ اقترح أقرب موعد';
+            btn.style.opacity = '1';
+        }
+        console.log('🏁 [Suggest] Function completed');
+    }
+};
 
 function isProductItem(item) {
     return item?.metadata?.isProduct === true || item?.icon === '🛍️';
@@ -192,6 +455,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const dateInput = document.getElementById('appointmentDate');
     if (dateInput) {
         dateInput.min = today;
+        dateInput.value = today;
+        dateInput.defaultValue = today;
         // Force French numerals in date/time inputs
         dateInput.setAttribute('lang', 'en');
     }
@@ -211,6 +476,24 @@ function setupEventListeners() {
     
     // Booking form
     document.getElementById('bookingForm')?.addEventListener('submit', submitBooking);
+    
+    // Suggest Button - Direct event listener
+    const suggestBtn = document.getElementById('suggestBtn');
+    if (suggestBtn) {
+        console.log('✅ [Setup] Suggest button found, attaching listener');
+        suggestBtn.addEventListener('click', function(e) {
+            console.log('🖱️ [Click] Suggest button clicked');
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof window.suggestNearestAppointment === 'function') {
+                window.suggestNearestAppointment();
+            } else {
+                console.error('❌ [Click] suggestNearestAppointment function not found');
+            }
+        });
+    } else {
+        console.warn('⚠️ [Setup] Suggest button not found on page load');
+    }
     
     // Edit profile form
     document.getElementById('editProfileForm')?.addEventListener('submit', updateProfile);
@@ -385,7 +668,7 @@ function displayServices(services) {
                 </div>
                 <div class="service-description">${service.description || ''}</div>
                 <div class="service-meta">
-                    <span class="service-duration">⏱ ${service.duration} دقيقة</span>
+                    <!-- <span class="service-duration">⏱ ${service.duration} دقيقة</span> -->
                     ${service.hasVariants ? '<span style="color: #4CAF50; font-size: 12px; margin-right: 10px;">👆 اضغط للتفاصيل</span>' : ''}
                 </div>
             </div>
@@ -437,7 +720,7 @@ function populateBookingServices(services) {
                 ${service.hasVariants ? '<br><small style="color: #4CAF50; font-size: 11px;">👆 أنواع متعددة</small>' : ''}
             </div>
             <div class="service-meta" onclick="${service.hasVariants ? `openVariantsModalInBooking('${service._id}')` : `toggleServiceSelection('${service._id}')`}">
-                <span class="service-duration">⏱ ${service.duration} دقيقة</span>
+                <!-- <span class="service-duration">⏱ ${service.duration} دقيقة</span> -->
             </div>
         </div>
         `;
@@ -535,7 +818,7 @@ function openVariantsModal(serviceId) {
                             </div>
                         </div>
                         <div style="color: #A7A7A7; font-size: 13px;">
-                            ⏱ ${variant.duration} دقيقة
+                            <!-- ⏱ ${variant.duration} دقيقة -->
                         </div>
                     </div>
                 </div>
@@ -693,7 +976,7 @@ function openVariantsModalInBooking(serviceId) {
                             </div>
                         </div>
                         <div style="color: #A7A7A7; font-size: 13px;">
-                            ⏱ ${variant.duration} دقيقة
+                            <!-- ⏱ ${variant.duration} دقيقة -->
                         </div>
                     </div>
                 </div>
@@ -828,7 +1111,7 @@ function updateBookingSummary() {
 
     // Update summary with prices shown
     document.getElementById('servicesCount').textContent = selectedServices.length;
-    document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
+    // document.getElementById('totalDuration').textContent = totalDuration + ' دقيقة';
     document.getElementById('totalPrice').innerHTML = priceLabel;
     document.getElementById('totalPrice').style.display = 'block';
 }
@@ -1512,7 +1795,7 @@ function displayAppointments(appointments) {
                         <span class="detail-value">${apt.service?.price || 0} دج</span>
                     </div>
                 </div>
-                ${apt.status === 'pending' ? `<button class="cancel-booking-btn" onclick="cancelBooking('${apt._id}')">إلغاء الموعد</button>` : ''}
+                ${apt.status === 'pending' ? `<button class="cancel-booking-btn" onclick="window.cancelBooking('${apt._id}')">إلغاء الموعد</button>` : ''}
             </div>
         `).join('');
 }
@@ -1539,24 +1822,34 @@ function filterBookings(filter) {
 }
 
 // Cancel Booking
-async function cancelBooking(appointmentId) {
+window.cancelBooking = async function(appointmentId) {
     if (!confirm('هل أنت متأكد من إلغاء هذا الموعد؟')) return;
     
     try {
+        console.log('🗑️ Cancelling appointment:', appointmentId);
+        console.log('🔑 Using token:', token ? 'Present' : 'Missing');
+        
         const response = await fetch(`${API_URL}/appointments/${appointmentId}`, {
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
         });
+        
+        const result = await response.json();
+        console.log('📥 Server response:', result);
         
         if (response.ok) {
             showNotification('تم إلغاء الموعد بنجاح', 'success');
             loadAppointments();
         } else {
-            showNotification('فشل إلغاء الموعد', 'error');
+            console.error('❌ Cancel failed:', response.status, result);
+            showNotification(result.message || 'فشل إلغاء الموعد', 'error');
         }
     } catch (error) {
-        console.error('Error cancelling appointment:', error);
-        showNotification('حدث خطأ', 'error');
+        console.error('❌ Error cancelling appointment:', error);
+        showNotification('حدث خطأ في الاتصال بالخادم', 'error');
     }
 }
 
@@ -1777,13 +2070,32 @@ async function submitBooking(e) {
     const selectedDate = document.getElementById('appointmentDate').value;
     const timeInput = document.getElementById('appointmentTime').value;
     
-    if (!selectedDate || !timeInput) {
-        showNotification('اختر التاريخ والوقت', 'error');
+    if (!selectedDate) {
+        showNotification('اختر التاريخ', 'error');
         return;
     }
     
     // استخدام الوقت من input أو من time slot إذا كان محدد
+    // Fix: Ensure time is selected
     const selectedTime = selectedTimeSlot || timeInput;
+    
+    if (!selectedTime) {
+        showNotification('اختر الوقت', 'error');
+        return;
+    }
+
+    // Ensure time format is HH:MM
+    if (typeof selectedTime !== 'string' || !selectedTime.includes(':')) {
+        showNotification('تنسيق الوقت غير صحيح', 'error');
+        return;
+    }
+
+    const timeParts = selectedTime.split(':');
+    if (timeParts.length !== 2) {
+        showNotification('تنسيق الوقت غير صحيح', 'error');
+        return;
+    }
+    
     const dateTime = `${selectedDate}T${selectedTime}:00`;
     
     if (!customerData) {
@@ -1821,6 +2133,8 @@ async function submitBooking(e) {
     const selectedEmployeeName = document.getElementById('employeeSelect').selectedOptions[0]?.text;
     
     // If "any" is selected, skip employee availability check (booking will be pending for all barbers)
+    /* 
+    // Availability check removed - relying on backend schedule validation
     if (selectedEmployee !== 'any') {
         // Check employee availability
         try {
@@ -1841,6 +2155,7 @@ async function submitBooking(e) {
             console.error('Error checking employee availability:', error);
         }
     }
+    */
     
     // Check if booking is for a package
     const isPackageBooking = selectedServices.length === 1 && selectedServices[0].isPackage;
@@ -1885,7 +2200,7 @@ async function submitBooking(e) {
             const totalPrice = selectedServices.reduce((sum, s) => sum + s.price, 0);
             const totalDuration = selectedServices.reduce((sum, s) => sum + s.duration, 0);
             const selectedDate = document.getElementById('appointmentDate').value;
-            const selectedTime = document.getElementById('timeSlots').querySelector('.time-slot.selected')?.textContent;
+            // Use outer selectedTime to ensure it's not undefined
             
             // Format date in Arabic
             const dateObj = new Date(selectedDate);
@@ -1900,6 +2215,7 @@ async function submitBooking(e) {
             const extraChargeNote = window.paidForVIPSlot ? '\n\n💰 رسوم إضافية: 100 دج (سيتم التحصيل عند الحضور)' : '';
             const confirmationMessage = `✅ تم إرسال طلب الحجز بنجاح!\n\n📅 ${formattedDate}\n⏰ الساعة ${bookingData.time}\n👤 الحلاق: ${selectedEmployeeName}\n✂️ ${servicesNames}\n💰 ${totalPrice} دج${extraChargeNote}\n\n⏳ في انتظار تأكيد الحلاق\n\n📱 سنرسل لك إشعاراً عند تأكيد الموعد\n\n⚠️ اذا اضطررت لالغاء الحجز يجب ان اكون قبل 30 دقيقه من الموعد`;
             
+            // Updated confirmation message
             showNotification(confirmationMessage, 'success', 0);
             
             // Pending reward notification disabled per user request
@@ -2732,10 +3048,13 @@ function openBookingModal(addToHistory = true) {
     if (modal) {
         // Auto-set date to today if empty
         const dateInput = document.getElementById('appointmentDate');
-        if (dateInput && !dateInput.value) {
-            const today = new Date().toISOString().split('T')[0];
-            dateInput.value = today;
-            console.log(' Date auto-set to today:', today);
+        if (dateInput) {
+            // Set default date to today if not already set
+            if (!dateInput.value) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+                console.log('📅 Date auto-set to today:', today);
+            }
         }
 
         if (addToHistory) {
@@ -3193,16 +3512,20 @@ async function triggerBackgroundSync() {
 // Install Prompt
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
-    // Don't prevent default - let browser show banner
-    // e.preventDefault();
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
+    e.preventDefault();
     deferredPrompt = e;
     
-    // Optionally show custom install button
-    showInstallPrompt();
-    showInstallCTA();
+    // Only show if logged in
+    if (token) {
+        showInstallPrompt();
+        showInstallCTA();
+    }
 });
 
 function showInstallPrompt() {
+    if (!token) return;
+
     const installBtn = document.createElement('button');
     installBtn.className = 'install-app-btn';
     installBtn.innerHTML = `
@@ -3217,7 +3540,7 @@ function showInstallPrompt() {
             const { outcome } = await deferredPrompt.userChoice;
             
             if (outcome === 'accepted') {
-                showNotification('✅ تم بنجاح! التطبيق مثبت على هاتفك', 'success');
+                showNotification('⏳ جاري تثبيت التطبيق على جهازك...', 'success');
             } else {
                 showNotification('ℹ️ يمكنك التثبيت لاحقاً من قائمة المتصفح', 'info');
             }
@@ -3240,6 +3563,8 @@ function showInstallPrompt() {
 }
 
 function showInstallCTA(options = {}) {
+    if (!token) return;
+
     const container = document.getElementById('installPromptContainer');
     if (!container) return;
     if (options.ios) {
@@ -3259,7 +3584,7 @@ async function promptPWAInstall() {
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
-        showNotification('✅ التطبيق مثبت على جهازك', 'success');
+        showNotification('⏳ جاري تثبيت التطبيق على جهازك...', 'success');
         const container = document.getElementById('installPromptContainer');
         if (container) {
             container.classList.add('hidden');
@@ -4659,43 +4984,85 @@ const TourGuide = {
     init: function() {
         const token = localStorage.getItem('customerToken');
         
+        // Check for pending steps from registration flow
+        if (localStorage.getItem('tour_step_4_pending') === 'true') {
+            localStorage.removeItem('tour_step_4_pending');
+            this.startInstallTour();
+            return;
+        }
+
         // Step 1: Guest - Guide to Account Creation
         if (!token) {
             if (!localStorage.getItem('tour_guest_seen')) {
                 // Arrow 1: Create Account
-                this.showTooltip('nav-account', '1. أنشئ حسابك', 'اضغط هنا لإنشاء حساب جديد', 'top');
-                const btn = document.getElementById('nav-account');
-                if(btn) {
-                    btn.classList.add('tour-highlight');
-                    btn.addEventListener('click', () => {
-                        localStorage.setItem('tour_guest_seen', 'true');
-                        btn.classList.remove('tour-highlight');
-                        this.hideTooltip();
-                    }, {once: true});
-                }
-            }
-        } 
-        // Step 2: User - Guide to Booking
-        else {
-            if (!localStorage.getItem('tour_booking_seen')) {
-                // Ensure we are on home page
-                if(document.getElementById('homePage').style.display !== 'none') {
-                    // Arrow 2: Book Appointment
-                    this.showTooltip('nav-booking', '2. احجز موعدك', 'اضغط هنا لحجز موعد جديد', 'top');
-                    const btn = document.getElementById('nav-booking');
+                this.showArrow('nav-account', '1. أنشئ حسابك', 'top', () => {
+                    const btn = document.getElementById('nav-account');
                     if(btn) {
-                        btn.classList.add('tour-highlight');
                         btn.addEventListener('click', () => {
-                            localStorage.setItem('tour_booking_seen', 'true');
-                            btn.classList.remove('tour-highlight');
-                            this.hideTooltip();
-                            // Prepare for Step 3
-                            setTimeout(() => this.showBookingFormTour(), 800);
+                            localStorage.setItem('tour_guest_seen', 'true');
+                            localStorage.setItem('tour_step_2_pending', 'true'); // Flag for register page
+                            this.hideArrow();
                         }, {once: true});
                     }
-                }
+                });
+            }
+        } 
+        // Step 4: User - Guide to Booking (if logged in and not seen)
+        else {
+            if (!localStorage.getItem('tour_booking_seen')) {
+                this.startInstallTour();
             }
         }
+    },
+
+    startInstallTour: function() {
+        // Ensure we are on home page
+        if(document.getElementById('homePage').style.display === 'none') {
+            showHome();
+        }
+        
+        // Try to show install prompt if available (force check)
+        if (typeof showInstallCTA === 'function') showInstallCTA();
+        
+        setTimeout(() => {
+            const installContainer = document.getElementById('installPromptContainer');
+            const installBtn = installContainer ? installContainer.querySelector('button') : null;
+            
+            // Check if install container is visible
+            if (installContainer && !installContainer.classList.contains('hidden') && installBtn) {
+                // Arrow 4: Install App
+                this.showArrow(installBtn, '4. ثبت التطبيق للوصول السريع', 'bottom', () => {
+                    installBtn.addEventListener('click', () => {
+                        this.hideArrow();
+                        // Proceed to booking after delay
+                        setTimeout(() => this.startBookingTour(), 3000); 
+                    }, {once: true});
+                });
+            } else {
+                // Skip if not available
+                this.startBookingTour();
+            }
+        }, 1000);
+    },
+
+    startBookingTour: function() {
+        // Ensure we are on home page
+        if(document.getElementById('homePage').style.display === 'none') {
+            showHome();
+        }
+        
+        // Arrow 5: Book Appointment
+        this.showArrow('nav-booking', '5. احجز موعدك', 'top', () => {
+            const btn = document.getElementById('nav-booking');
+            if(btn) {
+                btn.addEventListener('click', () => {
+                    localStorage.setItem('tour_booking_seen', 'true');
+                    this.hideArrow();
+                    // Prepare for Step 6
+                    setTimeout(() => this.showBookingFormTour(), 800);
+                }, {once: true});
+            }
+        });
     },
     
     showBookingFormTour: function() {
@@ -4704,114 +5071,98 @@ const TourGuide = {
             if (modal && modal.classList.contains('show')) {
                 clearInterval(checkModal);
                 
-                // Arrow 3: Select Service
-                this.showTooltip('bookingServicesList', '3. اختر الخدمة', 'اضغط على الخدمة التي تريدها', 'bottom');
-                
-                const servicesList = document.getElementById('bookingServicesList');
-                if(servicesList) {
-                    // Use a one-time click listener on the container to detect service selection
-                    const serviceSelectHandler = (e) => {
-                        // Check if a service card was clicked
-                        if(e.target.closest('.booking-service-card')) {
-                            this.hideTooltip();
-                            servicesList.removeEventListener('click', serviceSelectHandler);
-                            
-                            // Arrow 4: Select Barber
-                            setTimeout(() => {
-                                this.showTooltip('employeeSelect', '4. اختر الحلاق', 'اختر الحلاق المفضل لديك', 'top');
-                                const empSelect = document.getElementById('employeeSelect');
-                                if(empSelect) {
-                                    empSelect.addEventListener('change', () => {
-                                        this.hideTooltip();
-                                        // Arrow 5: Select Time
-                                        setTimeout(() => {
-                                            this.showTooltip('appointmentTime', '5. اختر الوقت', 'حدد الوقت المناسب لك', 'top');
-                                            const timeInput = document.getElementById('appointmentTime');
-                                            if(timeInput) {
-                                                timeInput.addEventListener('change', () => {
-                                                    this.hideTooltip();
-                                                    // Arrow 6: Confirm
-                                                    setTimeout(() => {
-                                                        this.showTooltip('confirmBookingBtn', '6. أكد الحجز', 'اضغط هنا لتأكيد موعدك', 'top');
-                                                        const confirmBtn = document.getElementById('confirmBookingBtn');
-                                                        if(confirmBtn) {
-                                                            confirmBtn.addEventListener('click', () => {
-                                                                this.hideTooltip();
-                                                                localStorage.setItem('tour_booking_completed', 'true');
-                                                            }, {once: true});
-                                                        }
-                                                    }, 500);
-                                                }, {once: true});
-                                            }
-                                        }, 500);
-                                    }, {once: true});
-                                }
-                            }, 500);
-                        }
-                    };
-                    servicesList.addEventListener('click', serviceSelectHandler);
-                }
+                // Arrow 6: Select Service
+                this.showArrow('bookingServicesList', '6. اختر الخدمة', 'bottom', () => {
+                    const servicesList = document.getElementById('bookingServicesList');
+                    if(servicesList) {
+                        const serviceSelectHandler = (e) => {
+                            if(e.target.closest('.booking-service-card')) {
+                                this.hideArrow();
+                                servicesList.removeEventListener('click', serviceSelectHandler);
+                                
+                                // Wait for time selection to show Arrow 7 (Confirm)
+                                this.waitForConfirmButton();
+                            }
+                        };
+                        servicesList.addEventListener('click', serviceSelectHandler);
+                    }
+                });
             }
         }, 500);
         
-        // Stop checking after 10 seconds
         setTimeout(() => clearInterval(checkModal), 10000);
     },
 
-    showTooltip: function(targetId, title, text, position = 'top') {
-        this.hideTooltip();
+    waitForConfirmButton: function() {
+        // Check periodically if time is selected, then point to confirm
+        const checkTime = setInterval(() => {
+            const timeInput = document.getElementById('appointmentTime');
+            const confirmBtn = document.getElementById('confirmBookingBtn');
+            
+            if (timeInput && timeInput.value && confirmBtn) {
+                clearInterval(checkTime);
+                
+                // Arrow 7: Confirm
+                this.showArrow('confirmBookingBtn', '7. أكد الحجز', 'top', () => {
+                    confirmBtn.addEventListener('click', () => {
+                        this.hideArrow();
+                        localStorage.setItem('tour_booking_completed', 'true');
+                    }, {once: true});
+                });
+            }
+        }, 1000);
+        
+        // Stop checking after 2 minutes
+        setTimeout(() => clearInterval(checkTime), 120000);
+    },
+
+    showArrow: function(targetId, text, position = 'top', callback = null) {
+        this.hideArrow();
         
         let target = typeof targetId === 'string' ? document.getElementById(targetId) : targetId;
         if (!target) return;
         
-        const rect = target.getBoundingClientRect();
+        target.classList.add('tour-highlight-element');
         
-        const tooltip = document.createElement('div');
-        tooltip.className = 'tour-tooltip';
-        tooltip.innerHTML = `
-            <div class="tour-arrow ${position}"></div>
-            <div class="tour-content">
-                <h4>${title}</h4>
-                <p>${text}</p>
-                <button onclick="TourGuide.hideTooltip()">حسناً</button>
-            </div>
+        const arrow = document.createElement('div');
+        arrow.className = 'tour-arrow-indicator';
+        arrow.innerHTML = `
+            <div class="tour-arrow-text" style="${position === 'top' ? 'bottom: 65px; left: 50%; transform: translateX(-50%);' : 'top: 65px; left: 50%; transform: translateX(-50%);'}">${text}</div>
+            <svg viewBox="0 0 24 24" style="transform: ${position === 'top' ? 'rotate(0deg)' : 'rotate(180deg)'}">
+                <path d="M12 22L12 2M12 22L5 15M12 22L19 15" />
+            </svg>
         `;
         
-        document.body.appendChild(tooltip);
+        document.body.appendChild(arrow);
         
-        const tooltipRect = tooltip.getBoundingClientRect();
-        
+        const rect = target.getBoundingClientRect();
         let top, left;
         
+        left = rect.left + (rect.width / 2) - 30; // 30 is half of arrow width (60)
+        
         if (position === 'top') {
-            top = rect.top - tooltipRect.height - 15;
-            left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+            top = rect.top - 70;
         } else {
-            top = rect.bottom + 15;
-            left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+            top = rect.bottom + 10;
         }
         
-        // Keep within screen bounds
-        if (left < 10) left = 10;
-        if (left + tooltipRect.width > window.innerWidth - 10) left = window.innerWidth - tooltipRect.width - 10;
+        arrow.style.top = `${top}px`;
+        arrow.style.left = `${left}px`;
         
-        tooltip.style.top = `${top}px`;
-        tooltip.style.left = `${left}px`;
+        if (callback) callback();
         
-        // Scroll to element if needed
-        target.scrollIntoView({behavior: "smooth", block: "center", inline: "nearest"});
-        
-        // Add highlight class
-        target.classList.add('tour-highlight');
+        target.scrollIntoView({behavior: 'smooth', block: 'center'});
     },
     
-    hideTooltip: function() {
-        const existing = document.querySelector('.tour-tooltip');
-        if (existing) existing.remove();
-        document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+    hideArrow: function() {
+        const arrow = document.querySelector('.tour-arrow-indicator');
+        if (arrow) arrow.remove();
+        
+        document.querySelectorAll('.tour-highlight-element').forEach(el => {
+            el.classList.remove('tour-highlight-element');
+        });
     }
 };
+// v1.1
 
-
-// Force update
 
