@@ -532,34 +532,9 @@
                 });
             });
             
-            // Initialize smart pricing preview
-            updateSmartPricingPreview(ocument.getElementById('pricingPreview').textContent = preview;
-            
-            // Recalculate products if already loaded
-            if (extractedProducts.length > 0 && useSmartPricing) {
-                extractedProducts = extractedProducts.map(p => ({
-                    ...p,
-                    sellingPrice: calculateSmartSellingPrice(p.purchasePrice)
-                }));
-                displayProducts(extractedProducts);
-            }
-        }
-        
-        // Reset smart pricing to defaults
-        function resetSmartPricing() {
-            document.getElementById('range1_max').value = 200;
-            document.getElementById('range1_margin').value = 90;
-            document.getElementById('range2_max').value = 500;
-            document.getElementById('range2_margin').value = 60;
-            document.getElementById('range3_max').value = 1000;
-            document.getElementById('range3_margin').value = 45;
-            document.getElementById('range4_max').value = 2000;
-            document.getElementById('range4_margin').value = 35;
-            document.getElementById('range5_max').value = 5000;
-            document.getElementById('range5_margin').value = 27;
-            document.getElementById('range6_margin').value = 22;
-            updateSmartPricingPreview();
-        }
+            // Initialize smart pricing UI
+            renderPriceRanges();
+        });
         
         // Update profit margin display
         function updateProfitMarginDisplay() {
