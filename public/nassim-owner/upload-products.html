@@ -281,18 +281,61 @@
                 <h4 style="color: #f57c00; margin-bottom: 15px; font-size: 16px;">⚙️ إعدادات الأسعار والصور</h4>
                 
                 <div style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px; cursor: pointer;">
+                        <input type="checkbox" id="smartPricing" onchange="toggleSmartPricing()" checked 
+                               style="width: 20px; height: 20px; cursor: pointer;">
+                        <span style="color: #555; font-weight: bold; font-size: 15px;">
+                            🧠 التسعير الذكي (موصى به للملفات الكبيرة)
+                        </span>
+                    </label>
+                    <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; font-size: 12px; color: #2e7d32; margin-bottom: 15px;" id="smartPricingInfo">
+                        ✅ يحسب هامش الربح تلقائياً حسب السعر:<br>
+                        • أقل من 200 دج: هامش 90%<br>
+                        • 200-500 دج: هامش 60%<br>
+                        • 500-1000 دج: هامش 45%<br>
+                        • 1000-2000 دج: هامش 35%<br>
+                        • 2000-5000 دج: هامش 27%<br>
+                        • أكثر من 5000 دج: هامش 22%
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;" id="manualMarginSection">
                     <label style="display: block; margin-bottom: 8px; color: #555; font-weight: bold;">
-                        💰 هامش الربح على سعر البيع:
+                        💰 هامش الربح اليدوي (إذا أُلغي التسعير الذكي):
                     </label>
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <input type="range" id="profitMargin" min="10" max="100" value="30" 
-                               style="flex: 1; cursor: pointer;" oninput="updateProfitMarginDisplay()">
-                        <span id="profitMarginDisplay" style="font-size: 24px; font-weight: bold; color: #f57c00; min-width: 60px;">30%</span>
+                               style="flex: 1; cursor: pointer; opacity: 0.5;" oninput="updateProfitMarginDisplay()" disabled>
+                        <span id="profitMarginDisplay" style="font-size: 24px; font-weight: bold; color: #999; min-width: 60px;">30%</span>
                     </div>
                     <p style="font-size: 12px; color: #666; margin-top: 5px;">
                         سعر البيع = سعر الشراء × (1 + <span id="profitMarginCalc">30</span>%)
                     </p>
                 </div>
+                
+                <script>
+                    // Toggle manual margin visibility
+                    document.getElementById('smartPricing').addEventListener('change', function() {
+                        const manual = document.getElementById('manualMarginSection');
+                        const slider = document.getElementById('profitMargin');
+                        const display = document.getElementById('profitMarginDisplay');
+                        
+                        if (this.checked) {
+                            manual.style.opacity = '0.5';
+                            slider.disabled = true;
+                            slider.style.opacity = '0.5';
+                            display.style.color = '#999';
+                        } else {
+                            manual.style.opacity = '1';
+                            slider.disabled = false;
+                            slider.style.opacity = '1';
+                            display.style.color = '#f57c00';
+                        }
+                    });
+                    
+                    // Initialize
+                    useSmartPricing = true;
+                </script>
                 
                 <div style="border-top: 1px solid #ffe0b2; padding-top: 15px; margin-top: 15px;">
                     <label style="display: block; margin-bottom: 10px; color: #555; font-weight: bold;">
@@ -380,9 +423,33 @@
         let extractedProducts = [];
         let extractedImages = [];
         let profitMargin = 0.3; // Default 30%
+        let useSmartPricing = false;
         
         // PDF.js setup
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        
+        // Smart pricing algorithm - different margins for different price ranges
+        function calculateSmartSellingPrice(purchasePrice) {
+            if (purchasePrice < 200) {
+                // Very cheap items: 80-100% margin
+                return Math.round(purchasePrice * 1.9);
+            } else if (purchasePrice < 500) {
+                // Cheap items: 50-70% margin
+                return Math.round(purchasePrice * 1.6);
+            } else if (purchasePrice < 1000) {
+                // Medium items: 40-50% margin
+                return Math.round(purchasePrice * 1.45);
+            } else if (purchasePrice < 2000) {
+                // Medium-high items: 30-40% margin
+                return Math.round(purchasePrice * 1.35);
+            } else if (purchasePrice < 5000) {
+                // High items: 25-30% margin
+                return Math.round(purchasePrice * 1.27);
+            } else {
+                // Very expensive items: 20-25% margin
+                return Math.round(purchasePrice * 1.22);
+            }
+        }
         
         // Update profit margin display
         function updateProfitMarginDisplay() {
@@ -395,10 +462,18 @@
             if (extractedProducts.length > 0) {
                 extractedProducts = extractedProducts.map(p => ({
                     ...p,
-                    sellingPrice: Math.round(p.purchasePrice * (1 + profitMargin))
+                    sellingPrice: useSmartPricing 
+                        ? calculateSmartSellingPrice(p.purchasePrice)
+                        : Math.round(p.purchasePrice * (1 + profitMargin))
                 }));
                 displayProducts(extractedProducts);
             }
+        }
+        
+        // Toggle smart pricing
+        function toggleSmartPricing() {
+            useSmartPricing = document.getElementById('smartPricing').checked;
+            updateProfitMarginDisplay();
         }
         
         // Show/hide internet image warning
@@ -450,22 +525,54 @@
             updateProgress(10, 'جاري قراءة ملف PDF...');
             
             try {
+                // Check file size and warn if too large
+                const fileSizeMB = file.size / (1024 * 1024);
+                if (fileSizeMB > 50) {
+                    const proceed = confirm(`الملف كبير جداً (${fileSizeMB.toFixed(1)} MB).\nقد يستغرق وقتاً طويلاً.\nهل تريد المتابعة؟\n\nنصيحة: استخدم "بدون صور" للملفات الكبيرة.`);
+                    if (!proceed) {
+                        hideProgress();
+                        return;
+                    }
+                }
+                
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 
-                updateProgress(30, `جاري استخراج النص من ${pdf.numPages} صفحة...`);
+                updateProgress(20, `الملف يحتوي على ${pdf.numPages} صفحة. جاري الاستخراج...`);
                 
                 let fullText = '';
                 extractedImages = [];
                 
-                // Extract text only first (faster and safer)
-                for (let i = 1; i <= pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(' ');
-                    fullText += pageText + '\n';
+                // Process in batches for large files
+                const BATCH_SIZE = 20; // Process 20 pages at a time
+                const totalBatches = Math.ceil(pdf.numPages / BATCH_SIZE);
+                
+                for (let batch = 0; batch < totalBatches; batch++) {
+                    const startPage = batch * BATCH_SIZE + 1;
+                    const endPage = Math.min((batch + 1) * BATCH_SIZE, pdf.numPages);
                     
-                    updateProgress(30 + (i / pdf.numPages * 40), `معالجة صفحة ${i} من ${pdf.numPages}...`);
+                    updateProgress(
+                        20 + (batch / totalBatches * 50), 
+                        `معالجة الصفحات ${startPage}-${endPage} من ${pdf.numPages}...`
+                    );
+                    
+                    // Extract text for this batch
+                    for (let i = startPage; i <= endPage; i++) {
+                        const page = await pdf.getPage(i);
+                        const textContent = await page.getTextContent();
+                        const pageText = textContent.items.map(item => item.str).join(' ');
+                        fullText += pageText + '\n';
+                        
+                        // Small delay to prevent browser freeze
+                        if (i % 5 === 0) {
+                            await new Promise(resolve => setTimeout(resolve, 10));
+                        }
+                    }
+                    
+                    // Clear memory periodically
+                    if (batch % 5 === 0 && batch > 0) {
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
                 }
                 
                 updateProgress(70, 'جاري استخراج المنتجات...');
@@ -546,10 +653,14 @@
                 if (line.length < 3 || 
                     line.toLowerCase().includes('product') || 
                     line.toLowerCase().includes('price') ||
-                    line.toLowerCase().includes('منتج') ||
-                    line.toLowerCase().includes('سعر')) {
-                    continue;
-                }
+                    lineconst sellingPrice = useSmartPricing 
+                            ? calculateSmartSellingPrice(price)
+                            : Math.round(price * (1 + profitMargin));
+                        
+                        products.push({
+                            name: name,
+                            purchasePrice: price,
+                            sellingPrice: sellingPrice
                 
                 // Try different patterns
                 let match = line.match(/^(.+?)\s*\|\s*(\d+(?:\.\d+)?)/);
@@ -592,21 +703,30 @@
                     }
                 }
             }
-            
-            return products;
-        }
-        
-        function detectCategory(name) {
-            const nameLower = name.toLowerCase();
-            
-            if (nameLower.includes('شامبو') || nameLower.includes('shampoo')) return 'hair-care';
-            if (nameLower.includes('زيت') || nameLower.includes('oil')) return 'hair-care';
-            if (nameLower.includes('كريم') || nameLower.includes('cream')) return 'hair-care';
-            if (nameLower.includes('جل') || nameLower.includes('gel')) return 'styling';
-            if (nameLower.includes('واكس') || nameLower.includes('wax')) return 'styling';
-            if (nameLower.includes('بومادة') || nameLower.includes('pomade')) return 'styling';
-            if (nameLower.includes('لحية') || nameLower.includes('beard')) return 'beard-care';
-            if (nameLower.includes('ماكينة') || nameLower.includes('machine') || nameLower.includes('clipper')) return 'tools';
+            {
+                const profit = p.sellingPrice - p.purchasePrice;
+                const margin = ((profit / p.purchasePrice) * 100).toFixed(0);
+                
+                return `
+                <tr>
+                    <td>${i + 1}</td>
+                    <td>
+                        ${p.imageUrl 
+                            ? `<img src="${p.imageUrl}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;">` 
+                            : '<div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📦</div>'}
+                    </td>
+                    <td>${p.name}</td>
+                    <td><span class="category-badge category-${p.category}">${getCategoryLabel(p.category)}</span></td>
+                    <td>${p.purchasePrice} دج</td>
+                    <td>${p.sellingPrice} دج</td>
+                    <td style="color: #4CAF50; font-weight: bold;">
+                        ${profit} دج
+                        <br>
+                        <span style="font-size: 11px; color: #666;">(${margin}%)</span>
+                    </td>
+                </tr>
+                `;
+            }f (nameLower.includes('ماكينة') || nameLower.includes('machine') || nameLower.includes('clipper')) return 'tools';
             if (nameLower.includes('مقص') || nameLower.includes('scissors')) return 'tools';
             if (nameLower.includes('فرشاة') || nameLower.includes('brush')) return 'tools';
             
