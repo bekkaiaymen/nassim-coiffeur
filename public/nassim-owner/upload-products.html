@@ -1101,27 +1101,45 @@
             return products;
         }
         
-        // استخراج الصور من الصفحة (طريقة محسّنة تدعم جميع أنواع PDF)
+        // استخراج الصور من الصفحة (محسّن لاستخراج صور المنتجات فقط)
         async function extractImagesFromPage(page, pageNum, maxImages = 10) {
             const images = [];
             
             try {
                 console.log(`  🖼️ استخراج الصور من الصفحة ${pageNum}...`);
                 
-                // الطريقة 1: محاولة استخراج الصور المدمجة
+                // الطريقة 1: استخراج الصور المدمجة من PDF (الأفضل - صور نقية)
                 try {
                     const operatorList = await page.getOperatorList();
+                    const viewport = page.getViewport({ scale: 1.0 });
                     const imageOps = [];
                     
+                    // جمع جميع عمليات رسم الصور مع مواقعها
                     for (let i = 0; i < operatorList.fnArray.length; i++) {
                         if (operatorList.fnArray[i] === pdfjsLib.OPS.paintImageXObject ||
                             operatorList.fnArray[i] === pdfjsLib.OPS.paintInlineImageXObject) {
-                            imageOps.push({ index: i, name: operatorList.argsArray[i][0] });
+                            
+                            // الحصول على موقع الصورة
+                            let transform = null;
+                            // البحث عن آخر transform قبل هذه الصورة
+                            for (let j = i - 1; j >= 0; j--) {
+                                if (operatorList.fnArray[j] === pdfjsLib.OPS.transform) {
+                                    transform = operatorList.argsArray[j];
+                                    break;
+                                }
+                            }
+                            
+                            imageOps.push({ 
+                                index: i, 
+                                name: operatorList.argsArray[i][0],
+                                transform: transform
+                            });
                         }
                     }
                     
-                    console.log(`    📦 وجدت ${imageOps.length} عملية رسم صورة`);
+                    console.log(`    📦 وجدت ${imageOps.length} صورة مدمجة`);
                     
+                    // استخراج الصور - فقط الصور المناسبة
                     for (let imgOp of imageOps) {
                         if (images.length >= maxImages) break;
                         
@@ -1129,18 +1147,35 @@
                             const imgName = imgOp.name;
                             const img = await page.objs.get(imgName);
                             
-                            if (!img || (!img.data && !img.bitmap)) continue;
-                            if (img.width < 60 || img.height < 60) continue;
+                            if (!img || (!img.data && !img.bitmap)) {
+                                console.log(`    ⚠️ تخطي: لا توجد بيانات للصورة ${imgName}`);
+                                continue;
+                            }
+                            
+                            // تخطي الصور الصغيرة (logos، icons)
+                            if (img.width < 100 || img.height < 100) {
+                                console.log(`    ⚠️ تخطي صورة صغيرة: ${img.width}x${img.height}`);
+                                continue;
+                            }
+                            
+                            // تخطي الصور الكبيرة جداً (قد تكون خلفيات)
+                            if (img.width > 1000 || img.height > 1000) {
+                                console.log(`    ⚠️ تخطي صورة كبيرة جداً: ${img.width}x${img.height}`);
+                                continue;
+                            }
+                            
+                            console.log(`    📐 صورة مناسبة: ${img.width}x${img.height}, نوع: ${img.kind}`);
                             
                             const blob = await convertImageToBlob(img);
-                            if (blob && blob.size > 2000) {
+                            if (blob && blob.size > 3000) {
                                 images.push({
                                     blob: blob,
                                     url: URL.createObjectURL(blob),
                                     pageNum: pageNum,
-                                    size: `${img.width}x${img.height}`
+                                    size: `${img.width}x${img.height}`,
+                                    type: 'embedded'
                                 });
-                                console.log(`    ✅ صورة مدمجة ${images.length}: ${img.width}x${img.height}`);
+                                console.log(`    ✅ صورة مدمجة ${images.length}: ${img.width}x${img.height} (${(blob.size/1024).toFixed(1)}KB)`);
                             }
                         } catch (e) {
                             console.warn(`    ⚠️ خطأ في صورة:`, e.message);
@@ -1150,84 +1185,10 @@
                     console.warn(`    ⚠️ فشل استخراج الصور المدمجة:`, e.message);
                 }
                 
-                // الطريقة 2: إذا لم نجد صور، نستخدم rendering الصفحة وتقسيمها
-                if (images.length === 0) {
-                    console.log(`    🔄 محاولة استخراج بـ rendering الصفحة...`);
-                    
-                    const viewport = page.getViewport({ scale: 1.0 });
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d', { alpha: false });
-                    
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    
-                    await page.render({ 
-                        canvasContext: context, 
-                        viewport: viewport 
-                    }).promise;
-                    
-                    // تقسيم الصفحة إلى شبكة 2x5 (عمودين × 5 صفوف)
-                    const cols = 2;  // عمودين
-                    const rows = 5;  // 5 صفوف
-                    const cellWidth = canvas.width / cols;
-                    const cellHeight = canvas.height / rows;
-                    
-                    console.log(`    📐 تقسيم: ${cols}x${rows} = ${cols*rows} صورة محتملة`);
-                    
-                    for (let row = 0; row < rows; row++) {
-                        for (let col = 0; col < cols; col++) {
-                            if (images.length >= maxImages) break;
-                            
-                            try {
-                                const cropCanvas = document.createElement('canvas');
-                                const targetSize = 300; // حجم ثابت للصور
-                                cropCanvas.width = targetSize;
-                                cropCanvas.height = targetSize;
-                                const cropCtx = cropCanvas.getContext('2d', { alpha: false });
-                                
-                                // خلفية بيضاء
-                                cropCtx.fillStyle = '#FFFFFF';
-                                cropCtx.fillRect(0, 0, targetSize, targetSize);
-                                
-                                // رسم الجزء المقصوص
-                                cropCtx.drawImage(
-                                    canvas,
-                                    col * cellWidth, 
-                                    row * cellHeight,
-                                    cellWidth, 
-                                    cellHeight,
-                                    0, 
-                                    0,
-                                    targetSize, 
-                                    targetSize
-                                );
-                                
-                                const blob = await new Promise(resolve => 
-                                    cropCanvas.toBlob(resolve, 'image/jpeg', 0.85)
-                                );
-                                
-                                if (blob && blob.size > 2000) {
-                                    images.push({
-                                        blob: blob,
-                                        url: URL.createObjectURL(blob),
-                                        pageNum: pageNum,
-                                        position: `r${row}c${col}`,
-                                        size: `${targetSize}x${targetSize}`
-                                    });
-                                    console.log(`    ✅ صورة مقصوصة ${images.length}: صف ${row+1}، عمود ${col+1}`);
-                                }
-                                
-                                cropCanvas.width = 0;
-                            } catch (e) {
-                                console.warn(`    ⚠️ خطأ في قص الصورة [${row},${col}]:`, e.message);
-                            }
-                        }
-                    }
-                    
-                    canvas.width = 0;
-                }
+                console.log(`  📊 إجمالي الصور المستخرجة: ${images.length}`);
                 
-                console.log(`  📊 إجمالي الصور: ${images.length}`);
+                // ملاحظة: تم تعطيل rendering وتقسيم الصفحة لأنه يعطي صور مع نصوص
+                // سنعتمد فقط على الصور المدمجة في PDF
                 
             } catch (error) {
                 console.error(`  ❌ فشل استخراج الصور:`, error);
@@ -1468,7 +1429,7 @@
                                 const filename = `product_${Date.now()}_${i}.jpg`;
                                 formData.append('image', product.imageBlob, filename);
                                 
-                                const imgResponse = await fetch(`${API_URL}/upload-image`, {
+                                const imgResponse = await fetch(`${API_URL}/api/upload-image`, {
                                     method: 'POST',
                                     headers: {
                                         'Authorization': `Bearer ${token}`
@@ -1489,7 +1450,7 @@
                             }
                         } else if (imageSource === 'internet') {
                             // Search for image on internet
-                            const searchResponse = await fetch(`${API_URL}/upload-image/search`, {
+                            const searchResponse = await fetch(`${API_URL}/api/upload-image/search`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
@@ -1523,7 +1484,7 @@
                             image: imageUrl
                         };
                         
-                        const response = await fetch(`${API_URL}/products`, {
+                        const response = await fetch(`${API_URL}/api/products`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
