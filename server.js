@@ -16,6 +16,7 @@ app.use(cors({
         'https://nassim-coiffeur.vercel.app',
         'https://nassim-coiffeur-bekkaiaymen.vercel.app',
         'https://nassim-coiffeur-git-main-nassim-coiffeurs-projects.vercel.app',
+        'https://nassim-coiffeur.onrender.com',
         'http://localhost:3000',
         'http://192.168.1.2:3000'
     ],
@@ -25,42 +26,12 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname)));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-app.use('/superadmin', express.static(path.join(__dirname, 'public/superadmin')));
-app.use('/register', express.static(path.join(__dirname, 'public/register')));
-app.use('/customer-register', express.static(path.join(__dirname, 'public/customer-register')));
-app.use('/book-now', express.static(path.join(__dirname, 'public/book-now')));
-app.use('/owner', express.static(path.join(__dirname, 'public/dashboard')));
-app.use('/nassim', express.static(path.join(__dirname, 'public/nassim')));
-app.use('/nassim-owner', express.static(path.join(__dirname, 'public/nassim-owner')));
 
-// MongoDB Connection (optional - server will still run without it)
-const mongoUri = process.env.MONGODB_URI;
-const isProduction = process.env.NODE_ENV === 'production';
-
-if (mongoUri) {
-    mongoose.connect(mongoUri)
-    .then(async () => {
-        console.log('✅ MongoDB متصل بنجاح');
-        console.log('📊 قاعدة البيانات جاهزة للاستخدام');
-    })
-    .catch(err => {
-        console.warn('⚠️ تحذير: لم يتم الاتصال بـ MongoDB - سيعمل الخادم بدون قاعدة بيانات');
-        console.warn('   السبب:', err.message);
-    });
-} else if (!isProduction) {
-    // Only attempt localhost connection in development
-    mongoose.connect('mongodb://localhost:27017/smartbiz')
-    .then(async () => {
-        console.log('✅ MongoDB (Local) متصل بنجاح');
-    })
-    .catch(err => {
-        console.warn('⚠️ تحذير: لم يتم الاتصال بـ MongoDB المحلي');
-    });
-} else {
-    console.log('ℹ️ تخطي الاتصال بقاعدة البيانات (بيئة الإنتاج بدون MONGODB_URI)');
-}
+// Logging Middleware
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    next();
+});
 
 // Routes
 const appointmentRoutes = require('./routes/appointments');
@@ -88,15 +59,16 @@ const reactionRoutes = require('./routes/reactions');
 const settingsRoutes = require('./routes/settings');
 const uploadRoutes = require('./routes/upload');
 const cleanupRoutes = require('./routes/cleanup');
-const whatsappRoutes = require('./routes/whatsapp'); // WhatsApp Route
-const productRoutes = require('./routes/products'); // Products Route
-const uploadImageRoutes = require('./routes/upload-image'); // Image Upload Route
+const whatsappRoutes = require('./routes/whatsapp');
+const productRoutes = require('./routes/products');
+const uploadImageRoutes = require('./routes/upload-image');
 
+// Mount API Routes
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/customers', customerRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/auth', userRoutes); // Auth routes (login, register)
+app.use('/api/auth', userRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/ai', aiAssistantRoutes);
 app.use('/api/stats', statsRoutes);
@@ -118,9 +90,51 @@ app.use('/api/reactions', reactionRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/cleanup', cleanupRoutes);
-app.use('/api/whatsapp', whatsappRoutes); // Mount WhatsApp Route
-app.use('/api/products', productRoutes); // Mount Products Route
-app.use('/api/upload-image', uploadImageRoutes); // Mount Image Upload Route
+app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/upload-image', uploadImageRoutes);
+
+// Test Route
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'API is working', timestamp: new Date() });
+});
+
+// Static Files (Moved after API routes to prevent shadowing)
+app.use(express.static(path.join(__dirname)));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/superadmin', express.static(path.join(__dirname, 'public/superadmin')));
+app.use('/register', express.static(path.join(__dirname, 'public/register')));
+app.use('/customer-register', express.static(path.join(__dirname, 'public/customer-register')));
+app.use('/book-now', express.static(path.join(__dirname, 'public/book-now')));
+app.use('/owner', express.static(path.join(__dirname, 'public/dashboard')));
+app.use('/nassim', express.static(path.join(__dirname, 'public/nassim')));
+app.use('/nassim-owner', express.static(path.join(__dirname, 'public/nassim-owner')));
+
+// MongoDB Connection
+const mongoUri = process.env.MONGODB_URI;
+const isProduction = process.env.NODE_ENV === 'production';
+
+if (mongoUri) {
+    mongoose.connect(mongoUri)
+    .then(async () => {
+        console.log('✅ MongoDB متصل بنجاح');
+        console.log('📊 قاعدة البيانات جاهزة للاستخدام');
+    })
+    .catch(err => {
+        console.warn('⚠️ تحذير: لم يتم الاتصال بـ MongoDB - سيعمل الخادم بدون قاعدة بيانات');
+        console.warn('   السبب:', err.message);
+    });
+} else if (!isProduction) {
+    mongoose.connect('mongodb://localhost:27017/smartbiz')
+    .then(async () => {
+        console.log('✅ MongoDB (Local) متصل بنجاح');
+    })
+    .catch(err => {
+        console.warn('⚠️ تحذير: لم يتم الاتصال بـ MongoDB المحلي');
+    });
+} else {
+    console.log('ℹ️ تخطي الاتصال بقاعدة البيانات (بيئة الإنتاج بدون MONGODB_URI)');
+}
 
 // Serve frontend pages
 app.get('/', (req, res) => {

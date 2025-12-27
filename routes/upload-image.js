@@ -25,6 +25,15 @@ const upload = multer({
     }
 });
 
+// Test route
+router.get('/test', (req, res) => {
+    res.json({ 
+        success: true, 
+        message: 'Upload Image API is working',
+        cloudinaryConfigured: !!process.env.CLOUDINARY_CLOUD_NAME
+    });
+});
+
 /**
  * POST /api/upload-image
  * Upload image to Cloudinary

@@ -3,6 +3,11 @@ const router = express.Router();
 const Product = require('../models/Product');
 const { protect, ensureTenant } = require('../middleware/auth');
 
+// Test route
+router.get('/test', (req, res) => {
+    res.json({ success: true, message: 'Products API is working' });
+});
+
 // Get all products for a business
 router.get('/business/:businessId', async (req, res) => {
     try {
