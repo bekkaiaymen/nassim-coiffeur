@@ -1101,164 +1101,204 @@
             return products;
         }
         
-        // استخراج الصور المدمجة فقط من PDF (بدون نصوص)
+        // استخراج الصور من الصفحة (طريقة محسّنة تدعم جميع أنواع PDF)
         async function extractImagesFromPage(page, pageNum, maxImages = 10) {
             const images = [];
             
             try {
-                console.log(`  🖼️ استخراج الصور المدمجة من الصفحة ${pageNum}...`);
+                console.log(`  🖼️ استخراج الصور من الصفحة ${pageNum}...`);
                 
-                // الطريقة 1: استخراج الصور المدمجة مباشرة من PDF
-                const operatorList = await page.getOperatorList();
-                const imageOps = [];
-                
-                // البحث عن عمليات رسم الصور
-                for (let i = 0; i < operatorList.fnArray.length; i++) {
-                    if (operatorList.fnArray[i] === pdfjsLib.OPS.paintImageXObject ||
-                        operatorList.fnArray[i] === pdfjsLib.OPS.paintInlineImageXObject) {
-                        imageOps.push({ index: i, name: operatorList.argsArray[i][0] });
-                    }
-                }
-                
-                console.log(`    وجدت ${imageOps.length} صورة مدمجة`);
-                
-                // استخراج كل صورة
-                for (let imgOp of imageOps) {
-                    if (images.length >= maxImages) break;
+                // الطريقة 1: محاولة استخراج الصور المدمجة
+                try {
+                    const operatorList = await page.getOperatorList();
+                    const imageOps = [];
                     
-                    try {
-                        const imgName = imgOp.name;
-                        console.log(`    🔍 محاولة استخراج: ${imgName}`);
-                        
-                        const img = await page.objs.get(imgName);
-                        
-                        if (!img) {
-                            console.log(`    ⚠️ الصورة غير موجودة: ${imgName}`);
-                            continue;
+                    for (let i = 0; i < operatorList.fnArray.length; i++) {
+                        if (operatorList.fnArray[i] === pdfjsLib.OPS.paintImageXObject ||
+                            operatorList.fnArray[i] === pdfjsLib.OPS.paintInlineImageXObject) {
+                            imageOps.push({ index: i, name: operatorList.argsArray[i][0] });
                         }
-                        
-                        if (!img.data && !img.bitmap) {
-                            console.log(`    ⚠️ لا توجد بيانات للصورة: ${imgName}`);
-                            continue;
-                        }
-                        
-                        // تخطي الصور الصغيرة جداً (احتمال logos)
-                        if (img.width < 80 || img.height < 80) {
-                            console.log(`    تخطي صورة صغيرة: ${img.width}x${img.height}`);
-                            continue;
-                        }
-                        
-                        console.log(`    📐 حجم الصورة: ${img.width}x${img.height}, نوع: ${img.kind}`);
-                        
-                        // إنشاء canvas للصورة
-                        const canvas = document.createElement('canvas');
-                        
-                        // تصغير الصورة إذا كانت كبيرة جداً
-                        const maxDim = 400;
-                        let width = img.width;
-                        let height = img.height;
-                        
-                        if (width > maxDim || height > maxDim) {
-                            const scale = Math.min(maxDim / width, maxDim / height);
-                            width = Math.floor(width * scale);
-                            height = Math.floor(height * scale);
-                        }
-                        
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d', { alpha: false });
-                        
-                        // رسم الصورة
-                        const tempCanvas = document.createElement('canvas');
-                        tempCanvas.width = img.width;
-                        tempCanvas.height = img.height;
-                        const tempCtx = tempCanvas.getContext('2d');
-                        
-                        const imageData = tempCtx.createImageData(img.width, img.height);
-                        
-                        // نسخ بيانات الصورة حسب النوع
-                        try {
-                            if (img.data) {
-                                if (img.kind === 1) { // Grayscale
-                                    for (let i = 0, j = 0; i < img.data.length; i++, j += 4) {
-                                        const gray = img.data[i];
-                                        imageData.data[j] = gray;
-                                        imageData.data[j + 1] = gray;
-                                        imageData.data[j + 2] = gray;
-                                        imageData.data[j + 3] = 255;
-                                    }
-                                } else if (img.kind === 2) { // RGB
-                                    for (let i = 0, j = 0; i < img.data.length; i += 3, j += 4) {
-                                        imageData.data[j] = img.data[i];
-                                        imageData.data[j + 1] = img.data[i + 1];
-                                        imageData.data[j + 2] = img.data[i + 2];
-                                        imageData.data[j + 3] = 255;
-                                    }
-                                } else { // RGBA
-                                    imageData.data.set(img.data);
-                                }
-                            } else if (img.bitmap) {
-                                // استخدام bitmap إذا كانت متوفرة
-                                imageData.data.set(new Uint8ClampedArray(img.bitmap));
-                            }
-                        } catch (dataError) {
-                            console.warn(`    ⚠️ خطأ في معالجة بيانات الصورة:`, dataError);
-                            continue;
-                        }
-                        
-                        // وضع البيانات في canvas مؤقت
-                        tempCtx.putImageData(imageData, 0, 0);
-                        
-                        // إضافة خلفية بيضاء
-                        ctx.fillStyle = '#FFFFFF';
-                        ctx.fillRect(0, 0, width, height);
-                        
-                        // نسخ بحجم مصغر
-                        ctx.drawImage(tempCanvas, 0, 0, width, height);
-                        
-                        // تحويل إلى blob بجودة عالية
-                        const blob = await new Promise((resolve, reject) => {
-                            try {
-                                canvas.toBlob(
-                                    (b) => resolve(b), 
-                                    'image/jpeg', 
-                                    0.90
-                                );
-                            } catch (e) {
-                                reject(e);
-                            }
-                        });
-                        
-                        if (blob && blob.size > 3000) {
-                            const url = URL.createObjectURL(blob);
-                            images.push({
-                                blob: blob,
-                                url: url,
-                                pageNum: pageNum,
-                                size: `${width}x${height}`,
-                                sizeKB: (blob.size/1024).toFixed(1)
-                            });
-                            console.log(`    ✅ صورة ${images.length}: ${width}x${height} (${(blob.size/1024).toFixed(1)}KB)`);
-                        } else {
-                            console.log(`    ⚠️ صورة صغيرة جداً أو فارغة: ${blob ? blob.size : 0} bytes`);
-                        }
-                        
-                        // تنظيف
-                        canvas.width = 0;
-                        tempCanvas.width = 0;
-                        
-                    } catch (imgError) {
-                        console.warn(`    ⚠️ خطأ في استخراج صورة:`, imgError.message);
                     }
+                    
+                    console.log(`    📦 وجدت ${imageOps.length} عملية رسم صورة`);
+                    
+                    for (let imgOp of imageOps) {
+                        if (images.length >= maxImages) break;
+                        
+                        try {
+                            const imgName = imgOp.name;
+                            const img = await page.objs.get(imgName);
+                            
+                            if (!img || (!img.data && !img.bitmap)) continue;
+                            if (img.width < 60 || img.height < 60) continue;
+                            
+                            const blob = await convertImageToBlob(img);
+                            if (blob && blob.size > 2000) {
+                                images.push({
+                                    blob: blob,
+                                    url: URL.createObjectURL(blob),
+                                    pageNum: pageNum,
+                                    size: `${img.width}x${img.height}`
+                                });
+                                console.log(`    ✅ صورة مدمجة ${images.length}: ${img.width}x${img.height}`);
+                            }
+                        } catch (e) {
+                            console.warn(`    ⚠️ خطأ في صورة:`, e.message);
+                        }
+                    }
+                } catch (e) {
+                    console.warn(`    ⚠️ فشل استخراج الصور المدمجة:`, e.message);
                 }
                 
-                console.log(`  📊 تم استخراج ${images.length} صورة نقية من الصفحة ${pageNum}`);
+                // الطريقة 2: إذا لم نجد صور، نستخدم rendering الصفحة وتقسيمها
+                if (images.length === 0) {
+                    console.log(`    🔄 محاولة استخراج بـ rendering الصفحة...`);
+                    
+                    const viewport = page.getViewport({ scale: 1.0 });
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d', { alpha: false });
+                    
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    await page.render({ 
+                        canvasContext: context, 
+                        viewport: viewport 
+                    }).promise;
+                    
+                    // تقسيم الصفحة إلى شبكة 2x5 (عمودين × 5 صفوف)
+                    const cols = 2;  // عمودين
+                    const rows = 5;  // 5 صفوف
+                    const cellWidth = canvas.width / cols;
+                    const cellHeight = canvas.height / rows;
+                    
+                    console.log(`    📐 تقسيم: ${cols}x${rows} = ${cols*rows} صورة محتملة`);
+                    
+                    for (let row = 0; row < rows; row++) {
+                        for (let col = 0; col < cols; col++) {
+                            if (images.length >= maxImages) break;
+                            
+                            try {
+                                const cropCanvas = document.createElement('canvas');
+                                const targetSize = 300; // حجم ثابت للصور
+                                cropCanvas.width = targetSize;
+                                cropCanvas.height = targetSize;
+                                const cropCtx = cropCanvas.getContext('2d', { alpha: false });
+                                
+                                // خلفية بيضاء
+                                cropCtx.fillStyle = '#FFFFFF';
+                                cropCtx.fillRect(0, 0, targetSize, targetSize);
+                                
+                                // رسم الجزء المقصوص
+                                cropCtx.drawImage(
+                                    canvas,
+                                    col * cellWidth, 
+                                    row * cellHeight,
+                                    cellWidth, 
+                                    cellHeight,
+                                    0, 
+                                    0,
+                                    targetSize, 
+                                    targetSize
+                                );
+                                
+                                const blob = await new Promise(resolve => 
+                                    cropCanvas.toBlob(resolve, 'image/jpeg', 0.85)
+                                );
+                                
+                                if (blob && blob.size > 2000) {
+                                    images.push({
+                                        blob: blob,
+                                        url: URL.createObjectURL(blob),
+                                        pageNum: pageNum,
+                                        position: `r${row}c${col}`,
+                                        size: `${targetSize}x${targetSize}`
+                                    });
+                                    console.log(`    ✅ صورة مقصوصة ${images.length}: صف ${row+1}، عمود ${col+1}`);
+                                }
+                                
+                                cropCanvas.width = 0;
+                            } catch (e) {
+                                console.warn(`    ⚠️ خطأ في قص الصورة [${row},${col}]:`, e.message);
+                            }
+                        }
+                    }
+                    
+                    canvas.width = 0;
+                }
+                
+                console.log(`  📊 إجمالي الصور: ${images.length}`);
                 
             } catch (error) {
-                console.error(`  ❌ فشل استخراج الصور من صفحة ${pageNum}:`, error);
+                console.error(`  ❌ فشل استخراج الصور:`, error);
             }
             
             return images;
+        }
+        
+        // دالة مساعدة لتحويل بيانات الصورة إلى blob
+        async function convertImageToBlob(img) {
+            try {
+                const canvas = document.createElement('canvas');
+                const maxSize = 400;
+                let width = img.width;
+                let height = img.height;
+                
+                if (width > maxSize || height > maxSize) {
+                    const scale = Math.min(maxSize / width, maxSize / height);
+                    width = Math.floor(width * scale);
+                    height = Math.floor(height * scale);
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d', { alpha: false });
+                
+                // خلفية بيضاء
+                ctx.fillStyle = '#FFFFFF';
+                ctx.fillRect(0, 0, width, height);
+                
+                // معالجة بيانات الصورة
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = img.width;
+                tempCanvas.height = img.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                const imageData = tempCtx.createImageData(img.width, img.height);
+                
+                if (img.data) {
+                    if (img.kind === 1) { // Grayscale
+                        for (let i = 0, j = 0; i < img.data.length; i++, j += 4) {
+                            const gray = img.data[i];
+                            imageData.data[j] = imageData.data[j + 1] = imageData.data[j + 2] = gray;
+                            imageData.data[j + 3] = 255;
+                        }
+                    } else if (img.kind === 2) { // RGB
+                        for (let i = 0, j = 0; i < img.data.length; i += 3, j += 4) {
+                            imageData.data[j] = img.data[i];
+                            imageData.data[j + 1] = img.data[i + 1];
+                            imageData.data[j + 2] = img.data[i + 2];
+                            imageData.data[j + 3] = 255;
+                        }
+                    } else { // RGBA
+                        imageData.data.set(img.data);
+                    }
+                } else if (img.bitmap) {
+                    imageData.data.set(new Uint8ClampedArray(img.bitmap));
+                }
+                
+                tempCtx.putImageData(imageData, 0, 0);
+                ctx.drawImage(tempCanvas, 0, 0, width, height);
+                
+                const blob = await new Promise(resolve => 
+                    canvas.toBlob(resolve, 'image/jpeg', 0.90)
+                );
+                
+                canvas.width = tempCanvas.width = 0;
+                return blob;
+            } catch (e) {
+                console.error('خطأ في convertImageToBlob:', e);
+                return null;
+            }
         }
         
         
