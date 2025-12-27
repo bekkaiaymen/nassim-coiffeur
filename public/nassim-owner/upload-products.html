@@ -957,96 +957,102 @@
             }
         }
         
-        // استخراج المنتجات من صفحة واحدة (محسّن)
+        // استخراج المنتجات من صفحة واحدة (محسّن للكتالوج)
         function extractProductsFromPage(pageText, pageNum, maxProducts = 10) {
             const lines = pageText.split('\n').filter(line => line.trim().length > 0);
             const products = [];
             
             console.log(`  🔍 بدء استخراج المنتجات من ${lines.length} سطر`);
+            console.log(`  📄 أول 15 سطر:`, lines.slice(0, 15));
             
-            for (let i = 0; i < lines.length && products.length < maxProducts; i++) {
-                let line = lines[i].trim();
+            let currentProduct = null;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
                 if (line.length < 3) continue;
                 
                 const lineLower = line.toLowerCase();
-                // تخطي العناوين فقط
-                if (lineLower === 'product' || lineLower === 'price' || 
-                    lineLower === 'page' || lineLower === 'total') continue;
                 
-                let name = null;
-                let price = null;
-                
-                // محاولة 1: السطر يحتوي على اسم ورقم
-                // مثال: "Cable USB Type-C 850" أو "850 Cable USB"
-                const patterns = [
-                    // النمط 1: اسم + مسافات + رقم في النهاية
-                    /^(.+?)\s+(\d{2,})(?:\.\d+)?\s*(?:DA|DZD|دج)?$/i,
-                    // النمط 2: رقم + مسافات + اسم
-                    /^(\d{2,})(?:\.\d+)?\s+(.+)$/,
-                    // النمط 3: اسم | رقم
-                    /^(.+?)\s*\|\s*(\d{2,})(?:\.\d+)?/,
-                    // النمط 4: اسم - رقم
-                    /^(.+?)\s*-\s*(\d{2,})(?:\.\d+)?/,
-                    // النمط 5: اسم : رقم
-                    /^(.+?)\s*:\s*(\d{2,})(?:\.\d+)?/,
-                    // النمط 6: اسم .... رقم
-                    /^(.+?)\.{2,}\s*(\d{2,})(?:\.\d+)?/
-                ];
-                
-                for (let pattern of patterns) {
-                    const match = line.match(pattern);
-                    if (match) {
-                        // تحديد أي جزء هو الاسم وأيهما السعر
-                        if (patterns.indexOf(pattern) === 1) {
-                            // النمط 2: رقم أولاً
-                            price = parseFloat(match[1]);
-                            name = match[2].trim();
-                        } else {
-                            // باقي الأنماط: اسم أولاً
-                            name = match[1].trim();
-                            price = parseFloat(match[2]);
-                        }
-                        break;
-                    }
+                // تخطي العناوين والنصوص الثابتة
+                if (lineLower.includes('catalogue') || 
+                    lineLower.includes('page :') ||
+                    lineLower.includes('page:') ||
+                    lineLower.includes('contenance') ||
+                    lineLower.includes('emballage') ||
+                    lineLower.startsWith('sph') ||
+                    lineLower.includes('email')) {
+                    continue;
                 }
                 
-                // إذا لم نجد، جرب السطرين المتتاليين (اسم في سطر، سعر في سطر)
-                if (!name && i + 1 < lines.length) {
-                    const nextLine = lines[i + 1].trim();
-                    const priceMatch = nextLine.match(/^(\d{2,})(?:\.\d+)?\s*(?:DA|DZD|دج)?$/i);
-                    if (priceMatch && line.length > 3 && !/^\d+$/.test(line)) {
-                        name = line;
-                        price = parseFloat(priceMatch[1]);
-                        i++; // تخطي السطر التالي
-                    }
+                // تخطي الباركود (أرقام طويلة فقط - 8 أرقام أو أكثر)
+                if (/^0+\d{6,}$/.test(line)) {
+                    console.log(`  🏷️ تخطي باركود: ${line}`);
+                    continue;
                 }
                 
-                // التحقق من صحة البيانات
-                if (name && price && name.length > 2 && price >= 10 && price < 1000000) {
-                    // تنظيف الاسم من الأحرف الغريبة
-                    name = name.replace(/[|\-:]+$/g, '').trim();
+                // البحث عن السعر بصيغة "Prix : 4 330,00" أو "Prix: 1 380,00"
+                const priceMatch = line.match(/prix\s*:?\s*(\d[\d\s]*(?:[,\.]\d+)?)/i);
+                if (priceMatch) {
+                    // إزالة المسافات والفواصل من السعر
+                    const priceStr = priceMatch[1]
+                        .replace(/\s/g, '')  // إزالة المسافات
+                        .replace(',', '.');   // تحويل الفاصلة لنقطة
+                    const price = parseFloat(priceStr);
                     
-                    console.log(`  ✅ منتج ${products.length + 1}: "${name}" = ${price} دج`);
-                    
-                    const category = detectCategory(name);
-                    const sellingPrice = useSmartPricing 
-                        ? calculateSmartSellingPrice(price, category)
-                        : Math.round(price * (1 + profitMargin));
+                    if (price >= 10 && price < 10000000 && currentProduct) {
+                        currentProduct.price = price;
+                        console.log(`  💰 سعر: ${price} دج`);
+                        
+                        // حفظ المنتج إذا كان لديه اسم وسعر
+                        if (currentProduct.name && currentProduct.price) {
+                            const category = detectCategory(currentProduct.name);
+                            const sellingPrice = useSmartPricing 
+                                ? calculateSmartSellingPrice(currentProduct.price, category)
+                                : Math.round(currentProduct.price * (1 + profitMargin));
 
-                    products.push({
-                        name: name,
-                        purchasePrice: price,
-                        sellingPrice: sellingPrice,
-                        description: `${name} - منتج أصلي`,
-                        category: category,
-                        inStock: true,
-                        stockQuantity: 10,
-                        imageUrl: null,
-                        imageBlob: null,
-                        pageNumber: pageNum
-                    });
-                } else if (name || price) {
-                    console.log(`  ⚠️ تخطي: name="${name}", price=${price} (غير صالح)`);
+                            products.push({
+                                name: currentProduct.name,
+                                purchasePrice: currentProduct.price,
+                                sellingPrice: sellingPrice,
+                                description: `${currentProduct.name} - منتج أصلي`,
+                                category: category,
+                                inStock: true,
+                                stockQuantity: 10,
+                                imageUrl: null,
+                                imageBlob: null,
+                                pageNumber: pageNum
+                            });
+                            
+                            console.log(`  ✅ منتج ${products.length}: "${currentProduct.name}" - ${currentProduct.price} دج → ${sellingPrice} دج`);
+                            currentProduct = null;
+                            
+                            if (products.length >= maxProducts) break;
+                        }
+                    }
+                    continue;
+                }
+                
+                // البحث عن اسم المنتج (يحتوي على أحرف، ليس أرقام فقط)
+                if (line.length > 5 && !/^\d+$/.test(line) && !lineLower.startsWith('prix')) {
+                    // تصفية الأسماء المحتملة
+                    const hasLetters = /[a-zA-Zا-ي]/.test(line);
+                    const notTooManyNumbers = (line.match(/\d/g) || []).length < line.length * 0.5;
+                    
+                    if (hasLetters && notTooManyNumbers) {
+                        // تنظيف الاسم
+                        let cleanName = line
+                            .replace(/^[\/\-\|:]+/, '')
+                            .replace(/[\/\-\|:]+$/, '')
+                            .replace(/\s+/g, ' ')
+                            .trim();
+                        
+                        // تخطي الأسماء القصيرة جداً أو التي تحتوي على كلمات مفتاحية
+                        if (cleanName.length > 3 && 
+                            !cleanName.match(/^(hoco|EQ\d+|Page|SPH)$/i)) {
+                            currentProduct = { name: cleanName, price: null };
+                            console.log(`  📦 اسم محتمل: ${cleanName}`);
+                        }
+                    }
                 }
             }
             
