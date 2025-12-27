@@ -838,11 +838,46 @@
                                 
                                 const page = await pdf.getPage(pageNum);
                                 
-                                // 1. استخراج النص
+                                // 1. استخراج النص مع الحفاظ على التنسيق
                                 const textContent = await page.getTextContent();
-                                const pageText = textContent.items.map(item => item.str).join('\n');
                                 
-                                console.log(`  📝 نص: ${pageText.length} حرف`);
+                                // ترتيب العناصر حسب الموقع (من أعلى لأسفل، من اليمين لليسار)
+                                const items = textContent.items.sort((a, b) => {
+                                    const yDiff = Math.abs(a.transform[5] - b.transform[5]);
+                                    if (yDiff > 5) return b.transform[5] - a.transform[5]; // من أعلى لأسفل
+                                    return b.transform[4] - a.transform[4]; // من اليمين لليسار (عربي)
+                                });
+                                
+                                // تجميع النصوص في سطور
+                                let currentY = null;
+                                let lines = [];
+                                let currentLine = [];
+                                
+                                for (let item of items) {
+                                    const y = Math.round(item.transform[5]);
+                                    
+                                    if (currentY === null || Math.abs(y - currentY) > 5) {
+                                        if (currentLine.length > 0) {
+                                            lines.push(currentLine.join(' ').trim());
+                                            currentLine = [];
+                                        }
+                                        currentY = y;
+                                    }
+                                    
+                                    if (item.str.trim()) {
+                                        currentLine.push(item.str);
+                                    }
+                                }
+                                
+                                if (currentLine.length > 0) {
+                                    lines.push(currentLine.join(' ').trim());
+                                }
+                                
+                                const pageText = lines.join('\n');
+                                
+                                console.log(`  📝 نص: ${pageText.length} حرف، ${lines.length} سطر`);
+                                console.log(`  📝 أول 5 سطور:`);
+                                lines.slice(0, 5).forEach((line, i) => console.log(`    ${i+1}: ${line}`));
                                 
                                 // 2. استخراج المنتجات
                                 const pageProducts = extractProductsFromPage(pageText, pageNum, PRODUCTS_PER_PAGE);
@@ -922,144 +957,218 @@
             }
         }
         
-        // استخراج المنتجات من صفحة واحدة
+        // استخراج المنتجات من صفحة واحدة (محسّن)
         function extractProductsFromPage(pageText, pageNum, maxProducts = 10) {
             const lines = pageText.split('\n').filter(line => line.trim().length > 0);
             const products = [];
             
-            for (let line of lines) {
-                if (products.length >= maxProducts) break;
-                
-                line = line.trim();
+            console.log(`  🔍 بدء استخراج المنتجات من ${lines.length} سطر`);
+            
+            for (let i = 0; i < lines.length && products.length < maxProducts; i++) {
+                let line = lines[i].trim();
                 if (line.length < 3) continue;
                 
                 const lineLower = line.toLowerCase();
+                // تخطي العناوين فقط
                 if (lineLower === 'product' || lineLower === 'price' || 
-                    lineLower === 'page' || lineLower === 'total' ||
-                    /^\d+\/\d+\/\d+$/.test(line)) continue;
+                    lineLower === 'page' || lineLower === 'total') continue;
                 
-                let match = null;
+                let name = null;
+                let price = null;
                 
-                // 6 أنماط مختلفة لاستخراج المنتجات
-                match = line.match(/^(.+?)\s*\|\s*(\d+(?:[.,]\d+)?)/);
-                if (!match) match = line.match(/^(.+?)\s*-\s*(\d+(?:[.,]\d+)?)/);
-                if (!match) match = line.match(/^(.+?):\s*(\d+(?:[.,]\d+)?)/);
-                if (!match) match = line.match(/^(.+?)\.{2,}\s*(\d+(?:[.,]\d+)?)/);
-                if (!match) match = line.match(/^(.+?)\s+(\d+(?:[.,]\d+)?)$/);
-                if (!match) {
-                    match = line.match(/^(\d+(?:[.,]\d+)?)\s+(.+)$/);
-                    if (match) match = [match[0], match[2], match[1]];
+                // محاولة 1: السطر يحتوي على اسم ورقم
+                // مثال: "Cable USB Type-C 850" أو "850 Cable USB"
+                const patterns = [
+                    // النمط 1: اسم + مسافات + رقم في النهاية
+                    /^(.+?)\s+(\d{2,})(?:\.\d+)?\s*(?:DA|DZD|دج)?$/i,
+                    // النمط 2: رقم + مسافات + اسم
+                    /^(\d{2,})(?:\.\d+)?\s+(.+)$/,
+                    // النمط 3: اسم | رقم
+                    /^(.+?)\s*\|\s*(\d{2,})(?:\.\d+)?/,
+                    // النمط 4: اسم - رقم
+                    /^(.+?)\s*-\s*(\d{2,})(?:\.\d+)?/,
+                    // النمط 5: اسم : رقم
+                    /^(.+?)\s*:\s*(\d{2,})(?:\.\d+)?/,
+                    // النمط 6: اسم .... رقم
+                    /^(.+?)\.{2,}\s*(\d{2,})(?:\.\d+)?/
+                ];
+                
+                for (let pattern of patterns) {
+                    const match = line.match(pattern);
+                    if (match) {
+                        // تحديد أي جزء هو الاسم وأيهما السعر
+                        if (patterns.indexOf(pattern) === 1) {
+                            // النمط 2: رقم أولاً
+                            price = parseFloat(match[1]);
+                            name = match[2].trim();
+                        } else {
+                            // باقي الأنماط: اسم أولاً
+                            name = match[1].trim();
+                            price = parseFloat(match[2]);
+                        }
+                        break;
+                    }
                 }
                 
-                if (match) {
-                    const name = match[1].trim();
-                    const priceStr = match[2].replace(',', '.');
-                    const price = parseFloat(priceStr);
-                    
-                    if (name.length > 2 && price > 0 && price < 1000000) {
-                        const category = detectCategory(name);
-                        const sellingPrice = useSmartPricing 
-                            ? calculateSmartSellingPrice(price, category)
-                            : Math.round(price * (1 + profitMargin));
-
-                        products.push({
-                            name: name,
-                            purchasePrice: price,
-                            sellingPrice: sellingPrice,
-                            description: `${name} - منتج أصلي`,
-                            category: category,
-                            inStock: true,
-                            stockQuantity: 10,
-                            imageUrl: null,
-                            imageBlob: null,
-                            pageNumber: pageNum
-                        });
+                // إذا لم نجد، جرب السطرين المتتاليين (اسم في سطر، سعر في سطر)
+                if (!name && i + 1 < lines.length) {
+                    const nextLine = lines[i + 1].trim();
+                    const priceMatch = nextLine.match(/^(\d{2,})(?:\.\d+)?\s*(?:DA|DZD|دج)?$/i);
+                    if (priceMatch && line.length > 3 && !/^\d+$/.test(line)) {
+                        name = line;
+                        price = parseFloat(priceMatch[1]);
+                        i++; // تخطي السطر التالي
                     }
+                }
+                
+                // التحقق من صحة البيانات
+                if (name && price && name.length > 2 && price >= 10 && price < 1000000) {
+                    // تنظيف الاسم من الأحرف الغريبة
+                    name = name.replace(/[|\-:]+$/g, '').trim();
+                    
+                    console.log(`  ✅ منتج ${products.length + 1}: "${name}" = ${price} دج`);
+                    
+                    const category = detectCategory(name);
+                    const sellingPrice = useSmartPricing 
+                        ? calculateSmartSellingPrice(price, category)
+                        : Math.round(price * (1 + profitMargin));
+
+                    products.push({
+                        name: name,
+                        purchasePrice: price,
+                        sellingPrice: sellingPrice,
+                        description: `${name} - منتج أصلي`,
+                        category: category,
+                        inStock: true,
+                        stockQuantity: 10,
+                        imageUrl: null,
+                        imageBlob: null,
+                        pageNumber: pageNum
+                    });
+                } else if (name || price) {
+                    console.log(`  ⚠️ تخطي: name="${name}", price=${price} (غير صالح)`);
                 }
             }
             
+            console.log(`  📊 تم استخراج ${products.length} منتج من الصفحة ${pageNum}`);
             return products;
         }
         
-        // استخراج الصور من صفحة واحدة (محسّن للهواتف)
+        // استخراج الصور المدمجة فقط من PDF (بدون نصوص)
         async function extractImagesFromPage(page, pageNum, maxImages = 10) {
             const images = [];
             
             try {
-                // استخدام دقة منخفضة للهواتف (0.5 بدلاً من 1.5)
-                const viewport = page.getViewport({ scale: 0.5 });
+                console.log(`  🖼️ استخراج الصور المدمجة من الصفحة ${pageNum}...`);
                 
-                // إنشاء canvas واحد للصفحة
-                const canvas = document.createElement('canvas');
-                const context = canvas.getContext('2d', { 
-                    alpha: false, 
-                    willReadFrequently: false 
-                });
-                canvas.height = viewport.height;
-                canvas.width = viewport.width;
+                // الطريقة 1: استخراج الصور المدمجة مباشرة من PDF
+                const operatorList = await page.getOperatorList();
+                const imageOps = [];
                 
-                // رسم الصفحة
-                await page.render({ 
-                    canvasContext: context, 
-                    viewport: viewport 
-                }).promise;
-                
-                // تقسيم الصفحة إلى 10 أجزاء (شبكة 2x5)
-                const rows = 5;
-                const cols = 2;
-                const cellWidth = canvas.width / cols;
-                const cellHeight = canvas.height / rows;
-                
-                for (let row = 0; row < rows && images.length < maxImages; row++) {
-                    for (let col = 0; col < cols && images.length < maxImages; col++) {
-                        try {
-                            const cropCanvas = document.createElement('canvas');
-                            // حجم أصغر للصور (توفير الذاكرة)
-                            cropCanvas.width = Math.min(cellWidth, 200);
-                            cropCanvas.height = Math.min(cellHeight, 200);
-                            const cropCtx = cropCanvas.getContext('2d', { alpha: false });
-                            
-                            cropCtx.drawImage(
-                                canvas,
-                                col * cellWidth, row * cellHeight,
-                                cellWidth, cellHeight,
-                                0, 0,
-                                cropCanvas.width, cropCanvas.height
-                            );
-                            
-                            // جودة منخفضة لتوفير الذاكرة (0.6 بدلاً من 0.75)
-                            const blob = await new Promise(resolve => 
-                                cropCanvas.toBlob(resolve, 'image/jpeg', 0.6)
-                            );
-                            
-                            if (blob) {
-                                images.push({
-                                    blob: blob,
-                                    url: URL.createObjectURL(blob),
-                                    pageNum: pageNum,
-                                    position: `${row}-${col}`
-                                });
-                            }
-                            
-                            // تحرير canvas بعد كل صورة
-                            cropCanvas.width = 0;
-                            cropCanvas.height = 0;
-                            
-                        } catch (cropError) {
-                            console.warn(`⚠️ خطأ في قص الصورة ${row},${col}`);
-                        }
-                        
-                        // راحة قصيرة بين كل صورة
-                        await new Promise(resolve => setTimeout(resolve, 10));
+                // البحث عن عمليات رسم الصور
+                for (let i = 0; i < operatorList.fnArray.length; i++) {
+                    if (operatorList.fnArray[i] === pdfjsLib.OPS.paintImageXObject ||
+                        operatorList.fnArray[i] === pdfjsLib.OPS.paintInlineImageXObject) {
+                        imageOps.push({ index: i, name: operatorList.argsArray[i][0] });
                     }
                 }
                 
-                // تحرير canvas الرئيسي
-                canvas.width = 0;
-                canvas.height = 0;
+                console.log(`    وجدت ${imageOps.length} صورة مدمجة`);
+                
+                // استخراج كل صورة
+                for (let imgOp of imageOps) {
+                    if (images.length >= maxImages) break;
+                    
+                    try {
+                        const imgName = imgOp.name;
+                        const img = await page.objs.get(imgName);
+                        
+                        if (!img || !img.data) continue;
+                        
+                        // تخطي الصور الصغيرة جداً (احتمال logos)
+                        if (img.width < 50 || img.height < 50) {
+                            console.log(`    تخطي صورة صغيرة: ${img.width}x${img.height}`);
+                            continue;
+                        }
+                        
+                        // إنشاء canvas للصورة
+                        const canvas = document.createElement('canvas');
+                        
+                        // تصغير الصورة إذا كانت كبيرة جداً
+                        const maxDim = 400;
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        if (width > maxDim || height > maxDim) {
+                            const scale = Math.min(maxDim / width, maxDim / height);
+                            width = Math.floor(width * scale);
+                            height = Math.floor(height * scale);
+                        }
+                        
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d', { alpha: false });
+                        
+                        // رسم الصورة
+                        const imageData = ctx.createImageData(img.width, img.height);
+                        
+                        // نسخ بيانات الصورة
+                        if (img.kind === 1) { // Grayscale
+                            for (let i = 0, j = 0; i < img.data.length; i++, j += 4) {
+                                const gray = img.data[i];
+                                imageData.data[j] = gray;
+                                imageData.data[j + 1] = gray;
+                                imageData.data[j + 2] = gray;
+                                imageData.data[j + 3] = 255;
+                            }
+                        } else { // RGB or RGBA
+                            const channels = img.kind === 2 ? 3 : 4;
+                            for (let i = 0, j = 0; i < img.data.length; i += channels, j += 4) {
+                                imageData.data[j] = img.data[i];
+                                imageData.data[j + 1] = img.data[i + 1];
+                                imageData.data[j + 2] = img.data[i + 2];
+                                imageData.data[j + 3] = channels === 4 ? img.data[i + 3] : 255;
+                            }
+                        }
+                        
+                        // وضع البيانات ثم تصغيرها
+                        const tempCanvas = document.createElement('canvas');
+                        tempCanvas.width = img.width;
+                        tempCanvas.height = img.height;
+                        const tempCtx = tempCanvas.getContext('2d');
+                        tempCtx.putImageData(imageData, 0, 0);
+                        
+                        // نسخ بحجم مصغر
+                        ctx.drawImage(tempCanvas, 0, 0, width, height);
+                        
+                        // تحويل إلى blob
+                        const blob = await new Promise(resolve => 
+                            canvas.toBlob(resolve, 'image/jpeg', 0.85)
+                        );
+                        
+                        if (blob && blob.size > 5000) {
+                            images.push({
+                                blob: blob,
+                                url: URL.createObjectURL(blob),
+                                pageNum: pageNum,
+                                size: `${width}x${height}`
+                            });
+                            console.log(`    ✅ صورة ${images.length}: ${width}x${height} (${(blob.size/1024).toFixed(1)}KB)`);
+                        }
+                        
+                        // تنظيف
+                        canvas.width = 0;
+                        tempCanvas.width = 0;
+                        
+                    } catch (imgError) {
+                        console.warn(`    ⚠️ خطأ في استخراج صورة:`, imgError.message);
+                    }
+                }
+                
+                console.log(`  📊 تم استخراج ${images.length} صورة نقية من الصفحة ${pageNum}`);
                 
             } catch (error) {
-                console.warn(`⚠️ فشل استخراج الصور من صفحة ${pageNum}:`, error);
+                console.error(`  ❌ فشل استخراج الصور من صفحة ${pageNum}:`, error);
             }
             
             return images;
