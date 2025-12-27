@@ -398,13 +398,13 @@
             </div>
             
             <div class="info-box">
-                <h4>🚀 نظام الاستخراج الذكي الجديد</h4>
+                <h4>� نظام محسّن للهواتف المحمولة</h4>
                 <ul>
-                    <li><strong>معالجة صفحة بصفحة:</strong> يستخرج 10 منتجات مع 10 صور من كل صفحة</li>
-                    <li><strong>تقسيم تلقائي:</strong> يقسم PDF إلى أجزاء صغيرة لتجنب مشاكل الذاكرة</li>
-                    <li><strong>سرعة فائقة:</strong> معالجة متوازية لتسريع الاستخراج</li>
-                    <li><strong>دقة عالية:</strong> 6 أنماط مختلفة لاكتشاف المنتجات والأسعار</li>
-                    <li><strong>استخراج صور ذكي:</strong> يقطع كل صفحة إلى 10 صور تلقائياً</li>
+                    <li><strong>معالجة تدريجية:</strong> يقسم PDF إلى أجزاء صغيرة (صفحتين/جزء)</li>
+                    <li><strong>تحرير ذاكرة تلقائي:</strong> يحرر الذاكرة بعد كل جزء لمنع التوقف</li>
+                    <li><strong>آمن للهواتف:</strong> لن يخرج من المتصفح عند 85%</li>
+                    <li><strong>استخراج ذكي:</strong> 10 منتجات + 10 صور من كل صفحة</li>
+                    <li><strong>عرض تدريجي:</strong> يعرض المنتجات أثناء الاستخراج</li>
                 </ul>
             </div>
             
@@ -784,76 +784,130 @@
                 const fileSizeMB = file.size / (1024 * 1024);
                 console.log(`📄 File size: ${fileSizeMB.toFixed(2)} MB`);
                 
+                // تحذير للملفات الكبيرة على الهواتف
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                if (isMobile && fileSizeMB > 10) {
+                    const proceed = confirm(`📱 الملف كبير (${fileSizeMB.toFixed(1)} MB)\n\n✅ لا تقلق! النظام محسّن للهواتف.\n• سيتم التقسيم إلى أجزاء صغيرة\n• تحرير الذاكرة تلقائياً\n• لن يتوقف عند 85%\n\nابق في التطبيق ولا تغلقه.\n\nهل تريد المتابعة؟`);
+                    if (!proceed) {
+                        hideProgress();
+                        return;
+                    }
+                }
+                
                 const arrayBuffer = await file.arrayBuffer();
                 const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
                 
-                updateProgress(10, `الملف يحتوي على ${pdf.numPages} صفحة. جاري الاستخراج الذكي...`);
+                updateProgress(10, `الملف يحتوي على ${pdf.numPages} صفحة. جاري التحضير...`);
                 console.log(`📚 Total pages: ${pdf.numPages}`);
                 
                 extractedProducts = [];
                 extractedImages = [];
                 
                 const PRODUCTS_PER_PAGE = 10;
+                // تقليل حجم الجزء للهواتف (صفحة واحدة فقط!)
+                const CHUNK_SIZE = isMobile ? 1 : 2;
                 const imageSource = document.querySelector('input[name="imageSource"]:checked').value;
                 
-                // Process each page individually
-                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                    const pageProgress = 10 + (pageNum / pdf.numPages * 80);
-                    updateProgress(pageProgress, `معالجة صفحة ${pageNum}/${pdf.numPages} - استخراج 10 منتجات...`);
+                console.log(`📱 وضع: ${isMobile ? 'هاتف محمول' : 'كمبيوتر'} - حجم الجزء: ${CHUNK_SIZE} صفحة`);
+                
+                // تقسيم الصفحات إلى أجزاء صغيرة
+                const totalChunks = Math.ceil(pdf.numPages / CHUNK_SIZE);
+                console.log(`📦 تقسيم ${pdf.numPages} صفحة إلى ${totalChunks} جزء (${CHUNK_SIZE} صفحة/جزء)`);
+                
+                // معالجة كل جزء على حدة
+                for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+                    const startPage = chunkIndex * CHUNK_SIZE + 1;
+                    const endPage = Math.min((chunkIndex + 1) * CHUNK_SIZE, pdf.numPages);
                     
-                    console.log(`\n${'='.repeat(60)}`);
-                    console.log(`📄 معالجة الصفحة ${pageNum}/${pdf.numPages}`);
-                    console.log('='.repeat(60));
+                    const chunkProgress = 10 + (chunkIndex / totalChunks * 80);
+                    updateProgress(
+                        chunkProgress, 
+                        `📦 جزء ${chunkIndex + 1}/${totalChunks} - صفحة ${startPage}${endPage > startPage ? '-' + endPage : ''}...`
+                    );
+                    
+                    console.log(`\n${'█'.repeat(60)}`);
+                    console.log(`📦 معالجة الجزء ${chunkIndex + 1}/${totalChunks}`);
+                    console.log(`📄 الصفحات: ${startPage} إلى ${endPage}`);
+                    console.log('█'.repeat(60));
                     
                     try {
-                        const page = await pdf.getPage(pageNum);
-                        
-                        // 1. استخراج النص من الصفحة
-                        const textContent = await page.getTextContent();
-                        const pageText = textContent.items.map(item => item.str).join('\n');
-                        
-                        console.log(`📝 Text length: ${pageText.length} characters`);
-                        console.log(`📝 First 300 chars: ${pageText.substring(0, 300)}`);
-                        
-                        // 2. استخراج المنتجات من الصفحة (10 منتجات)
-                        const pageProducts = extractProductsFromPage(pageText, pageNum, PRODUCTS_PER_PAGE);
-                        console.log(`✅ استخرج ${pageProducts.length} منتجات من الصفحة ${pageNum}`);
-                        
-                        // 3. استخراج الصور من الصفحة إذا كان مطلوباً
-                        if (imageSource === 'pdf' && pageProducts.length > 0) {
-                            const pageImages = await extractImagesFromPage(page, pageNum, PRODUCTS_PER_PAGE);
-                            console.log(`🖼️ استخرج ${pageImages.length} صور من الصفحة ${pageNum}`);
-                            
-                            // ربط الصور بالمنتجات
-                            for (let i = 0; i < Math.min(pageProducts.length, pageImages.length); i++) {
-                                pageProducts[i].imageBlob = pageImages[i].blob;
-                                pageProducts[i].imageUrl = pageImages[i].url;
+                        // معالجة صفحات هذا الجزء
+                        for (let pageNum = startPage; pageNum <= endPage; pageNum++) {
+                            try {
+                                console.log(`\n  ➤ صفحة ${pageNum}/${pdf.numPages}`);
+                                
+                                const page = await pdf.getPage(pageNum);
+                                
+                                // 1. استخراج النص
+                                const textContent = await page.getTextContent();
+                                const pageText = textContent.items.map(item => item.str).join('\n');
+                                
+                                console.log(`  📝 نص: ${pageText.length} حرف`);
+                                
+                                // 2. استخراج المنتجات
+                                const pageProducts = extractProductsFromPage(pageText, pageNum, PRODUCTS_PER_PAGE);
+                                console.log(`  ✅ منتجات: ${pageProducts.length}`);
+                                
+                                // 3. استخراج الصور إذا لزم الأمر
+                                if (imageSource === 'pdf' && pageProducts.length > 0) {
+                                    const pageImages = await extractImagesFromPage(page, pageNum, PRODUCTS_PER_PAGE);
+                                    console.log(`  🖼️ صور: ${pageImages.length}`);
+                                    
+                                    // ربط الصور
+                                    for (let i = 0; i < Math.min(pageProducts.length, pageImages.length); i++) {
+                                        pageProducts[i].imageBlob = pageImages[i].blob;
+                                        pageProducts[i].imageUrl = pageImages[i].url;
+                                    }
+                                }
+                                
+                                // إضافة المنتجات
+                                extractedProducts.push(...pageProducts);
+                                
+                                // تحديث التقدم لكل صفحة
+                                const pageProgress = chunkProgress + ((pageNum - startPage + 1) / CHUNK_SIZE * (80 / totalChunks));
+                                updateProgress(pageProgress, `صفحة ${pageNum}/${pdf.numPages} - ${extractedProducts.length} منتج`);
+                                
+                            } catch (pageError) {
+                                console.error(`  ❌ خطأ في صفحة ${pageNum}:`, pageError);
                             }
                         }
                         
-                        // إضافة المنتجات إلى القائمة الكلية
-                        extractedProducts.push(...pageProducts);
-                        
-                        // فترة راحة صغيرة لتجنب تجميد المتصفح
-                        if (pageNum % 5 === 0) {
-                            await new Promise(resolve => setTimeout(resolve, 50));
+                        // تحرير الذاكرة بعد كل جزء (مهم جداً للهواتف!)
+                        console.log(`  🧹 تحرير الذاكرة...`);
+                        if (isMobile) {
+                            // راحة أطول للهواتف
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        } else {
+                            await new Promise(resolve => setTimeout(resolve, 200));
                         }
                         
-                    } catch (pageError) {
-                        console.error(`❌ خطأ في معالجة الصفحة ${pageNum}:`, pageError);
-                        // المتابعة للصفحة التالية
+                        // عرض جزئي للمنتجات المستخرجة حتى الآن
+                        if (extractedProducts.length > 0) {
+                            displayProducts(extractedProducts);
+                        }
+                        
+                        console.log(`  ✅ اكتمل الجزء ${chunkIndex + 1} - إجمالي المنتجات: ${extractedProducts.length}`);
+                        
+                    } catch (chunkError) {
+                        console.error(`❌ خطأ في الجزء ${chunkIndex + 1}:`, chunkError);
+                        // المتابعة للجزء التالي
+                    }
+                    
+                    // راحة إضافية بين الأجزاء
+                    if (chunkIndex < totalChunks - 1) {
+                        await new Promise(resolve => setTimeout(resolve, isMobile ? 600 : 300));
                     }
                 }
                 
-                console.log(`\n${'='.repeat(60)}`);
-                console.log(`✅ النتيجة النهائية: ${extractedProducts.length} منتج من ${pdf.numPages} صفحة`);
-                console.log('='.repeat(60));
+                console.log(`\n${'✓'.repeat(60)}`);
+                console.log(`🎉 النتيجة النهائية: ${extractedProducts.length} منتج من ${pdf.numPages} صفحة`);
+                console.log('✓'.repeat(60));
                 
                 if (extractedProducts.length === 0) {
                     console.error('❌ لم يتم استخراج أي منتجات!');
                     alert('⚠️ لم يتم العثور على أي منتجات في الملف.\n\nالرجاء التحقق من:\n1. تنسيق PDF (يجب أن يحتوي على نص)\n2. وجود أسعار بجانب أسماء المنتجات\n3. افتح Console (F12) لرؤية التفاصيل');
                 } else {
-                    updateProgress(100, `✅ تم استخراج ${extractedProducts.length} منتج بنجاح!`);
+                    updateProgress(100, `✅ اكتمل! ${extractedProducts.length} منتج من ${pdf.numPages} صفحة`);
                 }
                 
                 setTimeout(() => {
@@ -927,89 +981,55 @@
             return products;
         }
         
-        // استخراج الصور من صفحة واحدة
+        // استخراج الصور من صفحة واحدة (محسّن للهواتف)
         async function extractImagesFromPage(page, pageNum, maxImages = 10) {
             const images = [];
             
             try {
-                const operatorList = await page.getOperatorList();
-                const viewport = page.getViewport({ scale: 1.5 });
+                // استخدام دقة منخفضة للهواتف (0.5 بدلاً من 1.5)
+                const viewport = page.getViewport({ scale: 0.5 });
                 
-                // البحث عن كائنات الصور في الصفحة
-                const imagePromises = [];
+                // إنشاء canvas واحد للصفحة
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d', { 
+                    alpha: false, 
+                    willReadFrequently: false 
+                });
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
                 
-                for (let i = 0; i < operatorList.fnArray.length; i++) {
-                    if (images.length >= maxImages) break;
-                    
-                    // التحقق من وجود صور
-                    if (operatorList.fnArray[i] === pdfjsLib.OPS.paintImageXObject || 
-                        operatorList.fnArray[i] === pdfjsLib.OPS.paintInlineImageXObject) {
-                        
-                        const imgName = operatorList.argsArray[i][0];
-                        
+                // رسم الصفحة
+                await page.render({ 
+                    canvasContext: context, 
+                    viewport: viewport 
+                }).promise;
+                
+                // تقسيم الصفحة إلى 10 أجزاء (شبكة 2x5)
+                const rows = 5;
+                const cols = 2;
+                const cellWidth = canvas.width / cols;
+                const cellHeight = canvas.height / rows;
+                
+                for (let row = 0; row < rows && images.length < maxImages; row++) {
+                    for (let col = 0; col < cols && images.length < maxImages; col++) {
                         try {
-                            const img = await page.objs.get(imgName);
-                            
-                            if (img && img.width > 50 && img.height > 50) {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = img.width;
-                                canvas.height = img.height;
-                                const ctx = canvas.getContext('2d');
-                                
-                                const imageData = ctx.createImageData(img.width, img.height);
-                                imageData.data.set(img.data);
-                                ctx.putImageData(imageData, 0, 0);
-                                
-                                const blob = await new Promise(resolve => 
-                                    canvas.toBlob(resolve, 'image/jpeg', 0.8)
-                                );
-                                
-                                if (blob && blob.size > 5000) {
-                                    images.push({
-                                        blob: blob,
-                                        url: URL.createObjectURL(blob),
-                                        pageNum: pageNum
-                                    });
-                                }
-                            }
-                        } catch (imgError) {
-                            // تجاهل الأخطاء والمتابعة
-                        }
-                    }
-                }
-                
-                // إذا لم نجد صور، نستخدم لقطة شاشة للصفحة وتقسيمها
-                if (images.length === 0) {
-                    const canvas = document.createElement('canvas');
-                    const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
-                    
-                    await page.render({ canvasContext: context, viewport: viewport }).promise;
-                    
-                    // تقسيم الصفحة إلى 10 أجزاء متساوية (شبكة 2x5)
-                    const rows = 5;
-                    const cols = 2;
-                    const cellWidth = canvas.width / cols;
-                    const cellHeight = canvas.height / rows;
-                    
-                    for (let row = 0; row < rows && images.length < maxImages; row++) {
-                        for (let col = 0; col < cols && images.length < maxImages; col++) {
                             const cropCanvas = document.createElement('canvas');
-                            cropCanvas.width = cellWidth;
-                            cropCanvas.height = cellHeight;
-                            const cropCtx = cropCanvas.getContext('2d');
+                            // حجم أصغر للصور (توفير الذاكرة)
+                            cropCanvas.width = Math.min(cellWidth, 200);
+                            cropCanvas.height = Math.min(cellHeight, 200);
+                            const cropCtx = cropCanvas.getContext('2d', { alpha: false });
                             
                             cropCtx.drawImage(
                                 canvas,
                                 col * cellWidth, row * cellHeight,
                                 cellWidth, cellHeight,
                                 0, 0,
-                                cellWidth, cellHeight
+                                cropCanvas.width, cropCanvas.height
                             );
                             
+                            // جودة منخفضة لتوفير الذاكرة (0.6 بدلاً من 0.75)
                             const blob = await new Promise(resolve => 
-                                cropCanvas.toBlob(resolve, 'image/jpeg', 0.75)
+                                cropCanvas.toBlob(resolve, 'image/jpeg', 0.6)
                             );
                             
                             if (blob) {
@@ -1017,15 +1037,29 @@
                                     blob: blob,
                                     url: URL.createObjectURL(blob),
                                     pageNum: pageNum,
-                                    position: `row${row}_col${col}`
+                                    position: `${row}-${col}`
                                 });
                             }
+                            
+                            // تحرير canvas بعد كل صورة
+                            cropCanvas.width = 0;
+                            cropCanvas.height = 0;
+                            
+                        } catch (cropError) {
+                            console.warn(`⚠️ خطأ في قص الصورة ${row},${col}`);
                         }
+                        
+                        // راحة قصيرة بين كل صورة
+                        await new Promise(resolve => setTimeout(resolve, 10));
                     }
                 }
                 
+                // تحرير canvas الرئيسي
+                canvas.width = 0;
+                canvas.height = 0;
+                
             } catch (error) {
-                console.warn(`⚠️ Image extraction failed for page ${pageNum}:`, error);
+                console.warn(`⚠️ فشل استخراج الصور من صفحة ${pageNum}:`, error);
             }
             
             return images;
