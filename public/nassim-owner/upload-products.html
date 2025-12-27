@@ -885,13 +885,20 @@
                                 
                                 // 3. استخراج الصور إذا لزم الأمر
                                 if (imageSource === 'pdf' && pageProducts.length > 0) {
+                                    console.log(`  🔄 بدء استخراج الصور...`);
                                     const pageImages = await extractImagesFromPage(page, pageNum, PRODUCTS_PER_PAGE);
-                                    console.log(`  🖼️ صور: ${pageImages.length}`);
+                                    console.log(`  🖼️ صور مستخرجة: ${pageImages.length}`);
                                     
-                                    // ربط الصور
+                                    // ربط الصور بالمنتجات
                                     for (let i = 0; i < Math.min(pageProducts.length, pageImages.length); i++) {
                                         pageProducts[i].imageBlob = pageImages[i].blob;
                                         pageProducts[i].imageUrl = pageImages[i].url;
+                                        console.log(`    ✅ ربط صورة ${i+1} بالمنتج: ${pageProducts[i].name}`);
+                                    }
+                                    
+                                    // التحذير إذا كانت الصور أقل من المنتجات
+                                    if (pageImages.length < pageProducts.length) {
+                                        console.warn(`    ⚠️ تحذير: ${pageImages.length} صورة فقط لـ ${pageProducts.length} منتجات`);
                                     }
                                 }
                                 
@@ -1087,15 +1094,27 @@
                     
                     try {
                         const imgName = imgOp.name;
+                        console.log(`    🔍 محاولة استخراج: ${imgName}`);
+                        
                         const img = await page.objs.get(imgName);
                         
-                        if (!img || !img.data) continue;
+                        if (!img) {
+                            console.log(`    ⚠️ الصورة غير موجودة: ${imgName}`);
+                            continue;
+                        }
+                        
+                        if (!img.data && !img.bitmap) {
+                            console.log(`    ⚠️ لا توجد بيانات للصورة: ${imgName}`);
+                            continue;
+                        }
                         
                         // تخطي الصور الصغيرة جداً (احتمال logos)
-                        if (img.width < 50 || img.height < 50) {
+                        if (img.width < 80 || img.height < 80) {
                             console.log(`    تخطي صورة صغيرة: ${img.width}x${img.height}`);
                             continue;
                         }
+                        
+                        console.log(`    📐 حجم الصورة: ${img.width}x${img.height}, نوع: ${img.kind}`);
                         
                         // إنشاء canvas للصورة
                         const canvas = document.createElement('canvas');
@@ -1116,50 +1135,78 @@
                         const ctx = canvas.getContext('2d', { alpha: false });
                         
                         // رسم الصورة
-                        const imageData = ctx.createImageData(img.width, img.height);
-                        
-                        // نسخ بيانات الصورة
-                        if (img.kind === 1) { // Grayscale
-                            for (let i = 0, j = 0; i < img.data.length; i++, j += 4) {
-                                const gray = img.data[i];
-                                imageData.data[j] = gray;
-                                imageData.data[j + 1] = gray;
-                                imageData.data[j + 2] = gray;
-                                imageData.data[j + 3] = 255;
-                            }
-                        } else { // RGB or RGBA
-                            const channels = img.kind === 2 ? 3 : 4;
-                            for (let i = 0, j = 0; i < img.data.length; i += channels, j += 4) {
-                                imageData.data[j] = img.data[i];
-                                imageData.data[j + 1] = img.data[i + 1];
-                                imageData.data[j + 2] = img.data[i + 2];
-                                imageData.data[j + 3] = channels === 4 ? img.data[i + 3] : 255;
-                            }
-                        }
-                        
-                        // وضع البيانات ثم تصغيرها
                         const tempCanvas = document.createElement('canvas');
                         tempCanvas.width = img.width;
                         tempCanvas.height = img.height;
                         const tempCtx = tempCanvas.getContext('2d');
+                        
+                        const imageData = tempCtx.createImageData(img.width, img.height);
+                        
+                        // نسخ بيانات الصورة حسب النوع
+                        try {
+                            if (img.data) {
+                                if (img.kind === 1) { // Grayscale
+                                    for (let i = 0, j = 0; i < img.data.length; i++, j += 4) {
+                                        const gray = img.data[i];
+                                        imageData.data[j] = gray;
+                                        imageData.data[j + 1] = gray;
+                                        imageData.data[j + 2] = gray;
+                                        imageData.data[j + 3] = 255;
+                                    }
+                                } else if (img.kind === 2) { // RGB
+                                    for (let i = 0, j = 0; i < img.data.length; i += 3, j += 4) {
+                                        imageData.data[j] = img.data[i];
+                                        imageData.data[j + 1] = img.data[i + 1];
+                                        imageData.data[j + 2] = img.data[i + 2];
+                                        imageData.data[j + 3] = 255;
+                                    }
+                                } else { // RGBA
+                                    imageData.data.set(img.data);
+                                }
+                            } else if (img.bitmap) {
+                                // استخدام bitmap إذا كانت متوفرة
+                                imageData.data.set(new Uint8ClampedArray(img.bitmap));
+                            }
+                        } catch (dataError) {
+                            console.warn(`    ⚠️ خطأ في معالجة بيانات الصورة:`, dataError);
+                            continue;
+                        }
+                        
+                        // وضع البيانات في canvas مؤقت
                         tempCtx.putImageData(imageData, 0, 0);
+                        
+                        // إضافة خلفية بيضاء
+                        ctx.fillStyle = '#FFFFFF';
+                        ctx.fillRect(0, 0, width, height);
                         
                         // نسخ بحجم مصغر
                         ctx.drawImage(tempCanvas, 0, 0, width, height);
                         
-                        // تحويل إلى blob
-                        const blob = await new Promise(resolve => 
-                            canvas.toBlob(resolve, 'image/jpeg', 0.85)
-                        );
+                        // تحويل إلى blob بجودة عالية
+                        const blob = await new Promise((resolve, reject) => {
+                            try {
+                                canvas.toBlob(
+                                    (b) => resolve(b), 
+                                    'image/jpeg', 
+                                    0.90
+                                );
+                            } catch (e) {
+                                reject(e);
+                            }
+                        });
                         
-                        if (blob && blob.size > 5000) {
+                        if (blob && blob.size > 3000) {
+                            const url = URL.createObjectURL(blob);
                             images.push({
                                 blob: blob,
-                                url: URL.createObjectURL(blob),
+                                url: url,
                                 pageNum: pageNum,
-                                size: `${width}x${height}`
+                                size: `${width}x${height}`,
+                                sizeKB: (blob.size/1024).toFixed(1)
                             });
                             console.log(`    ✅ صورة ${images.length}: ${width}x${height} (${(blob.size/1024).toFixed(1)}KB)`);
+                        } else {
+                            console.log(`    ⚠️ صورة صغيرة جداً أو فارغة: ${blob ? blob.size : 0} bytes`);
                         }
                         
                         // تنظيف
@@ -1222,18 +1269,29 @@
             
             // حساب الإحصائيات
             const pageStats = {};
+            let totalWithImages = 0;
+            
             products.forEach(p => {
                 if (!pageStats[p.pageNumber]) {
                     pageStats[p.pageNumber] = { count: 0, withImages: 0 };
                 }
                 pageStats[p.pageNumber].count++;
-                if (p.imageUrl) pageStats[p.pageNumber].withImages++;
+                if (p.imageUrl) {
+                    pageStats[p.pageNumber].withImages++;
+                    totalWithImages++;
+                }
             });
             
             // عرض الإحصائيات
             const statsHTML = Object.keys(pageStats).map(page => 
                 `صفحة ${page}: ${pageStats[page].count} منتج، ${pageStats[page].withImages} صورة`
             ).join(' | ');
+            
+            const imageWarning = totalWithImages === 0 
+                ? ' ⚠️ <strong style="color: #f44336;">لا توجد صور! تأكد من اختيار "استخراج الصور من PDF"</strong>' 
+                : totalWithImages < products.length 
+                ? ` ⚠️ ${products.length - totalWithImages} منتج بدون صور` 
+                : ' ✅ جميع المنتجات لديها صور';
             
             const tbody = document.getElementById('productsTableBody');
             tbody.innerHTML = products.map((p, i) => {
@@ -1245,8 +1303,8 @@
                     <td>${i + 1}</td>
                     <td>
                         ${p.imageUrl 
-                            ? `<img src="${p.imageUrl}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" title="من صفحة ${p.pageNumber}">` 
-                            : '<div style="width: 50px; height: 50px; background: #f0f0f0; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;">📦</div>'}
+                            ? `<img src="${p.imageUrl}" alt="${p.name}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px; border: 2px solid #4CAF50;" title="صفحة ${p.pageNumber} - صورة متوفرة">` 
+                            : `<div style="width: 50px; height: 50px; background: #ffebee; border: 2px dashed #f44336; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px;" title="لا توجد صورة">❌</div>`}
                     </td>
                     <td>
                         ${p.name}
@@ -1273,7 +1331,7 @@
             const statsDiv = document.createElement('div');
             statsDiv.className = 'page-stats';
             statsDiv.style.cssText = 'background: #e3f2fd; padding: 10px; border-radius: 8px; margin-bottom: 15px; font-size: 12px; color: #1565c0;';
-            statsDiv.innerHTML = `📊 <strong>تفاصيل الاستخراج:</strong> ${statsHTML}`;
+            statsDiv.innerHTML = `📊 <strong>تفاصيل الاستخراج:</strong> ${statsHTML}${imageWarning}`;
             
             const h3 = previewDiv.querySelector('h3');
             h3.after(statsDiv);
@@ -1295,10 +1353,25 @@
             
             try {
                 const token = localStorage.getItem('ownerToken') || localStorage.getItem('token');
+                
+                if (!token) {
+                    alert('⚠️ خطأ: لم يتم العثور على token للمصادقة!\n\nالرجاء تسجيل الدخول مرة أخرى.');
+                    hideProgress();
+                    btn.disabled = false;
+                    btn.textContent = '✅ رفع المنتجات إلى المتجر';
+                    return;
+                }
+                
+                console.log('🔑 Token:', token.substring(0, 20) + '...');
+                console.log('🏢 Business ID:', NASSIM_BUSINESS_ID);
+                console.log('🌐 API URL:', API_URL);
+                
                 const imageSource = document.querySelector('input[name="imageSource"]:checked').value;
+                console.log('🖼️ مصدر الصور:', imageSource);
                 
                 let successCount = 0;
                 let errorCount = 0;
+                const errors = [];
                 
                 for (let i = 0; i < extractedProducts.length; i++) {
                     const product = extractedProducts[i];
@@ -1313,21 +1386,32 @@
                         
                         // Handle image upload based on selected option
                         if (imageSource === 'pdf' && product.imageBlob) {
-                            // Upload image from PDF to Cloudinary
-                            const formData = new FormData();
-                            formData.append('image', product.imageBlob, `${product.name}.jpg`);
-                            
-                            const imgResponse = await fetch(`${API_URL}/upload-image`, {
-                                method: 'POST',
-                                headers: {
-                                    'Authorization': `Bearer ${token}`
-                                },
-                                body: formData
-                            });
-                            
-                            if (imgResponse.ok) {
-                                const imgData = await imgResponse.json();
-                                imageUrl = imgData.url;
+                            try {
+                                console.log(`  📤 رفع صورة للمنتج ${i + 1}...`);
+                                
+                                // Upload image from PDF to Cloudinary
+                                const formData = new FormData();
+                                const filename = `product_${Date.now()}_${i}.jpg`;
+                                formData.append('image', product.imageBlob, filename);
+                                
+                                const imgResponse = await fetch(`${API_URL}/upload-image`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': `Bearer ${token}`
+                                    },
+                                    body: formData
+                                });
+                                
+                                if (imgResponse.ok) {
+                                    const imgData = await imgResponse.json();
+                                    imageUrl = imgData.url || imgData.imageUrl || imgData.secure_url;
+                                    console.log(`  ✅ تم رفع الصورة:`, imageUrl);
+                                } else {
+                                    const errorText = await imgResponse.text();
+                                    console.warn(`  ⚠️ فشل رفع الصورة (${imgResponse.status}):`, errorText);
+                                }
+                            } catch (imgError) {
+                                console.error(`  ❌ خطأ في رفع الصورة:`, imgError);
                             }
                         } else if (imageSource === 'internet') {
                             // Search for image on internet
@@ -1349,37 +1433,92 @@
                         }
                         
                         // Upload product with image URL
+                        console.log(`\n📤 رفع منتج ${i + 1}: ${product.name}`);
+                        console.log('  💰 السعر:', product.purchasePrice, '→', product.sellingPrice);
+                        console.log('  🖼️ صورة:', imageUrl || 'لا توجد');
+                        
+                        const productData = {
+                            name: product.name,
+                            purchasePrice: product.purchasePrice,
+                            sellingPrice: product.sellingPrice,
+                            description: product.description,
+                            category: product.category,
+                            inStock: product.inStock,
+                            stockQuantity: product.stockQuantity,
+                            business: NASSIM_BUSINESS_ID,
+                            image: imageUrl
+                        };
+                        
                         const response = await fetch(`${API_URL}/products`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
                                 'Authorization': `Bearer ${token}`
                             },
-                            body: JSON.stringify({
-                                ...product,
-                                business: NASSIM_BUSINESS_ID,
-                                image: imageUrl,
-                                imageBlob: undefined, // Remove blob before sending
-                                imageUrl: undefined
-                            })
+                            body: JSON.stringify(productData)
                         });
                         
+                        const responseText = await response.text();
+                        
                         if (response.ok) {
+                            let data;
+                            try {
+                                data = JSON.parse(responseText);
+                            } catch (e) {
+                                data = { message: responseText };
+                            }
                             successCount++;
+                            console.log(`  ✅ نجح! ID: ${data._id || data.id || 'unknown'}`);
                         } else {
                             errorCount++;
+                            const errorMsg = `${product.name}: ${response.status} - ${responseText.substring(0, 150)}`;
+                            errors.push(errorMsg);
+                            console.error(`  ❌ فشل:`, response.status, responseText);
+                            
+                            // إضافة تفاصيل الخطأ
+                            if (response.status === 401) {
+                                console.error(`  🔐 خطأ مصادقة - Token غير صالح`);
+                            } else if (response.status === 403) {
+                                console.error(`  🚫 ممنوع - ليس لديك صلاحية`);
+                            } else if (response.status === 404) {
+                                console.error(`  🔍 API غير موجود - تحقق من الرابط`);
+                            } else if (response.status === 500) {
+                                console.error(`  💥 خطأ في الخادم`);
+                            }
                         }
                     } catch (error) {
-                        console.error('Error uploading product:', error);
+                        console.error(`  💥 خطأ في رفع المنتج ${i + 1}:`, error);
                         errorCount++;
+                        errors.push(`المنتج ${i + 1}: ${error.message}`);
                     }
                 }
                 
                 updateProgress(100, '✅ اكتمل!');
                 
+                console.log('\n📊 النتيجة النهائية:');
+                console.log('  ✅ نجح:', successCount);
+                console.log('  ❌ فشل:', errorCount);
+                console.log('  📊 إجمالي:', extractedProducts.length);
+                
                 setTimeout(() => {
                     hideProgress();
-                    alert(`✅ تم بنجاح: ${successCount}\n❌ فشل: ${errorCount}\n📊 الإجمالي: ${extractedProducts.length}`);
+                    
+                    let message = `📊 النتيجة:\n\n✅ نجح: ${successCount}\n❌ فشل: ${errorCount}\n📦 الإجمالي: ${extractedProducts.length}`;
+                    
+                    if (errorCount > 0 && errors.length > 0) {
+                        message += '\n\n🔍 الأخطاء (افتح Console للتفاصيل):\n';
+                        message += errors.slice(0, 3).join('\n');
+                        if (errors.length > 3) {
+                            message += `\n... و ${errors.length - 3} أخطاء أخرى`;
+                        }
+                        console.error('\n❌ قائمة الأخطاء الكاملة:', errors);
+                    }
+                    
+                    if (successCount === 0 && errorCount > 0) {
+                        message += '\n\n⚠️ تحقق من:\n• اتصال الإنترنت\n• صلاحية تسجيل الدخول\n• Console (F12) للتفاصيل';
+                    }
+                    
+                    alert(message);
                     
                     if (successCount > 0) {
                         resetUpload();
