@@ -838,48 +838,82 @@
                                 
                                 const page = await pdf.getPage(pageNum);
                                 
-                                // 1. استخراج النص مع الحفاظ على التنسيق
+                                // 1. استخراج النص مع فصل الأعمدة (عمودين في الصفحة)
                                 const textContent = await page.getTextContent();
+                                const viewport = page.getViewport({ scale: 1.0 });
+                                const pageWidth = viewport.width;
+                                const middleX = pageWidth / 2;
                                 
-                                // ترتيب العناصر حسب الموقع (من أعلى لأسفل، من اليمين لليسار)
-                                const items = textContent.items.sort((a, b) => {
-                                    const yDiff = Math.abs(a.transform[5] - b.transform[5]);
-                                    if (yDiff > 5) return b.transform[5] - a.transform[5]; // من أعلى لأسفل
-                                    return b.transform[4] - a.transform[4]; // من اليمين لليسار (عربي)
-                                });
+                                console.log(`  📏 عرض الصفحة: ${pageWidth.toFixed(0)}px، الوسط: ${middleX.toFixed(0)}px`);
                                 
-                                // تجميع النصوص في سطور
-                                let currentY = null;
-                                let lines = [];
-                                let currentLine = [];
+                                // فصل العناصر إلى عمودين
+                                const rightColumn = []; // العمود الأيمن (X > middleX)
+                                const leftColumn = [];  // العمود الأيسر (X < middleX)
                                 
-                                for (let item of items) {
-                                    const y = Math.round(item.transform[5]);
+                                for (let item of textContent.items) {
+                                    const x = item.transform[4];
+                                    if (x > middleX) {
+                                        rightColumn.push(item);
+                                    } else {
+                                        leftColumn.push(item);
+                                    }
+                                }
+                                
+                                console.log(`  📊 عمود يمين: ${rightColumn.length} عنصر، عمود يسار: ${leftColumn.length} عنصر`);
+                                
+                                // دالة لتجميع العناصر في سطور
+                                function itemsToLines(items) {
+                                    // ترتيب حسب Y (من أعلى لأسفل) ثم X (من اليمين لليسار)
+                                    items.sort((a, b) => {
+                                        const yDiff = Math.abs(a.transform[5] - b.transform[5]);
+                                        if (yDiff > 5) return b.transform[5] - a.transform[5];
+                                        return b.transform[4] - a.transform[4];
+                                    });
                                     
-                                    if (currentY === null || Math.abs(y - currentY) > 5) {
-                                        if (currentLine.length > 0) {
-                                            lines.push(currentLine.join(' ').trim());
-                                            currentLine = [];
+                                    let currentY = null;
+                                    let lines = [];
+                                    let currentLine = [];
+                                    
+                                    for (let item of items) {
+                                        const y = Math.round(item.transform[5]);
+                                        
+                                        if (currentY === null || Math.abs(y - currentY) > 5) {
+                                            if (currentLine.length > 0) {
+                                                lines.push(currentLine.join(' ').trim());
+                                                currentLine = [];
+                                            }
+                                            currentY = y;
                                         }
-                                        currentY = y;
+                                        
+                                        if (item.str.trim()) {
+                                            currentLine.push(item.str);
+                                        }
                                     }
                                     
-                                    if (item.str.trim()) {
-                                        currentLine.push(item.str);
+                                    if (currentLine.length > 0) {
+                                        lines.push(currentLine.join(' ').trim());
                                     }
+                                    
+                                    return lines;
                                 }
                                 
-                                if (currentLine.length > 0) {
-                                    lines.push(currentLine.join(' ').trim());
-                                }
+                                // تحويل كل عمود إلى سطور
+                                const rightLines = itemsToLines(rightColumn);
+                                const leftLines = itemsToLines(leftColumn);
                                 
-                                const pageText = lines.join('\n');
+                                console.log(`  📝 عمود يمين: ${rightLines.length} سطر`);
+                                console.log(`  📝 عمود يسار: ${leftLines.length} سطر`);
+                                console.log(`  📝 عينة يمين:`, rightLines.slice(0, 3));
+                                console.log(`  📝 عينة يسار:`, leftLines.slice(0, 3));
                                 
-                                console.log(`  📝 نص: ${pageText.length} حرف، ${lines.length} سطر`);
-                                console.log(`  📝 أول 5 سطور:`);
-                                lines.slice(0, 5).forEach((line, i) => console.log(`    ${i+1}: ${line}`));
+                                // دمج النصوص - العمود الأيمن أولاً ثم الأيسر
+                                const pageText = rightLines.join('\n') + '\n' + leftLines.join('\n');
                                 
-                                // 2. استخراج المنتجات
+                                console.log(`  📝 نص الصفحة: ${pageText.length} حرف`);
+                                console.log(`  📝 عمود يمين - أول 5 سطور:`, rightLines.slice(0, 5));
+                                console.log(`  📝 عمود يسار - أول 5 سطور:`, leftLines.slice(0, 5));
+                                
+                                // 2. استخراج المنتجات (10 منتجات: 5 من اليمين + 5 من اليسار)
                                 const pageProducts = extractProductsFromPage(pageText, pageNum, PRODUCTS_PER_PAGE);
                                 console.log(`  ✅ منتجات: ${pageProducts.length}`);
                                 
