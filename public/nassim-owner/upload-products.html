@@ -1187,8 +1187,84 @@
                 
                 console.log(`  📊 إجمالي الصور المستخرجة: ${images.length}`);
                 
-                // ملاحظة: تم تعطيل rendering وتقسيم الصفحة لأنه يعطي صور مع نصوص
-                // سنعتمد فقط على الصور المدمجة في PDF
+                // Fallback: إذا لم نجد صور مدمجة كافية، نستخدم rendering بحذر
+                if (images.length < maxImages) {
+                    console.log(`    ⚠️ صور مدمجة غير كافية (${images.length}/${maxImages})`);
+                    console.log(`    🔄 استخدام rendering كـ fallback...`);
+                    
+                    const viewport = page.getViewport({ scale: 2.0 }); // دقة أعلى
+                    const canvas = document.createElement('canvas');
+                    const context = canvas.getContext('2d', { alpha: false });
+                    
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    await page.render({ 
+                        canvasContext: context, 
+                        viewport: viewport 
+                    }).promise;
+                    
+                    // استخراج منطقة الصور فقط (النصف العلوي من كل عمود)
+                    // تقسيم أفقي: عمودين
+                    const cols = 2;
+                    const rows = Math.ceil(maxImages / cols);
+                    const cellWidth = canvas.width / cols;
+                    const cellHeight = canvas.height / rows;
+                    
+                    console.log(`    📐 تقسيم ذكي: ${cols}×${rows} خلايا`);
+                    
+                    for (let row = 0; row < rows && images.length < maxImages; row++) {
+                        for (let col = 0; col < cols && images.length < maxImages; col++) {
+                            try {
+                                const cropCanvas = document.createElement('canvas');
+                                const targetSize = 400;
+                                cropCanvas.width = targetSize;
+                                cropCanvas.height = targetSize;
+                                const cropCtx = cropCanvas.getContext('2d', { alpha: false });
+                                
+                                cropCtx.fillStyle = '#FFFFFF';
+                                cropCtx.fillRect(0, 0, targetSize, targetSize);
+                                
+                                // استخراج 60% فقط من الخلية (الجزء العلوي - الصورة فقط)
+                                const cropHeight = cellHeight * 0.6;
+                                
+                                cropCtx.drawImage(
+                                    canvas,
+                                    col * cellWidth, 
+                                    row * cellHeight,
+                                    cellWidth, 
+                                    cropHeight,
+                                    0, 
+                                    0,
+                                    targetSize, 
+                                    targetSize
+                                );
+                                
+                                const blob = await new Promise(resolve => 
+                                    cropCanvas.toBlob(resolve, 'image/jpeg', 0.85)
+                                );
+                                
+                                if (blob && blob.size > 3000) {
+                                    images.push({
+                                        blob: blob,
+                                        url: URL.createObjectURL(blob),
+                                        pageNum: pageNum,
+                                        position: `r${row}c${col}`,
+                                        size: `${targetSize}x${targetSize}`,
+                                        type: 'rendered'
+                                    });
+                                    console.log(`    ✅ صورة rendered ${images.length}: صف ${row+1}، عمود ${col+1}`);
+                                }
+                                
+                                cropCanvas.width = 0;
+                            } catch (e) {
+                                console.warn(`    ⚠️ خطأ في rendering [${row},${col}]:`, e.message);
+                            }
+                        }
+                    }
+                    
+                    canvas.width = 0;
+                }
                 
             } catch (error) {
                 console.error(`  ❌ فشل استخراج الصور:`, error);
